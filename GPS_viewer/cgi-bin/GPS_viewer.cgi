@@ -5,12 +5,13 @@ use warnings;
 use utf8;
 use CGI;
 
+use lib '%libs_dir%';
+use HTML_Elem;
+use ParamPath;
+
 use GPS_KML;
 use GPS_GPX;
 use GPS_NMEA;
-
-use HTML_Elem;
-use ParamPath;
 
 our @BASE_DIRS;
 require '%conf_dir%/BaseDirs.pl';

@@ -1,30 +1,25 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
 use CGI;
 use File::Path;
 use XML::Simple;
 
 use lib '%libs_dir%';
-#require './media_cgi.lib';
-#require '/etc/media_cgi.conf';
+use ParamPath;
 
-my @support_video_types = (
-  "avi",
-  "flv",
-  "mov",
-  "mpg", "mpeg", "m2p",
-  "ts" , "mts", "m2ts",
-  "mp4", "m4v", "mpg4",
-  "asf", "wmv"
-);
+our $BASE_DIR_CONF;
+our $SUPPORT_TYPES;
+our $MOVIE_INFO_CMD;
+our $FFMPEG_CMD;
+our $MOVIE_IMAGE_CACHE_DIR;
+our $TMP_FILE;
+require '%conf_dir%/converter.conf';
 
-my @support_audio_types = (
-  "flac",
-  "wav",
-  "aif", "aiff", "aifc",
-  "ram", "ra",
-  "mp3"
-);
+our @support_video_types;
+our @support_audio_types;
+require $SUPPORT_TYPES;
 
 my @encode_video_types = (
   ["H.264", "H.264 (mp4)"],

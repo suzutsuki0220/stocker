@@ -1,14 +1,19 @@
 .PHONY: all clean install
 
 DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin
-DOCS_DIR   = $(DESTDIR)/html
+CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
+DOCS_DIR   = $(DESTDIR)/html/stocker
 BASE_DIR   = $(DESTDIR)/stocker
 BIN_DIR    = $(BASE_DIR)/bin
 LIBS_DIR   = $(BASE_DIR)/lib
 CONF_DIR   = $(BASE_DIR)/conf
 CACHE_DIR  = $(BASE_DIR)/cache
 TRASH_DIR  = $(BASE_DIR)/trash
+
+LIB_FILES  =
+DOC_FILES  =
+CGI_FILES  = converter.cgi get_movieimg.cgi show_encbatch_list.cgi
+CONF_FILES = converter.conf
 
 all:
 	make -C movie_info
@@ -26,29 +31,30 @@ make-directory:
 	mkdir -m 1777 -p $(CACHE_DIR)
 
 install-config:
-	cp -rn Conf/* $(CONF_DIR)
+	cp -rn $(addprefix Conf/,$(CONF_FILES)) $(CONF_DIR)
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
-	       $(CONF_DIR)/*
+	       $(addprefix $(CONF_DIR)/,$(CONF_FILES))
 
 install-libs:
+	cp -r $(addprefix lib/,$(LIB_FILES)) $(LIBS_DIR)
 	cp -r lib/* $(LIBS_DIR)
 
 install-htdocs:
-	cp -r htdocs/* $(DOCS_DIR)
-	find '$(CGI_DIR)' -type f -exec chmod 644 {} \;
+	cp -r $(addprefix htdocs/,$(DOC_FILES)) $(DOCS_DIR)
+	chmod 644 $(addprefix $(DOCS_DIR)/,$(DOC_FILES))
 
 install-cgi:
-	cp -r cgi-bin/* $(CGI_DIR)
+	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)
 	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
-	       $(CGI_DIR)/*
-	find '$(CGI_DIR)' -type f -exec chmod 755 {} \;
+	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
+	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
 install-bin:
 	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
