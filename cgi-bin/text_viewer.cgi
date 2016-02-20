@@ -12,6 +12,7 @@ use ParamPath;
 use HTML_Elem;
 
 our $BASE_DIR_CONF;
+our $STOCKER_CGI;
 require '%conf_dir%/stocker.conf';
 
 my $form = eval{new CGI};
@@ -37,7 +38,11 @@ HTML_Elem->header();
 my $file_name = $path;
 $file_name =~ s/[^\/]*\///g;
 
+my $in_dir = $form->param('dir');
+my $link_dir = ParamPath->get_up_path($form->param('in'));
+
 my $msg = <<EOF;
+<a href=\"${STOCKER_CGI}?dir=${in_dir}&in=${link_dir}\">← 戻る</a><br>
 <h1 style="font-size: 14pt">${file_name}</h1>
 <hr>
 <pre>

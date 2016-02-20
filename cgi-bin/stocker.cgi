@@ -139,11 +139,8 @@ EOD
   print "</span>\n";
 
   print "<div style=\"clear: both\">";
-  my $up_path = ${in_in};
-  $up_path =~ s/[^\/]{1,}$//;
-  $up_path =~ s/\/{1,}$//;
-  print "<img src=\"/icons/up.png\" border=\"0\">&nbsp;";
-  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes\">一つ上に戻る</a></div>\n";
+  my $up_path = ParamPath->get_up_path(${in_in});
+  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes\">↑UP</a></div>\n";
 } else {
   print "<form action=\"$script\" name=\"base\" method=\"GET\">\n";
   print "ディレクトリ: ";
@@ -277,7 +274,7 @@ foreach my $entry (@dir_list) {
         &print_icon(${base}.${path}, $entry, $icon, $action);
       } else {
         my $icon   = $ICON_UNKNOWN;
-        my $action = "${MUSIC_PLAYER_CGI}?in=$inode&dir=${in_dir}";
+        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
         &print_icon(${base}.${path}, $entry, $icon, $action);
       }
     }

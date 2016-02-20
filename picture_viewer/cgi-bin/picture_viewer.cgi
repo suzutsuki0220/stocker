@@ -14,6 +14,7 @@ use HTML_Elem;
 our $BASE_DIR_CONF = "";
 our $GET_PICTURE_CGI = "";
 our $GET_THUMBNAIL_CGI = "";
+our $STOCKER_CGI = "";
 our $EXIF_CMD = "";
 require '%conf_dir%/picture_viewer.conf';
 
@@ -64,7 +65,7 @@ if ($link_head ne "") {
 } else {
   print "|≪｜＜｜";
 }
-print "<a href=\"media.cgi?dir=${in_dir}&in=$link_dir\">∧</a>｜";
+print "<a href=\"${STOCKER_CGI}?dir=${in_dir}&in=$link_dir\">∧</a>｜";
 if ($link_tail ne "") {
   print "<a href=\"$script_name?dir=${in_dir}&in=$link_next\">＞</a>｜";
   print "<a href=\"$script_name?dir=${in_dir}&in=$link_tail\">≫</a>|";
@@ -223,12 +224,8 @@ exit(0);
 #####
 
 sub get_imglink {
-  my $path_of_dir = "${base}${path}";
-  $path_of_dir =~ s/[^\/]{1,}$//;
-  $path_of_dir =~ s/\/{1,}$//;
-  my $path_of_inode = $form->param('in');
-  $path_of_inode =~ s/[^\/]{1,}$//;
-  $path_of_inode =~ s/\/{1,}$//;
+  my $path_of_dir = ParamPath->get_up_path("${base}${path}");
+  my $path_of_inode = ParamPath->get_up_path($form->param('in'));
   if(opendir( DIR, "$path_of_dir" )) {
     my @jpg_list = ();
     while( my $entry = readdir DIR ) {
@@ -261,12 +258,8 @@ sub get_imglink {
 sub show_dir_imglist {
   my ($path, $repeat) = @_;  # (対象ディレクトリ, 画像表示枚数)
   ### ディレクトリ内の写真
-  my $path_of_dir = $path;
-  $path_of_dir =~ s/[^\/]{1,}$//;
-  $path_of_dir =~ s/\/{1,}$//;
-  my $path_of_inode = $in_in;
-  $path_of_inode =~ s/[^\/]{1,}$//;
-  $path_of_inode =~ s/\/{1,}$//;
+  my $path_of_dir = ParamPath->get_up_path($path);
+  my $path_of_inode = ParamPath->get_up_path($in_in);
   if(opendir( DIR, "$path_of_dir" )) {
     my @jpg_list = ();
     while( my $entry = readdir DIR ) {

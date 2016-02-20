@@ -53,6 +53,18 @@ sub get_base_dir_column {
   return $BASE_DIRS[$idx];
 }
 
+sub get_up_path {
+  my $self = shift;
+  my $path = shift;
+
+  $path =~ s/\/{1,}$//;   # 末尾が"/"になっているとカット出来ないので、切る
+  $path =~ s/\/{2,}/\//g; # splitの分離が奇麗にならないので、二重の"/"は1つにする
+  $path =~ s/([^\/]{1,})$//;
+  $path =~ s/\/{1,}$//;   # 切り出し後に末尾の"/"を削除する
+
+  return $path;
+}
+
 sub inode_to_path {
   my $self = shift;
   my $inodes = shift;
@@ -69,7 +81,7 @@ sub inode_to_path {
     die("Directory not found - ".$self->{base});
   }
 
-  $inodes =~ s/^\///;
+  $inodes =~ s/^\/{1,}//;
   if(! $inodes || length($inodes) == 0) {
     return "";
   }

@@ -13,33 +13,22 @@ use GPS_KML;
 use GPS_GPX;
 use GPS_NMEA;
 
-our @BASE_DIRS;
-require '%conf_dir%/BaseDirs.pl';
-
-our $GOOGLE_API_KEY;
+our $GOOGLE_API_KEY = "";
+our $STOCKER_CGI = "";
+our $BASE_DIR_CONF = "";
 require '%conf_dir%/GPS_viewer.conf';
 
 my $script_name = $ENV{'SCRIPT_NAME'};
 my $form = eval{new CGI};
 
-my $base = "";
-foreach my $cnf (@BASE_DIRS) {
-  if($form->param('dir') eq @{$cnf}[1]) {
-    $base = @{$cnf}[2];
-    if ($base !~ /\/$/) {
-      $base .= "/";
-    }
-    last;
-  }
-}
-if (length(${base}) == 0 || ! -d "${base}") {
-  HTML_Elem->header();
-  HTML_Elem->error("設定されているディレクトリが存在しません - ${base}");
-}
-
 my $path;
+my $base;
 eval {
-  $path = ParamPath->inode_to_path($base, $form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
+                           param_dir => $form->param('dir'));
+  $ins->init();
+  $path = $ins->inode_to_path($form->param('in'));
+  $base = $ins->{base};
 };
 if ($@) {
   HTML_Elem->header();
@@ -48,12 +37,15 @@ if ($@) {
 
 if (length($path) == 0 || ! -e "${base}${path}") {
   HTML_Elem->header();
-  HTML_Elem->error("GPSログが見つかりません");
+  HTML_Elem->error("GPSログが見つかりません path=[${path}]");
 }
 
 my $file_name = $path;
 $file_name =~ /([^\/]{1,})$/;
 $file_name = $1;
+
+my $up_in = ParamPath->get_up_path($form->param('in'));
+my $in_dir = $form->param('dir');
 
 print "Content-Type: text/html\n\n";
 
@@ -82,7 +74,6 @@ EOF
 <title>$file_name</title>
 EOF
 }
-
 
 my $start_lat;
 my $start_long;
@@ -173,6 +164,8 @@ print <<EOF;
 </script>
 </head>
 <body onload="map_init()">
+<a href="${STOCKER_CGI}?in=${up_in}&dir=${in_dir}">← 戻る</a>
+<hr>
 <b>$file_name</b><br>
 <div id="map_canvas"></div>
 EOF
