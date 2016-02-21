@@ -2,19 +2,27 @@
 
 use strict;
 use warnings;
+use utf8;
+use Encode;
 use CGI;
 use File::Path;
 use XML::Simple;
 
 use lib '%libs_dir%';
 use ParamPath;
+use HTML_Elem;
 
-our $BASE_DIR_CONF;
-our $SUPPORT_TYPES;
-our $MOVIE_INFO_CMD;
-our $FFMPEG_CMD;
-our $MOVIE_IMAGE_CACHE_DIR;
-our $TMP_FILE;
+our $STOCKER_CGI    = "";
+our $MOVIEIMG_CGI   = "";
+our $BASE_DIR_CONF  = "";
+our $SUPPORT_TYPES  = "";
+our $MOVIE_INFO_CMD = "";
+our $FFMPEG_CMD     = "";
+our $MOVIE_IMAGE_CACHE_DIR = "";
+our $TMP_FILE = "";
+our $CONV_OUT_DIR    = "";
+our $ENCODE_BATCH    = "";
+our $ENCBATCH_LIST   = "";
 require '%conf_dir%/converter.conf';
 
 our @support_video_types;
@@ -41,60 +49,63 @@ my @encode_audio_types = (
   ["aac", "aac (Audio)"],
 );
 
-$q = eval{new CGI};
-$mode = $q->param('mode');
-$in   = $q->param('in');
-$dir  = $q->param('dir');
-$out_dir = $q->param('out_dir');
+my $q = eval{new CGI};
+my $mode = $q->param('mode');
+my $in   = $q->param('in');
+my $dir  = $q->param('dir');
+my $out_dir = $q->param('out_dir');
 
 if(! ${in} || length(${in}) <= 0 ) {
-  &header();
-  &error("パスが指定されていません。");
-}
-
-my $base;
-foreach $lst (@MEDIA_DIRS) {
-  if(${dir} eq @{$lst}[1]) {
-    $base = @{$lst}[2];
-    last;
-  }
+  HTML_Elem->header();
+  HTML_Elem->error("パスが指定されていません。");
 }
 
 my @files = ();
 my $up_inode = ${in};
-my $path = &inode_to_fullpath($base, ${in});
-if(-f $path) {
+my $path;
+my $base;
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
+                           param_dir => $q->param('dir'));
+  $ins->init();
+  $path = $ins->inode_to_path($q->param('in'));
+  $base = $ins->{base};
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
+
+if(-f "${base}${path}") {
   # 1ファイルの指定
-  my $filename = $path;
+  my $filename = "/$path";
   $filename =~ /(.*)\/([^\/]{1,})$/;
   $path = $1;
   $filename = $2;
   push(@files, $filename);
-  $up_inode =~ s/[^\/]{1,}$//;
-  $up_inode =~ s/\/{1,}$//;
-} elsif(-d $path) {
+  $up_inode = ParamPath->get_up_path(${in});
+} elsif(-d "${base}${path}") {
   # 複数ファイルの指定
-  @files = &get_checked_list($path);
+  @files = &get_checked_list("${base}${path}");
   @files = sort {$a cmp $b} @files;
 } else {
-  &header();
-  &error("指定されたファイルが存在しません。");
+  HTML_Elem->header();
+  HTML_Elem->error("指定されたファイルが存在しません。");
 }
 
-my $encfile = $path ."/". $files[0];
-my $encfile_inode = $up_inode ."/". (stat "${path}/${files[0]}")[1];
+my $encfile = $base . $path ."/". $files[0];
+my $encfile_inode = $up_inode ."/". (stat "${encfile}")[1];
+
+print STDERR "DEBUG: Enc_inode[${encfile_inode}], Encfile[${encfile}]";
 
 my $mtype = &check_capable_type($encfile);
 if ($mtype eq "unsupported") {
-  &header();
-  &error("対応していない形式です: $encfile");
+  HTML_Elem->header();
+  HTML_Elem->error("対応していない形式です: $encfile");
 }
 
 # エンコード出力先
-$out_path = $CONV_OUT_DIR ."/". ${out_dir};
-
-$MOVIE_INFO_CMD =~ s/%%INPUT%%/$encfile/;
-my $FFMPEG_CMD = "/usr/bin/ffmpeg %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
+my $out_path = $CONV_OUT_DIR ."/". ${out_dir};
 
 if(${mode} eq "encode") {
   &perform_encode();
@@ -110,7 +121,7 @@ exit(0);
 
 ### エンコード
 sub perform_encode() {
-  &header();
+  HTML_Elem->header();
   print "<h2>エンコードします</h2>";
   print "<p>処理が完了するまで、ブラウザを閉じないでください</p>\n";
 
@@ -134,9 +145,9 @@ sub perform_encode() {
     &add_encodejob("$path/$files[0]");
   }
 
-  print "<a href=\"media.cgi?in=$up_inode&dir=${dir}&to=$pg_size\">メディアフォルダーに戻る</a></p>";
+  print "<a href=\"${STOCKER_CGI}?in=$up_inode&dir=${dir}\">← フォルダーに戻る</a></p>";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub add_encodejob()
@@ -307,7 +318,7 @@ sub encode_file()
 
     my $pos=0;
     while ($pos <= $duration_sec) {
-      my $cmd = $FFMPEG_CMD;
+      my $cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
       my $out = $out_path ."/". sprintf("%06d_", $pos). $out_file .".jpg";
       $position = "-ss $pos";
       $cmd =~ s/%%POSITION%%/$position/;
@@ -329,18 +340,15 @@ sub encode_file()
     print "\n</pre>\n";
     print "<p><b>エンコード完了</b><br>";
 
-    my $up_path = ${in};
-    $up_path =~ s/[^\/]{1,}$//;
-    $up_path =~ s/\/{1,}$//;
-    print "<a href=\"media.cgi?in=$up_inode&dir=${dir}&to=$pg_size\">メディアフォルダーに戻る</a></p>";
+    print "<a href=\"${STOCKER_CGI}?in=$up_inode&dir=${dir}\">← フォルダーに戻る</a></p>";
 
-    &tail();
+    HTML_Elem->tail();
     return;
   }  else {
     &error('不正なフォーマットが指定されました');
   }
 
-  my $enc_cmd = $FFMPEG_CMD;
+  my $enc_cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
   $enc_cmd =~ s/%%POSITION%%/$position/;
   $enc_cmd =~ s/%%INPUT%%/$encfile/;
   $enc_cmd =~ s/%%OUTPUT%%/$out_file/;
@@ -378,13 +386,15 @@ sub encode_file()
 sub print_form() {
   my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
   my $mp4_url = "media_out_mp4.cgi?in=${encfile_inode}&dir=${dir}";
-  my $thm_url = "media_out_movieimg.cgi?in=${encfile_inode}&dir=${dir}&size=640";
+  my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
 
-  &header();
+   my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
+  $cmd_movie_info =~ s/%%INPUT%%/$encfile/;
+
+  HTML_Elem->header();
 
   print <<EOF;
-<img src="/icons/up.png" border="0">&nbsp;
-<a href="media.cgi?in=${up_inode}&dir=${dir}&to=$pg_size">メディアフォルダーに戻る</a><br>
+<a href="${STOCKER_CGI}?in=${up_inode}&dir=${dir}">← 戻る</a><br>
 <h1>ファイル変換</h1>
 EOF
 
@@ -398,11 +408,11 @@ EOF
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
-    print substr($path."/".$_, length($base)) . "<br>\n";
+    print $path . "/" . $_ . "<br>\n";
   }
 
   print "<h2>情報</h2>\n";
-  open (IN, "${MOVIE_INFO_CMD} |");  # FFMpeg APIを使って情報を読み込む
+  open (IN, "${cmd_movie_info} |");  # FFMpeg APIを使って情報を読み込む
   my $movie_info_xml = "";
   while(my $line = <IN>) {
     $movie_info_xml .= $line;
@@ -463,10 +473,9 @@ EOF
     print "<br></p>\n";
   }
   foreach (@files) {
-    my $inode = (stat "$path/$_")[1];
+    my $inode = (stat "${base}${path}/$_")[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
   }
-  my $innerPath = substr($encfile, length($base));
   print "ソースの場所: \n";
 
   my $default_bps = int($vid_width * $vid_height * $vid_fps * 0.125 / 1000);
@@ -482,7 +491,7 @@ EOF
   function fillFolderName(pathText) {
     document.enc_setting.out_dir.value = pathText;
   }
-  var path = "$innerPath";
+  var path = "${path}";
   if( path.charAt(0) == "/" ) {
     path = path.substr(1,path.length);
   }
@@ -500,7 +509,7 @@ EOF
   }
 
   function get_preview_url(ss, width) {
-    var url = "media_out_movieimg.cgi?in=${encfile_inode}&dir=${dir}&size=" + width;
+    var url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=" + width;
     url += "&ss=" + ss;
     if (document.enc_setting.enable_crop.checked == true) {
       url += "&enable_crop=1";
@@ -1099,7 +1108,7 @@ EOD
 EOF
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" onChange=\"select_existdir()\">\n";
-    while($entry = readdir(DIR)) {
+    while(my $entry = readdir(DIR)) {
       if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' &&
           -d "$CONV_OUT_DIR/$entry" )
       {
@@ -1131,12 +1140,12 @@ EOF
 ファイルフォーマット <select name="format" onchange="changeEncodeParameter()">
 EOF
   print "<optgroup label=\"Video\">\n";
-  foreach $etype (@encode_video_types) {
+  foreach my $etype (@encode_video_types) {
     print "<option value=\"". @{$etype}[0] ."\">". @{$etype}[1] ."</option>\n";
   }
   print "</optgroup>\n";
   print "<optgroup label=\"Audio\">\n";
-  foreach $etype (@encode_audio_types) {
+  foreach my $etype (@encode_audio_types) {
     print "<option value=\"". @{$etype}[0] ."\">". @{$etype}[1] ."</option>\n";
   }
   print "</optgroup>\n";
@@ -1272,7 +1281,7 @@ weight
 </form>
 EOF
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub print_table_video
@@ -1326,7 +1335,7 @@ sub print_table_audio
 
 sub print_timesel
 {
-  &header('timer selector');
+  HTML_Elem->header('timer selector');
 
   my $target = $q->param('target') eq 't' ? "t" : "ss";
   my $duration = get_video_duration($encfile);
@@ -1409,7 +1418,7 @@ EOF
     my $timestr = sprintf("%02d:%02d:%02d.%03d", $hh, $mm, $ss, $xx);
     print "<div style=\"background-color: #cccccc; margin-top: 5px; padding-left: 1px; padding-right: 1px; float: left; text-align: center; font-size: 9pt;\">";
     print "<a href=\"javascript: select_time(\'${timestr}\')\">";
-    print "<img src=\"media_out_movieimg.cgi?\in=${encfile_inode}&dir=${dir}&size=120&ss=${timestr}\">";
+    print "<img src=\"${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=120&ss=${timestr}\">";
     print "</a><br>$timestr</div>\n";
     $pos += $skip;
   }
@@ -1430,7 +1439,7 @@ Time: <input type="text" name="selectedTime" size="30" value="${selectedTime}">
 </form>
 EOF
 
-  &tail();
+  HTML_Elem->tail();
   exit(0);
 }
 
@@ -1466,8 +1475,11 @@ sub get_video_duration
 {
   my ($filename) = @_;
 
+  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
+  $cmd_movie_info =~ s/%%INPUT%%/$encfile/;
+
   ## get movie information by FFMpeg API
-  open (IN, "${MOVIE_INFO_CMD} |");
+  open (IN, "${cmd_movie_info} |");
   my $movie_info_xml = "";
   while(my $line = <IN>) {
     $movie_info_xml .= $line;
@@ -1622,12 +1634,12 @@ sub check_capable_type
 {
   my ($file) = @_;
 
-  foreach $type (@support_video_types) {
+  foreach my $type (@support_video_types) {
     if (lc($file) =~ /\.${type}$/) {
       return "video";
     }
   }
-  foreach $type (@support_audio_types) {
+  foreach my $type (@support_audio_types) {
     if (lc($file) =~ /\.${type}$/) {
       return "audio";
     }

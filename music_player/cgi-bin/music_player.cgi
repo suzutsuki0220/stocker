@@ -15,6 +15,7 @@ use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
+our $STOCKER_CGI   = "";
 our $GET_MEDIA_CGI = "";
 our $BASE_DIR_CONF = "";
 require '%conf_dir%/music_player.conf';
@@ -40,6 +41,7 @@ my $dir_inode = $1;
 my $file_inode = $2;
 
 my $player_src = ${GET_MEDIA_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
+my $stocker_src = ${STOCKER_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
 
 #### ディレクトリ一覧 ####
 $path =~ /(.*)\/([^\/]{1,})$/;
@@ -201,8 +203,9 @@ print "-->\n";
 print "</script>\n";
 closedir($DIR);
 
+print "<a href=\"${stocker_src}\">← 戻る</a>\n";
+print "<hr>\n";
 if ($music_count > 0) {
-  print "<hr>\n";
   print "<h2>${directory_name}</h2>\n";
 
   print <<DATA;

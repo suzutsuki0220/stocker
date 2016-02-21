@@ -8,10 +8,9 @@ use lib '%libs_dir%';
 use ParamPath;
 
 our $BASE_DIR_CONF = "";
+our $AUDIO_CONVERTER_CMD = "/usr/bin/ffmpeg";
+our $AUDIO_CONVERT_BITRATE = "256k";
 require '%conf_dir%/music_player.conf';
-
-my $bitrate = "256k";
-my $ffmpeg  = "/usr/bin/ffmpeg";
 
 my $form = eval{new CGI};
 
@@ -69,7 +68,7 @@ sub output_mp3() {
   print "Content-Type: audio/mpeg\n";
   if($convert == 1) {
     print "\n";
-    system("${ffmpeg} -y -i \"$media_path\" -vn -acodec libmp3lame -f mp3 -ac 2 -ar 44100 -ab ${bitrate} - 2>/dev/null");
+    system("${AUDIO_CONVERTER_CMD} -y -i \"$media_path\" -vn -acodec libmp3lame -f mp3 -ab ${AUDIO_CONVERT_BITRATE} - 2>/dev/null");
   } else {
     print "Content-Length: ". (-s $media_path) ."\n";
     print "Content-Disposition: attachment; filename=media.mp3\n";
@@ -87,7 +86,7 @@ sub output_ogg() {
   print "Content-Type: audio/ogg\n";
   if($convert == 1) {
     print "\n";
-    system("${ffmpeg} -y -i \"$media_path\" -vn -acodec libvorbis -f ogg -ac 2 -ar 44100 -ab ${bitrate} - 2>/dev/null");
+    system("${AUDIO_CONVERTER_CMD} -y -i \"$media_path\" -vn -acodec libvorbis -f ogg -ab ${AUDIO_CONVERT_BITRATE} - 2>/dev/null");
   } else {
     print "Content-Length: ". (-s $media_path) ."\n";
     print "Content-Disposition: attachment; filename=media.ogg\n";
@@ -105,7 +104,7 @@ sub output_wav() {
   print "Content-Type: audio/x-wav\n";
   if($convert == 1) {
     print "\n";
-    system("${ffmpeg} -y -i \"$media_path\" -vn -acodec pcm_s16le -f wav -ac 2 -ar 44100 - 2>/dev/null");
+    system("${AUDIO_CONVERTER_CMD} -y -i \"$media_path\" -vn -acodec pcm_s16le -f wav - 2>/dev/null");
   } else {
     print "Content-Length: ". (-s $media_path) ."\n";
     print "Content-Disposition: attachment; filename=media.wav\n";

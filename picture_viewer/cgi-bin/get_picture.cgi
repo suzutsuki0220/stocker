@@ -15,7 +15,7 @@ our $TMP_FILE = "";
 our $RESIZE_CMD = "";
 require '%conf_dir%/picture_viewer.conf';
 
-$VGA_CACHE_DIR =~ s/\/{1,}$//g;  # $BKvHx$K(B"/"$B$,IU$$$F$$$?$i>C$9(B
+$VGA_CACHE_DIR =~ s/\/{1,}$//g;  # 末尾に"/"が付いていたら消す
 
 if (length($VGA_CACHE_DIR) == 0) {
   print STDERR "get_picgure.cgi ERROR: missing configuration VGA_CACHE_DIR";
@@ -24,8 +24,6 @@ if (length($VGA_CACHE_DIR) == 0) {
   print "\n";
   exit(1);
 }
-
-#use GD;
 
 my $form = eval{new CGI};
 
@@ -97,7 +95,7 @@ eval {
         exit(1);
       }
     }
-    # $B%-%c%C%7%e$+$i2hA|$rFI$_9~$_(B
+    # キャッシュから画像を読み込み
     if((-f $cache_path) && ((-s $cache_path) > 0)) {
       my $cachemodified = (stat "$cache_path")[9];
       if($cachemodified == $lastmodified) {
@@ -119,6 +117,7 @@ eval {
   }
 };
 
+#use GD;
 #if( $in{'fast'} eq "true" ) {
 #  my $srcImage = new GD::Image->newFromJpeg($path);
 #  my($srcWidth, $srcHeight) = $srcImage->getBounds();
@@ -151,7 +150,7 @@ eval {
   }
   close $MEDIA;
 
-  # $B%-%c%C%7%eJ]B8(B
+  # キャッシュ保存
   if($size == 640) {
     copy("${TMP_FILE}", "$cache_path");
     utime(undef, $lastmodified, "$cache_path");

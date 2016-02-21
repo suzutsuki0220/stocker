@@ -70,7 +70,7 @@ sub inode_to_path {
   my $inodes = shift;
   my $subdir = "";
 
-  if($inodes =~ /[^0123456789\/]/) {
+  if(! $inodes || $inodes =~ /[^0123456789\/]/) {
     die("Parameter invalid format");
   }
 
@@ -144,6 +144,26 @@ sub path_inode {
   }
 
   return $all_inode;
+}
+
+### チェックされたファイルをリストに保持
+sub get_checked_list {
+  my $self = shift;
+  my ($params, $path) = @_;
+  my @files;
+  opendir( DIR, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
+  while( $entry = readdir DIR ) {
+    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
+      if( -f "$path/$entry" || -d "$path/$entry") {
+        if( $$params((stat "$path/$entry")[1]) == 1 ) {
+          push(@files, $entry);
+        }
+      }
+    }
+  }
+  closedir(DIR);
+
+  return @files;
 }
 
 1;

@@ -1,11 +1,14 @@
 #!/usr/bin/perl
 
 use strict;
-use warnings;
+#use warnings;
 use utf8;
 use CGI;
 use File::Copy;
 use File::Path;
+
+use lib '%libs_dir%';
+use ParamPath;
 
 our $BASE_DIR_CONF;
 our $MOVIE_IMAGE_CACHE_DIR = "";
@@ -13,39 +16,56 @@ our $TMP_FILE = "";
 our $FFMPEG_CMD = "";
 require '%conf_dir%/converter.conf';
 
-@in = parseInput();
+my $MOVIE_IMG_CMD = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%OPTION%% -r 1 -vframes 1 -f image2 \"%%OUTPUT%%\" 2>/dev/null";
 
-my $base = "";
-foreach $lst (@MEDIA_DIRS) {
-  if($in{'dir'} eq @{$lst}[1]) {
-    $base = @{$lst}[2];
-    last;
-  }
-}
-$path = &inode_to_path($base, $in{'in'});
+my $form = eval{new CGI};
 
-my $file_name = $path;
-$file_name =~ s/[^\/]*\///g;
-
-if(length($in{'in'}) == 0 || length($base) == 0 || ! -f "${base}${path}") {
+my $base;
+my $path;
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
+                           param_dir => $form->param('dir'));
+  $ins->init();
+  $path = $ins->inode_to_path($form->param('in'));
+  $base = $ins->{base}
+};
+if ($@) {
+  print STDERR "get_movieimg.cgi ERROR: $@\n";
   print "Content-Type: image/jpeg\n";
   print "Content-Length: 0\n";
   print "\n";
   exit(1);
 }
 
-my $cache = $CACHE_DIR.$path;
-my $size;
-if($in{'size'} && $in{'size'} != 0) {
+if(length($form->param('in')) <= 0 || ! -f "${base}${path}") {
+  print STDERR "get_movieimg.cgi ERROR: file not found - ${base}${path}";
+  print "Content-Type: image/jpeg\n";
+  print "Content-Length: 0\n";
+  print "\n";
+  exit(1);
+}
+
+my $file_name = $path;
+$file_name =~ s/[^\/]*\///g;
+
+my $param_dir = $form->param('dir');
+if (! $param_dir || length($param_dir) == 0) {
+  $param_dir = "DEFAULT";
+}
+$MOVIE_IMAGE_CACHE_DIR =~ s/\/{1,}$//g;  # 末尾に"/"が付いていたら消す
+my $cache = $MOVIE_IMAGE_CACHE_DIR ."/". $param_dir ."/". $path;
+
+my $size = 640;
+if($form->param('size') && $form->param('size') != 0) {
   # If size set 0 it output original data
-  if( $in{'size'} > 0 && $in{'size'} < 5000 ) {
-    $size = $in{'size'};
+  if( $form->param('size') > 0 && $form->param('size') < 5000 ) {
+    $size = $form->param('size');
   }
 }
 
 my $lastmodified = (stat ${base}.${path})[9];
 
-if ($in{'size'} == 640 && ! $in{'ss'} && ! $in{'enable_adjust'}) {
+if ($form->param('size') == 640 && ! $form->param('ss') && ! $form->param('enable_adjust')) {
   if (&img_fromcache($cache, $lastmodified) == 0) {
     exit(0);
   }
@@ -71,15 +91,15 @@ sub img_fromcache()
   if( -f $cache) {
     my $cachemodified = (stat $cache)[9];
     if($cachemodified == $lastmodified) {
-      if(open(MEDIA, $cache)) {
+      if(open(my $fd, $cache)) {
         print "Content-Type: image/jpeg\n";
         print "Content-Length: ". (-s $cache). "\n";
         #print "Content-Disposition: inline; filename=$size_$file_name\n";
         print "\n";
-        while($inData = <MEDIA>) {
+        while(my $inData = <$fd>) {
           print $inData;
         }
-        close MEDIA;
+        close $fd;
         return 0;
       }
     } else {
@@ -95,30 +115,30 @@ sub make_imgcache()
   my $option = "";
 
   my $position = "";
-  if ($in{'ss'} && $in{'ss'} ne '00:00:00.000') {
-    $position = "-ss $in{'ss'}";
+  if ($form->param('ss') && $form->param('ss') ne '00:00:00.000') {
+    $position = "-ss $form->param('ss')";
   }
   my @vf_option = ();
-  if($in{'enable_crop'}) {
-    push(@vf_option, "crop=".$in{'crop_w'}.":".$in{'crop_h'}.":".$in{'crop_x'}.":".$in{'crop_y'});
+  if($form->param('enable_crop')) {
+    push(@vf_option, "crop=".$form->param('crop_w').":".$form->param('crop_h').":".$form->param('crop_x').":".$form->param('crop_y'));
   }
-  if($in{'enable_pad'}) {
-    push(@vf_option, "pad=".$in{'pad_w'}.":".$in{'pad_h'}.":".$in{'pad_x'}.":".$in{'pad_y'}.":".$in{'pad_color'});
+  if($form->param('enable_pad')) {
+    push(@vf_option, "pad=".$form->param('pad_w').":".$form->param('pad_h').":".$form->param('pad_x').":".$form->param('pad_y').":".$form->param('pad_color'));
   }
-  if ($in{'enable_adjust'}) {
-    push(@vf_option, "mp=eq2=$in{'gamma'}:$in{'contrast'}:$in{'brightness'}:1.0:$in{'rg'}:$in{'gg'}:$in{'bg'}:$in{'weight'}");
-    push(@vf_option, "hue=h=$in{'hue'}:s=$in{'saturation'}");
-    push(@vf_option, "unsharp=3:3:$in{'sharp'}");
+  if ($form->param('enable_adjust')) {
+    push(@vf_option, "mp=eq2=".$form->param('gamma').":".$form->param('contrast').":".$form->param('brightness').":1.0:".$form->param('rg').":".$form->param('gg').":".$form->param('bg').":".$form->param('weight'));
+    push(@vf_option, "hue=h=".$form->param('hue').":s=".$form->param('saturation'));
+    push(@vf_option, "unsharp=3:3:".$form->param('sharp'));
   }
-  my $numerator   = $in{'aspect_numerator'};
-  my $denominator = $in{'aspect_denominator'};
-  if ($in{'aspect_set'} eq "setsar") {
+  my $numerator   = $form->param('aspect_numerator');
+  my $denominator = $form->param('aspect_denominator');
+  if ($form->param('aspect_set') eq "setsar") {
     push(@vf_option, "setsar=ratio=${numerator}/${denominator}:max=1000");
-  } elsif ($in{'aspect_set'} eq "setdar") {
+  } elsif ($form->param('aspect_set') eq "setdar") {
     push(@vf_option, "setdar=ratio=${numerator}/${denominator}:max=1000");
   }
   if (length($size) > 0) {
-    push(@vf_option, "scale=". $in{'size'} . ":-1");  #  width
+    push(@vf_option, "scale=". $form->param('size') . ":-1");  #  width
   }
 
   if ($#vf_option >= 0) {
@@ -129,24 +149,25 @@ sub make_imgcache()
     $option =~ s/,$//;
     $option .= "\" ";
   }
-  $MOVIE_IMG_CMD =~ s/%%POSITION%%/${position}/;
-  $MOVIE_IMG_CMD =~ s/%%INPUT%%/${base}${path}/;
-  $MOVIE_IMG_CMD =~ s/%%OUTPUT%%/$TMP_FILE/;
-  $MOVIE_IMG_CMD =~ s/%%OPTION%%/${option}/;
-  system($MOVIE_IMG_CMD);
+  my $cmd_movie_img = $MOVIE_IMG_CMD;
+  $cmd_movie_img =~ s/%%POSITION%%/${position}/;
+  $cmd_movie_img =~ s/%%INPUT%%/${base}${path}/;
+  $cmd_movie_img =~ s/%%OUTPUT%%/$TMP_FILE/;
+  $cmd_movie_img =~ s/%%OPTION%%/${option}/;
+  system($cmd_movie_img);
 
   print "Content-Type: image/jpeg\n";
   print "Content-Length: ". (-s $TMP_FILE). "\n";
   #print "Content-Disposition: inline; filename=$size_$file_name\n";
   print "\n";
-  open(MEDIA, $TMP_FILE) or die("media file open error");
-  while($inData = <MEDIA>) {
+  open(my $fd, $TMP_FILE) or die("media file open error");
+  while(my $inData = <$fd>) {
     print $inData;
   }
-  close MEDIA;
+  close $fd;
 
-  if (! $in{'ss'} && ! $in{'enable_adjust'}) {
-    if ($in{'size'} == 640 && length($position) == 0) {
+  if (! $form->param('ss') && ! $form->param('enable_adjust')) {
+    if ($form->param('size') == 640 && length($position) == 0) {
       &save_imgcache($cache, $lastmodified);
     }
   }
