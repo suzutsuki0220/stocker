@@ -10,7 +10,7 @@ CONF_DIR   = $(BASE_DIR)/conf
 CACHE_DIR  = $(BASE_DIR)/cache
 TRASH_DIR  = $(BASE_DIR)/trash
 
-LIB_FILES  =
+LIB_FILES  = ConverterJob.pm
 DOC_FILES  =
 CGI_FILES  = converter.cgi get_movieimg.cgi show_encbatch_list.cgi
 CONF_FILES = converter.conf
@@ -42,7 +42,6 @@ install-config:
 
 install-libs:
 	cp -r $(addprefix lib/,$(LIB_FILES)) $(LIBS_DIR)
-	cp -r lib/* $(LIBS_DIR)
 
 install-htdocs:
 	cp -r $(addprefix htdocs/,$(DOC_FILES)) $(DOCS_DIR)
@@ -59,5 +58,5 @@ install-cgi:
 install-bin:
 	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 
-install: make-directory install-config install-cgi install-bin
+install: make-directory install-config install-cgi install-bin install-libs
 

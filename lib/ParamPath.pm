@@ -25,8 +25,8 @@ sub init {
 
   foreach my $lst (@BASE_DIRS) {
     if($self->{param_dir} eq @{$lst}[1]) {
-      $self->{base_name} = @{$lst}[0];  # $BI=<(L>(B
-      $self->{base} = @{$lst}[2];  # $B4pE@$H$J$k%Q%9(B
+      $self->{base_name} = @{$lst}[0];  # 表示名
+      $self->{base} = @{$lst}[2];  # 基点となるパス
       if ($self->{base} !~ /\/$/) {
         $self->{base} .= "/";
       }
@@ -57,10 +57,10 @@ sub get_up_path {
   my $self = shift;
   my $path = shift;
 
-  $path =~ s/\/{1,}$//;   # $BKvHx$,(B"/"$B$K$J$C$F$$$k$H%+%C%H=PMh$J$$$N$G!"@Z$k(B
-  $path =~ s/\/{2,}/\//g; # split$B$NJ,N%$,4qNo$K$J$i$J$$$N$G!"Fs=E$N(B"/"$B$O(B1$B$D$K$9$k(B
+  $path =~ s/\/{1,}$//;   # 末尾が"/"になっているとカット出来ないので、切る
+  $path =~ s/\/{2,}/\//g; # splitの分離が奇麗にならないので、二重の"/"は1つにする
   $path =~ s/([^\/]{1,})$//;
-  $path =~ s/\/{1,}$//;   # $B@Z$j=P$78e$KKvHx$N(B"/"$B$r:o=|$9$k(B
+  $path =~ s/\/{1,}$//;   # 切り出し後に末尾の"/"を削除する
 
   return $path;
 }
@@ -146,22 +146,22 @@ sub path_inode {
   return $all_inode;
 }
 
-### $B%A%'%C%/$5$l$?%U%!%$%k$r%j%9%H$KJ];}(B
+### チェックされたファイルをリストに保持
 sub get_checked_list {
   my $self = shift;
   my ($params, $path) = @_;
   my @files;
-  opendir( DIR, "$path" ) or error( "$B%G%#%l%/%H%j$N%"%/%;%9$K<:GT$7$^$7$?(B" );
-  while( $entry = readdir DIR ) {
+  opendir( my $dir, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
+  while( my $entry = readdir $dir ) {
     if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
       if( -f "$path/$entry" || -d "$path/$entry") {
-        if( $$params((stat "$path/$entry")[1]) == 1 ) {
+        if( $$params{(stat "$path/$entry")[1]} == 1 ) {
           push(@files, $entry);
         }
       }
     }
   }
-  closedir(DIR);
+  closedir($dir);
 
   return @files;
 }

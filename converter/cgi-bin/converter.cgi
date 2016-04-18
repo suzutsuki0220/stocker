@@ -11,6 +11,7 @@ use XML::Simple;
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
+use ConverterJob;
 
 our $STOCKER_CGI    = "";
 our $MOVIEIMG_CGI   = "";
@@ -154,14 +155,63 @@ sub add_encodejob()
 {
   my ($encfile) = @_;
 
-  if($q->param('pass2')) {
-    &encode_file($encfile ,1);
-    &encode_file($encfile ,2);
-    add_batch("rm -f ${TMP_FILE}*");
-  } else {
-    &encode_file($encfile ,0);
-  }
-  system("echo \"${ENCODE_BATCH} > /dev/null\" |batch");
+#  if($q->param('pass2')) {
+#    &encode_file($encfile ,1);
+#    &encode_file($encfile ,2);
+#    add_batch("rm -f ${TMP_FILE}*");
+#  } else {
+#    &encode_file($encfile ,0);
+#  }
+#  system("echo \"${ENCODE_BATCH} > /dev/null\" |batch");
+
+  my $job = ConverterJob->new();
+  $job->{source} = $encfile;
+  $job->{out_dir} = $q->param('out_dir');
+  $job->{format} = $q->param('format');
+  $job->{pass2} = $q->param('pass2') ? 1 : 0;
+  $job->{ss} = $q->param('ss');
+  $job->{t} = $q->param('t');
+  $job->{v_v_map} = $q->param('v_map');
+  $job->{v_v_copy} = $q->param('v_copy');
+  $job->{v_enable_crop} = $q->param('enable_crop') ? 1 : 0;
+  $job->{v_crop_w} = $q->param('crop_w');
+  $job->{v_crop_h} = $q->param('crop_h');
+  $job->{v_crop_x} = $q->param('crop_x');
+  $job->{v_crop_y} = $q->param('crop_y');
+  $job->{v_enable_pad} = $q->param('enable_pad') ? 1 : 0;
+  $job->{v_pad_w} = $q->param('pad_w');
+  $job->{v_pad_h} = $q->param('pad_h');
+  $job->{v_pad_x} = $q->param('pad_x');
+  $job->{v_pad_y} = $q->param('pad_y');
+  $job->{v_pad_color} = $q->param('pad_color');
+  $job->{v_s_w} = $q->param('s_w');
+  $job->{v_s_h} = $q->param('s_h');
+  $job->{v_aspect_set} = $q->param('aspect_set');
+  $job->{v_aspect_numerator} = $q->param('aspect_numerator');
+  $job->{v_aspect_denominator} = $q->param('aspect_denominator');
+  $job->{v_r} = $q->param('r');
+  $job->{v_b} = $q->param('b');
+  $job->{v_enable_adjust} = $q->param('enable_adjust') ? 1 : 0;
+  $job->{v_brightness} = $q->param('brightness');
+  $job->{v_contrast} = $q->param('contrast');
+  $job->{v_gamma} = $q->param('gamma');
+  $job->{v_hue} = $q->param('hue');
+  $job->{v_saturation} = $q->param('saturation');
+  $job->{v_sharp} = $q->param('sharp');
+  $job->{v_rg} = $q->param('rg');
+  $job->{v_gg} = $q->param('gg');
+  $job->{v_bg} = $q->param('bg');
+  $job->{v_weight} = $q->param('weight');
+  $job->{v_deinterlace} = $q->param('deinterlace') ? 1 : 0;
+  $job->{v_deshake} = $q->param('deshake')? 1 : 0;
+  $job->{a_a_map} = $q->param('a_map');
+  $job->{a_a_copy} = $q->param('a_copy');
+  $job->{a_ar} = $q->param('ar');
+  $job->{a_ac} = $q->param('ac');
+  $job->{a_cutoff} = $q->param('cutoff');
+  $job->{a_volume} = $q->param('volume');
+
+  $job->add();
 }
 
 sub add_batch()
