@@ -1,17 +1,27 @@
-## media_edit.cgi 機能
+## a part of edit.cgi function
 # ファイルの削除、アップロード、リネームなどのファイル管理の機能
 
+use CGI;
 use File::Copy;  # for file move across the different filesystems
 use File::Path;
 use File::Basename;
 use Archive::Zip qw (:ERROR_CODES);  # download one more files at once
 
+use lib '%libs_dir%';
+use ParamPath;
+use HTML_Elem;
+use FileOperator;
+
+my $form = eval{new CGI};
+my $mode = $form->param('mode');
+my $in   = $form->param('in');
+my $dir  = $form->param('dir');
 
 ########################
 ### 新規フォルダ作成 ###
 ########################
 sub form_newfolder() {
-  &header();
+  HTML_Elem->header();
 
   print <<EOD;
 <script type="text/javascript">
@@ -42,26 +52,26 @@ EOF
 }
 
 sub do_newfolder() {
-  my $newname = $q->param('foldername');
+  my $newname = $form->param('foldername');
 
   # ファイル名チェック
   if (! &isFilenameValid("$newname")) {
-    &header();
-    &error("指定された名前は使用できません。別の名前に変更してください");
+    HTML_Elem->header();
+    HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
     exit(1);
   }
 
   # 既存ファイル名重複チェック
   if( -e "$path/".$newname) {
-    &header();
-    &error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
+    HTML_Elem->header();
+    HTML_Elem->error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
     exit(1);
   }
 
   if(! mkdir("$path/".$newname)) {
       my $reason = $!;
-      &header();
-      &error("ディレクトリ作成に失敗しました($reason)");
+      HTML_Elem->header();
+      HTML_Elem->error("ディレクトリ作成に失敗しました($reason)");
       exit(1);
   }
 
@@ -72,7 +82,7 @@ sub do_newfolder() {
 ### ファイルのアップロード ###
 ##############################
 sub form_upload() {
-  &header();
+  HTML_Elem->header();
 
   print <<EOD;
 <script type="text/javascript">
@@ -119,10 +129,10 @@ sub save_upfile
 {
   my ($formname) = @_;
 
-  if ($q->param($formname)) {
-    my $fname = basename($q->param($formname));
+  if ($form->param($formname)) {
+    my $fname = basename($form->param($formname));
     if ($fname && length($fname) > 0) {
-      my $fh = $q->upload($formname);
+      my $fh = $form->upload($formname);
       copy ($fh, "$path/$fname");
       undef $fname;
     }
@@ -133,10 +143,10 @@ sub save_upfile
 ### ダウンロード ###
 ####################
 sub do_download() {
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
   if (@files.length == 0) {
-    &header();
-    &error("チェックが一つも選択されていません");
+    HTML_Elem->header();
+    HTML_Elem->error("チェックが一つも選択されていません");
     &tail();
     return;
   }
@@ -164,7 +174,7 @@ sub do_download() {
       &output_filedata($TMP_FILE, "download[".$files[0]."].zip");
       unlink($TMP_FILE);
     } else {
-      &header();
+      HTML_Elem->header();
       if ($ret == AZ_STREAM_END) {
         $reason = "The read stream (or central directory) ended normally.";
       } elsif ($ret == AZ_ERROR) {
@@ -177,7 +187,7 @@ sub do_download() {
         $reason = "Unknown error";
       }
 
-      &error("圧縮に失敗しました: ${reason}");
+      HTML_Elem->error("圧縮に失敗しました: ${reason}");
       &tail();
     }
   }
@@ -206,11 +216,11 @@ sub output_filedata()
 ### 名前変更 ###
 ################
 sub form_rename() {
-  &header();
+  HTML_Elem->header();
 
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
   if (@files.length == 0) {
-    &error("チェックが一つも選択されていません");
+    HTML_Elem->error("チェックが一つも選択されていません");
     &tail();
     return;
   }
@@ -258,24 +268,24 @@ sub do_rename() {
   my @files = ();
   opendir( DIR, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
   while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' && $q->param($entry)) {
+    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' && $form->param($entry)) {
       # ファイル名チェック
-      if (! &isFilenameValid($q->param($entry))) {
-        &header();
-        &error("指定された名前は使用できません。別の名前に変更してください");
+      if (! &isFilenameValid($form->param($entry))) {
+        HTML_Elem->header();
+        HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
         exit(1);
       }
       # 既存ファイル名重複チェック
-      if( -e "$path/".$q->param($entry)) {
-        &header();
-        &error("指定された名前(".$q->param($entry).")は既に使われています。別の名前を指定してください");
+      if( -e "$path/".$form->param($entry)) {
+        HTML_Elem->header();
+        HTML_Elem->error("指定された名前(".$form->param($entry).")は既に使われています。別の名前を指定してください");
         exit(1);
       }
       # リスト内の重複チェック
       foreach $org_name (@files) {
-        if ($q->param($org_name) eq $q->param($entry)) {
-          &header();
-          &error("名前($q->param($entry))は重複しています。別の名前を指定してください");
+        if ($form->param($org_name) eq $form->param($entry)) {
+          HTML_Elem->header();
+          HTML_Elem->error("名前($form->param($entry))は重複しています。別の名前を指定してください");
           exit(1);
         }
       }
@@ -285,10 +295,10 @@ sub do_rename() {
   close(DIR);
 
   foreach $entry (@files) {
-    if(! rename("$path/$entry", "$path/".$q->param($entry))) {
+    if(! rename("$path/$entry", "$path/".$form->param($entry))) {
       my $reason = $!;
-      &header();
-      &error("名前の変更に失敗しました($reason)");
+      HTML_Elem->header();
+      HTML_Elem->error("名前の変更に失敗しました($reason)");
       exit(1);
     }
   }
@@ -300,16 +310,16 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  &header();
+  HTML_Elem->header();
 
-  my $dest = $q->param('f_dest');
-  my $dest_dir = $q->param('f_dest_dir');
+  my $dest = $form->param('f_dest');
+  my $dest_dir = $form->param('f_dest_dir');
   my $dest_base = @{$MEDIA_DIRS[0]}[2];
   my @lst_dest = ();
 
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
   if (@files.length == 0) {
-    &error("チェックが一つも選択されていません");
+    HTML_Elem->error("チェックが一つも選択されていません");
     &tail();
     return;
   }
@@ -403,14 +413,14 @@ EOF
 }
 
 sub do_move() {
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
 
-  my $dest = $q->param('dest');
-  my $dest_dir = $q->param('dest_dir');
+  my $dest = $form->param('dest');
+  my $dest_dir = $form->param('dest_dir');
 
   if (length($dest) == 0) {
-    &header();
-    &error("移動先のディレクトリが指定されていません");
+    HTML_Elem->header();
+    HTML_Elem->error("移動先のディレクトリが指定されていません");
     exit(1);
   }
 
@@ -422,8 +432,8 @@ sub do_move() {
     }
   }
   if (length($dest_base) == 0) {
-    &header();
-    &error("不正なパスが指定されました");
+    HTML_Elem->header();
+    HTML_Elem->error("不正なパスが指定されました");
     exit(1);
   }
 
@@ -431,19 +441,19 @@ sub do_move() {
 
   foreach $entry (@files) {
     if(${entry} =~ /\/\./) {
-      &header();
-      &error("移動先に移動できないパスが指定されています");
+      HTML_Elem->header();
+      HTML_Elem->error("移動先に移動できないパスが指定されています");
       exit(1);
     }
     if( -e "${dest_path}/${entry}") {
-      &header();
-      &error("既に同じ名前が存在するため移動できません($entry)");
+      HTML_Elem->header();
+      HTML_Elem->error("既に同じ名前が存在するため移動できません($entry)");
       exit(1);
     }
     if(! move("$path/$entry", "${dest_path}")) {
       my $reason = $!;
-      &header();
-      &error("移動に失敗しました($reason)");
+      HTML_Elem->header();
+      HTML_Elem->error("移動に失敗しました($reason)");
       exit(1);
     }
   }
@@ -455,11 +465,11 @@ sub do_move() {
 ### 削 除 ###
 #############
 sub form_delete() {
-  &header();
+  HTML_Elem->header();
 
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
   if (@files.length == 0) {
-    &error("チェックが一つも選択されていません");
+    HTML_Elem->error("チェックが一つも選択されていません");
     &tail();
     return;
   }
@@ -508,16 +518,16 @@ sub do_delete() {
 
   if(! -d $TRASH_PATH.$inner_path) {
     if(! mkpath($TRASH_PATH.$inner_path)) {
-      &header();
-      &error("待避先の書込み権限がないため、削除を中止しました");
+      HTML_Elem->header();
+      HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました");
       exit(1);
     }
   }
 
-  my @files = &get_checked_list($path);
+  my @files = ParamPath->get_checked_list($q, $path);
   if (@files == 0) {
-    &header();
-    &error("チェックが一つも選択されていません");
+    HTML_Elem->header();
+    HTML_Elem->error("チェックが一つも選択されていません");
     &tail();
     return;
   }
@@ -526,8 +536,8 @@ sub do_delete() {
     if (-f "$path/$entry") {
       if(! move("$path/$entry", $TRASH_PATH.$inner_path)) {
         my $reason = $!;
-        &header();
-        &error("削除に失敗しました($reason)。");
+        HTML_Elem->header();
+        HTML_Elem->error("削除に失敗しました($reason)。");
         exit(1);
       }
       # cacheの削除
@@ -535,8 +545,8 @@ sub do_delete() {
     } elsif (-d "$path/$entry") {
       if (! rmdir("$path/$entry")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
         my $reason = $!;
-        &header();
-        &error("ディレクトリの削除に失敗しました($reason)");
+        HTML_Elem->header();
+        HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
         exit(1);
       }
     }

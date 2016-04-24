@@ -87,7 +87,7 @@ if(-f "${base}${path}") {
   $up_inode = ParamPath->get_up_path(${in});
 } elsif(-d "${base}${path}") {
   # 複数ファイルの指定
-  @files = &get_checked_list("${base}${path}");
+  @files = ParamPath->get_checked_list(\$q, "${base}${path}");
   @files = sort {$a cmp $b} @files;
 } else {
   HTML_Elem->header();
@@ -134,16 +134,16 @@ sub perform_encode() {
 
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
-      &add_encodejob("$path/$_");
+      &add_encodejob("${base}${path}/$_");
     }
   } elsif ($q->param('multi_editmode') eq "combine") {
     my $concat = "concat:";
     foreach (@files) {
-      $concat .= "$path/$_|";
+      $concat .= "${base}${path}/$_|";
     }
     &add_encodejob("$concat");
   } else {
-    &add_encodejob("$path/$files[0]");
+    &add_encodejob("${base}${path}/$files[0]");
   }
 
   print "<a href=\"${STOCKER_CGI}?in=$up_inode&dir=${dir}\">← フォルダーに戻る</a></p>";
@@ -153,32 +153,33 @@ sub perform_encode() {
 
 sub add_encodejob()
 {
-  my ($encfile) = @_;
+  my ($source) = @_;
 
 #  if($q->param('pass2')) {
-#    &encode_file($encfile ,1);
-#    &encode_file($encfile ,2);
+#    &encode_file($source ,1);
+#    &encode_file($source ,2);
 #    add_batch("rm -f ${TMP_FILE}*");
 #  } else {
-#    &encode_file($encfile ,0);
+#    &encode_file($source ,0);
 #  }
 #  system("echo \"${ENCODE_BATCH} > /dev/null\" |batch");
 
-  my $job = ConverterJob->new();
-  $job->{source} = $encfile;
+  my $job = ConverterJob->new(listfile => $ENCBATCH_LIST);
+  $job->{source} = $source;
   $job->{out_dir} = $q->param('out_dir');
   $job->{format} = $q->param('format');
-  $job->{pass2} = $q->param('pass2') ? 1 : 0;
+  $job->{set_position} = $q->param('set_position') ? 'true' : 'false';
+  $job->{pass2} = $q->param('pass2') ? 'true' : 'false';
   $job->{ss} = $q->param('ss');
   $job->{t} = $q->param('t');
   $job->{v_v_map} = $q->param('v_map');
-  $job->{v_v_copy} = $q->param('v_copy');
-  $job->{v_enable_crop} = $q->param('enable_crop') ? 1 : 0;
+  $job->{v_v_copy} = $q->param('v_copy') ? 'true' : 'false'; 
+  $job->{v_enable_crop} = $q->param('enable_crop') ? 'true' : 'false';
   $job->{v_crop_w} = $q->param('crop_w');
   $job->{v_crop_h} = $q->param('crop_h');
   $job->{v_crop_x} = $q->param('crop_x');
   $job->{v_crop_y} = $q->param('crop_y');
-  $job->{v_enable_pad} = $q->param('enable_pad') ? 1 : 0;
+  $job->{v_enable_pad} = $q->param('enable_pad') ? 'true' : 'false';
   $job->{v_pad_w} = $q->param('pad_w');
   $job->{v_pad_h} = $q->param('pad_h');
   $job->{v_pad_x} = $q->param('pad_x');
@@ -191,7 +192,7 @@ sub add_encodejob()
   $job->{v_aspect_denominator} = $q->param('aspect_denominator');
   $job->{v_r} = $q->param('r');
   $job->{v_b} = $q->param('b');
-  $job->{v_enable_adjust} = $q->param('enable_adjust') ? 1 : 0;
+  $job->{v_enable_adjust} = $q->param('enable_adjust') ? 'true' : 'false';
   $job->{v_brightness} = $q->param('brightness');
   $job->{v_contrast} = $q->param('contrast');
   $job->{v_gamma} = $q->param('gamma');
@@ -202,10 +203,10 @@ sub add_encodejob()
   $job->{v_gg} = $q->param('gg');
   $job->{v_bg} = $q->param('bg');
   $job->{v_weight} = $q->param('weight');
-  $job->{v_deinterlace} = $q->param('deinterlace') ? 1 : 0;
-  $job->{v_deshake} = $q->param('deshake')? 1 : 0;
+  $job->{v_deinterlace} = $q->param('deinterlace') ? 'true' : 'false';
+  $job->{v_deshake} = $q->param('deshake')? 'true' : 'false';
   $job->{a_a_map} = $q->param('a_map');
-  $job->{a_a_copy} = $q->param('a_copy');
+  $job->{a_a_copy} = $q->param('a_copy') ? 'true' : 'false';
   $job->{a_ar} = $q->param('ar');
   $job->{a_ac} = $q->param('ac');
   $job->{a_cutoff} = $q->param('cutoff');

@@ -12,7 +12,7 @@ TRASH_DIR  = $(BASE_DIR)/trash
 
 LIB_FILES  = ConverterJob.pm
 DOC_FILES  =
-CGI_FILES  = converter.cgi get_movieimg.cgi show_encbatch_list.cgi
+CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi
 CONF_FILES = converter.conf
 
 all:

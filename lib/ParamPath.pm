@@ -34,7 +34,7 @@ sub init {
     }
   }
 
-  if (length($self->{base}) == 0 || ! -d ($self->{base})) {
+  if (length($self->{base}) == 0) {
     die("invalid parameter \"dir\" - ".$self->{param_dir});
   }
   if (! -d ($self->{base})) {
@@ -70,6 +70,11 @@ sub inode_to_path {
   my $inodes = shift;
   my $subdir = "";
 
+  $inodes =~ s/^\/{1,}//;
+  if(! $inodes || length($inodes) == 0) {
+    return "";
+  }
+
   if(! $inodes || $inodes =~ /[^0123456789\/]/) {
     die("Parameter invalid format");
   }
@@ -81,21 +86,16 @@ sub inode_to_path {
     die("Directory not found - ".$self->{base});
   }
 
-  $inodes =~ s/^\/{1,}//;
-  if(! $inodes || length($inodes) == 0) {
-    return "";
-  }
-
   foreach my $inode (split('/', $inodes)) {
     my $match_flag = 0;
     opendir(my $dir, $self->{base}.${subdir}) or die("Failed to open directory DIR[${subdir}]");
-    while(my $entry = readdir($dir)) {
+    while (my $entry = readdir($dir)) {
       if ($entry =~ /^\./ || $entry eq 'lost+found') {
         # Ignore hidden file or directory
         next;
       }
       my $point_inode = (stat $self->{base}."${subdir}/${entry}")[1];
-      if($inode == $point_inode) {
+      if ($inode == $point_inode) {
         $match_flag = 1;
         if (length($subdir) == 0) {
           $subdir = $entry;
@@ -151,11 +151,11 @@ sub get_checked_list {
   my $self = shift;
   my ($params, $path) = @_;
   my @files;
-  opendir( my $dir, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
+  opendir( my $dir, "$path" ) or die( "ディレクトリのアクセスに失敗しました - $path" );
   while( my $entry = readdir $dir ) {
     if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
       if( -f "$path/$entry" || -d "$path/$entry") {
-        if( $$params{(stat "$path/$entry")[1]} == 1 ) {
+        if( $$params->param((stat "$path/$entry")[1]) == 1 ) {
           push(@files, $entry);
         }
       }

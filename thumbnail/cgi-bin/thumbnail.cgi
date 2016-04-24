@@ -153,6 +153,8 @@ sub thumbnail_exif
 {
   my ($file) = @_;
 
+  $SIG{HUP} = $SIG{INT} = $SIG{PIPE} = $SIG{QUIT} = $SIG{TERM} = \&remove_temp;
+
   $exif_thumb_cmd =~ s/%%INPUT%%/${file}/;
   $exif_thumb_cmd =~ s/%%OUTPUT%%/${TMP_FILE}/;
   my $ret = system($exif_thumb_cmd." >/dev/null 2>/dev/null");
@@ -174,11 +176,13 @@ sub thumbnail_exif
   unlink("${TMP_FILE}");
   return 0;
 }
-
+;
 # コマンドからサムネイルを作成
 sub thumbnail_cmd
 {
   my ($cmd, $base, $path) = @_;
+
+  $SIG{HUP} = $SIG{INT} = $SIG{PIPE} = $SIG{QUIT} = $SIG{TERM} = \&remove_temp;
 
   $cmd =~ s/%%INPUT%%/${base}${path}/;
   $cmd =~ s/%%OUTPUT%%/${TMP_FILE}/;
@@ -227,3 +231,8 @@ sub thumbnail_cmd
 #  print $dstImage->jpeg(80);
 #  return 0;
 #}
+
+sub remove_temp
+{
+  unlink("${TMP_FILE}");
+}

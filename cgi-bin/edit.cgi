@@ -11,7 +11,12 @@ use File::Path;
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
-use perl_fileoperator::FileOperator;
+use FileOperator;
+
+our $BASE_DIR_CONF;
+require '%conf_dir%/stocker.conf';
+
+require 'edit_filefunc.pl';
 
 my $form = eval{new CGI};
 my $mode = $form->param('mode');
@@ -28,7 +33,7 @@ eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $form->param('dir'));
   $ins->init();
-  $path = $ins->inode_to_path($in_in);
+  $path = $ins->inode_to_path($in);
   $base = $ins->{base};
   $base_name = $ins->{base_name};
 };
@@ -70,34 +75,22 @@ if( ${mode} eq "resize" || ${mode} eq "combine" ) {
 } elsif( ${mode} eq "do_move" ) {
   &do_move();
 } else {
-  &error_form();
+  HTML_Elem->header();
+  HTML_Elem->error("実装されていない機能です");
 }
 
 exit(0);
 
-sub error_form {
-  &header();
-  print "<h1>実装されていない機能です。</h1>\n";
-
-  &tail();
-}
-
 sub form_setting() {
   my @files;
 
-  &header();
-
-  opendir( DIR, "${base}${path}" ) or error( "ディレクトリのアクセスに失敗しました" );
-  while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "${base}${path}/$entry" ) {
-        if( $form->param((stat "${base}${path}/$entry")[1]) == 1 ) {
-          push(@files, $entry);
-        }
-      }
-    }
+  HTML_Elem->header();
+  eval {
+    @files = ParamPath->get_checked_list($form, $path);
+  };
+  if ($@) {
+    HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
   }
-  closedir(DIR);
 
   if (@files.length == 0) {
     print "<p>ファイルが選択されていません。</p>\n";
@@ -105,7 +98,7 @@ sub form_setting() {
     return;
   }
 
-  foreach $entry (@files) {
+  foreach my $entry (@files) {
     if( lc($entry) !~ /\.jpg$/  && lc($entry) !~ /\.jpeg$/ && lc($entry) !~ /\.ts$/ &&
         lc($entry) !~ /\.m2ts$/ && lc($entry) !~ /\.mts$/ )
     {
@@ -124,7 +117,7 @@ sub form_setting() {
   my $img_flag = 0;
   my $cmb_ext  = "";
 
-  foreach $file (@files) {
+  foreach my $file (@files) {
     my $extention = $file;
     $extention =~ /([^\.]{1,})$/;
     $extention = lc($1);  # change to lower string
@@ -140,13 +133,13 @@ sub form_setting() {
         $cmb_ext = $extention;
       } else {
         if ($cmb_ext ne $extention) {
-          &error("異なる形式を結合できません。");
+          HTML_Elem->error("異なる形式を結合できません。");
         }
       }
     }
   }
   if (${mode} eq "resize" && $ts_flag) { # 縮小時の画像指定チェック
-    &error("動画ファイルは縮小できません");
+    HTML_Elem->error("動画ファイルは縮小できません");
   }
   ######
 
@@ -257,7 +250,7 @@ EOD
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_resize();\">\n";
-  foreach $file (@files) {
+  foreach my $file (@files) {
     print "<input type=\"hidden\" name=\"$file\" value=\"1\">\n";
     print $file ."<br>\n";
   }
@@ -319,15 +312,15 @@ EOD
 }
 
 sub do_resize {
-  &header();
+  HTML_Elem->header();
 
   print "<h1>ステータス</h1>\n";
   print "<p>処理が完了するまで、ブラウザを閉じないでください。</p>\n";
 
-  if (-d "$out_path") {
+  if (-d "$out_dir") {
     print "<p><font color=\"red\">警告: 出力先が既に存在します。同名のファイルは上書きされます。</font></p>";
   } else {
-    mkpath "$out_path";
+    mkpath "$out_dir";
   }
 
   my $opt_strip = "";
@@ -346,44 +339,39 @@ sub do_resize {
 
   # sort directory list and count convert images
   my @conv_list = ();
-  opendir( DIR, "${base}${path}" ) or error( "ディレクトリのアクセスに失敗しました" );
-  while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "${base}${path}/$entry" ) {
-        if( $form->param($entry) && $form->param($entry) == 1 ) {
-          push(@conv_list, $entry);
-        }
-      }
-    }
+  eval {
+    @conv_list = ParamPath->get_checked_list($form, $path);
+  };
+  if ($@) {
+    HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
   }
-  closedir(DIR);
   @conv_list = sort {$a cmp $b} @conv_list;
 #  @conv_list = sort {$b cmp $a} @conv_list;
 
   my $cnt = 1;
-  foreach $entry (@conv_list) {
+  foreach my $entry (@conv_list) {
     printf("%03d / %03d: ", $cnt, $#conv_list+1); $cnt++;
     print $entry, "を変換しています。<br>\n";
-    system("convert \"$path/$entry\" -resize ".$form->param('out_size')." -filter Cubic ${opt_strip} ${opt_crop} -quality 90 $out_path/$entry");
+    system("convert \"$path/$entry\" -resize ".$form->param('out_size')." -filter Cubic ${opt_strip} ${opt_crop} -quality 90 $out_dir/$entry");
     if( $form->param('save_exif') eq "1" ) {
       # Fix width and height of exif info
-      my $Img = new GD::Image->newFromJpeg("$out_path/$entry");
+      my $Img = new GD::Image->newFromJpeg("$out_dir/$entry");
       my($small_w, $small_h) = $Img->getBounds();
       my $tmp_file = "/tmp/edit_tmp_".$ENV{'UNIQUE_ID'};
 
       my $cmd = $exif_cmd;
-      $cmd =~ s/%%INPUT%%/$out_path\/$entry/;
+      $cmd =~ s/%%INPUT%%/$out_dir\/$entry/;
       $cmd =~ s/%%TAG%%/0xa002/;  # Width
       $cmd =~ s/%%VALUE%%/$small_w/;
       $cmd =~ s/%%TMP_FILE%%/$tmp_file/;
       system($cmd);
-      unlink("$out_path/$entry");
+      unlink("$out_dir/$entry");
 
       $cmd = $exif_cmd;
       $cmd =~ s/%%INPUT%%/$tmp_file/;
       $cmd =~ s/%%TAG%%/0xa003/;  # Height
       $cmd =~ s/%%VALUE%%/$small_h/;
-      $cmd =~ s/%%TMP_FILE%%/$out_path\/$entry/;
+      $cmd =~ s/%%TMP_FILE%%/$out_dir\/$entry/;
       system($cmd);
       unlink($tmp_file);
     }
@@ -400,31 +388,26 @@ sub do_resize {
 ###   引数: in ディレクトリ、ファイル名 = 1の時に結合対象とする
 ###   ファイル名順に結合する
 sub do_combine() {
-  &header();
+  HTML_Elem->header();
 
   print "<h2>複数のtsを結合します。</h2>";
   print "<p>処理が完了するまで、ブラウザを閉じないでください。</p>\n";
 
-  if (-d "$out_path") {
+  if (-d "$out_dir") {
     print "<p><font color=\"red\">警告: 出力先が既に存在します。同名のファイルは上書きされます。</font></p>";
   } else {
-#    mkdir "$out_path";
-    mkpath "$out_path";
+#    mkdir "$out_dir";
+    mkpath "$out_dir";
   }
 
   # sort directory list and count convert images
   my @conv_list = ();
-  opendir( DIR, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
-  while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "$path/$entry" ) {
-        if( $form->param($entry) && $form->param($entry) == 1 ) {
-          push(@conv_list, $entry);
-        }
-      }
-    }
+  eval {
+    @conv_list = ParamPath->get_checked_list($form, $path);
+  };
+  if ($@) {
+     HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
   }
-  closedir(DIR);
   @conv_list = sort {$a cmp $b} @conv_list;
 #  @conv_list = sort {$b cmp $a} @conv_list;
 
@@ -433,48 +416,48 @@ sub do_combine() {
   if (${type} eq "copy") {
     # 動画の結合はムービーで撮った細切れTSを1ファイルにまとめることを想定
     ### 一つ一つ末尾に結合
-    #  $cmd = "cat > $out_path/combined_$conv_list[0]";
+    #  $cmd = "cat > $out_dir/combined_$conv_list[0]";
     #  system($cmd);
     #  foreach $entry (@conv_list) {
     #    printf("%03d / %03d: ", $cnt, $#conv_list+1); $cnt++;
     #    print $entry, "を結合しています。<br>\n";
     #
-    #    $cmd = "cat \'$path/$entry\' >> $out_path/combined_$conv_list[0]";
+    #    $cmd = "cat \'$path/$entry\' >> $out_dir/combined_$conv_list[0]";
     #    system($cmd);
     #  }
     ## 単純なバイナリ結合では、シークがおかしくなるなど良くない
 
     # ffmpegで結合 (再エンコードしないので、全て同じ形式であること)
     $cmd = "ffmpeg -i \"concat:";
-    foreach $entry (@conv_list) {
+    foreach my $entry (@conv_list) {
       $cmd .= "$path/$entry|";
     }
-    $cmd .= "\" -c copy \"$out_path/combined_$conv_list[0]\"";
+    $cmd .= "\" -c copy \"$out_dir/combined_$conv_list[0]\"";
   } elsif (${type} eq "H.264") {
     $cmd = "ffmpeg -i \"concat:";
-    foreach $entry (@conv_list) {
+    foreach my $entry (@conv_list) {
       $cmd .= "$path/$entry|";
     }
-    $cmd .= "\" -vcodec libx264 -sameq \"$out_path/combined_$conv_list[0]\"";
+    $cmd .= "\" -vcodec libx264 -sameq \"$out_dir/combined_$conv_list[0]\"";
   } elsif (${type} eq "pdf") {
     $cmd = "convert ";
-    foreach $entry (@conv_list) {
+    foreach my $entry (@conv_list) {
       $cmd .= "\"$path/$entry\" ";
     }
-    $cmd .= "\"$out_path/combined_$conv_list[0].pdf\"";
+    $cmd .= "\"$out_dir/combined_$conv_list[0].pdf\"";
   } elsif (${type} eq "mjpeg") {
     my $i = 1;
-    foreach $entry (@conv_list) {
+    foreach my $entry (@conv_list) {
       my $link_file = sprintf("temp_%08d.jpg", $i);
-      symlink("${path}/${entry}", "${out_path}/${link_file}");
+      symlink("${path}/${entry}", "${out_dir}/${link_file}");
       $i++;
     }
-    $cmd = "ffmpeg -y -r 0.33 -i \"${out_path}/temp_%08d.jpg\"";
-    $cmd .= " -vcodec mjpeg -sameq -vf \"scale=1280:-1\" \"$out_path/combined_$conv_list[0].avi\"";
+    $cmd = "ffmpeg -y -r 0.33 -i \"${out_dir}/temp_%08d.jpg\"";
+    $cmd .= " -vcodec mjpeg -sameq -vf \"scale=1280:-1\" \"$out_dir/combined_$conv_list[0].avi\"";
     system($cmd);
     until($i<=1) {
       my $link_file = sprintf("temp_%08d.jpg", $i-1);
-      unlink("${out_path}/${link_file}");
+      unlink("${out_dir}/${link_file}");
       $i--;
     }
     $cmd = "true";  # dummy command
@@ -489,19 +472,14 @@ sub do_combine() {
 
 sub form_divide() {
   my @files;
-  &header();
+  HTML_Elem->header();
 
-  opendir( DIR, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
-  while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "$path/$entry" ) {
-        if( $form->param((stat "$path/$entry")[1]) == 1 ) {
-          push(@files, $entry);
-        }
-      }
-    }
+  eval {
+    @files = ParamPath->get_checked_list($form, $path);
+  };
+  if ($@) {
+    HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
   }
-  closedir(DIR);
 
   if (@files.length == 0) {
     print "<p>ファイルが選択されていません。</p>\n";
@@ -509,7 +487,7 @@ sub form_divide() {
     return;
   }
 
-  foreach $entry (@files) {
+  foreach my $entry (@files) {
     if( lc($entry) !~ /\.pdf$/ ) {
       print "<p>この形式は変換できません。<br>$entry</p>\n";
       &tail();
@@ -547,7 +525,7 @@ EOF
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_resize();\">\n";
-  foreach $file (@files) {
+  foreach my $file (@files) {
     print "<input type=\"hidden\" name=\"$file\" value=\"1\">\n";
     print $file ."<br>\n";
   }
@@ -601,31 +579,27 @@ EOD
 }
 
 sub do_divide() {
-  &header();
+  HTML_Elem->header();
 
   print "<h2>画像を分離します。</h2>";
-  if (-d "$out_path") {
+  if (-d "$out_dir") {
     print "<p><font color=\"red\">警告: 出力先が既に存在します。同名のファイルは上書きされます。</font></p>";
   } else {
-    mkpath "$out_path";
+    mkpath "$out_dir";
   }
 
   # sort directory list and count convert images
   my @conv_list = ();
-  opendir( DIR, "$path" ) or error( "ディレクトリのアクセスに失敗しました" );
-  while( $entry = readdir DIR ) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "$path/$entry" ) {
-        if( $form->param($entry) && $form->param($entry) == 1 ) {
-          push(@conv_list, $entry);
-        }
-      }
-    }
-  }
-  closedir(DIR);
+  eval {
+    @conv_list = ParamPath->get_checked_list($form, $path);
+   };
+   if ($@) {
+     HTML_Elem->error($@);
+   }
   @conv_list = sort {$a cmp $b} @conv_list;
 #  @conv_list = sort {$b cmp $a} @conv_list;
 
+  my $type = $form->param('type');
   my $ext = ".jpg";
   if (${type} eq "png") {
     $ext = ".png";
@@ -634,9 +608,9 @@ sub do_divide() {
   }
 
   my $i;
-  foreach $entry (@conv_list) {
+  foreach my $entry (@conv_list) {
     for ($i=$form->param('page_from'); $i<=$form->param('page_to'); $i++) {
-      my $cmd = "convert -density $form->param('density') \"$path/$entry\[${i}\]\" \"$out_path/${entry}_" . sprintf("%03d", $i) . "${ext}\"";
+      my $cmd = "convert -density $form->param('density') \"$path/$entry\[${i}\]\" \"$out_dir/${entry}_" . sprintf("%03d", $i) . "${ext}\"";
 print "CMD: $cmd<br>";
       system($cmd);
     }
