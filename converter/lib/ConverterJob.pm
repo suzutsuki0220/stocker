@@ -12,7 +12,7 @@ sub new {
   my $class = shift;
   my $self = {
     _jobid => 0,
-    listfile => '/tmp/convertlist.xml',
+    listfile => '',
     source => '',
     out_dir => '',
     format => '',
@@ -73,6 +73,10 @@ sub get
   my $buffer = "";
   my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
 
+  if (length($self->{'listfile'}) == 0) {
+    die("listfile is not set");
+  }
+
   open(my $in, "$self->{'listfile'}") or die("failed to read convert list");
   flock($in, 1);  # 書込みロック
   while (my $line = <$in>) {
@@ -99,62 +103,82 @@ sub get
   $self->{'_jobid'} = $job_num;
 
   my $job = $xml->XMLin($buffer);
-#use Data::Dumper;
-#print Dumper($job->{'job'}->{$job_num}->{'video'}[0]);
-#return;
-  $self->{'source'}               = $job->{'job'}->{$job_num}->{'source'}[0];
-  $self->{'out_dir'}              = $job->{'job'}->{$job_num}->{'out_dir'}[0];
-  $self->{'format'}               = $job->{'job'}->{$job_num}->{'format'}[0];
-  $self->{'set_position'}         = $job->{'job'}->{$job_num}->{'set_position'}[0];
-  $self->{'pass2'}                = $job->{'job'}->{$job_num}->{'pass2'}[0];
-  $self->{'ss'}                   = $job->{'job'}->{$job_num}->{'ss'}[0];
-  $self->{'t'}                    = $job->{'job'}->{$job_num}->{'t'}[0];
-  $self->{'v_v_map'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'v_map'}[0];
-  $self->{'v_v_copy'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'v_copy'}[0];
-  $self->{'v_enable_crop'}        = $job->{'job'}->{$job_num}->{'video'}[0]->{'enable_crop'}[0];
-  $self->{'v_crop_w'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'crop_w'}[0];
-  $self->{'v_crop_h'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'crop_h'}[0];
-  $self->{'v_crop_x'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'crop_x'}[0];
-  $self->{'v_crop_y'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'crop_y'}[0];
-  $self->{'v_enable_pad'}         = $job->{'job'}->{$job_num}->{'video'}[0]->{'enable_pad'}[0];
-  $self->{'v_pad_w'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'pad_w'}[0];
-  $self->{'v_pad_h'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'pad_h'}[0];
-  $self->{'v_pad_x'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'pad_x'}[0];
-  $self->{'v_pad_y'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'pad_y'}[0];
-  $self->{'v_pad_color'}          = $job->{'job'}->{$job_num}->{'video'}[0]->{'pad_color'}[0];
-  $self->{'v_s_w'}                = $job->{'job'}->{$job_num}->{'video'}[0]->{'s_w'}[0];
-  $self->{'v_s_h'}                = $job->{'job'}->{$job_num}->{'video'}[0]->{'s_h'}[0];
-  $self->{'v_aspect_set'}         = $job->{'job'}->{$job_num}->{'video'}[0]->{'aspect_set'}[0];
-  $self->{'v_aspect_numerator'}   = $job->{'job'}->{$job_num}->{'video'}[0]->{'aspect_numerator'}[0];
-  $self->{'v_aspect_denominator'} = $job->{'job'}->{$job_num}->{'video'}[0]->{'aspect_denominator'}[0];
-  $self->{'v_r'}                  = $job->{'job'}->{$job_num}->{'video'}[0]->{'r'}[0];
-  $self->{'v_b'}                  = $job->{'job'}->{$job_num}->{'video'}[0]->{'b'}[0];
-  $self->{'v_enable_adjust'}      = $job->{'job'}->{$job_num}->{'video'}[0]->{'enable_adjust'}[0];
-  $self->{'v_brightness'}         = $job->{'job'}->{$job_num}->{'video'}[0]->{'brightness'}[0];
-  $self->{'v_contrast'}           = $job->{'job'}->{$job_num}->{'video'}[0]->{'contrast'}[0];
-  $self->{'v_gamma'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'gamma'}[0];
-  $self->{'v_hue'}                = $job->{'job'}->{$job_num}->{'video'}[0]->{'hue'}[0];
-  $self->{'v_saturation'}         = $job->{'job'}->{$job_num}->{'video'}[0]->{'saturation'}[0];
-  $self->{'v_sharp'}              = $job->{'job'}->{$job_num}->{'video'}[0]->{'sharp'}[0];
-  $self->{'v_rg'}                 = $job->{'job'}->{$job_num}->{'video'}[0]->{'rg'}[0];
-  $self->{'v_gg'}                 = $job->{'job'}->{$job_num}->{'video'}[0]->{'gg'}[0];
-  $self->{'v_bg'}                 = $job->{'job'}->{$job_num}->{'video'}[0]->{'bg'}[0];
-  $self->{'v_weight'}             = $job->{'job'}->{$job_num}->{'video'}[0]->{'weight'}[0];
-  $self->{'v_deinterlace'}        = $job->{'job'}->{$job_num}->{'video'}[0]->{'deinterlace'}[0];
-  $self->{'v_deshake'}            = $job->{'job'}->{$job_num}->{'video'}[0]->{'deshake'}[0];
-  $self->{'a_a_map'}              = $job->{'job'}->{$job_num}->{'audio'}[0]->{'a_map'}[0];
-  $self->{'a_a_copy'}             = $job->{'job'}->{$job_num}->{'audio'}[0]->{'a_copy'}[0];
-  $self->{'a_ar'}                 = $job->{'job'}->{$job_num}->{'audio'}[0]->{'ar'}[0];
-  $self->{'a_ac'}                 = $job->{'job'}->{$job_num}->{'audio'}[0]->{'ac'}[0];
-  $self->{'a_cutoff'}             = $job->{'job'}->{$job_num}->{'audio'}[0]->{'cutoff'}[0];
-  $self->{'a_volume'}             = $job->{'job'}->{$job_num}->{'audio'}[0]->{'volume'}[0];
+
+  my $gnl = $job->{'job'}->{$job_num};
+  $self->{'source'}               = $self->_elm($gnl->{'source'}[0]);
+  $self->{'out_dir'}              = $self->_elm($gnl->{'out_dir'}[0]);
+  $self->{'format'}               = $self->_elm($gnl->{'format'}[0]);
+  $self->{'set_position'}         = $self->_elm($gnl->{'set_position'}[0]);
+  $self->{'pass2'}                = $self->_elm($gnl->{'pass2'}[0]);
+  $self->{'ss'}                   = $self->_elm($gnl->{'ss'}[0]);
+  $self->{'t'}                    = $self->_elm($gnl->{'t'}[0]);
+
+  my $vid = $gnl->{'video'}[0];
+  $self->{'v_v_map'}              = $self->_elm($vid->{'v_map'}[0]);
+  $self->{'v_v_copy'}             = $self->_elm($vid->{'v_copy'}[0]);
+  $self->{'v_enable_crop'}        = $self->_elm($vid->{'enable_crop'}[0]);
+  $self->{'v_crop_w'}             = $self->_elm($vid->{'crop_w'}[0]);
+  $self->{'v_crop_h'}             = $self->_elm($vid->{'crop_h'}[0]);
+  $self->{'v_crop_x'}             = $self->_elm($vid->{'crop_x'}[0]);
+  $self->{'v_crop_y'}             = $self->_elm($vid->{'crop_y'}[0]);
+  $self->{'v_enable_pad'}         = $self->_elm($vid->{'enable_pad'}[0]);
+  $self->{'v_pad_w'}              = $self->_elm($vid->{'pad_w'}[0]);
+  $self->{'v_pad_h'}              = $self->_elm($vid->{'pad_h'}[0]);
+  $self->{'v_pad_x'}              = $self->_elm($vid->{'pad_x'}[0]);
+  $self->{'v_pad_y'}              = $self->_elm($vid->{'pad_y'}[0]);
+  $self->{'v_pad_color'}          = $self->_elm($vid->{'pad_color'}[0]);
+  $self->{'v_s_w'}                = $self->_elm($vid->{'s_w'}[0]);
+  $self->{'v_s_h'}                = $self->_elm($vid->{'s_h'}[0]);
+  $self->{'v_aspect_set'}         = $self->_elm($vid->{'aspect_set'}[0]);
+  $self->{'v_aspect_numerator'}   = $self->_elm($vid->{'aspect_numerator'}[0]);
+  $self->{'v_aspect_denominator'} = $self->_elm($vid->{'aspect_denominator'}[0]);
+  $self->{'v_r'}                  = $self->_elm($vid->{'r'}[0]);
+  $self->{'v_b'}                  = $self->_elm($vid->{'b'}[0]);
+  $self->{'v_enable_adjust'}      = $self->_elm($vid->{'enable_adjust'}[0]);
+  $self->{'v_brightness'}         = $self->_elm($vid->{'brightness'}[0]);
+  $self->{'v_contrast'}           = $self->_elm($vid->{'contrast'}[0]);
+  $self->{'v_gamma'}              = $self->_elm($vid->{'gamma'}[0]);
+  $self->{'v_hue'}                = $self->_elm($vid->{'hue'}[0]);
+  $self->{'v_saturation'}         = $self->_elm($vid->{'saturation'}[0]);
+  $self->{'v_sharp'}              = $self->_elm($vid->{'sharp'}[0]);
+  $self->{'v_rg'}                 = $self->_elm($vid->{'rg'}[0]);
+  $self->{'v_gg'}                 = $self->_elm($vid->{'gg'}[0]);
+  $self->{'v_bg'}                 = $self->_elm($vid->{'bg'}[0]);
+  $self->{'v_weight'}             = $self->_elm($vid->{'weight'}[0]);
+  $self->{'v_deinterlace'}        = $self->_elm($vid->{'deinterlace'}[0]);
+  $self->{'v_deshake'}            = $self->_elm($vid->{'deshake'}[0]);
+
+  my $aud = $gnl->{'audio'}[0];
+  $self->{'a_a_map'}              = $self->_elm($aud->{'a_map'}[0]);
+  $self->{'a_a_copy'}             = $self->_elm($aud->{'a_copy'}[0]);
+  $self->{'a_ar'}                 = $self->_elm($aud->{'ar'}[0]);
+  $self->{'a_ac'}                 = $self->_elm($aud->{'ac'}[0]);
+  $self->{'a_cutoff'}             = $self->_elm($aud->{'cutoff'}[0]);
+  $self->{'a_volume'}             = $self->_elm($aud->{'volume'}[0]);
 
   return 0;
 }
 
 sub list
 {
+  my $self = shift;
 
+  if (length($self->{'listfile'}) == 0) {
+    die("listfile is not set");
+  }
+
+  my @lst;
+  open(my $in, "$self->{'listfile'}") or die("failed to read convert list");
+  flock($in, 1);  # 書込みロック
+  while (my $line = <$in>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      push(@lst, $1);
+    }
+  }
+  close($in);
+
+  return @lst;
 }
 
 sub add
@@ -200,12 +224,34 @@ sub delete
 {
   my $self = shift;
   my ($job_num) = @_;
+
+  if (length($self->{'listfile'}) == 0) {
+    die("listfile is not set");
+  }
+
 }
 
 sub edit
 {
   my $self = shift;
   my ($job_num) = @_;
+
+  if (length($self->{'listfile'}) == 0) {
+    die("listfile is not set");
+  }
+
+}
+
+sub _elm
+{
+  my $self = shift;
+  my ($val) = @_;
+
+  if ($val && !ref($val)) {
+    return $val;
+  }
+
+  return '';
 }
 
 sub _make_job_number
