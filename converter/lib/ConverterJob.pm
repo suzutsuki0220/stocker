@@ -56,6 +56,7 @@ sub new {
     a_a_map => '',
     a_a_copy => '',
     a_ar => '',
+    a_ab => '',
     a_ac => '',
     a_cutoff => '',
     a_volume => '',
@@ -152,6 +153,7 @@ sub get
   $self->{'a_a_map'}              = $self->_elm($aud->{'a_map'}[0]);
   $self->{'a_a_copy'}             = $self->_elm($aud->{'a_copy'}[0]);
   $self->{'a_ar'}                 = $self->_elm($aud->{'ar'}[0]);
+  $self->{'a_ab'}                 = $self->_elm($aud->{'ab'}[0]);
   $self->{'a_ac'}                 = $self->_elm($aud->{'ac'}[0]);
   $self->{'a_cutoff'}             = $self->_elm($aud->{'cutoff'}[0]);
   $self->{'a_volume'}             = $self->_elm($aud->{'volume'}[0]);
@@ -454,6 +456,7 @@ sub _make_job_xml
   $data .= "        <a_map>".$self->{'a_a_map'}."</a_map>\n";
   $data .= "        <a_copy>".$self->{'a_a_copy'}."</a_copy>\n";
   $data .= "        <ar>".$self->{'a_ar'}."</ar>\n";
+  $data .= "        <ab>".$self->{'a_ab'}."</ab>\n";
   $data .= "        <ac>".$self->{'a_ac'}."</ac>\n";
   $data .= "        <cutoff>".$self->{'a_cutoff'}."</cutoff>\n";
   $data .= "        <volume>".$self->{'a_volume'}."</volume>\n";

@@ -20,10 +20,9 @@ our $SUPPORT_TYPES  = "";
 our $MOVIE_INFO_CMD = "";
 our $FFMPEG_CMD     = "";
 our $MOVIE_IMAGE_CACHE_DIR = "";
-our $TMP_FILE = "";
-our $CONV_OUT_DIR    = "";
-our $ENCODE_BATCH    = "";
-our $ENCBATCH_LIST   = "";
+our $TMP_FILE       = "";
+our $CONV_OUT_DIR   = "";
+our $ENCBATCH_LIST  = "";
 require '%conf_dir%/converter.conf';
 
 our @support_video_types;
@@ -208,6 +207,7 @@ sub add_encodejob()
   $job->{a_a_map} = $q->param('a_map');
   $job->{a_a_copy} = $q->param('a_copy') ? 'true' : 'false';
   $job->{a_ar} = $q->param('ar');
+  $job->{a_ab} = $q->param('ab');
   $job->{a_ac} = $q->param('ac');
   $job->{a_cutoff} = $q->param('cutoff');
   $job->{a_volume} = $q->param('volume');

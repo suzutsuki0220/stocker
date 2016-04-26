@@ -12,7 +12,7 @@ use ParamPath;
 
 our $BASE_DIR_CONF;
 our $MOVIE_IMAGE_CACHE_DIR = "";
-our $TMP_FILE = "";
+our $TMP_PATH = "";
 our $FFMPEG_CMD = "";
 require '%conf_dir%/converter.conf';
 
@@ -152,15 +152,15 @@ sub make_imgcache()
   my $cmd_movie_img = $MOVIE_IMG_CMD;
   $cmd_movie_img =~ s/%%POSITION%%/${position}/;
   $cmd_movie_img =~ s/%%INPUT%%/${base}${path}/;
-  $cmd_movie_img =~ s/%%OUTPUT%%/$TMP_FILE/;
+  $cmd_movie_img =~ s/%%OUTPUT%%/$TMP_PATH/;
   $cmd_movie_img =~ s/%%OPTION%%/${option}/;
   system($cmd_movie_img);
 
   print "Content-Type: image/jpeg\n";
-  print "Content-Length: ". (-s $TMP_FILE). "\n";
+  print "Content-Length: ". (-s $TMP_PATH). "\n";
   #print "Content-Disposition: inline; filename=$size_$file_name\n";
   print "\n";
-  open(my $fd, $TMP_FILE) or die("media file open error");
+  open(my $fd, $TMP_PATH) or die("media file open error");
   while(my $inData = <$fd>) {
     print $inData;
   }
@@ -171,7 +171,7 @@ sub make_imgcache()
       &save_imgcache($cache, $lastmodified);
     }
   }
-  unlink($TMP_FILE);
+  unlink($TMP_PATH);
 
   return 0;
 }
@@ -192,7 +192,7 @@ sub save_imgcache()
       return -1;
     }
   }
-  copy($TMP_FILE, $cache);
+  copy($TMP_PATH, $cache);
   utime(undef, $lastmodified, $cache);
 
   return 0;
