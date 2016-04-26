@@ -224,22 +224,162 @@ sub delete
 {
   my $self = shift;
   my ($job_num) = @_;
+  my $job_matched = 0;
 
   if (length($self->{'listfile'}) == 0) {
     die("listfile is not set");
   }
 
+  open(my $fd, "+< $self->{'listfile'}") or die("failed to read convert list");
+  flock($fd, 2);  # 読書きロック
+  while (my $line = <$fd>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      if ($job_num eq $1) {
+        $job_matched = 1;
+        last;
+      }
+    }
+#    $edit_pos = tell($fd);
+  }
+  if ($job_matched == 0) {
+    # job not found
+    close($fd);
+    return -1;
+  }
+
+  my $out;
+  my $tmp_file = $self->{'listfile'} . "__temp__". $$;
+  if (!open($out, "> $tmp_file")) {
+    # write file failed
+    close($fd);
+    return -2;
+  }
+  flock($out, 2);  # 読書きロック
+
+  # 編集対象のjobまでtmp_fileに書き込む
+  $job_matched = 0;
+  seek($fd, 0, 0);
+  while (my $line = <$fd>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      if ($job_num eq $1) {
+        $job_matched = 1;
+        last;
+      }
+    }
+    print $out $line;
+  }
+
+  if ($job_matched == 0) {
+    # job not found
+    close($out);
+    close($fd);
+    unlink("$tmp_file");
+    return -1;
+  }
+
+  # 編集対象のjobを読み飛ばす
+  while (my $line = <$fd>) {
+    if ($line =~ /^<\/job>/) {
+      last;
+    }
+  }
+
+  # 残りの部分を書き込む
+  while (my $line = <$fd>) {
+    print $out $line;
+  }
+
+  close($out);
+  close($fd);
+
+  rename($tmp_file, $self->{'listfile'});
+
+  return 0;
 }
 
 sub edit
 {
   my $self = shift;
   my ($job_num) = @_;
+  my $job_matched = 0;
+#  my $edit_pos = 0;
 
   if (length($self->{'listfile'}) == 0) {
     die("listfile is not set");
   }
 
+  open(my $fd, "+< $self->{'listfile'}") or die("failed to read convert list");
+  flock($fd, 2);  # 読書きロック
+  while (my $line = <$fd>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      if ($job_num eq $1) {
+        $job_matched = 1;
+        last;
+      }
+    }
+#    $edit_pos = tell($fd);
+  }
+  if ($job_matched == 0) {
+    # job not found
+    close($fd);
+    return -1;
+  }
+
+  my $out;
+  my $tmp_file = $self->{'listfile'} . "__temp__". $$;
+  if (!open($out, "> $tmp_file")) {
+    # write file failed
+    close($fd);
+    return -2;
+  }
+  flock($out, 2);  # 読書きロック
+
+  # 編集対象のjobまでtmp_fileに書き込む
+  $job_matched = 0;
+  seek($fd, 0, 0);
+  while (my $line = <$fd>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      if ($job_num eq $1) {
+        $job_matched = 1;
+        last;
+      }
+    }
+    print $out $line;
+  }
+
+  if ($job_matched == 0) {
+    # job not found
+    close($out);
+    close($fd);
+    unlink("$tmp_file");
+    return -1;
+  }
+
+  # 変更部分のjobを書き込む
+  print $out $self->_make_job_xml();
+
+  # 編集対象のjobを読み飛ばす
+  while (my $line = <$fd>) {
+    if ($line =~ /^<\/job>/) {
+      last;
+    }
+  }
+
+  # 残りの部分を書き込む
+  while (my $line = <$fd>) {
+    print $out $line;
+  }
+
+  close($out);
+  close($fd);
+
+  rename($tmp_file, $self->{'listfile'});
+
+  return 0;
 }
 
 sub _elm
