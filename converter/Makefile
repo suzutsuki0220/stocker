@@ -13,7 +13,7 @@ TRASH_DIR  = $(BASE_DIR)/trash
 LIB_FILES  = ConverterJob.pm
 DOC_FILES  =
 CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi
-CONF_FILES = converter.conf
+CONF_FILES = converter.conf ConvertParams.pl
 
 all:
 	make -C movie_info

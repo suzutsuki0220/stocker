@@ -216,7 +216,7 @@ sub add
     print $fd $XML_HEAD;
   }
 
-  print $fd $self->_make_job_xml();
+  print $fd $self->make_job_xml();
   print $fd $XML_TAIL;
   truncate($fd, tell($fd));
   close($fd);
@@ -362,7 +362,7 @@ sub edit
   }
 
   # 変更部分のjobを書き込む
-  print $out $self->_make_job_xml();
+  print $out $self->make_job_xml();
 
   # 編集対象のjobを読み飛ばす
   while (my $line = <$fd>) {
@@ -403,7 +403,7 @@ sub _make_job_number
   return $job_number; 
 }
 
-sub _make_job_xml
+sub make_job_xml
 {
   my $self = shift;
   my $data = "";

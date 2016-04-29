@@ -19,6 +19,9 @@ our $ENCODE_BATCH   = "";
 our $ENCBATCH_LIST  = "";
 require '%conf_dir%/converter.conf';
 
+our @CONVERT_PARAMS;
+require '%conf_dir%/ConvertParams.pl';
+
 while(1) {
   if (-f "$ENCBATCH_LIST") {
     my $job = ConverterJob->new(listfile => "$ENCBATCH_LIST");
@@ -26,14 +29,13 @@ while(1) {
       my @list = $job->list();
       if ($#list == 0) {
 	unlink("$ENCBATCH_LIST");
-	continue;
       }
-      &do_encode(\$job, $list[0]);
+      &worker(\$job, $list[0]);
+last;
       continue;
     } else {
       print STDERR "failed to make ConvertJob instance\n";
       unlink("$ENCBATCH_LIST");
-      continue;
     }
   }
   sleep(60);
@@ -43,14 +45,307 @@ exit 0;
 
 #####
 
-sub do_encode
+sub worker
 {
   my ($job, $job_num) = @_;
 
   $$job->get($job_num);
-  $$job->del($job_num);
+#  $$job->delete($job_num);
 
-  print $$job->{'source'}."\n";
+  mkpath ($CONV_OUT_DIR ."/". $$job->{'out_dir'});
 
+  if (open(my $fd, "> $CONV_OUT_DIR/".$$job->{'out_dir'}."/parameter_".$$job->{'_jobid'}.".xml")) {
+    print $fd $$job->make_job_xml();
+    close($fd);
+  }
+
+  if($$job->{'pass2'} eq "true") {
+    mkpath("${TMP_PATH}");
+    &encode_file($job, 1);
+    &encode_file($job, 2);
+    rmtree("${TMP_PATH}");
+  } else {
+    &encode_file($job, 0);
+  }
+
+  return;
+}
+
+sub set_general_option
+{
+  my ($job) = @_;
+  my $general_option = "";
+  $general_option .= " -y";  # 強制上書き
+
+#  privent unspecified sample format ERROR
+#  $general_option .= " -analyzeduration 30M -probesize 30M";
+
+  if ($$job->{'set_position'} eq "true" && $$job->{'t'} ne '00:00:00.000') {
+    $general_option .= " -t ".$$job->{'t'};
+  }
+
+  return $general_option;
+}
+
+sub set_video_option
+{
+  my ($job, $codec, $pass) = @_;
+
+  my @vf_option = ();
+  my $video_option = "";
+  $video_option .= " -map 0:".$$job->{'v_v_map'};
+
+  # 無変換オプション
+  if ($$job->{'v_v_copy'} eq "true") {
+    $video_option .= " -c:v copy";
+    return $video_option;
+  }
+
+  $video_option .= " -c:v ${codec}";
+
+  #$video_option .= " -s ". $$job->{'v_s_w'} . "x" . $$job->{'v_s_h'};  # 解像度
+  $video_option .= " -b:v ".$$job->{'v_b'}."k";   # 動画ビットレート
+  $video_option .= " -r ".$$job->{'v_r'};         # フレームレート
+
+  if($$job->{'v_deinterlace'}  eq "true") {
+    #$video_option .= " -deinterlace -top -1";
+    push(@vf_option, "yadif=0:-1");
+  }
+  if($$job->{'v_deshake'} eq "true") {
+#    push(@vf_option, "deshake=rx=64:ry=64,crop=9/10*in_w:9/10*in_h");
+    if ($pass == 1) {
+      push(@vf_option, "vidstabdetect=shakiness=10:accuracy=15:result=\"${TMP_PATH}/stabilize.trf\"");
+    } elsif ($pass == 2) {
+      push(@vf_option, "vidstabtransform=zoom=5:input=\"${TMP_PATH}/stabilize.trf\"");
+    }
+  }
+  if($$job->{'v_enable_crop'} eq "true") {
+    push(@vf_option, "crop=".$$job->{'v_crop_w'}.":".$$job->{'v_crop_h'}.":".$$job->{'v_crop_x'}.":".$$job->{'v_crop_y'});
+  }
+  if($$job->{'v_enable_pad'} eq "true") {
+    push(@vf_option, "pad=".$$job->{'v_pad_w'}.":".$$job->{'v_pad_h'}.":".$$job->{'v_pad_x'}.":".$$job->{'v_pad_y'}.":".$$job->{'v_pad_color'});
+  }
+  if ($$job->{'v_enable_adjust'} eq "true") {
+    push(@vf_option, "mp=eq2=".$$job->{'v_gamma'}.":".$$job->{'v_contrast'}.":".$$job->{'v_brightness'}.":1.0:".$$job->{'v_rg'}.":".$$job->{'v_gg'}.":".$$job->{'v_bg'}.":".$$job->{'v_weight'});
+    push(@vf_option, "hue=h=".$$job->{'v_hue'}.":s=".$$job->{'v_saturation'});
+    push(@vf_option, "unsharp=3:3:".$$job->{'v_sharp'});
+  }
+  push(@vf_option, "scale=".$$job->{'v_s_w'}.":".$$job->{'v_s_h'});  # 解像度
+  
+  my $numerator   = $$job->{'v_aspect_numerator'};
+  my $denominator = $$job->{'v_aspect_denominator'};
+  
+  if ($$job->{'v_aspect_set'} eq "setsar") {
+    push(@vf_option, "setsar=ratio=${numerator}/${denominator}:max=1000");
+  } elsif ($$job->{'v_aspect_set'} eq "setdar") {
+    push(@vf_option, "setdar=ratio=${numerator}/${denominator}:max=1000");
+  }
+  
+  if ($#vf_option >= 0) {
+    $video_option .= " -vf \"";
+    foreach (@vf_option) {
+      $video_option .= $_ . ",";
+    }
+    $video_option =~ s/,$/\"/;
+  }
+  
+  return $video_option;
+}
+
+sub set_audio_option
+{
+  my ($job, $codec) = @_;
+
+  my $audio_option = "";
+  $audio_option .= " -map 0:".$$job->{'a_a_map'};
+
+  # 無変換オプション
+  if ($$job->{'a_a_copy'} eq "true") {
+    $audio_option .= " -c:a copy";
+    return $audio_option;
+  }
+
+  $audio_option .= " -c:a ".${codec};
+  $audio_option .= " -ac ".$$job->{'a_ac'} if ($$job->{'a_ac'});   # 音声チャンネル
+  $audio_option .= " -ar ".$$job->{'a_ar'} if ($$job->{'a_ar'});   # 音声サンプリングレート
+  if (! &is_lossless(${codec})) {
+    $audio_option .= " -b:a ".$$job->{'a_ab'}."k";  # 音声ビットレート
+  }
+  if($$job->{'a_cutoff'} && $$job->{'a_cutoff'} ne "0") {
+    $audio_option .= " -cutoff ".$$job->{'a_cutoff'};  # 高域カット
+  }
+
+  my @af_option = ();
+  if($$job->{'a_volume'} && $$job->{'a_volume'} ne "1.0") {
+    push(@af_option, "volume=".$$job->{'a_volume'});  # 音量
+  }
+  if($#af_option >= 0) {
+    $audio_option .= " -af \"";
+    foreach (@af_option) {
+      $audio_option .= $_ . ",";
+    }
+    $audio_option =~ s/,$/\"/;
+  }
+
+  return $audio_option;
+}
+
+sub is_lossless
+{
+  my ($codec) = @_;
+
+  if ("${codec}" eq 'flac') {
+    return 1;
+  } elsif ("${codec}" =~ /^pcm_/) {
+    return 1;
+  }
+  return 0;
+}
+
+sub encode_file()
+{
+  my ($job, $pass) = @_;
+
+  my $tmpfile = ${TMP_PATH} ."/encodelog.dat";
+  my $out_file = $$job->{'source'};
+  my $orig_ext;
+  $out_file =~ s/([^\/]{1,})\.([^\.]{0,})$//;
+  $out_file = $1;
+  $orig_ext = $2;
+  $orig_ext =~ s/\|//g;  # for "concat mode"
+
+  my $position = "";
+  if ($$job->{'set_position'} && $$job->{'ss'} ne '00:00:00.000') {
+    $position = "-ss ".$$job->{'ss'};
+
+    my $ss_sec = $$job->{'ss'};
+    $ss_sec =~ s/[:\.]//g;
+    $out_file = $ss_sec."_".$out_file;
+  }
+
+  my $option = "";
+## TODO: 例外的な物
+#  if($$job->{'format'} eq "copy") {
+#    $out_file = $out_path ."/". $out_file .".". $orig_ext;
+#    $option  = " -c copy ";
+#    $option .= &set_general_option($job);
+#  } elsif($q->param('format') eq "mts") {
+#    $out_file = $out_path ."/". $out_file .".mts";
+#    $option .= &set_general_option($job);
+#    $option .= &set_video_option("libx264", $pass);
+#    if (! $q->param('v_copy')) {
+#      $option .= " -nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
+#    }
+#    $option .= &set_audio_option("libfdk_aac"); # best quality but less compatibility
+#    if (! $q->param('a_copy')) {
+#      $option .= " -profile:a aac_he -afterburner 1";  # additional for libfdk
+#    }
+#    $option .= " -strict experimental -f mpegts";
+
+  foreach my $lst (@CONVERT_PARAMS) {
+    if($$job->{'format'} eq @{$lst}[0]) {
+      if (length(@{$lst}[1]) > 0) {
+        $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". @{$lst}[1];
+      } else {
+        $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
+      }
+      if (length(@{$lst}[2]) > 0) {
+        $option .= " ". @{$lst}[2] ." ";
+      }
+      $option .= &set_general_option($job);
+      if (length(@{$lst}[3]) > 0) {
+        $option .= " ". &set_video_option($job, @{$lst}[3], $pass);
+      } else {
+        $option .= " -vn";
+      }
+      if (length(@{$lst}[4]) > 0) {
+        $option .= " ". &set_audio_option($job, @{$lst}[4]);
+      } else {
+        $option .= " -an";	
+      }
+      if (length(@{$lst}[5]) > 0) {
+        $option .= " ". @{$lst}[5];
+      }
+      if (length(@{$lst}[6]) > 0) {
+        $option .= " -f ". @{$lst}[6];
+      }
+    }
+  }
+
+#  } elsif($q->param('format') eq "H.264") {
+#    $out_file = $out_path ."/". $out_file .".mp4";
+#    $option .= &set_general_option($job);
+#    $option .= &set_video_option("libx264", $pass);
+#    if (! $q->param('v_copy')) {
+#      $option .= " -nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
+##      $option ."  -mixed-refs 1 -profile high -trellis 2 -8x8dct 1";
+#    }
+#    #$option .= &set_audio_option("aac");  # worst quality
+#    #$option .= &set_audio_option("libfaac"); # better
+#    $option .= &set_audio_option("libfdk_aac"); # best quality but less compatibility
+#    if (! $q->param('a_copy')) {
+#      $option .= " -profile:a aac_he -afterburner 1";  # additional for libfdk
+#    }
+#  } elsif($q->param('format') eq "I-Frame") {
+#    $out_file = $out_path ."/". $out_file ."-%03d.jpg";
+#    if($q->param('deinterlace')) {
+#      $option .= " -vf \"yadif=0:-1\"";
+#    }
+#    $option .= &set_general_option($job);
+#    #$option .= " -vf select=\"eq(pict_type\\,I)\",tile=8x8";
+#    $option .= " -r 0.5";
+#  } elsif($q->param('format') eq "HighLight") {
+#    my $SKIP_SEC = 15;
+#    my $duration_sec = &get_video_duration($path);
+#
+#    if($q->param('deinterlace')) {
+#      $option .= " -vf \"yadif=0:-1\"";
+#    }
+#    $option .= " -r 1";
+#    $option .= " -vframes 1 -f image2";
+#
+#    my $pos=0;
+#    while ($pos <= $duration_sec) {
+#      my $cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
+#      my $out = $out_path ."/". sprintf("%06d_", $pos). $out_file .".jpg";
+#      $position = "-ss $pos";
+#      $cmd =~ s/%%POSITION%%/$position/;
+#      $cmd =~ s/%%INPUT%%/$$job->{'source'}/;
+#      $cmd =~ s/%%OUTPUT%%/$out/;
+#      $cmd =~ s/%%PASS%%//;
+#      $cmd =~ s/%%TMP_FILE%%/$TMP_FILE/;
+#      $cmd =~ s/%%OPTION%%/$option/;
+#
+#    print "$cmd\n";
+#      if($q->param('to_que')) {
+#        &add_batch($cmd);
+#      } else {
+#        system("$cmd 2>&1");
+#      }
+#
+#    $pos += $SKIP_SEC;
+#   }
+#    return;
+
+  if (length($option) == 0) {
+    print STDERR '不正なフォーマットが指定されました';
+    return;
+  }
+
+  my $enc_cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
+  $enc_cmd =~ s/%%POSITION%%/$position/;
+  $enc_cmd =~ s/%%INPUT%%/$$job->{'source'}/;
+  $enc_cmd =~ s/%%OUTPUT%%/$out_file/;
+  $enc_cmd =~ s/%%OPTION%%/$option/;
+
+  my $pass_opt = "";
+  if($pass == 1) {
+    $pass_opt = "-pass 1 -passlogfile ${tmpfile}";
+  } elsif($pass == 2) {
+    $pass_opt = "-pass 2 -passlogfile ${tmpfile}";
+  }
+  $enc_cmd =~ s/%%PASSOPT%%/$pass_opt/;
+
+print "-- ENCODE --\n".$enc_cmd. "\n-----\n";
   return;
 }
