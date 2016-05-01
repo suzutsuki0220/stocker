@@ -14,6 +14,7 @@ use HTML_Elem;
 use FileOperator;
 
 our $BASE_DIR_CONF;
+our $STOCKER_CGI;
 require '%conf_dir%/stocker.conf';
 
 require 'edit_filefunc.pl';
@@ -213,7 +214,7 @@ sub form_setting() {
   }
 
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 
   function sizeSimulate() {
@@ -378,7 +379,7 @@ sub do_resize {
   }
   print "<hr>\n";
   print "<p>全ての変換が完了しました。<br>";
-  print "<a href=\"media.cgi?in=${in}\">メディアフォルダーに戻る</a>";
+  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a>";
   print "</p>\n";
 
   &tail();
@@ -465,7 +466,7 @@ sub do_combine() {
 
   system($cmd);
   print "<p><b>結合完了</b><br>";
-  print "<a href=\"media.cgi?in=${in}\">メディアフォルダーに戻る</a></p>";
+  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
 
   &tail();
 }
@@ -516,7 +517,7 @@ sub form_divide() {
   }
 
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 -->
 </script>
@@ -617,7 +618,7 @@ print "CMD: $cmd<br>";
   }
 
   print "<p><b>分離完了</b><br>";
-  print "<a href=\"media.cgi?in=${in}\">メディアフォルダーに戻る</a></p>";
+  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
 
   &tail();
 }

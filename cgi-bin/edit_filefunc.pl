@@ -27,7 +27,7 @@ sub form_newfolder() {
 <script type="text/javascript">
 <!--
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 -->
 </script>
@@ -88,7 +88,7 @@ sub form_upload() {
 <script type="text/javascript">
 <!--
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 -->
 </script>
@@ -237,7 +237,7 @@ sub form_rename() {
     }
   }
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 -->
 </script>
@@ -335,7 +335,7 @@ sub form_move() {
     }
   }
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
   function refresh() {
     document.f1.mode.value = "move";
@@ -485,7 +485,7 @@ sub form_delete() {
     }
   }
   function backPage() {
-    location.href = "media.cgi?in=${in}&dir=${dir}";
+    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
   }
 -->
 </script>

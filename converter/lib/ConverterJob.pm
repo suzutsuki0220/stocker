@@ -389,7 +389,7 @@ sub _elm
   my $self = shift;
   my ($val) = @_;
 
-  if ($val && !ref($val)) {
+  if (!ref($val) && ($val || length($val) > 0)) {
     return $val;
   }
 

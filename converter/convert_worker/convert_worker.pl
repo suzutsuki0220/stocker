@@ -27,12 +27,11 @@ while(1) {
     my $job = ConverterJob->new(listfile => "$ENCBATCH_LIST");
     if ($job) {
       my @list = $job->list();
-      if ($#list == 0) {
+      if ($#list < 0) {
 	unlink("$ENCBATCH_LIST");
+      } else {
+        &worker(\$job, $list[0]);
       }
-      &worker(\$job, $list[0]);
-last;
-      continue;
     } else {
       print STDERR "failed to make ConvertJob instance\n";
       unlink("$ENCBATCH_LIST");
@@ -50,22 +49,55 @@ sub worker
   my ($job, $job_num) = @_;
 
   $$job->get($job_num);
-#  $$job->delete($job_num);
+  $$job->delete($job_num);
 
-  mkpath ($CONV_OUT_DIR ."/". $$job->{'out_dir'});
+  my $outdir = $CONV_OUT_DIR ."/". $$job->{'out_dir'};
+  if (! -d "$outdir") {
+    mkpath ("$outdir");
+  }
 
-  if (open(my $fd, "> $CONV_OUT_DIR/".$$job->{'out_dir'}."/parameter_".$$job->{'_jobid'}.".xml")) {
+  if (open(my $fd, "> ${outdir}/parameter_".$$job->{'_jobid'}.".xml")) {
     print $fd $$job->make_job_xml();
     close($fd);
   }
 
+  my $log_file = ${outdir}."/encodelog_".$$job->{'_jobid'}.".txt";
+
   if($$job->{'pass2'} eq "true") {
     mkpath("${TMP_PATH}");
-    &encode_file($job, 1);
-    &encode_file($job, 2);
+
+    my $ret;
+    my $cmd = &make_cmd($job, 1);
+    if (length($cmd) == 0) {
+      #error;
+    }
+
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    if ($ret != 0) {
+      #error
+    }
+
+    $cmd = &make_cmd($job, 2);
+    if (length($cmd) == 0) {
+      #error;
+    }
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    if ($ret != 0) {
+      #error
+    }
+
     rmtree("${TMP_PATH}");
   } else {
-    &encode_file($job, 0);
+    my $cmd = &make_cmd($job, 0);
+    if (length($cmd) == 0) {
+      #error;
+    }
+
+    my $ret;
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    if ($ret != 0) {
+      #error
+    }
   }
 
   return;
@@ -76,6 +108,7 @@ sub set_general_option
   my ($job) = @_;
   my $general_option = "";
   $general_option .= " -y";  # 強制上書き
+  $general_option .= " -threads 2";  # エンコードスレッド数
 
 #  privent unspecified sample format ERROR
 #  $general_option .= " -analyzeduration 30M -probesize 30M";
@@ -89,7 +122,7 @@ sub set_general_option
 
 sub set_video_option
 {
-  my ($job, $codec, $pass) = @_;
+  my ($job, $codec, $pass, $extopt) = @_;
 
   my @vf_option = ();
   my $video_option = "";
@@ -148,13 +181,17 @@ sub set_video_option
     }
     $video_option =~ s/,$/\"/;
   }
+
+  if (length($extopt) > 0) {
+    $video_option .= " $extopt";
+  }
   
   return $video_option;
 }
 
 sub set_audio_option
 {
-  my ($job, $codec) = @_;
+  my ($job, $codec, $extopt) = @_;
 
   my $audio_option = "";
   $audio_option .= " -map 0:".$$job->{'a_a_map'};
@@ -187,6 +224,10 @@ sub set_audio_option
     $audio_option =~ s/,$/\"/;
   }
 
+  if (length($extopt) > 0) {
+    $audio_option .= " $extopt";
+  }
+
   return $audio_option;
 }
 
@@ -202,7 +243,7 @@ sub is_lossless
   return 0;
 }
 
-sub encode_file()
+sub make_cmd()
 {
   my ($job, $pass) = @_;
 
@@ -224,76 +265,19 @@ sub encode_file()
   }
 
   my $option = "";
-## TODO: 例外的な物
-#  if($$job->{'format'} eq "copy") {
-#    $out_file = $out_path ."/". $out_file .".". $orig_ext;
-#    $option  = " -c copy ";
-#    $option .= &set_general_option($job);
-#  } elsif($q->param('format') eq "mts") {
-#    $out_file = $out_path ."/". $out_file .".mts";
-#    $option .= &set_general_option($job);
-#    $option .= &set_video_option("libx264", $pass);
-#    if (! $q->param('v_copy')) {
-#      $option .= " -nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
-#    }
-#    $option .= &set_audio_option("libfdk_aac"); # best quality but less compatibility
-#    if (! $q->param('a_copy')) {
-#      $option .= " -profile:a aac_he -afterburner 1";  # additional for libfdk
-#    }
-#    $option .= " -strict experimental -f mpegts";
 
-  foreach my $lst (@CONVERT_PARAMS) {
-    if($$job->{'format'} eq @{$lst}[0]) {
-      if (length(@{$lst}[1]) > 0) {
-        $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". @{$lst}[1];
-      } else {
-        $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
-      }
-      if (length(@{$lst}[2]) > 0) {
-        $option .= " ". @{$lst}[2] ." ";
-      }
-      $option .= &set_general_option($job);
-      if (length(@{$lst}[3]) > 0) {
-        $option .= " ". &set_video_option($job, @{$lst}[3], $pass);
-      } else {
-        $option .= " -vn";
-      }
-      if (length(@{$lst}[4]) > 0) {
-        $option .= " ". &set_audio_option($job, @{$lst}[4]);
-      } else {
-        $option .= " -an";	
-      }
-      if (length(@{$lst}[5]) > 0) {
-        $option .= " ". @{$lst}[5];
-      }
-      if (length(@{$lst}[6]) > 0) {
-        $option .= " -f ". @{$lst}[6];
-      }
+  if($$job->{'format'} eq "copy") {
+    $out_file = $out_path ."/". $out_file .".". $orig_ext;
+    $option  = " -c copy ";
+    $option .= &set_general_option($job);
+  } elsif($$job->{'format'} eq "I-Frame") {
+    $out_file = $out_path ."/". $out_file ."-%03d.jpg";
+    if($$job->{'deinterlace'}) {
+      $option .= " -vf \"yadif=0:-1\"";
     }
-  }
-
-#  } elsif($q->param('format') eq "H.264") {
-#    $out_file = $out_path ."/". $out_file .".mp4";
-#    $option .= &set_general_option($job);
-#    $option .= &set_video_option("libx264", $pass);
-#    if (! $q->param('v_copy')) {
-#      $option .= " -nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
-##      $option ."  -mixed-refs 1 -profile high -trellis 2 -8x8dct 1";
-#    }
-#    #$option .= &set_audio_option("aac");  # worst quality
-#    #$option .= &set_audio_option("libfaac"); # better
-#    $option .= &set_audio_option("libfdk_aac"); # best quality but less compatibility
-#    if (! $q->param('a_copy')) {
-#      $option .= " -profile:a aac_he -afterburner 1";  # additional for libfdk
-#    }
-#  } elsif($q->param('format') eq "I-Frame") {
-#    $out_file = $out_path ."/". $out_file ."-%03d.jpg";
-#    if($q->param('deinterlace')) {
-#      $option .= " -vf \"yadif=0:-1\"";
-#    }
-#    $option .= &set_general_option($job);
-#    #$option .= " -vf select=\"eq(pict_type\\,I)\",tile=8x8";
-#    $option .= " -r 0.5";
+    $option .= &set_general_option($job);
+    #$option .= " -vf select=\"eq(pict_type\\,I)\",tile=8x8";
+    $option .= " -r 0.5";
 #  } elsif($q->param('format') eq "HighLight") {
 #    my $SKIP_SEC = 15;
 #    my $duration_sec = &get_video_duration($path);
@@ -323,9 +307,34 @@ sub encode_file()
 #        system("$cmd 2>&1");
 #      }
 #
-#    $pos += $SKIP_SEC;
-#   }
-#    return;
+#$pos += $SKIP_SEC;
+#  }}
+
+  } else {
+    foreach my $lst (@CONVERT_PARAMS) {
+      if($$job->{'format'} eq @{$lst}[0]) {
+        if (length(@{$lst}[1]) > 0) {
+          $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". @{$lst}[1];
+        } else {
+          $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
+        }
+        $option .= &set_general_option($job);
+        if (length(@{$lst}[3]) > 0) {
+          $option .= &set_video_option($job, @{$lst}[2], $pass, @{$lst}[3]);
+        } else {
+          $option .= " -vn";
+        }
+        if (length(@{$lst}[4]) > 0) {
+          $option .= &set_audio_option($job, @{$lst}[4], @{$lst}[5]);
+        } else {
+          $option .= " -an";
+        }
+        if (length(@{$lst}[6]) > 0) {
+          $option .= " -f ". @{$lst}[6];
+        }
+      }
+    }
+  }
 
   if (length($option) == 0) {
     print STDERR '不正なフォーマットが指定されました';
@@ -346,6 +355,5 @@ sub encode_file()
   }
   $enc_cmd =~ s/%%PASSOPT%%/$pass_opt/;
 
-print "-- ENCODE --\n".$enc_cmd. "\n-----\n";
-  return;
+  return $enc_cmd;
 }
