@@ -96,8 +96,6 @@ if(-f "${base}${path}") {
 my $encfile = $base . $path ."/". $files[0];
 my $encfile_inode = $up_inode ."/". (stat "${encfile}")[1];
 
-print STDERR "DEBUG: Enc_inode[${encfile_inode}], Encfile[${encfile}]";
-
 my $mtype = &check_capable_type($encfile);
 if ($mtype eq "unsupported") {
   HTML_Elem->header();
@@ -332,7 +330,10 @@ EOF
 
   function get_preview_url(ss, width) {
     var url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=" + width;
-    url += "&ss=" + ss;
+    if (document.enc_setting.set_position.checked == true) {
+      url += "&set_position=1";
+      url += "&ss=" + ss;
+    }
     if (document.enc_setting.enable_crop.checked == true) {
       url += "&enable_crop=1";
       url += "&crop_w=" + document.enc_setting.crop_w.value;

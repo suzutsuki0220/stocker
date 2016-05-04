@@ -159,7 +159,7 @@ sub set_video_option
     push(@vf_option, "pad=".$$job->{'v_pad_w'}.":".$$job->{'v_pad_h'}.":".$$job->{'v_pad_x'}.":".$$job->{'v_pad_y'}.":".$$job->{'v_pad_color'});
   }
   if ($$job->{'v_enable_adjust'} eq "true") {
-    push(@vf_option, "mp=eq2=".$$job->{'v_gamma'}.":".$$job->{'v_contrast'}.":".$$job->{'v_brightness'}.":1.0:".$$job->{'v_rg'}.":".$$job->{'v_gg'}.":".$$job->{'v_bg'}.":".$$job->{'v_weight'});
+    push(@vf_option, "eq=gamma=".$$job->{'v_gamma'}.":contrast=".$$job->{'v_contrast'}.":brightness=".$$job->{'v_brightness'}.":gamma_r=".$$job->{'v_rg'}.":gamma_g=".$$job->{'v_gg'}.":gamma_b=".$$job->{'v_bg'}.":gamma_weight=".$$job->{'v_weight'});
     push(@vf_option, "hue=h=".$$job->{'v_hue'}.":s=".$$job->{'v_saturation'});
     push(@vf_option, "unsharp=3:3:".$$job->{'v_sharp'});
   }
@@ -267,11 +267,11 @@ sub make_cmd()
   my $option = "";
 
   if($$job->{'format'} eq "copy") {
-    $out_file = $out_path ."/". $out_file .".". $orig_ext;
+    $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
     $option  = " -c copy ";
     $option .= &set_general_option($job);
   } elsif($$job->{'format'} eq "I-Frame") {
-    $out_file = $out_path ."/". $out_file ."-%03d.jpg";
+    $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file ."-%03d.jpg";
     if($$job->{'deinterlace'}) {
       $option .= " -vf \"yadif=0:-1\"";
     }
@@ -319,7 +319,7 @@ sub make_cmd()
           $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
         }
         $option .= &set_general_option($job);
-        if (length(@{$lst}[3]) > 0) {
+        if (length(@{$lst}[2]) > 0) {
           $option .= &set_video_option($job, @{$lst}[2], $pass, @{$lst}[3]);
         } else {
           $option .= " -vn";

@@ -16,6 +16,8 @@ our $TMP_PATH = "";
 our $FFMPEG_CMD = "";
 require '%conf_dir%/converter.conf';
 
+$SIG{HUP} = $SIG{INT} = $SIG{PIPE} = $SIG{QUIT} = $SIG{TERM} = \&remove_temp;
+
 my $MOVIE_IMG_CMD = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%OPTION%% -r 1 -vframes 1 -f image2 \"%%OUTPUT%%\" 2>/dev/null";
 
 my $form = eval{new CGI};
@@ -65,7 +67,7 @@ if($form->param('size') && $form->param('size') != 0) {
 
 my $lastmodified = (stat ${base}.${path})[9];
 
-if ($form->param('size') == 640 && ! $form->param('ss') && ! $form->param('enable_adjust')) {
+if ($form->param('size') == 640 && ! $form->param('set_position') && ! $form->param('enable_adjust') && ! $form->param('enable_crop') && ! $form->param('enable_pad')) {
   if (&img_fromcache($cache, $lastmodified) == 0) {
     exit(0);
   }
@@ -115,8 +117,8 @@ sub make_imgcache()
   my $option = "";
 
   my $position = "";
-  if ($form->param('ss') && $form->param('ss') ne '00:00:00.000') {
-    $position = "-ss $form->param('ss')";
+  if ($form->param('set_position') && $form->param('ss') ne '00:00:00.000') {
+    $position = "-ss ".$form->param('ss');
   }
   my @vf_option = ();
   if($form->param('enable_crop')) {
@@ -126,7 +128,7 @@ sub make_imgcache()
     push(@vf_option, "pad=".$form->param('pad_w').":".$form->param('pad_h').":".$form->param('pad_x').":".$form->param('pad_y').":".$form->param('pad_color'));
   }
   if ($form->param('enable_adjust')) {
-    push(@vf_option, "mp=eq2=".$form->param('gamma').":".$form->param('contrast').":".$form->param('brightness').":1.0:".$form->param('rg').":".$form->param('gg').":".$form->param('bg').":".$form->param('weight'));
+    push(@vf_option, "eq=gamma=".$form->param('gamma').":contrast=".$form->param('contrast').":brightness=".$form->param('brightness').":gamma_r=".$form->param('rg').":gamma_g=".$form->param('gg').":gamma_b=".$form->param('bg').":gamma_weight=".$form->param('weight'));
     push(@vf_option, "hue=h=".$form->param('hue').":s=".$form->param('saturation'));
     push(@vf_option, "unsharp=3:3:".$form->param('sharp'));
   }
@@ -196,4 +198,9 @@ sub save_imgcache()
   utime(undef, $lastmodified, $cache);
 
   return 0;
+}
+
+sub remove_temp
+{
+  unlink("${TMP_PATH}");
 }
