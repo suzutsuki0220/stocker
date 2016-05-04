@@ -211,7 +211,7 @@ sub print_form() {
   my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
 
    my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
-  $cmd_movie_info =~ s/%%INPUT%%/$encfile/;
+  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
 
   HTML_Elem->header();
 
@@ -234,12 +234,12 @@ EOF
   }
 
   print "<h2>情報</h2>\n";
-  open (IN, "${cmd_movie_info} |");  # FFMpeg APIを使って情報を読み込む
+  open (my $IN, "${cmd_movie_info} |");  # FFMpeg APIを使って情報を読み込む
   my $movie_info_xml = "";
-  while(my $line = <IN>) {
+  while(my $line = <$IN>) {
     $movie_info_xml .= $line;
   }
-  close (IN);
+  close ($IN);
 
   my $i = 0;
   my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
@@ -1297,7 +1297,7 @@ sub get_video_duration
   my ($filename) = @_;
 
   my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
-  $cmd_movie_info =~ s/%%INPUT%%/$encfile/;
+  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
 
   ## get movie information by FFMpeg API
   open (IN, "${cmd_movie_info} |");

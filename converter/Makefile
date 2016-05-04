@@ -57,7 +57,7 @@ install-cgi:
 
 install-bin:
 	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
-	make -C convert_worker DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
+	make -C convert_worker install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 
 install: make-directory install-config install-cgi install-bin install-libs
 
