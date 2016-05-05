@@ -72,7 +72,7 @@ sub worker
       #error;
     }
 
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
     }
@@ -81,7 +81,7 @@ sub worker
     if (length($cmd) == 0) {
       #error;
     }
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
     }
@@ -94,7 +94,7 @@ sub worker
     }
 
     my $ret;
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null");
+    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
     }
