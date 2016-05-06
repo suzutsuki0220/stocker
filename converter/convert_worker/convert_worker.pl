@@ -47,6 +47,7 @@ exit 0;
 sub worker
 {
   my ($job, $job_num) = @_;
+  my $out_file = "";
 
   $$job->get($job_num);
   $$job->delete($job_num);
@@ -67,7 +68,7 @@ sub worker
     mkpath("${TMP_PATH}");
 
     my $ret;
-    my $cmd = &make_cmd($job, 1);
+    my $cmd = &make_cmd($job, 1, \$out_file);
     if (length($cmd) == 0) {
       #error;
     }
@@ -77,7 +78,9 @@ sub worker
       #error
     }
 
-    $cmd = &make_cmd($job, 2);
+    unlink($out_file);
+
+    $cmd = &make_cmd($job, 2, \$out_file);
     if (length($cmd) == 0) {
       #error;
     }
@@ -85,10 +88,12 @@ sub worker
     if ($ret != 0) {
       #error
     }
+
+    rename($out_file, &rev_temporary_name($out_file, 2));
 
     rmtree("${TMP_PATH}");
   } else {
-    my $cmd = &make_cmd($job, 0);
+    my $cmd = &make_cmd($job, 0, \$out_file);
     if (length($cmd) == 0) {
       #error;
     }
@@ -98,6 +103,8 @@ sub worker
     if ($ret != 0) {
       #error
     }
+
+    rename($out_file, &rev_temporary_name($out_file, 0));
   }
 
   return;
@@ -245,33 +252,33 @@ sub is_lossless
 
 sub make_cmd()
 {
-  my ($job, $pass) = @_;
+  my ($job, $pass, $out_file) = @_;
 
   my $tmpfile = ${TMP_PATH} ."/encodelog.dat";
-  my $out_file = $$job->{'source'};
+  $$out_file = $$job->{'source'};
   my $orig_ext;
-  $out_file =~ s/([^\/]{1,})\.([^\.]{0,})$//;
-  $out_file = $1;
+  $$out_file =~ s/([^\/]{1,})\.([^\.]{0,})$//;
+  $$out_file = $1;
   $orig_ext = $2;
   $orig_ext =~ s/\|//g;  # for "concat mode"
 
   my $position = "";
-  if ($$job->{'set_position'} && $$job->{'ss'} ne '00:00:00.000') {
+  if ($$job->{'set_position'} eq "true" && $$job->{'ss'} ne '00:00:00.000') {
     $position = "-ss ".$$job->{'ss'};
 
     my $ss_sec = $$job->{'ss'};
     $ss_sec =~ s/[:\.]//g;
-    $out_file = $ss_sec."_".$out_file;
+    $$out_file = $ss_sec."_".$$out_file;
   }
 
   my $option = "";
 
   if($$job->{'format'} eq "copy") {
-    $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
+    $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
     $option  = " -c copy ";
     $option .= &set_general_option($job);
   } elsif($$job->{'format'} eq "I-Frame") {
-    $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file ."-%03d.jpg";
+    $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file ."-%03d.jpg";
     if($$job->{'deinterlace'}) {
       $option .= " -vf \"yadif=0:-1\"";
     }
@@ -291,7 +298,7 @@ sub make_cmd()
 #    my $pos=0;
 #    while ($pos <= $duration_sec) {
 #      my $cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
-#      my $out = $out_path ."/". sprintf("%06d_", $pos). $out_file .".jpg";
+#      my $out = $out_path ."/". sprintf("%06d_", $pos). $$out_file .".jpg";
 #      $position = "-ss $pos";
 #      $cmd =~ s/%%POSITION%%/$position/;
 #      $cmd =~ s/%%INPUT%%/$$job->{'source'}/;
@@ -314,9 +321,9 @@ sub make_cmd()
     foreach my $lst (@CONVERT_PARAMS) {
       if($$job->{'format'} eq @{$lst}[0]) {
         if (length(@{$lst}[1]) > 0) {
-          $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". @{$lst}[1];
+          $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". @{$lst}[1];
         } else {
-          $out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $out_file .".". $orig_ext;
+          $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
         }
         $option .= &set_general_option($job);
         if (length(@{$lst}[2]) > 0) {
@@ -341,10 +348,12 @@ sub make_cmd()
     return;
   }
 
+  $$out_file = &get_temporary_name($$out_file, $pass);
+
   my $enc_cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
   $enc_cmd =~ s/%%POSITION%%/$position/;
   $enc_cmd =~ s/%%INPUT%%/$$job->{'source'}/;
-  $enc_cmd =~ s/%%OUTPUT%%/$out_file/;
+  $enc_cmd =~ s/%%OUTPUT%%/$$out_file/;
   $enc_cmd =~ s/%%OPTION%%/$option/;
 
   my $pass_opt = "";
@@ -356,4 +365,50 @@ sub make_cmd()
   $enc_cmd =~ s/%%PASSOPT%%/$pass_opt/;
 
   return $enc_cmd;
+}
+
+# 変換中はファイル名に"__CONVERTING__"を付ける
+sub get_temporary_name
+{
+  my ($name, $pass) = @_;
+  my $path = "";
+
+  if ($name =~ /\//) {
+    $name =~ s/(.{0,})\/(.+)$//;
+    $path = $1 . "/";
+    $name = $2;
+  }
+
+  if ($pass == 1) {
+    $name = "__CONVERTING-1pass__" . $name;
+  } elsif ($pass == 2) {
+    $name = "__CONVERTING-2pass__" . $name;
+  } else {
+    $name = "__CONVERTING__" . $name;
+  }
+
+  return $path . $name;
+}
+
+# 変換が終了した時に "__CONVERTING__" を外す
+sub rev_temporary_name
+{
+  my ($name, $pass) = @_;
+  my $path = "";
+ 
+  if ($name =~ /\//) {
+    $name =~ s/(.{0,})\/(.+)$//;
+    $path = $1 . "/";
+    $name = $2;
+  }
+
+  if ($pass == 1) {
+    $name =~ s/^__CONVERTING-1pass__//;
+  } elsif ($pass == 2) {
+    $name =~ s/^__CONVERTING-2pass__//;
+  } else {
+    $name =~ s/^__CONVERTING__//;
+  }
+
+  return $path . $name;
 }
