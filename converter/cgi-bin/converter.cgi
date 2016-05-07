@@ -1240,7 +1240,7 @@ EOF
     my $timestr = sprintf("%02d:%02d:%02d.%03d", $hh, $mm, $ss, $xx);
     print "<div style=\"background-color: #cccccc; margin-top: 5px; padding-left: 1px; padding-right: 1px; float: left; text-align: center; font-size: 9pt;\">";
     print "<a href=\"javascript: select_time(\'${timestr}\')\">";
-    print "<img src=\"${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=120&ss=${timestr}\">";
+    print "<img src=\"${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=120&set_position=1&ss=${timestr}\">";
     print "</a><br>$timestr</div>\n";
     $pos += $skip;
   }

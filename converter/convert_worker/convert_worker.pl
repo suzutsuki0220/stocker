@@ -65,17 +65,26 @@ sub worker
   my $log_file = ${outdir}."/encodelog_".$$job->{'_jobid'}.".txt";
 
   if($$job->{'pass2'} eq "true") {
+    # 2pass 有効
     mkpath("${TMP_PATH}");
 
     my $ret;
     my $cmd = &make_cmd($job, 1, \$out_file);
     if (length($cmd) == 0) {
       #error;
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
+      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+        close($fd);
+      }
+      return
     }
 
     $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
+      rename($out_file, $error_name);
+      return
     }
 
     unlink($out_file);
@@ -83,25 +92,42 @@ sub worker
     $cmd = &make_cmd($job, 2, \$out_file);
     if (length($cmd) == 0) {
       #error;
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
+      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+        close($fd);
+      }
+      return
     }
     $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
+      rename($out_file, $error_name);
+      return
     }
 
     rename($out_file, &rev_temporary_name($out_file, 2));
 
     rmtree("${TMP_PATH}");
   } else {
+    # 2pass 無効
     my $cmd = &make_cmd($job, 0, \$out_file);
     if (length($cmd) == 0) {
       #error;
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
+      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+        close($fd);
+      }
+      return
     }
 
     my $ret;
     $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
     if ($ret != 0) {
       #error
+      my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
+      rename($out_file, $error_name);
+      return
     }
 
     rename($out_file, &rev_temporary_name($out_file, 0));
@@ -114,8 +140,8 @@ sub set_general_option
 {
   my ($job) = @_;
   my $general_option = "";
-  $general_option .= " -y";  # $B6/@)>e=q$-(B
-  $general_option .= " -threads 2";  # $B%(%s%3!<%I%9%l%C%I?t(B
+  $general_option .= " -y";  # 強制上書き
+  $general_option .= " -threads 2";  # エンコードスレッド数
 
 #  privent unspecified sample format ERROR
 #  $general_option .= " -analyzeduration 30M -probesize 30M";
@@ -135,7 +161,7 @@ sub set_video_option
   my $video_option = "";
   $video_option .= " -map 0:".$$job->{'v_v_map'};
 
-  # $BL5JQ49%*%W%7%g%s(B
+  # 無変換オプション
   if ($$job->{'v_v_copy'} eq "true") {
     $video_option .= " -c:v copy";
     return $video_option;
@@ -143,9 +169,9 @@ sub set_video_option
 
   $video_option .= " -c:v ${codec}";
 
-  #$video_option .= " -s ". $$job->{'v_s_w'} . "x" . $$job->{'v_s_h'};  # $B2rA|EY(B
-  $video_option .= " -b:v ".$$job->{'v_b'}."k";   # $BF02h%S%C%H%l!<%H(B
-  $video_option .= " -r ".$$job->{'v_r'};         # $B%U%l!<%`%l!<%H(B
+  #$video_option .= " -s ". $$job->{'v_s_w'} . "x" . $$job->{'v_s_h'};  # 解像度
+  $video_option .= " -b:v ".$$job->{'v_b'}."k";   # 動画ビットレート
+  $video_option .= " -r ".$$job->{'v_r'};         # フレームレート
 
   if($$job->{'v_deinterlace'}  eq "true") {
     #$video_option .= " -deinterlace -top -1";
@@ -170,7 +196,7 @@ sub set_video_option
     push(@vf_option, "hue=h=".$$job->{'v_hue'}.":s=".$$job->{'v_saturation'});
     push(@vf_option, "unsharp=3:3:".$$job->{'v_sharp'});
   }
-  push(@vf_option, "scale=".$$job->{'v_s_w'}.":".$$job->{'v_s_h'});  # $B2rA|EY(B
+  push(@vf_option, "scale=".$$job->{'v_s_w'}.":".$$job->{'v_s_h'});  # 解像度
   
   my $numerator   = $$job->{'v_aspect_numerator'};
   my $denominator = $$job->{'v_aspect_denominator'};
@@ -203,25 +229,25 @@ sub set_audio_option
   my $audio_option = "";
   $audio_option .= " -map 0:".$$job->{'a_a_map'};
 
-  # $BL5JQ49%*%W%7%g%s(B
+  # 無変換オプション
   if ($$job->{'a_a_copy'} eq "true") {
     $audio_option .= " -c:a copy";
     return $audio_option;
   }
 
   $audio_option .= " -c:a ".${codec};
-  $audio_option .= " -ac ".$$job->{'a_ac'} if ($$job->{'a_ac'});   # $B2;@<%A%c%s%M%k(B
-  $audio_option .= " -ar ".$$job->{'a_ar'} if ($$job->{'a_ar'});   # $B2;@<%5%s%W%j%s%0%l!<%H(B
+  $audio_option .= " -ac ".$$job->{'a_ac'} if ($$job->{'a_ac'});   # 音声チャンネル
+  $audio_option .= " -ar ".$$job->{'a_ar'} if ($$job->{'a_ar'});   # 音声サンプリングレート
   if (! &is_lossless(${codec})) {
-    $audio_option .= " -b:a ".$$job->{'a_ab'}."k";  # $B2;@<%S%C%H%l!<%H(B
+    $audio_option .= " -b:a ".$$job->{'a_ab'}."k";  # 音声ビットレート
   }
   if($$job->{'a_cutoff'} && $$job->{'a_cutoff'} ne "0") {
-    $audio_option .= " -cutoff ".$$job->{'a_cutoff'};  # $B9b0h%+%C%H(B
+    $audio_option .= " -cutoff ".$$job->{'a_cutoff'};  # 高域カット
   }
 
   my @af_option = ();
   if($$job->{'a_volume'} && $$job->{'a_volume'} ne "1.0") {
-    push(@af_option, "volume=".$$job->{'a_volume'});  # $B2;NL(B
+    push(@af_option, "volume=".$$job->{'a_volume'});  # 音量
   }
   if($#af_option >= 0) {
     $audio_option .= " -af \"";
@@ -344,7 +370,7 @@ sub make_cmd()
   }
 
   if (length($option) == 0) {
-    print STDERR '$BIT@5$J%U%)!<%^%C%H$,;XDj$5$l$^$7$?(B';
+    print STDERR '不正なフォーマットが指定されました';
     return;
   }
 
@@ -367,7 +393,7 @@ sub make_cmd()
   return $enc_cmd;
 }
 
-# $BJQ49Cf$O%U%!%$%kL>$K(B"__CONVERTING__"$B$rIU$1$k(B
+# 変換中はファイル名に"__CONVERTING__"を付ける
 sub get_temporary_name
 {
   my ($name, $pass) = @_;
@@ -390,7 +416,7 @@ sub get_temporary_name
   return $path . $name;
 }
 
-# $BJQ49$,=*N;$7$?;~$K(B "__CONVERTING__" $B$r30$9(B
+# 変換が終了した時に "__CONVERTING__" を外す
 sub rev_temporary_name
 {
   my ($name, $pass) = @_;
@@ -412,3 +438,21 @@ sub rev_temporary_name
 
   return $path . $name;
 }
+
+# 変換に失敗した場合、ファイル名に"__ERROR__"を付ける
+sub get_error_name
+{
+  my ($name) = @_;
+  my $path = "";
+
+  if ($name =~ /\//) {
+    $name =~ s/(.{0,})\/(.+)$//;
+    $path = $1 . "/";
+    $name = $2;
+  }
+
+  $name = "__ERROR__" . $name;
+
+  return $path . $name;
+}
+
