@@ -579,7 +579,7 @@ EOF
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
 開始位置 <input type="text" name="ss" value="00:00:00.000" onClick="openTimerSelector('ss')"> (時:分:秒.ミリ秒)
- ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend')" onChange="calculateT('t')"> (時:分:秒.ミリ秒)
+ ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend')"> (時:分:秒.ミリ秒)
  長さ <input type="text" name="t" value="00:00:00.000" readonly>
 </div>
 </fieldset><br>

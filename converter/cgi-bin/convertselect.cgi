@@ -52,7 +52,10 @@ exit 0;
 
 sub print_timesel
 {
-  HTML_Elem->header('timer selector');
+  my @jslist = ("%htdocs_root%/converter_form.js");
+  my $html = HTML_Elem->new();
+  $html->{'javascript'} = \@jslist;
+  $html->header('timer selector');
 
   my $target = $q->param('target') eq 'tend' ? "tend" : "ss";
   my $duration = get_video_duration($encfile);
@@ -75,6 +78,10 @@ sub print_timesel
     var selected_time = document.f1.selectedTime.value;
     if (selected_time) {
       window.opener.document.enc_setting.${target}.value = selected_time;
+
+      var ss = window.opener.document.enc_setting.ss.value;
+      var te = window.opener.document.enc_setting.tend.value;
+      window.opener.document.enc_setting.t.value = calculateT(ss, te);
     } else {
       alert("Timeが選択されていません");
     }

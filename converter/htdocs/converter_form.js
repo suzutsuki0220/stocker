@@ -383,22 +383,22 @@ function add_ss_and_t() {
 }
 
 // 開始時と終了時から長さを求める
-function calculateT(target) {
-    var array_ss = document.enc_setting.ss.value.split(":", 3);
-    var array_te = document.enc_setting.tend.value.split(":", 3);
+function calculateT(ss, te) {
+    var array_ss = ss.split(":", 3);
+    var array_te = te.split(":", 3);
 
-    var ss_total = parseFloat((array_ss[0]*3600) + (array_ss[1]*60)) + parseFloat(array_ss[2]);
-    var te_total = parseFloat((array_te[0]*3600) + (array_te[1]*60)) + parseFloat(array_te[2]);
+    var ss_total = (array_ss[0]*3600000) + (array_ss[1]*60000) + (array_ss[2]*1000);
+    var te_total = (array_te[0]*3600000) + (array_te[1]*60000) + (array_te[2]*1000);
 
-    var length = ((parseFloat(te_total)*1000) - (parseFloat(ss_total)*1000)) / 1000;
+    var length = te_total - ss_total;
 
-    var len_hour = Math.floor(length / 3600);
-    var len_min  = Math.floor((length - (len_hour*3600)) / 60);
-    var len_sec  = length - (len_hour*3600) - (len_min*60);
+    var len_hour = Math.floor(length / 3600000);
+    var len_min  = Math.floor((length - (len_hour*3600000)) / 60000);
+    var len_sec  = (length - (len_hour*3600000) - (len_min*60000)) / 1000;
 
     if (len_hour < 10) { len_hour = "0" + len_hour; }
     if (len_min  < 10) { len_min  = "0" + len_min; }
     if (len_sec  < 10) { len_sec  = "0" + len_sec; }
 
-    document.getElementsByName(target).value = len_hour + ":" + len_min + ":" + len_sec;
+    return len_hour + ":" + len_min + ":" + len_sec;
 }
