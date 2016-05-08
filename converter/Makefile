@@ -1,8 +1,10 @@
 .PHONY: all clean install
 
+HTDOCS_ROOT = /stocker
+
 DESTDIR    = /var/www
 CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html/stocker
+DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
 BASE_DIR   = $(DESTDIR)/stocker
 BIN_DIR    = $(BASE_DIR)/bin
 LIBS_DIR   = $(BASE_DIR)/lib
@@ -11,8 +13,8 @@ CACHE_DIR  = $(BASE_DIR)/cache
 TRASH_DIR  = $(BASE_DIR)/trash
 
 LIB_FILES  = ConverterJob.pm
-DOC_FILES  =
-CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi
+DOC_FILES  = converter_form.js
+CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi convertselect.cgi
 CONF_FILES = converter.conf ConvertParams.pl
 
 all:
@@ -36,6 +38,7 @@ install-config:
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
 	       $(addprefix $(CONF_DIR)/,$(CONF_FILES))
@@ -52,6 +55,7 @@ install-cgi:
 	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
@@ -59,5 +63,5 @@ install-bin:
 	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 	make -C convert_worker install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 
-install: make-directory install-config install-cgi install-bin install-libs
+install: make-directory install-config install-htdocs install-cgi install-bin install-libs
 

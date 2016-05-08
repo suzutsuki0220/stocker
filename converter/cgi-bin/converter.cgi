@@ -14,6 +14,7 @@ use HTML_Elem;
 use ConverterJob;
 
 our $STOCKER_CGI    = "";
+our $SELECTOR_CGI   = "";
 our $MOVIEIMG_CGI   = "";
 our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
@@ -107,8 +108,6 @@ my $out_path = $CONV_OUT_DIR ."/". ${out_dir};
 
 if(${mode} eq "encode") {
   &perform_encode();
-} elsif(${mode} eq "timesel") {
-  &print_timesel();
 } else {
   &print_form();
 }
@@ -211,7 +210,10 @@ sub print_form() {
    my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
   $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
 
-  HTML_Elem->header();
+  my @jslist = ("%htdocs_root%/converter_form.js");
+  my $html = HTML_Elem->new();
+  $html->{'javascript'} = \@jslist;
+  $html->header();
 
   print <<EOF;
 <a href="${STOCKER_CGI}?in=${up_inode}&dir=${dir}">← 戻る</a><br>
@@ -270,16 +272,14 @@ EOF
   if ($has_video_stream) {
     print "<tr><th colspan=\"3\">映像ストリーム</th></tr>\n";
     for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'video'}}; $i++) {
-      &print_table_video(\$movie_info->{'movie_info'}[0]->{'video'}[${i}]);
+      &print_table_video(\$movie_info->{'movie_info'}[0]->{'video'}[${i}], $i);
     }
-    print "<script>document.enc_setting.v_map[0].checked = true;</script>\n";
   }
   if ($has_audio_stream) {
     print "<tr><th colspan=\"3\">音声ストリーム</th></tr>\n";
     for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'audio'}}; $i++) {
-      &print_table_audio(\$movie_info->{'movie_info'}[0]->{'audio'}[${i}]);
+      &print_table_audio(\$movie_info->{'movie_info'}[0]->{'audio'}[${i}], $i);
     }
-    print "<script>document.enc_setting.a_map[0].checked = true;</script>\n";
   }
   print "</table>\n";
 
@@ -320,14 +320,6 @@ EOF
     document.write("/ <a href=\\"javascript:fillFolderName('" + pathArray[i] + "')\\">" + pathArray[i] + "</a>&nbsp;");
   }
 
-  function showElem(fElem, checkbox) {
-    if (checkbox.checked == true) {
-      fElem.style.display = "block";
-    } else {
-      fElem.style.display = "none";
-    }
-  }
-
   function get_preview_url(ss, width) {
     var url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=" + width;
     if (document.enc_setting.set_position.checked == true) {
@@ -365,279 +357,12 @@ EOF
     return url;
   }
 
-  function preview_img(ss) {
-    var url = get_preview_url(ss, 640);
-    window.open(url, 'preview', 'width=640, height=500, menubar=no, scrollbar=yes');
-  }
-
-  function adjust_preview() {
-    var ss = document.enc_setting.ss.value;
-    var url = get_preview_url(ss, 320);
-    document.adjpreview.src = url;
-  }
-
   function actionAdjEnable() {  // 画質調整する のチェックボックス
     if(document.enc_setting.enable_adjust.checked == true) {
       adjust_preview();
     } else {
       document.adjpreview.src = "${GRAY_PAD}";
     }
-  }
-
-  function adj_brightness(gain) {
-    var num = (((parseFloat(document.enc_setting.brightness.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.brightness.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-  function set_brightness(value) {
-    document.enc_setting.brightness.value = value;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_contrast(gain) {
-    var num = (((parseFloat(document.enc_setting.contrast.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.contrast.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-  function set_contrast(num) {
-    document.enc_setting.contrast.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_gamma(gain) {
-    var num = (((parseFloat(document.enc_setting.gamma.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.gamma.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-  function set_gamma(num) {
-    document.enc_setting.gamma.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_hue(gain) {
-    var num = (((parseFloat(document.enc_setting.hue.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.hue.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_hue(num) {
-    document.enc_setting.hue.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_saturation(gain) {
-    var num = (((parseFloat(document.enc_setting.saturation.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.saturation.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_saturation(num) {
-    document.enc_setting.saturation.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_sharp(gain) {
-    var num = (((parseFloat(document.enc_setting.sharp.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.sharp.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_sharp(num) {
-    document.enc_setting.sharp.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_rg(gain) {
-    var num = (((parseFloat(document.enc_setting.rg.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.rg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_rg(num) {
-    document.enc_setting.rg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_gg(gain) {
-    var num = (((parseFloat(document.enc_setting.gg.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.gg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_gg(num) {
-    document.enc_setting.gg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_bg(gain) {
-    var num = (((parseFloat(document.enc_setting.bg.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.bg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_bg(num) {
-    document.enc_setting.bg.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function adj_weight(gain) {
-    var num = (((parseFloat(document.enc_setting.weight.value)*1000) + (gain*1000)) / 1000);
-    document.enc_setting.weight.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function set_weight(num) {
-    document.enc_setting.weight.value = num;
-    if(vaildate_adjustment()) {
-      adjust_preview();
-    }
-  }
-
-  function vaildate_adjustment() {
-    if (document.enc_setting.brightness.value > 1.0) {
-      document.enc_setting.brightness.value = 1.0;
-      alert('明るさが大きすぎます。(最大値: 1.0)');
-      return false;
-    }
-    if (document.enc_setting.brightness.value < -1.0) {
-      document.enc_setting.brightness.value = -1.0;
-      alert('明るさが小さすぎます。(最小値: -1.0)');
-      return false;
-    }
-    if (document.enc_setting.contrast.value > 2.0) {
-      document.enc_setting.contrast.value = 2.0;
-      alert('コントラストが大きすぎます。(最大値: 2)');
-      return false;
-    }
-    if (document.enc_setting.contrast.value < -2.0) {
-      document.enc_setting.contrast.value = -2.0;
-      alert('コントラストが小さすぎます。(最小値: -2)');
-      return false;
-    }
-    if (document.enc_setting.gamma.value > 10) {
-      document.enc_setting.gamma.value = 10;
-      alert('ガンマが大きすぎます。(最大値: 10)');
-      return false;
-    }
-    if (document.enc_setting.gamma.value < 0.1) {
-      document.enc_setting.gamma.value = 0.1;
-      alert('ガンマが小さすぎます。(最小値: 0.1)');
-      return false;
-    }
-    if (document.enc_setting.hue.value > 180) {
-      document.enc_setting.hue.value = 180;
-      alert('色相が大きすぎます。(最大値: 180)');
-      return false;
-    }
-    if (document.enc_setting.hue.value < -180) {
-      document.enc_setting.hue.value = -180;
-      alert('色相が小さすぎます。(最小値: -180)');
-      return false;
-    }
-    if (document.enc_setting.saturation.value > 10) {
-      document.enc_setting.saturation.value = 10;
-      alert('彩度が大きすぎます。(最大値: 10)');
-      return false;
-    }
-    if (document.enc_setting.saturation.value < -10) {
-      document.enc_setting.saturation.value = -10;
-      alert('彩度が小さすぎます。(最小値: -10)');
-      return false;
-    }
-    if (document.enc_setting.sharp.value > 1.5) {
-      document.enc_setting.sharp.value = 1.5;
-      alert('シャープが大きすぎます。(最大値: 1.5)');
-      return false;
-    }
-    if (document.enc_setting.sharp.value < -1.5) {
-      document.enc_setting.sharp.value = -1.5;
-      alert('シャープが小さすぎます。(最小値: -1.5)');
-      return false;
-    }
-    if (document.enc_setting.rg.value > 10) {
-      document.enc_setting.rg.value = 10;
-      alert('赤ガンマが大きすぎます。(最大値: 10)');
-      return false;
-    }
-    if (document.enc_setting.rg.value < 0.1) {
-      document.enc_setting.rg.value = 0.1;
-      alert('赤ガンマが小さすぎます。(最小値: 0.1)');
-      return false;
-    }
-    if (document.enc_setting.gg.value > 10) {
-      document.enc_setting.gg.value = 10;
-      alert('緑ガンマが大きすぎます。(最大値: 10)');
-      return false;
-    }
-    if (document.enc_setting.gg.value < 0.1) {
-      document.enc_setting.gg.value = 0.1;
-      alert('緑ガンマが小さすぎます。(最小値: 0.1)');
-      return false;
-    }
-    if (document.enc_setting.bg.value > 10) {
-      document.enc_setting.bg.value = 10;
-      alert('青ガンマが大きすぎます。(最大値: 10)');
-      return false;
-    }
-    if (document.enc_setting.bg.value < 0.1) {
-      document.enc_setting.bg.value = 0.1;
-      alert('青ガンマが小さすぎます。(最小値: 0.1)');
-      return false;
-    }
-    if (document.enc_setting.weight.value > 1) {
-      document.enc_setting.weight.value = 1;
-      alert('weightが大きすぎます。(最大値: 1)');
-      return false;
-    }
-    if (document.enc_setting.weight.value < 0) {
-      document.enc_setting.weight.value = 0;
-      alert('weightが小さすぎます。(最小値: 0)');
-      return false;
-    }
-
-    return true;
-  }
-
-  function select_existdir() {
-    fillFolderName(document.enc_setting.exist_dir.value);
   }
 
   function fixHeight() {
@@ -668,84 +393,6 @@ EOF
     if( document.enc_setting.save_aspect.checked == true ) {
       document.enc_setting.s_w.value = Math.round(document.enc_setting.s_h.value / ${y_ratio} * ${x_ratio});
     }
-  }
-
-  function get_ratio(a,b) {
-    if (isNaN(a) || isNaN(b)) {
-      return 0;
-    }
-    if (a == 0 || b == 0) {
-      return 0;
-    }
-
-    while (a != b) {
-      if (a > b) {
-        r = a - b;
-	a = b;
-	b = r;
-      } else {
-        r = b - a;
-	b = r;
-      }
-      if (a <= 0 || b <= 0) {
-        return 0;
-      }
-    }
-    return a;
-  }
-
-  function print_aspect(location) {
-    if (location == "crop") {
-      var aspect = get_video_aspect(document.enc_setting.crop_w.value, document.enc_setting.crop_h.value);
-      document.getElementById('crop_aspect').innerHTML = aspect;
-      return;
-    }
-    if (location == "padding") {
-      var aspect = get_video_aspect(document.enc_setting.pad_w.value, document.enc_setting.pad_h.value);
-      document.getElementById('padding_aspect').innerHTML = aspect;
-      return;
-    }
-    if (location == "ssize") {
-      var aspect = get_video_aspect(document.enc_setting.s_w.value, document.enc_setting.s_h.value);
-      document.getElementById('s_aspect').innerHTML = aspect;
-      return;
-    }
-  }
-
-  function get_video_aspect(width, height) {
-    var x_ratio = 1;
-    var y_ratio = 1;
-    var vid_ratio = get_ratio(width, height);
-    if(vid_ratio != 0) {
-      x_ratio = width / vid_ratio;
-      y_ratio = height / vid_ratio;
-      return x_ratio + ":" + y_ratio;
-    } else {
-      return "-----";
-    }
-  }
-
-  function calcBitrateAim() {
-    // aimed bitrate calcurate from BPP (http://service.jp.real.com/help/faq/prod/faq_4226.html)
-    var high_bit = 0;
-    var low_bit  = 0;
-    var width  = document.enc_setting.s_w.value;
-    var height = document.enc_setting.s_h.value;
-    var fps    = document.enc_setting.r.value;
-    if( document.enc_setting.move_freq[0].checked == true ) {
-      // freq high
-      high_bit = Math.round(width * height * fps * 0.225 / 1000);
-      low_bit  = Math.round(width * height * fps * 0.125 / 1000);
-    } else if( document.enc_setting.move_freq[1].checked == true ) {
-      // freq middle;
-      high_bit = Math.round(width * height * fps * 0.200 / 1000);
-      low_bit  = Math.round(width * height * fps * 0.100 / 1000);
-    } else if( document.enc_setting.move_freq[2].checked == true ) {
-      // freq low
-      high_bit = Math.round(width * height * fps * 0.175 / 1000);
-      low_bit  = Math.round(width * height * fps * 0.075 / 1000);
-    }
-    document.getElementById('aimed_bitrate').innerHTML = high_bit + "～" + low_bit + " kbps";
   }
 
   function changeEncodeParameter() {
@@ -894,30 +541,10 @@ EOF
   }
 
   function openTimerSelector(target) {
-    window.open("$ENV{'SCRIPT_NAME'}?mode=timesel&in=${encfile_inode}&dir=${dir}&target=" + target,
+    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target,
                 "timersel",
                 'width=680, height=700, menubar=no, toolbar=no, scrollbars=yes'
                );
-  }
-
-  function add_ss_and_t() {
-    var array_ss = document.enc_setting.ss.value.split(":", 3);
-    var array_t  = document.enc_setting.t.value.split(":", 3);
-
-    var ss_total = parseFloat((array_ss[0]*3600) + (array_ss[1]*60)) + parseFloat(array_ss[2]);
-    var t_total  = parseFloat((array_t[0]*3600)  + (array_t[1]*60))  + parseFloat(array_t[2]);
-
-    var total = ((parseFloat(ss_total)*1000) + (parseFloat(t_total)*1000)) / 1000;
-
-    var total_hour = Math.floor(total / 3600);
-    var total_min  = Math.floor((total - (total_hour*3600)) / 60);
-    var total_sec  = total - (total_hour*3600) - (total_min*60);
-
-    if (total_hour < 10) { total_hour = "0" + total_hour; }
-    if (total_min  < 10) { total_min  = "0" + total_min; }
-    if (total_sec  < 10) { total_sec  = "0" + total_sec; }
-
-    return total_hour + ":" + total_min + ":" + total_sec;
   }
 -->
 </script>
@@ -951,13 +578,9 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-開始位置 <input type="text" name="ss" value="00:00:00.000"> (時:分:秒.ミリ秒)
-<input type="button" onClick="openTimerSelector('ss')" value="select">
-<input type="button" onClick="preview_img(document.enc_setting.ss.value)" value="preview">
-<br>
-長さ <input type="text" name="t" value="00:00:00.000"> (時:分:秒.ミリ秒)
-<input type="button" onClick="openTimerSelector('t')" value="select">
-<input type="button" onClick="preview_img(add_ss_and_t())" value="preview">
+開始位置 <input type="text" name="ss" value="00:00:00.000" onClick="openTimerSelector('ss')"> (時:分:秒.ミリ秒)
+ ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend')" onChange="calculateT('t')"> (時:分:秒.ミリ秒)
+ 長さ <input type="text" name="t" value="00:00:00.000" readonly>
 </div>
 </fieldset><br>
 ファイルフォーマット <select name="format" onchange="changeEncodeParameter()">
@@ -1108,7 +731,12 @@ EOF
 
 sub print_table_video
 {
-  my ($vid_info) = @_;
+  my ($vid_info, $num) = @_;
+
+  my $checked = "";
+  if ($num == 0) {
+    $checked = " checked";
+  }
 
   my $vid_no       = $$vid_info->{'no'}[0];
   my $vid_bitrate  = $$vid_info->{'bitrate'}[0];
@@ -1123,7 +751,7 @@ sub print_table_video
   my $disp_aspect  = $$vid_info->{'disp_aspect'}[0];
   my $vid_gop_size = $$vid_info->{'gop_size'}[0];
 
-  print "<tr><th rowspan=\"6\"><input type=\"radio\" name=\"v_map\" value=\"${vid_no}\"></th>";
+  print "<tr><th rowspan=\"6\"><input type=\"radio\" name=\"v_map\" value=\"${vid_no}\"${checked}></th>";
   print "<th>幅 x 高さ</th><td>${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>\n";
   print "<tr><th>表示上のサイズ</th><td>${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>\n";
   print "<tr><th>ビットレート</th><td>$vid_bitrate</td></tr>\n";
@@ -1138,7 +766,12 @@ sub print_table_video
 
 sub print_table_audio
 {
-  my ($aud_info) = @_;
+  my ($aud_info, $num) = @_;
+
+  my $checked = "";
+  if ($num == 0) {
+    $checked = " checked";
+  }
 
   my $aud_no          = $$aud_info->{'no'}[0];
   my $aud_sample_rate = $$aud_info->{'sample_rate'}[0];
@@ -1147,122 +780,12 @@ sub print_table_audio
   my $aud_bits        = $$aud_info->{'sample_fmt'}[0];
   my $aud_codec       = $$aud_info->{'codec'}[0];
 
-  print "<tr><th rowspan=\"5\"><input type=\"radio\" name=\"a_map\" value=\"${aud_no}\"></th>";
+  print "<tr><th rowspan=\"5\"><input type=\"radio\" name=\"a_map\" value=\"${aud_no}\"${checked}></th>";
   print "<th>サンプリングレート</th><td>$aud_sample_rate</td></tr>\n";
   print "<tr><th>チャンネル</th><td>$aud_channel</td></tr>\n";
   print "<tr><th>ビットレート</th><td>$aud_bitrate</td></tr>\n";
   print "<tr><th>ビット数</th><td>$aud_bits</td></tr>\n";
   print "<tr><th>コーデック</th><td>$aud_codec</td></tr>\n";
-}
-
-sub print_timesel
-{
-  HTML_Elem->header('timer selector');
-
-  my $target = $q->param('target') eq 't' ? "t" : "ss";
-  my $duration = get_video_duration($encfile);
-  my $icons = $q->param('icons') ? $q->param('icons') : 25;
-  my $time  = $q->param('time') ? $q->param('time') : 0;
-  my $skip  = $q->param('skip') ? $q->param('skip') : $duration / $icons;
-  my $selectedTime = $q->param('selectedTime');
-  my $pos = $time - ($skip * (($icons-1)/2));
-  if ($pos < 0) { $pos = 0 };
-
-  print <<EOF;
-<script type="text/javascript">
-<!--
-  function setTime() {
-    if (!window.opener || window.opener.closed) {
-      window.alert("メインウィンドウが閉じられています");
-      return;
-    }
-
-    var selected_time = document.f1.selectedTime.value;
-    if (selected_time) {
-      window.opener.document.enc_setting.${target}.value = selected_time;
-    } else {
-      alert("Timeが選択されていません");
-    }
-  }
-
-  function select_time(t) {
-    document.f1.selectedTime.value = t;
-    tim = t.split(":");
-    document.f1.time.value = parseFloat(tim[0]*3600) + parseFloat(tim[1]*60) + parseFloat(tim[2]);
-    document.f1.submit();
-  }
-
-  function closeWindow() {
-    window.close();
-  }
--->
-</script>
-<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
-間隔: <select name="skip" onChange="document.f1.submit()">
-<option value="0.03125">1/32 秒</option>
-<option value="0.0625">1/16 秒</option>
-<option value="0.125">1/8 秒</option>
-<option value="0.25">1/4 秒</option>
-<option value="0.5">1/2 秒</option>
-<option value="1">1 秒</option>
-<option value="3">3 秒</option>
-<option value="5">5 秒</option>
-<option value="15">15 秒</option>
-<option value="30">30 秒</option>
-<option value="60">1 分</option>
-<option value="180">3 分</option>
-<option value="900">15 分</option>
-<option value="1800">30 分</option>
-<option value="" selected>全体表示</option>
-</select><br>
-<script type="text/javascript">
-<!--
-  var i=0;
-  for (i=0; i<document.f1.skip.options.length; i++) {
-    if (document.f1.skip.options[i].value == "${skip}") {
-      document.f1.skip.options[i].selected = true;
-    }
-  }
--->
-</script>
-EOF
-
-  my $i;
-  for ($i=0; $i<$icons; $i++) {
-    if ($pos > $duration) {
-      last;
-    }
-    my $sec = int($pos);  # 全体秒
-    my $xx  = ($pos - $sec) * 1000;
-    my $ss  = $sec % 60;
-    my $mm  = ($sec - $ss) / 60 % 60;
-    my $hh  = ($sec - $mm - $ss) / 3600;
-    my $timestr = sprintf("%02d:%02d:%02d.%03d", $hh, $mm, $ss, $xx);
-    print "<div style=\"background-color: #cccccc; margin-top: 5px; padding-left: 1px; padding-right: 1px; float: left; text-align: center; font-size: 9pt;\">";
-    print "<a href=\"javascript: select_time(\'${timestr}\')\">";
-    print "<img src=\"${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=120&set_position=1&ss=${timestr}\">";
-    print "</a><br>$timestr</div>\n";
-    $pos += $skip;
-  }
-
-  print "<input type=\"hidden\" name=\"mode\" value=\"${mode}\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
-  print "<input type=\"hidden\" name=\"target\" value=\"${target}\">\n";
-  print "<input type=\"hidden\" name=\"icons\" value=\"${icons}\">\n";
-  print "<input type=\"hidden\" name=\"time\" value=\"${time}\">\n";
-  print <<EOF;
-<p style="clear: both; padding-top: 5px; padding-bottom: 5px;">&nbsp;</p>
-<p style="text-align: center">
-Time: <input type="text" name="selectedTime" size="30" value="${selectedTime}">
-<input type="button" onClick="setTime()" name="btnSet" value="設定"><br>
-<input type="button" onClick="closeWindow()" name="btnClose" value="閉じる">
-</p>
-</form>
-EOF
-
-  HTML_Elem->tail();
-  exit(0);
 }
 
 sub get_date_string
@@ -1291,33 +814,6 @@ sub get_video_ratio
   }
 
   return $a;
-}
-
-sub get_video_duration
-{
-  my ($filename) = @_;
-
-  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
-  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
-
-  ## get movie information by FFMpeg API
-  open (IN, "${cmd_movie_info} |");
-  my $movie_info_xml = "";
-  while(my $line = <IN>) {
-    $movie_info_xml .= $line;
-  }
-  close (IN);
-
-  my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
-  my $movie_info = $xml->XMLin($movie_info_xml);
-  my $hhmmssxxx  = $movie_info->{'movie_info'}[0]->{'duration'}[0];
-  $hhmmssxxx =~ /([0-9][0-9]):([0-9][0-9]):([0-9][0-9]).[0-9]{1,}/;
-  my $hh = $1;
-  my $mm = $2;
-  my $ss = $3;
-  my $duration = 3600*$hh + 60*$mm + $ss;
-
-  return $duration;
 }
 
 sub check_capable_type

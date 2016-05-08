@@ -1,8 +1,10 @@
 .PHONY: all clean install
 
+HTDOCS_ROOT = /stocker
+
 DESTDIR    = /var/www
 CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html/stocker
+DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
 BASE_DIR   = $(DESTDIR)/stocker
 BIN_DIR    = $(BASE_DIR)/bin
 LIBS_DIR   = $(BASE_DIR)/lib
@@ -44,6 +46,7 @@ install-config:
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
 	       $(addprefix $(CONF_DIR)/,$(CONF_FILES))
@@ -61,15 +64,16 @@ install-cgi:
 	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
 install-modules:
-	make -C GPS_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR)
-	make -C converter/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR)
-	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR)
-	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR)
-	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR)
+	make -C GPS_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C converter/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 
 install: make-directory install-config install-libs install-htdocs install-cgi install-modules
 

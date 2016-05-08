@@ -4,6 +4,17 @@ use utf8;
 use Encode;
 use Encode::Guess;
 
+sub new {
+  my $class = shift;
+  my $self = {
+    javascript => 0,
+    css => 0,
+    @_,
+  };
+
+  return bless $self, $class;
+}
+
 ## ページのヘッダ部分 ##
 sub header {
   my $self = shift;
@@ -19,6 +30,21 @@ sub header {
 <meta name="viewport" content="width=device-width; initial-scale=1.0;">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
+EOF
+
+  if ($self->{'javascript'}) {
+    foreach my $scr (@{$self->{'javascript'}}) {
+      print "<script type=\"text/javascript\" src=\"".$scr."\"></script>\n";
+    }
+  }
+
+  if ($self->{'css'}) {
+    foreach my $css (@{$self->{'css'}}) {
+      print "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$css."\">\n";
+    }
+  }
+
+  print <<EOF;
 <style type="text/css">
 <!--
   .partition {
