@@ -15,6 +15,8 @@ use FileOperator;
 
 our $BASE_DIR_CONF;
 our $STOCKER_CGI;
+our $TRASH_PATH;
+our $TMP_FILE;
 require '%conf_dir%/stocker.conf';
 
 require 'edit_filefunc.pl';
@@ -27,9 +29,9 @@ my $out_dir = $form->param('out_dir');
 
 my $exif_cmd = "/usr/local/bin/exif --tag=%%TAG%% --ifd=EXIF --set-value=%%VALUE%% --output=%%TMP_FILE%% '%%INPUT%%' 2>&1 > /dev/null";
 
-my $path;
-my $base;
-my $base_name;
+our $path;
+our $base;
+our $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $form->param('dir'));
@@ -87,7 +89,7 @@ sub form_setting() {
 
   HTML_Elem->header();
   eval {
-    @files = ParamPath->get_checked_list($form, $path);
+    @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   };
   if ($@) {
     HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
@@ -341,7 +343,7 @@ sub do_resize {
   # sort directory list and count convert images
   my @conv_list = ();
   eval {
-    @conv_list = ParamPath->get_checked_list($form, $path);
+    @conv_list = ParamPath->get_checked_list(\$form, "${base}${path}");
   };
   if ($@) {
     HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
@@ -385,9 +387,6 @@ sub do_resize {
   &tail();
 }
 
-### 複数のtsを結合
-###   引数: in ディレクトリ、ファイル名 = 1の時に結合対象とする
-###   ファイル名順に結合する
 sub do_combine() {
   HTML_Elem->header();
 
@@ -476,7 +475,7 @@ sub form_divide() {
   HTML_Elem->header();
 
   eval {
-    @files = ParamPath->get_checked_list($form, $path);
+    @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   };
   if ($@) {
     HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
@@ -592,11 +591,11 @@ sub do_divide() {
   # sort directory list and count convert images
   my @conv_list = ();
   eval {
-    @conv_list = ParamPath->get_checked_list($form, $path);
-   };
-   if ($@) {
-     HTML_Elem->error($@);
-   }
+    @conv_list = ParamPath->get_checked_list(\$form, "${base}${path}");
+  };
+  if ($@) {
+    HTML_Elem->error($@);
+  }
   @conv_list = sort {$a cmp $b} @conv_list;
 #  @conv_list = sort {$b cmp $a} @conv_list;
 
