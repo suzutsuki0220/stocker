@@ -79,7 +79,7 @@ sub worker
       return
     }
 
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
+    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
     if ($ret != 0) {
       #error
       my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
@@ -98,7 +98,7 @@ sub worker
       }
       return
     }
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
+    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
     if ($ret != 0) {
       #error
       my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
@@ -122,7 +122,7 @@ sub worker
     }
 
     my $ret;
-    $ret = system($cmd ." 2>>". $log_file." >/dev/null </dev/null");
+    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
     if ($ret != 0) {
       #error
       my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
