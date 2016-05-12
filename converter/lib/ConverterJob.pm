@@ -410,8 +410,8 @@ sub make_job_xml
   my $data = "";
 
   $data .= "<job id=\"".$self->{'_jobid'}."\">\n";
-  $data .= "    <source>".$self->{'source'}."</source>\n";
-  $data .= "    <out_dir>".$self->{'out_dir'}."</out_dir>\n";
+  $data .= "    <source>".&escape_xml($self->{'source'})."</source>\n";
+  $data .= "    <out_dir>".&escape_xml($self->{'out_dir'})."</out_dir>\n";
   $data .= "    <format>".$self->{'format'}."</format>\n";
   $data .= "    <set_position>".$self->{'set_position'}."</set_position>\n";
   $data .= "    <ss>".$self->{'ss'}."</ss>\n";
@@ -467,6 +467,16 @@ sub make_job_xml
   return $data;
 }
 
+sub escape_xml {
+  my($string) = @_;
+
+  $string =~ s/&/&amp;/g;
+  $string =~ s/"/&quot;/g;
+  $string =~ s/</&lt;/g;
+  $string =~ s/>/&gt;/g;
+
+  return $string;
+}
 
 1; # __EXIT__
 
