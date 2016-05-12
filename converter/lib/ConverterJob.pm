@@ -3,6 +3,7 @@ package ConverterJob;
 use strict;
 use warnings;
 use utf8;
+use Encode;
 use XML::Simple;
 
 my $XML_HEAD = '<?xml version="1.0" encoding="UTF-8"?>'."\n<encode_batch>\n";
@@ -216,7 +217,7 @@ sub add
     print $fd $XML_HEAD;
   }
 
-  print $fd $self->make_job_xml();
+  print $fd encode('utf-8', $self->make_job_xml());
   print $fd $XML_TAIL;
   truncate($fd, tell($fd));
   close($fd);
@@ -362,7 +363,7 @@ sub edit
   }
 
   # 変更部分のjobを書き込む
-  print $out $self->make_job_xml();
+  print $out encode('utf-8', $self->make_job_xml());
 
   # 編集対象のjobを読み飛ばす
   while (my $line = <$fd>) {

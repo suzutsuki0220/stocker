@@ -69,8 +69,8 @@ eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $q->param('dir'));
   $ins->init();
-  $path = $ins->inode_to_path($q->param('in'));
-  $base = $ins->{base};
+  $path = decode('utf-8', $ins->inode_to_path($q->param('in')));
+  $base = decode('utf-8', $ins->{base});
 };
 if ($@) {
   HTML_Elem->header();
@@ -104,7 +104,7 @@ if ($mtype eq "unsupported") {
 }
 
 # エンコード出力先
-my $out_path = $CONV_OUT_DIR ."/". ${out_dir};
+my $out_path = encode('utf-8', $CONV_OUT_DIR ."/". ${out_dir});
 
 if(${mode} eq "encode") {
   &perform_encode();
@@ -150,7 +150,7 @@ sub add_encodejob()
 
   my $job = ConverterJob->new(listfile => $ENCBATCH_LIST);
   $job->{source} = $source;
-  $job->{out_dir} = $q->param('out_dir');
+  $job->{out_dir} = decode('utf-8', $q->param('out_dir'));
   $job->{format} = $q->param('format');
   $job->{set_position} = $q->param('set_position') ? 'true' : 'false';
   $job->{pass2} = $q->param('pass2') ? 'true' : 'false';
@@ -206,8 +206,9 @@ sub print_form() {
   my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
   my $mp4_url = "media_out_mp4.cgi?in=${encfile_inode}&dir=${dir}";
   my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
+  my $mes;
 
-   my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
+  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
   $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
 
   my @jslist = ("%htdocs_root%/converter_form.js");
@@ -215,10 +216,11 @@ sub print_form() {
   $html->{'javascript'} = \@jslist;
   $html->header();
 
-  print <<EOF;
+  $mes = <<EOF;
 <a href="${STOCKER_CGI}?in=${up_inode}&dir=${dir}">← 戻る</a><br>
 <h1>ファイル変換</h1>
 EOF
+  print encode('utf8', $mes);
 
   if ($mtype eq "video") {
     if (lc($files[0]) =~ /\.mp4$/ || lc($files[0]) =~ /\.m4v$/ || lc($files[0]) =~ /\.mpg4$/) {
@@ -242,25 +244,53 @@ EOF
   close ($IN);
 
   my $i = 0;
+  my $vid_width  = 0;
+  my $vid_height = 0;
+  my $vid_fps    = 0;
+  my $x_ratio = 1;
+  my $y_ratio = 1;
+  my $disp_width = 0;
+  my $init_set_width = 0;
+  my $has_video_stream = undef;
+  my $has_audio_stream = undef;
+  my $mov_duration = 0;
+  my $mov_filesize = 0;
+  my $mov_format   = "";
+  my $default_bps  = 0;
+  my $round_fps    = 0;
+  my $vimg_height  = 0;
+
   my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
-  my $movie_info = $xml->XMLin($movie_info_xml);
+  my $movie_info;
+  eval {
+    $movie_info = $xml->XMLin($movie_info_xml);
+  };
+  if ($@) {
+    print "情報取得失敗 [$@]";
+  } else {
+    $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
+    $has_audio_stream = $movie_info->{'movie_info'}[0]->{'audio'}[0]->{'no'};
 
-  my $mov_duration = $movie_info->{'movie_info'}[0]->{'duration'}[0];
-  my $mov_filesize = $movie_info->{'movie_info'}[0]->{'filesize'}[0];
-  my $mov_format   = $movie_info->{'movie_info'}[0]->{'format'}[0];
+    $mov_duration = $movie_info->{'movie_info'}[0]->{'duration'}[0];
+    $mov_filesize = $movie_info->{'movie_info'}[0]->{'filesize'}[0];
+    $mov_format   = $movie_info->{'movie_info'}[0]->{'format'}[0];
 
-  my $vid_width  = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_width'}[0];
-  my $vid_height = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_height'}[0];
-  my $vid_fps    = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'fps'}[0];
+    if ($has_video_stream) {
+      $vid_width  = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_width'}[0];
+      $vid_height = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_height'}[0];
+      $vid_fps    = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'fps'}[0];
 
-  my $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
-  my $has_audio_stream = $movie_info->{'movie_info'}[0]->{'audio'}[0]->{'no'};
+      ($x_ratio, $y_ratio) = split(/:/, $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_aspect'}[0]);
+      $disp_width = $vid_width;
+      $init_set_width = $disp_width - ($disp_width % 8);  # エンコードする時に8の倍数にする
 
-  my ($x_ratio, $y_ratio) = split(/:/, $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_aspect'}[0]);
-  my $disp_width = $vid_width;
-  my $init_set_width = $disp_width - ($disp_width % 8);  # エンコードする時に8の倍数にする
+      $default_bps = int($vid_width * $vid_height * $vid_fps * 0.125 / 1000);
+      $round_fps = sprintf("%.2f", ${vid_fps});
+      $vimg_height = $vid_height ? int(640 / $disp_width * $vid_height) : 1;
+    }
 
-  1 while $mov_filesize =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
+    1 while $mov_filesize =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
+  }
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"enc_setting\" method=\"POST\">";
 
@@ -296,30 +326,35 @@ EOF
     my $inode = (stat "${base}${path}/$_")[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
   }
-  print "ソースの場所: \n";
 
-  my $default_bps = int($vid_width * $vid_height * $vid_fps * 0.125 / 1000);
-  my $round_fps = sprintf("%.2f", ${vid_fps});
-
-  my $vimg_height = $vid_height ? int(640 / $disp_width * $vid_height) : 1;
-  print <<EOD;
+  $mes = <<EOD;
+ソースの場所: 
 <script type="text/javascript">
 <!--
-  document.getElementsByName('vimg')[0].style.width  = "640px";
-  document.getElementsByName('vimg')[0].style.height = "${vimg_height}px";
-
-  function fillFolderName(pathText) {
-    document.enc_setting.out_dir.value = pathText;
-  }
   var path = "${path}";
   if( path.charAt(0) == "/" ) {
     path = path.substr(1,path.length);
   }
   var pathArray = path.split("/");
-  for( i=0 ; i<pathArray.length -1 ; i++ ) {  // 最後のpathArrayはファイル名のため、-1を入れる
+  for( i=0; i<pathArray.length; i++ ) {
     document.write("/ <a href=\\"javascript:fillFolderName('" + pathArray[i] + "')\\">" + pathArray[i] + "</a>&nbsp;");
   }
 
+  function fillFolderName(pathText) {
+    document.enc_setting.out_dir.value = pathText;
+  }
+
+EOD
+  print encode('utf-8', $mes);
+ 
+  if ($has_video_stream) {
+    print <<EOD;
+  document.getElementsByName('vimg')[0].style.width  = "640px";
+  document.getElementsByName('vimg')[0].style.height = "${vimg_height}px";
+EOD
+  }
+
+  print <<EOD;
   function get_preview_url(ss, width) {
     var url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=" + width;
     if (document.enc_setting.set_position.checked == true) {
@@ -540,8 +575,8 @@ EOF
     document.enc_setting.cutoff.value = 18000;
   }
 
-  function openTimerSelector(target) {
-    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target,
+  function openTimerSelector(target, ss) {
+    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target + "&ss=" + ss,
                 "timersel",
                 'width=680, height=700, menubar=no, toolbar=no, scrollbars=yes'
                );
@@ -578,8 +613,8 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-開始位置 <input type="text" name="ss" value="00:00:00.000" onClick="openTimerSelector('ss')"> (時:分:秒.ミリ秒)
- ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend')"> (時:分:秒.ミリ秒)
+開始位置 <input type="text" name="ss" value="00:00:00.000" onClick="openTimerSelector('ss', document.enc_setting.ss.value)"> (時:分:秒.ミリ秒)
+ ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend', document.enc_setting.tend.value)"> (時:分:秒.ミリ秒)
  長さ <input type="text" name="t" value="00:00:00.000" readonly>
 </div>
 </fieldset><br>

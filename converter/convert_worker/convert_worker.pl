@@ -31,6 +31,7 @@ while(1) {
 	unlink("$ENCBATCH_LIST");
       } else {
         &worker(\$job, $list[0]);
+	next;
       }
     } else {
       print STDERR "failed to make ConvertJob instance\n";
@@ -58,7 +59,7 @@ sub worker
   }
 
   if (open(my $fd, "> ${outdir}/parameter_".$$job->{'_jobid'}.".xml")) {
-    print $fd $$job->make_job_xml();
+    print $fd encode('utf-8', $$job->make_job_xml());
     close($fd);
   }
 
