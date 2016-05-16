@@ -58,7 +58,7 @@ EOD
 </form>
 EOF
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_newfolder() {
@@ -122,7 +122,7 @@ EOD
   print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
   print "</form>\n";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_upload() {
@@ -157,7 +157,6 @@ sub do_download() {
   if (@files.length == 0) {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
-    &tail();
     return;
   }
 
@@ -199,7 +198,6 @@ sub do_download() {
       }
 
       HTML_Elem->error("圧縮に失敗しました: ${reason}");
-      &tail();
     }
   }
 
@@ -232,7 +230,6 @@ sub form_rename() {
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
-    &tail();
     return;
   }
   @files = sort {$a cmp $b} @files;
@@ -272,7 +269,7 @@ EOD
   print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
   print "</form>\n";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_rename() {
@@ -331,7 +328,6 @@ sub form_move() {
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
-    &tail();
     return;
   }
 
@@ -420,7 +416,7 @@ EOD
 </form>
 EOF
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_move() {
@@ -479,7 +475,6 @@ sub form_delete() {
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
-    &tail();
     return;
   }
 
@@ -519,7 +514,7 @@ EOD
   print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
   print "</form>\n";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_delete() {
@@ -535,7 +530,6 @@ sub do_delete() {
   if (@files == 0) {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
-    &tail();
     return;
   }
 
@@ -545,14 +539,14 @@ sub do_delete() {
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("削除に失敗しました($reason)。");
-        exit(1);
+        return;
       }
     } elsif (-d "$path/$entry") {
       if (! rmdir("$path/$entry")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
-        exit(1);
+        return;
       }
     }
   }
