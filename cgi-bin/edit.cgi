@@ -84,6 +84,8 @@ if( ${mode} eq "resize" || ${mode} eq "combine" ) {
 
 exit(0);
 
+#####
+
 sub form_setting() {
   my @files;
 
@@ -92,22 +94,18 @@ sub form_setting() {
     @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   };
   if ($@) {
-    HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
+    HTML_Elem->error("ディレクトリのアクセスに失敗しました");
   }
 
   if (@files.length == 0) {
-    print "<p>ファイルが選択されていません。</p>\n";
-    &tail();
-    return;
+    HTML_Elem->error("ファイルが選択されていません");
   }
 
   foreach my $entry (@files) {
     if( lc($entry) !~ /\.jpg$/  && lc($entry) !~ /\.jpeg$/ && lc($entry) !~ /\.ts$/ &&
         lc($entry) !~ /\.m2ts$/ && lc($entry) !~ /\.mts$/ )
     {
-      print "<p>この形式は変換できません。<br>$entry</p>\n";
-      &tail();
-      return;
+      HTML_Elem->error("この形式は変換できません。<br>$entry");
     }
   }
 
@@ -144,7 +142,6 @@ sub form_setting() {
   if (${mode} eq "resize" && $ts_flag) { # 縮小時の画像指定チェック
     HTML_Elem->error("動画ファイルは縮小できません");
   }
-  ######
 
   # get image size
   my $img_width  = 0;
@@ -311,7 +308,7 @@ EOD
 </script>
 EOD
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_resize {
@@ -384,7 +381,7 @@ sub do_resize {
   print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a>";
   print "</p>\n";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_combine() {
@@ -467,7 +464,7 @@ sub do_combine() {
   print "<p><b>結合完了</b><br>";
   print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub form_divide() {
@@ -482,16 +479,12 @@ sub form_divide() {
   }
 
   if (@files.length == 0) {
-    print "<p>ファイルが選択されていません。</p>\n";
-    &tail();
-    return;
+    HTML_Elem->error("ファイルが選択されていません");
   }
 
   foreach my $entry (@files) {
     if( lc($entry) !~ /\.pdf$/ ) {
-      print "<p>この形式は変換できません。<br>$entry</p>\n";
-      &tail();
-      return;
+      HTML_Elem->error("この形式は変換できません。<br>$entry");
     }
   }
 
@@ -575,7 +568,7 @@ EOD
 </script>
 EOD
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 sub do_divide() {
@@ -619,7 +612,7 @@ print "CMD: $cmd<br>";
   print "<p><b>分離完了</b><br>";
   print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
 
-  &tail();
+  HTML_Elem->tail();
 }
 
 exit(0);
