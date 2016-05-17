@@ -320,18 +320,30 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  HTML_Elem->header();
-
   my $dest = $form->param('f_dest');
   my $dest_dir = $form->param('f_dest_dir');
-  my $dest_base = @{$MEDIA_DIRS[0]}[2];
+  my $dest_base = "";
   my @lst_dest = ();
+  my $ins;
 
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
+    HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
 
+  eval {
+    $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
+                          param_dir => $form->param('dir'));
+    $ins->init();
+    $dest_base = $ins->{base};
+  };
+  if ($@) {
+    HTML_Elem->header();
+    HTML_Elem->error($@);
+  }
+
+  HTML_Elem->header();
   print <<EOD;
 <script type="text/javascript">
 <!--
@@ -365,21 +377,22 @@ EOD
   print "<br>\n";
   print "<fieldset><legend>移動先</legend>\n";
 
-#  if (length($dest_dir) == 0) {
-#    $dest_dir = ${dir};
-#  }
   print "ディレクトリ: ";
   print "<select name=\"f_dest_dir\" size=\"1\" onChange=\"refresh()\">\n";
-  foreach my $lst (@MEDIA_DIRS) {
-    if (${dest_dir} eq @{$lst}[1]) {
-      print "<option value=\"". @{$lst}[1] ."\" selected>";
-      $dest_base = @{$lst}[2];
+
+  for (my $i = 0; $i < $ins->base_dirs_count(); $i++) {
+    my $col = get_base_dir_column($i);
+    my $dir = @{$col}[1];
+    if (${dest_dir} eq $dir) {
+      print "<option value=\"". $dir ."\" selected>";
+      $dest_base = @{$col}[2];
     } else {
-      print "<option value=\"". @{$lst}[1] ."\">";
+      print "<option value=\"". $dir ."\">";
     }
-    print @{$lst}[0] ."</option>\n";
+    print @{$col}[0] ."</option>\n";
   }
   my $dest_path = &inode_to_fullpath(${dest_base}, ${dest});
+
   print "</select><br>\n";
   print "パス [".substr($dest_path, length($dest_base))."]<br>\n";
   print "<select name=\"f_dest\" size=\"10\" onChange=\"refresh()\">\n";
