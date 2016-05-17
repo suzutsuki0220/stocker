@@ -6,8 +6,8 @@ use CGI;
 use Encode;
 
 use utf8;
-binmode(STDIN,  ":utf8");
-binmode(STDOUT, ":utf8");
+#binmode(STDIN,  ":utf8");
+#binmode(STDOUT, ":utf8");
 
 use File::Path;
 
