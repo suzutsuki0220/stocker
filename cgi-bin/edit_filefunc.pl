@@ -62,7 +62,7 @@ EOF
 }
 
 sub do_newfolder() {
-  my $newname = $form->param('foldername');
+  my $newname = decode('utf-8', $form->param('foldername'));
 
   # ファイル名チェック
   if (! FileOperator->isFilename("$newname")) {
@@ -71,12 +71,12 @@ sub do_newfolder() {
   }
 
   # 既存ファイル名重複チェック
-  if( -e "$path/".$newname) {
+  if( -e "${base}${path}/".$newname) {
     HTML_Elem->header();
     HTML_Elem->error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
   }
 
-  if(! mkdir("$path/".$newname)) {
+  if(! mkdir("${base}${path}/".$newname)) {
       my $reason = $!;
       HTML_Elem->header();
       HTML_Elem->error("ディレクトリ作成に失敗しました($reason)");
@@ -137,10 +137,10 @@ sub save_upfile
   my ($formname) = @_;
 
   if ($form->param($formname)) {
-    my $fname = basename($form->param($formname));
+    my $fname = basename(decode('utf-8', $form->param($formname)));
     if ($fname && length($fname) > 0) {
       my $fh = $form->upload($formname);
-      copy ($fh, "$path/$fname");
+      copy ($fh, "${base}${path}/$fname");
       undef $fname;
     }
   }
@@ -157,7 +157,7 @@ sub do_download() {
   }
 
   if (@files.length == 1) {
-    my $file = $path."/".$files[0];
+    my $file = ${base}.${path}."/".$files[0];
     # 一つの時はそのまま出力
     &output_filedata($file, $files[0]);
   } else {
@@ -165,12 +165,12 @@ sub do_download() {
     my $zip = Archive::Zip->new();
     foreach my $entry (@files) {
 # TODO: 文字コード変換 -> to cp932
-      if (-f "$path/$entry") {
+      if (-f "${base}${path}/$entry") {
         # ファイルの時
-        $zip->addFile("$path/$entry", $entry);
-      } elsif (-d "$path/$entry") {
+        $zip->addFile("${base}${path}/$entry", $entry);
+      } elsif (-d "${base}${path}/$entry") {
         # ディレクトリの時
-        $zip->addTree("$path/$entry", $entry);
+        $zip->addTree("${base}${path}/$entry", $entry);
       }
     }
 
@@ -251,9 +251,10 @@ EOD
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_delete();\">\n";
   foreach my $filename (@files) {
+    my $inode = (stat("$base/$path/$filename"))[1];
     $filename = encode('utf-8', $filename);
     print $filename . " → ";
-    print "<input type=\"text\" name=\"${filename}\" value=\"${filename}\"><br>\n";
+    print "<input type=\"text\" name=\"${inode}\" value=\"${filename}\"><br>\n";
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_rename\">\n";
@@ -271,11 +272,12 @@ EOD
 sub do_rename() {
   my @files = ();
   opendir(my $dir, "${base}${path}") or die( "ディレクトリのアクセスに失敗しました" );
-  while (my $entry = readdir $dir) {
-    $entry = decode('utf-8', $entry);
+  while (my $entry = decode('utf-8', readdir $dir)) {
     if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
-      my $dest_name = decode('utf-8', $form->param($entry));
-      if ($dest_name) {
+      my $inode = (stat("$base/$path/$entry"))[1];
+      if ($form->param($inode)) {
+        my $dest_name = decode('utf-8', $form->param($inode));
+
         # ファイル名チェック
         if (! FileOperator->isFilename($dest_name)) {
           HTML_Elem->header();
@@ -288,7 +290,8 @@ sub do_rename() {
         }
         # リスト内の重複チェック
         foreach my $f (@files) {
-          my $org_name = decode('utf-8', $form->param($f));
+	  my $i = (stat("$base/$path/$f"))[1];
+          my $org_name = decode('utf-8', $form->param($i));
 
           if ($org_name eq $dest_name) {
             HTML_Elem->header();
@@ -302,7 +305,8 @@ sub do_rename() {
   close($dir);
 
   foreach my $entry (@files) {
-    my $dest_name = decode('utf-8', $form->param($entry));
+    my $inode = (stat("$base/$path/$entry"))[1];
+    my $dest_name = decode('utf-8', $form->param($inode));
 
     my $src = encode('utf-8', "${base}${path}/$entry");
     my $dst = encode('utf-8', "${base}${path}/$dest_name");
@@ -528,8 +532,8 @@ EOD
 }
 
 sub do_delete() {
-  if(! -d $TRASH_PATH.$path) {
-    if(! mkpath($TRASH_PATH.$path)) {
+  if(! -d $TRASH_PATH."/".$path) {
+    if(! mkpath($TRASH_PATH."/".$path)) {
       HTML_Elem->header();
       HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました");
     }
@@ -542,14 +546,14 @@ sub do_delete() {
   }
 
   foreach my $entry (@files) {
-    if (-f "$path/$entry") {
-      if(! move("$path/$entry", $TRASH_PATH.$path)) {
+    if (-f "${base}${path}/$entry") {
+      if(! move("${base}${path}/$entry", $TRASH_PATH."/".$path)) {
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("削除に失敗しました($reason)。");
       }
-    } elsif (-d "$path/$entry") {
-      if (! rmdir("$path/$entry")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
+    } elsif (-d "${base}${path}/$entry") {
+      if (! rmdir("${base}${path}/$entry")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
@@ -586,7 +590,4 @@ ${title}<br><small>${note}</small><br>
 </html>
 EOD
 }
-
-
-__EXIT__
 
