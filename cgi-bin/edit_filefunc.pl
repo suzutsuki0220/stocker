@@ -495,7 +495,7 @@ sub form_delete() {
   print <<EOD;
 <script type="text/javascript">
 <!--
-  function confirm_delete() {
+  function confirm_rename() {
     if (confirm("削除します。よろしいですか？")) {
       return true;
     } else {
@@ -512,9 +512,9 @@ EOD
   print "<h1>ファイルの削除</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_delete();\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_rename();\">\n";
   foreach my $filename (@files) {
-    my $inode = (stat("$path/$filename"))[1];
+    my $inode = (stat("${base}${path}/$filename"))[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
     print $filename ."<br>\n";
   }
