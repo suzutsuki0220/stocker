@@ -4,6 +4,9 @@
 use strict;
 #use warning;
 
+use utf8;
+use Encode;
+
 use CGI;
 use File::Copy;  # for file move across the different filesystems
 use File::Path;
@@ -23,9 +26,9 @@ our $base;
 our $path;
 
 my $form = eval{new CGI};
-my $mode = $form->param('mode');
-my $in   = $form->param('in');
-my $dir  = $form->param('dir');
+my $mode = decode('utf-8', $form->param('mode'));
+my $in   = decode('utf-8', $form->param('in'));
+my $dir  = decode('utf-8', $form->param('dir'));
 
 ########################
 ### 新規フォルダ作成 ###
@@ -252,8 +255,7 @@ EOD
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_delete();\">\n";
   foreach my $filename (@files) {
     my $inode = (stat("$base/$path/$filename"))[1];
-    $filename = encode('utf-8', $filename);
-    print $filename . " → ";
+    print encode('utf-8', $filename . " → ");
     print "<input type=\"text\" name=\"${inode}\" value=\"${filename}\"><br>\n";
   }
   print "<br>\n";
@@ -324,8 +326,8 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  my $dest = $form->param('f_dest');
-  my $dest_dir = $form->param('f_dest_dir');
+  my $dest = decode('utf-8', $form->param('f_dest'));
+  my $dest_dir = decode('utf-8', $form->param('f_dest_dir'));
   my $dest_base = "";
   my @lst_dest = ();
   my $ins;
@@ -338,7 +340,7 @@ sub form_move() {
 
   eval {
     $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                          param_dir => $form->param('dir'));
+                          param_dir => $dest_dir);
     $ins->init();
     $dest_base = $ins->{base};
   };
@@ -370,13 +372,13 @@ sub form_move() {
 EOD
 
   print "<h1>移動</h1>\n";
-  print "<p>選択: ", @files.length, "ファイル</p>\n";
+  print "<p>選択: ". @files.length ."ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
   foreach my $filename (@files) {
-    my $inode = (stat("$path/$filename"))[1];
+    my $inode = (stat("${base}${path}/$filename"))[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
-    print $filename ."<br>\n";
+    print encode('utf-8', $filename ."<br>\n");
   }
   print "<br>\n";
   print "<fieldset><legend>移動先</legend>\n";
@@ -385,30 +387,30 @@ EOD
   print "<select name=\"f_dest_dir\" size=\"1\" onChange=\"refresh()\">\n";
 
   for (my $i = 0; $i < $ins->base_dirs_count(); $i++) {
-    my $col = get_base_dir_column($i);
-    my $dir = @{$col}[1];
-    if (${dest_dir} eq $dir) {
-      print "<option value=\"". $dir ."\" selected>";
+    my $col = $ins->get_base_dir_column($i);
+    my $d = @{$col}[1];
+    if (${dest_dir} eq $d) {
+      print "<option value=\"". $d ."\" selected>";
       $dest_base = @{$col}[2];
     } else {
-      print "<option value=\"". $dir ."\">";
+      print "<option value=\"". $d ."\">";
     }
     print @{$col}[0] ."</option>\n";
   }
-  my $dest_path = &inode_to_fullpath(${dest_base}, ${dest});
+  my $dest_path = $ins->inode_to_path(${dest});
 
   print "</select><br>\n";
-  print "パス [".substr($dest_path, length($dest_base))."]<br>\n";
+  print encode('utf-8', "パス [" . $dest_path . "]<br>\n");
   print "<select name=\"f_dest\" size=\"10\" onChange=\"refresh()\">\n";
-  opendir(DIR, $dest_path);
-  while(my $entry = readdir DIR) {
+  opendir(my $d, "${dest_base}/${dest_path}");
+  while(my $entry = decode('utf-8', readdir $d)) {
     if (length($entry) > 0 && $entry !~ /^\./ && $entry ne 'lost+found') {
-      if (-d "${dest_path}/${entry}") {
+      if (-d "${dest_base}/${dest_path}/${entry}") {
         push(@lst_dest, $entry);
       }
     }
   }
-  closedir(DIR);
+  closedir($d);
 
   if (length(${dest}) > 0) {
     $dest =~ /(.*?)\/([^\/]{1,})$/;
@@ -417,7 +419,7 @@ EOD
   }
   @lst_dest = sort {$a cmp $b} @lst_dest;
   foreach my $entry (@lst_dest) {
-    print "<option value=\"${dest}/".(stat "${dest_path}/${entry}")[1]."\">${entry}</option>\n";
+    print "<option value=\"${dest}/".(stat "${dest_base}${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
   }
   print "</select></fieldset>\n";
   print <<EOF;
@@ -440,8 +442,8 @@ EOF
 sub do_move() {
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
 
-  my $dest = $form->param('dest');
-  my $dest_dir = $form->param('dest_dir');
+  my $dest = $form->param('dest');  # 移動先のパス
+  my $dest_dir = $form->param('dest_dir');  # 移動先のディレクトリ(base)
 
   if (length($dest) == 0) {
     HTML_Elem->header();
@@ -453,8 +455,7 @@ sub do_move() {
     my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                              param_dir => $dest_dir);
     $ins->init();
-    $path = $ins->inode_to_path($in);
-    $dest_path = $ins->{base} . $dest;
+    $dest_path = $ins->{base} . $ins->inode_to_path($dest);
   };
   if ($@) {
     HTML_Elem->header();
@@ -470,7 +471,7 @@ sub do_move() {
       HTML_Elem->header();
       HTML_Elem->error("既に同じ名前が存在するため移動できません($entry)");
     }
-    if(! move("$path/$entry", "${dest_path}")) {
+    if(! move("${base}${path}/$entry", "${dest_path}")) {
       my $reason = $!;
       HTML_Elem->header();
       HTML_Elem->error("移動に失敗しました($reason)");
@@ -516,7 +517,7 @@ EOD
   foreach my $filename (@files) {
     my $inode = (stat("${base}${path}/$filename"))[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
-    print $filename ."<br>\n";
+    print encode('utf-8', $filename) ."<br>\n";
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";

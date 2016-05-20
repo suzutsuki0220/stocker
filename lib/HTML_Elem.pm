@@ -222,10 +222,11 @@ sub isSP {
 sub error {
   my $self = shift;
   my($message) = @_;
+  $message = encode('utf-8', $message) if(utf8::is_utf8($message));
 
   print encode('utf-8', "エラーが発生しました<br>\n");
   if( length($message) > 0 ) {
-    print encode('utf-8', "原因: ". $message . "\n");
+    print encode('utf-8', "原因: ") . $message . "\n";
   }
 
   &tail();

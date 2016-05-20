@@ -55,7 +55,7 @@ if ($@) {
 $path =~ /([^\/]{1,})$/;
 HTML_Elem->header($1); # 直下のディレクトリ名をタイトルにする
 
-opendir(DIR, "${base}${path}") or HTML_Elem->error("ディレクトリのopenに失敗しました - ${path}");
+opendir(my $DIR, "${base}${path}") or HTML_Elem->error("ディレクトリのopenに失敗しました - ${path}");
 
 ### スクリーンサイズに合わせてアイコン表示数を変える ###
 if( ! $in_s_width || ! $in_s_height ) {
@@ -185,7 +185,7 @@ EOD
 }
 
 my @dir_list = ();
-while( my $entry = readdir DIR ) {
+while (my $entry = decode('utf-8', readdir $DIR)) {
   if( length($entry) > 0 && $entry ne '..'  && $entry !~ /^\./ && $entry ne 'lost+found') {
     # 絞込みが指定された場合、マッチしない物はリストに入れない
     if( ${in_search} && $entry !~ /${in_search}/i ) {
@@ -315,7 +315,7 @@ foreach (@un_visible_list) {
 print "}\n";
 print "-->\n";
 print "</script>\n";
-closedir( DIR );
+closedir($DIR);
 
 &print_disk_space("$base");
 HTML_Elem->tail();

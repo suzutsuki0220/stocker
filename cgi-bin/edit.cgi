@@ -2,13 +2,13 @@
 
 use strict;
 use warnings;
-use CGI;
-use Encode;
 
 use utf8;
 #binmode(STDIN,  ":utf8");
 #binmode(STDOUT, ":utf8");
 
+use CGI;
+use Encode;
 use File::Path;
 
 use lib '%libs_dir%';
@@ -39,9 +39,9 @@ eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $form->param('dir'));
   $ins->init();
-  $path = decode('utf-8', $ins->inode_to_path($in));
-  $base = decode('utf-8', $ins->{base});
-  $base_name = decode('utf-8', $ins->{base_name});
+  $path = $ins->inode_to_path($in);
+  $base = $ins->{base};
+  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();

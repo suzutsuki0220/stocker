@@ -27,8 +27,8 @@ sub init {
 
   foreach my $lst (@BASE_DIRS) {
     if($self->{param_dir} eq @{$lst}[1]) {
-      $self->{base_name} = @{$lst}[0];  # 表示名
-      $self->{base} = @{$lst}[2];  # 基点となるパス
+      $self->{base_name} = decode('utf-8', @{$lst}[0]);  # 表示名
+      $self->{base} = decode('utf-8', @{$lst}[2]);  # 基点となるパス
       if ($self->{base} !~ /\/$/) {
         $self->{base} .= "/";
       }
@@ -91,7 +91,7 @@ sub inode_to_path {
   foreach my $inode (split('/', $inodes)) {
     my $match_flag = 0;
     opendir(my $dir, $self->{base}.${subdir}) or die("Failed to open directory DIR[${subdir}]");
-    while (my $entry = readdir($dir)) {
+    while (my $entry = decode('utf-8', readdir($dir))) {
       if ($entry =~ /^\./ || $entry eq 'lost+found') {
         # Ignore hidden file or directory
         next;
@@ -129,8 +129,8 @@ sub path_inode {
 
   foreach my $elem (split('/', $files)) {
     my $match_flag = 0;
-    opendir(DIR, $path) or return;
-    while(my $entry = readdir DIR) {
+    opendir(my $dir, $path) or return;
+    while (my $entry = decode('utf-8', readdir $dir)) {
       if("$elem" eq "$entry") {
         my $point_inode = (stat "$path/$entry")[1];
         $match_flag = 1;
@@ -139,7 +139,7 @@ sub path_inode {
         last;
       }
     }
-    closedir(DIR);
+    closedir($dir);
     if($match_flag == 0) {
       return "";
     }
