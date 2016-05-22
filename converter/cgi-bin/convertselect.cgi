@@ -44,11 +44,52 @@ if ($@) {
 
 my $encfile = $base . $path;
 
-&print_timesel();
+&frame_selector();
 
 exit 0;
 
 #####
+
+sub frame_selector
+{
+  my @jslist = ("%htdocs_root%/converter_form.js");
+  my $html = HTML_Elem->new();
+  $html->{'javascript'} = \@jslist;
+  $html->header('timer selector');
+
+  my $ss = $q->param('ss');
+  my $target = $q->param('target') eq 'tend' ? "tend" : "ss";
+  my $duration = get_video_duration($encfile);
+
+  &print_script($target);
+
+  print <<EOF;
+<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
+<div style="position: relative; width: 640px;">
+  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${ss}" id="preview">
+  <div style="position: absolute; top: 50%; left: 50%; display: none;" id="ReloadImgButton">
+    <input type="button" name="btnReloadImg" value="更新" onClick="reloadImage()">
+  </div>
+</div>
+<div style="text-align: center">
+<input type="button" name="btnUpHour" value="hour+" onClick="upTime('hour', 1)">&nbsp;
+<input type="button" name="btnUpMinute" value="min+" onClick="upTime('min', 1)">&nbsp;
+<input type="button" name="btnUpSec" value="sec+" onClick="upTime('sec', 1)">&nbsp;
+<br>
+Time: <input type="text" name="selectedTime" size="30" value="${ss}"><br>
+<input type="button" name="btnDownHour" value="hour-" onClick="upTime('hour', -1)">&nbsp;
+<input type="button" name="btnDownMinute" value="min-" onClick="upTime('min', -1)">&nbsp;
+<input type="button" name="btnDownSec" value="sec-" onClick="upTime('sec', -1)">&nbsp;
+<br><br>
+<input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
+<input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
+</div>
+</form>
+EOF
+
+  HTML_Elem->tail();
+  exit(0);
+}
 
 sub print_timesel
 {
@@ -66,39 +107,8 @@ sub print_timesel
   my $pos = $time - ($skip * (($icons-1)/2));
   if ($pos < 0) { $pos = 0 };
 
+  &print_script($target);
   print <<EOF;
-<script type="text/javascript">
-<!--
-  function setTime() {
-    if (!window.opener || window.opener.closed) {
-      window.alert("メインウィンドウが閉じられています");
-      return;
-    }
-
-    var selected_time = document.f1.selectedTime.value;
-    if (selected_time) {
-      window.opener.document.enc_setting.${target}.value = selected_time;
-
-      var ss = window.opener.document.enc_setting.ss.value;
-      var te = window.opener.document.enc_setting.tend.value;
-      window.opener.document.enc_setting.t.value = calculateT(ss, te);
-    } else {
-      alert("Timeが選択されていません");
-    }
-  }
-
-  function select_time(t) {
-    document.f1.selectedTime.value = t;
-    tim = t.split(":");
-    document.f1.time.value = parseFloat(tim[0]*3600) + parseFloat(tim[1]*60) + parseFloat(tim[2]);
-    document.f1.submit();
-  }
-
-  function closeWindow() {
-    window.close();
-  }
--->
-</script>
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
 間隔: <select name="skip" onChange="document.f1.submit()">
 <option value="0.03125">1/32 秒</option>
@@ -192,4 +202,118 @@ sub get_video_duration
   my $duration = 3600*$hh + 60*$mm + $ss;
 
   return $duration;
+}
+
+sub print_script
+{
+  my ($target) = @_;
+
+  print <<EOF;
+<script type="text/javascript">
+<!--
+  function setTime() {
+    if (!window.opener || window.opener.closed) {
+      window.alert("メインウィンドウが閉じられています");
+      return;
+    }
+
+    var selected_time = document.f1.selectedTime.value;
+    if (selected_time) {
+      window.opener.document.enc_setting.${target}.value = selected_time;
+
+      var ss = window.opener.document.enc_setting.ss.value;
+      var te = window.opener.document.enc_setting.tend.value;
+      window.opener.document.enc_setting.t.value = calculateT(ss, te);
+    } else {
+      alert("Timeが選択されていません");
+    }
+  }
+
+  function select_time(t) {
+    document.f1.selectedTime.value = t;
+    tim = t.split(":");
+    document.f1.time.value = parseFloat(tim[0]*3600) + parseFloat(tim[1]*60) + parseFloat(tim[2]);
+    document.f1.submit();
+  }
+
+  function apply() {
+    setTime();
+    window.close();
+  }
+
+  function closeWindow() {
+    window.close();
+  }
+
+  function reloadImage() {
+    var ss = document.f1.selectedTime.value;
+    var imgurl = "${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=" + ss;
+
+    document.getElementById("preview").src = imgurl;
+    document.getElementById("ReloadImgButton").style.display = "none";
+  }
+
+  function upTime(unit, num) {
+    var t = parseTimeStr(document.f1.selectedTime.value);
+
+    if (t) {
+      document.getElementById("ReloadImgButton").style.display = "block";
+
+      var hour = t[0];
+      var min  = t[1];
+      var sec  = t[2];
+      var mili = t[3];
+
+      switch(unit) {
+      case "hour":
+        hour += num;
+        break;
+      case "min":
+        min  += num;
+        break;
+      case "sec":
+        sec  += num;
+        break;
+      case "mili":
+        mili += num;
+        break;
+      }
+
+      document.f1.selectedTime.value = formatTime(hour, min, sec, mili);
+    }
+  }
+
+  function parseTimeStr(time_str) {
+    var col = new Array();
+
+    hhmmss = time_str.split(":");
+    if (hhmmss.length != 3) {
+      window.alert("書式が不正です");
+      return;
+    }
+
+    sss = hhmmss[2].split(".");
+    if (sss.length != 2) {
+      window.alert("書式が不正です");
+      return;
+    }
+
+    col.push(parseInt(hhmmss[0]));
+    col.push(parseInt(hhmmss[1]));
+    col.push(parseInt(sss[0]));
+    col.push(parseInt(sss[1]));
+
+    return col;
+  }
+
+  function formatTime(hour, min, sec, mili) {
+    hour = ("0" + hour).substr(-2);
+    min  = ("0" + min).substr(-2);
+    sec  = ("0" + sec).substr(-2);
+
+    return hour + ":" + min + ":" + sec + ".000";
+  }
+-->
+</script>
+EOF
 }

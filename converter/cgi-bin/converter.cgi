@@ -69,8 +69,8 @@ eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $q->param('dir'));
   $ins->init();
-  $path = decode('utf-8', $ins->inode_to_path($q->param('in')));
-  $base = decode('utf-8', $ins->{base});
+  $path = $ins->inode_to_path($q->param('in'));
+  $base = $ins->{base};
 };
 if ($@) {
   HTML_Elem->header();
