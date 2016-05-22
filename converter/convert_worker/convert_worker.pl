@@ -79,7 +79,10 @@ sub worker
       }
       return
     }
-
+    if (open(my $fd, ">> $log_file")) {
+      print $fd "=== pass 1 ===\n". $cmd ."\n=====\n";
+      close($fd);
+    }
     $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
     if ($ret != 0) {
       #error
@@ -98,6 +101,10 @@ sub worker
         close($fd);
       }
       return
+    }
+    if (open(my $fd, ">> $log_file")) {
+      print $fd "=== pass 2 ===\n". $cmd ."\n=====\n";
+      close($fd);
     }
     $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
     if ($ret != 0) {
@@ -120,6 +127,11 @@ sub worker
         close($fd);
       }
       return
+    }
+
+    if (open(my $fd, ">> $log_file")) {
+      print $fd "=====\n". $cmd ."\n=====\n";
+      close($fd);
     }
 
     my $ret;
