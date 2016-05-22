@@ -27,7 +27,7 @@ require '%conf_dir%/stocker.conf';
 my $form = eval{new CGI};
 my $in_dir    = $form->param('dir');
 my $in_in     = $form->param('in');
-my $in_search = $form->param('search');
+my $in_search = decode('utf-8', $form->param('search'));
 my $in_from   = $form->param('from');
 my $in_to     = $form->param('to');
 my $in_s_width  = $form->param('s_width');
