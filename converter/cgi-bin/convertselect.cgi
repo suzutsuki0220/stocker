@@ -42,9 +42,29 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
+my @skip_options = (
+  ["0.001", "1/100 秒"],
+  ["0.031", "1/32 秒"],
+  ["0.063", "1/16 秒"],
+  ["0.125", "1/8 秒"],
+  ["0.25", "1/4 秒"],
+  ["0.5", "1/2 秒"],
+  ["1", "1 秒"],
+  ["3", "3 秒"],
+  ["5", "5 秒"],
+  ["15", "15 秒"],
+  ["30", "30 秒"],
+  ["60", "1 分"],
+  ["180", "3 分"],
+  ["900", "15 分"],
+  ["1800", "30 分"],
+  ["3600", "60 分"],
+);
+
 my $encfile = $base . $path;
 
 &frame_selector();
+#&print_timesel();
 
 exit 0;
 
@@ -72,15 +92,20 @@ sub frame_selector
   </div>
 </div>
 <div style="text-align: center">
-<input type="button" name="btnUpHour" value="hour+" onClick="upTime('hour', 1)">&nbsp;
-<input type="button" name="btnUpMinute" value="min+" onClick="upTime('min', 1)">&nbsp;
-<input type="button" name="btnUpSec" value="sec+" onClick="upTime('sec', 1)">&nbsp;
+<input type="button" name="btnDown" value="-" onClick="upTime(document.f1.skip.value * (-1))">&nbsp;
+<select name="skip">
+EOF
+
+  foreach my $so (@skip_options) {
+    print "<option value=\"" . @{$so}[0] * 1000 . "\">" . @{$so}[1] . "</option>\n";
+  }
+
+print <<EOF;
+</select>&nbsp;
+<input type="button" name="btnUp" value="+" onClick="upTime(document.f1.skip.value)">
 <br>
 Time: <input type="text" name="selectedTime" size="30" value="${ss}"><br>
-<input type="button" name="btnDownHour" value="hour-" onClick="upTime('hour', -1)">&nbsp;
-<input type="button" name="btnDownMinute" value="min-" onClick="upTime('min', -1)">&nbsp;
-<input type="button" name="btnDownSec" value="sec-" onClick="upTime('sec', -1)">&nbsp;
-<br><br>
+<br>
 <input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
 <input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
 </div>
@@ -111,20 +136,13 @@ sub print_timesel
   print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
 間隔: <select name="skip" onChange="document.f1.submit()">
-<option value="0.03125">1/32 秒</option>
-<option value="0.0625">1/16 秒</option>
-<option value="0.125">1/8 秒</option>
-<option value="0.25">1/4 秒</option>
-<option value="0.5">1/2 秒</option>
-<option value="1">1 秒</option>
-<option value="3">3 秒</option>
-<option value="5">5 秒</option>
-<option value="15">15 秒</option>
-<option value="30">30 秒</option>
-<option value="60">1 分</option>
-<option value="180">3 分</option>
-<option value="900">15 分</option>
-<option value="1800">30 分</option>
+EOF
+
+  foreach my $so (@skip_options) {
+    print "<option value=\"" . @{$so}[0] . "\">" . @{$so}[1] . "</option>\n";
+  }
+
+  print <<EOF;
 <option value="" selected>全体表示</option>
 </select><br>
 <script type="text/javascript">
@@ -253,7 +271,7 @@ sub print_script
     document.getElementById("ReloadImgButton").style.display = "none";
   }
 
-  function upTime(unit, num) {
+  function upTime(num) {
     var t = parseTimeStr(document.f1.selectedTime.value);
 
     if (t) {
@@ -264,20 +282,13 @@ sub print_script
       var sec  = t[2];
       var mili = t[3];
 
-      switch(unit) {
-      case "hour":
-        hour += num;
-        break;
-      case "min":
-        min  += num;
-        break;
-      case "sec":
-        sec  += num;
-        break;
-      case "mili":
-        mili += num;
-        break;
-      }
+      var tm = parseInt(hour * 3600000 + min * 60000 + sec * 1000 + mili);
+      tm += parseInt(num);
+
+      hour = Math.floor(tm / 3600000);
+      min  = Math.floor((tm - hour * 3600000) / 60000);
+      sec  = Math.floor(((tm - hour * 3600000) - (min * 60000)) / 1000);
+      mili = tm - hour * 3600000 - min * 60000 - sec * 1000;
 
       document.f1.selectedTime.value = formatTime(hour, min, sec, mili);
     }
@@ -310,8 +321,9 @@ sub print_script
     hour = ("0" + hour).substr(-2);
     min  = ("0" + min).substr(-2);
     sec  = ("0" + sec).substr(-2);
+    mili = ("00" + mili).substr(-3);
 
-    return hour + ":" + min + ":" + sec + ".000";
+    return hour + ":" + min + ":" + sec + "." + mili;
   }
 -->
 </script>
