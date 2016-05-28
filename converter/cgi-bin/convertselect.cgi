@@ -86,9 +86,9 @@ sub frame_selector
   print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
 <div style="position: relative; width: 640px;">
-  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${ss}" id="preview">
-  <div style="position: absolute; top: 50%; left: 50%; display: none;" id="ReloadImgButton">
-    <input type="button" name="btnReloadImg" value="更新" onClick="reloadImage()">
+  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${ss}" id="preview" name="preview">
+  <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
+    Reloading...
   </div>
 </div>
 <div style="text-align: center">
@@ -133,6 +133,7 @@ sub print_timesel
   if ($pos < 0) { $pos = 0 };
 
   &print_script($target);
+
   print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
 間隔: <select name="skip" onChange="document.f1.submit()">
@@ -229,6 +230,9 @@ sub print_script
   print <<EOF;
 <script type="text/javascript">
 <!--
+  var loading = false;  // previewの更新多発を抑止するフラグ
+  var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
+
   function setTime() {
     if (!window.opener || window.opener.closed) {
       window.alert("メインウィンドウが閉じられています");
@@ -241,7 +245,13 @@ sub print_script
 
       var ss = window.opener.document.enc_setting.ss.value;
       var te = window.opener.document.enc_setting.tend.value;
-      window.opener.document.enc_setting.t.value = calculateT(ss, te);
+      var duration = getEncTimeDuration(ss, te);
+      if (duration > 0) {
+        window.opener.document.enc_setting.t.value = getEncTimeString(duration);
+      } else {
+        window.opener.document.enc_setting.tend.value = ss;
+        window.opener.document.enc_setting.t.value = getEncTimeString(0);
+      }
     } else {
       alert("Timeが選択されていません");
     }
@@ -264,19 +274,45 @@ sub print_script
   }
 
   function reloadImage() {
+    if (loading) {
+      load_again = true;
+      return;
+    }
+
+    if (document.preview.addEventListener) {
+      document.preview.addEventListener("load", unsetLoading, false);
+    } else if (document.preview.attachEvent) {
+      document.preview.attachEvent("onload", unsetLoading);
+    }
+
     var ss = document.f1.selectedTime.value;
     var imgurl = "${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=" + ss;
 
+    loading = true;
     document.getElementById("preview").src = imgurl;
-    document.getElementById("ReloadImgButton").style.display = "none";
+    document.getElementById("PreviewReloading").style.display = "block";
+  }
+
+  function unsetLoading() {
+    if (document.preview.removeEventListener) {
+      document.preview.removeEventListener("load", unsetLoading, false);
+    } else if (document.preview.detachEvent) {
+      document.preview.detachEvent("onload", unsetLoading);
+    }
+
+    document.getElementById("PreviewReloading").style.display = "none";
+    loading = false;
+
+    if (load_again) {
+      load_again = false;
+      reloadImage();
+    }
   }
 
   function upTime(num) {
     var t = parseTimeStr(document.f1.selectedTime.value);
 
     if (t) {
-      document.getElementById("ReloadImgButton").style.display = "block";
-
       var hour = t[0];
       var min  = t[1];
       var sec  = t[2];
@@ -291,6 +327,8 @@ sub print_script
       mili = tm - hour * 3600000 - min * 60000 - sec * 1000;
 
       document.f1.selectedTime.value = formatTime(hour, min, sec, mili);
+
+      reloadImage();
     }
   }
 

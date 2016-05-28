@@ -383,15 +383,17 @@ function add_ss_and_t() {
 }
 
 // 開始時と終了時から長さを求める
-function calculateT(ss, te) {
+function getEncTimeDuration(ss, te) {
     var array_ss = ss.split(":", 3);
     var array_te = te.split(":", 3);
 
     var ss_total = (array_ss[0]*3600000) + (array_ss[1]*60000) + (array_ss[2]*1000);
     var te_total = (array_te[0]*3600000) + (array_te[1]*60000) + (array_te[2]*1000);
 
-    var length = te_total - ss_total;
+    return te_total - ss_total;
+}
 
+function getEncTimeString(length) {
     var len_hour = Math.floor(length / 3600000);
     var len_min  = Math.floor((length - (len_hour*3600000)) / 60000);
     var len_sec  = (length - (len_hour*3600000) - (len_min*60000)) / 1000;
