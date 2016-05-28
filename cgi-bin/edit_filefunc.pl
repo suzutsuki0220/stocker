@@ -419,7 +419,7 @@ EOD
   }
   @lst_dest = sort {$a cmp $b} @lst_dest;
   foreach my $entry (@lst_dest) {
-    print "<option value=\"${dest}/".(stat "${dest_base}${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
+    print "<option value=\"${dest}/".(stat "${dest_base}/${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
   }
   print "</select></fieldset>\n";
   print <<EOF;
@@ -442,8 +442,8 @@ EOF
 sub do_move() {
   my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
 
-  my $dest = $form->param('dest');  # 移動先のパス
-  my $dest_dir = $form->param('dest_dir');  # 移動先のディレクトリ(base)
+  my $dest = decode('utf-8', $form->param('dest'));  # 移動先のパス
+  my $dest_dir = decode('utf-8', $form->param('dest_dir'));  # 移動先のディレクトリ(base)
 
   if (length($dest) == 0) {
     HTML_Elem->header();
@@ -592,3 +592,5 @@ ${title}<br><small>${note}</small><br>
 EOD
 }
 
+1;
+__END__
