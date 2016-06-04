@@ -326,8 +326,8 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  my $dest = decode('utf-8', $form->param('f_dest'));
-  my $dest_dir = decode('utf-8', $form->param('f_dest_dir'));
+  my $f_dest = decode('utf-8', $form->param('f_dest'));
+  my $f_dest_dir = decode('utf-8', $form->param('f_dest_dir'));
   my $dest_base = "";
   my @lst_dest = ();
   my $ins;
@@ -340,7 +340,7 @@ sub form_move() {
 
   eval {
     $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                          param_dir => $dest_dir);
+                          param_dir => $f_dest_dir);
     $ins->init();
     $dest_base = $ins->{base};
   };
@@ -389,15 +389,15 @@ EOD
   for (my $i = 0; $i < $ins->base_dirs_count(); $i++) {
     my $col = $ins->get_base_dir_column($i);
     my $d = @{$col}[1];
-    if (${dest_dir} eq $d) {
-      print "<option value=\"". $d ."\" selected>";
+    if (${f_dest_dir} eq $d) {
+      print "<option value=\"". encode('utf-8', $d) ."\" selected>";
       $dest_base = @{$col}[2];
     } else {
-      print "<option value=\"". $d ."\">";
+      print "<option value=\"". encode('utf-8', $d) ."\">";
     }
     print @{$col}[0] ."</option>\n";
   }
-  my $dest_path = $ins->inode_to_path(${dest});
+  my $dest_path = $ins->inode_to_path(${f_dest});
 
   print "</select><br>\n";
   print encode('utf-8', "パス [" . $dest_path . "]<br>\n");
@@ -412,14 +412,14 @@ EOD
   }
   closedir($d);
 
-  if (length(${dest}) > 0) {
-    $dest =~ /(.*?)\/([^\/]{1,})$/;
+  if (length(${f_dest}) > 0) {
+    $f_dest =~ /(.*?)\/([^\/]{1,})$/;
     my $dest_updir = $1;
     print "<option value=\"${dest_updir}\">..</option>\n";
   }
   @lst_dest = sort {$a cmp $b} @lst_dest;
   foreach my $entry (@lst_dest) {
-    print "<option value=\"${dest}/".(stat "${dest_base}/${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
+    print "<option value=\"${f_dest}/".(stat "${dest_base}/${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
   }
   print "</select></fieldset>\n";
   print <<EOF;
@@ -427,8 +427,8 @@ EOD
 <input type="hidden" name="mode" value="do_move">
 <input type="hidden" name="in" value="${in}">
 <input type="hidden" name="dir" value="${dir}">
-<input type="hidden" name="dest_dir" value="${dest_dir}">
-<input type="hidden" name="dest" value="${dest}">
+<input type="hidden" name="dest_dir" value="${f_dest_dir}">
+<input type="hidden" name="dest" value="${f_dest}">
 
 <br>
 <input type="submit" value="実行">

@@ -153,12 +153,12 @@ sub get_checked_list {
   my $self = shift;
   my ($params, $path) = @_;
   my @files;
-  opendir(my $dir, "$path" ) or die( "ディレクトリのアクセスに失敗しました - $path");
+  opendir(my $dir, "$path") or die("ディレクトリのアクセスに失敗しました - $path");
   while (my $entry = decode('utf-8', readdir $dir)) {
-    if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-      if( -f "$path/$entry" || -d "$path/$entry") {
+    if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
+      if (-f "$path/$entry" || -d "$path/$entry") {
         my $cf = $$params->param((stat "$path/$entry")[1]);
-        if ($cf && $cf eq "1" ) {
+        if ($cf && $cf eq "1") {
           push(@files, $entry);
         }
       }

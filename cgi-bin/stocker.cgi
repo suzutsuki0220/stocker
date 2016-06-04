@@ -92,13 +92,35 @@ my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 
 
 $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
 if ($in_to eq '') { $in_to = $boxes; }
-#######
+
+print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
+print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
+print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
+print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
+print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
+print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
+print "<input type=\"hidden\" name=\"s_width\" value=\"${in_s_width}\">\n";
+print "<input type=\"hidden\" name=\"s_height\" value=\"${in_s_height}\">\n";
+print "<div id=\"editParam\"></div>\n";
+print "ディレクトリ: ";
+print "<select name=\"fm_dir\" size=\"1\" onChange=\"changeDirectory()\">\n";
+
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
+                           param_dir => $form->param('dir'));
+  $ins->init();
+  for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
+    my $lst = $ins->get_base_dir_column($i);
+    if ($in_dir eq @{$lst}[1]) {
+      print "<option value=\"@{$lst}[1]\" selected>".@{$lst}[0]."</option>\n";
+    } else {
+      print "<option value=\"@{$lst}[1]\">".@{$lst}[0]."</option>\n";
+    }
+  }
+};
+print "</select>\n";
 
 if( $in_in && length($in_in) > 0 ) {
-  print "[<a href=\"${script}?in=&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}\">";
-  print ${base_name};
-  print "</a>] \n";
-
   print <<EOD;
 <script type="text/javascript">
 <!--
@@ -122,67 +144,23 @@ for( i=0 ; i<pathArray.length ; i++ ) {
 -->
 </script>
 EOD
+  }
 
-  print "<div style=\"clear: both\"></div>";
-  print "<span style=\"float: left;\">\n";
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"search\" method=\"GET\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
-  print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
-  print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
-  print "<input type=\"text\" name=\"search\" size=\"20\" maxlength=\"64\" value=\"${in_search}\">\n";
-  print "<input type=\"submit\" value=\"表示絞込み\">\n";
-  print "</form>\n";
-  print "</span>\n";
-  print "<span style=\"float: right\">\n";
-  &print_action();
-  print "</span>\n";
+print "<div style=\"clear: both\">";
+print "<span style=\"float: left\">\n";
+print "<input type=\"text\" name=\"search\" size=\"20\" maxlength=\"64\" value=\"${in_search}\">\n";
+print "<input type=\"submit\" value=\"表示絞込み\">\n";
+print "</span>\n";
+print "<span style=\"float: right\">\n";
+&print_action();
+print "</span></div>\n";
 
-  print "<div style=\"clear: both\">";
+print "<div style=\"clear: both\">";
+if( $in_in && length($in_in) > 0 ) {
   my $up_path = ParamPath->get_up_path(${in_in});
-  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes\">↑UP</a></div>\n";
-} else {
-  print "<form action=\"$script\" name=\"base\" method=\"GET\">\n";
-  print "ディレクトリ: ";
-  print "<select name=\"dir\" size=\"1\" onChange=\"document.base.submit()\">\n";
-
-  eval {
-    my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                             param_dir => $form->param('dir'));
-    $ins->init();
-    for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
-      my $lst = $ins->get_base_dir_column($i);
-      if ($in_dir eq @{$lst}[1]) {
-        print "<option value=\"@{$lst}[1]\" selected>".@{$lst}[0]."</option>\n";
-      } else {
-        print "<option value=\"@{$lst}[1]\">".@{$lst}[0]."</option>\n";
-      }
-    }
-  };
-
-  print "</select>\n";
-  print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
-  print "<input type=\"hidden\" name=\"s_width\" value=\"${in_s_width}\">\n";
-  print "<input type=\"hidden\" name=\"s_height\" value=\"${in_s_height}\">\n";
-  print "</form>\n";
-
-  print "<span style=\"float: left\">\n";
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"search\" method=\"GET\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
-  print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
-  print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
-  print "<input type=\"hidden\" name=\"s_width\" value=\"${in_s_width}\">\n";
-  print "<input type=\"hidden\" name=\"s_height\" value=\"${in_s_height}\">\n";
-  print "<input type=\"text\" name=\"search\" size=\"20\" maxlength=\"64\" value=\"${in_search}\">\n";
-  print "<input type=\"submit\" value=\"表示絞込み\">\n";
-  print "</form>\n";
-  print "</span>\n";
-  print "<span style=\"float: right\">\n";
-  &print_action();
-  print "</span>\n";
-  print "<p style=\"clear: both\"></p>";
+  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes\">↑UP</a>\n";
 }
+  print "</div>\n";
 
 my @dir_list = ();
 while (my $entry = decode('utf-8', readdir $DIR)) {
@@ -215,12 +193,6 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
 }
 
 ### ディレクトリ内のentry表示
-print "<form action=\"${EDIT_CGI}\" name=\"file_check\" method=\"POST\">\n";
-print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
-print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
-print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
-print "<input type=\"hidden\" name=\"f_dest\" value=\"${in_in}\">\n";
-print "<input type=\"hidden\" name=\"f_dest_dir\" value=\"${in_dir}\">\n";
 foreach my $entry (@dir_list) {
   my $inode = ${in_in} ."/". (stat "${base}${path}/${entry}")[1];
   if ($content_cnt >= $cont_from && $content_cnt <= $cont_to) {
@@ -290,13 +262,22 @@ print "<p class=\"partition\">&nbsp;</p>\n";
 
 if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   &show_next_pagelink(@dir_list);
-#  &show_pagelink(@dir_list);
   print "<br><br>\n";  # ページ下の余白
 }
+
+my @checked_list = ParamPath->get_checked_list(\$form, "${base}${path}");
 
 print "</form>\n";
 print "<script type=\"text/javascript\">\n";
 print "<!--\n";
+foreach my $checked (@checked_list) {
+  my $checked_in = (stat("${base}${path}/${checked}"))[1];
+  if (&contain($checked_in, \@visible_list)) {
+    print "  document.getElementsByName('" . $checked_in . "')[0].checked = true;\n";  # checkbox
+  } elsif (&contain($checked_in, \@un_visible_list)) {
+    print "  document.getElementsByName('" . $checked_in . "')[0].value = 1;\n";  # hidden属性
+  }
+}
 print "function allImgCheck() {\n";
 foreach (@visible_list) {
   print "  document.getElementsByName('" . $_ . "')[0].checked = true;\n";
@@ -313,6 +294,23 @@ foreach (@un_visible_list) {
   print "  document.getElementsByName('" . $_ . "').value = 0;\n";
 }
 print "}\n";
+print <<EOF;
+function changeDirectory() {
+  document.file_check.dir.value = document.file_check.fm_dir.value;
+  document.file_check.in.value = "";
+  document.file_check.submit();
+}
+function jump_to(from, to) {
+  document.file_check.from.value = from;
+  document.file_check.to.value = to;
+  document.file_check.submit();
+}
+function jump_select() {
+  document.file_check.from.value = document.getElementsByName('boxval')[0].value - $boxes;
+  document.file_check.to.value = document.getElementsByName('boxval')[0].value;
+  document.file_check.submit();
+}
+EOF
 print "-->\n";
 print "</script>\n";
 closedir($DIR);
@@ -329,28 +327,16 @@ sub show_pagelink {
   my (@dir_list) = @_;
   my $prev_from = $cont_from - $boxes;
   my $prev_to = $cont_from;
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"jump\" method=\"GET\">\n";
   print "<p style=\"text-align: center\">\n";
   if($prev_from >= 0) {
-    if(${in_search}) {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$prev_from&to=$prev_to&search=${in_search}\">← 前</a>";
-    } else {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$prev_from&to=$prev_to\">← 前</a>";
-    }
+    print "<a href=\"javascript:jump_to($prev_from, $prev_to)\">← 前</a>";
   } else {
     print "← 前";
   }
   print "&nbsp;";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
-  print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
-  print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
-  print "<input type=\"hidden\" name=\"s_width\" value=\"${in_s_width}\">\n";
-  print "<input type=\"hidden\" name=\"s_height\" value=\"${in_s_height}\">\n";
-  print "<input type=\"hidden\" name=\"search\" value=\"${in_search}\">\n" if(${in_search});
 
   my $pg = 1;
-  print "<select name=\"boxval\" onChange=\"jump_to()\">\n";
+  print "<select name=\"boxval\" onChange=\"jump_select()\">\n";
   for(my $i=0;$i<=$#dir_list;$i=$i+$boxes) {
     my $tt = $i + $boxes;
     if($i>=$cont_from && $i < $cont_from + $boxes) {
@@ -365,42 +351,25 @@ sub show_pagelink {
   my $next_from = $cont_to +1;
   my $next_to = $cont_to + $boxes + 1;
   if($cont_to < $#dir_list) {
-    if(${in_search}) {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$next_from&to=$next_to&search=${in_search}\">次 →</a>";
-    } else {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$next_from&to=$next_to\">次 →</a>";
-    }
+    print "<a href=\"javascript:jump_to($next_from, $next_to)\">次 →</a>";
   } else {
     print "次 →";
   }
-  print "</p></form>\n";
+  print "</p>\n";
   print <<EOF;
-<script type="text/javascript">
-<!--
-function jump_to() {
-  document.jump.from.value = document.jump.boxval.value - $boxes;
-  document.jump.to.value = document.jump.boxval.value;
-  document.jump.submit();
- }
--->
-</script>
 EOF
 }
 
 # 前ページリンクの表示
 sub show_prev_pagelink {
-   my (@dir_list) = @_;
-  print "<p style=\"text-align: center\">\n";
+  my (@dir_list) = @_;
   my $prev_from = $cont_from - $boxes;
   my $prev_to = $cont_from;
   if($prev_from >= 0) {
-    if(${in_search}) {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$prev_from&to=$prev_to&search=${in_search}\">前ページ</a>";
-    } else {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$prev_from&to=$prev_to\">前ページ</a>";
-    }
+    print "<p style=\"text-align: center\">\n";
+    print "<a href=\"javascript:jump_to($prev_from, $prev_to)\">前ページ</a>";
+    print "</p>\n";
   }
-  print "</p>\n";
 }
 
 # 次ページへのリンク表示
@@ -410,11 +379,7 @@ sub show_next_pagelink {
   my $next_from = $cont_to +1;
   my $next_to = $cont_to + $boxes + 1;
   if($cont_to < $#dir_list) {
-    if(${in_search}) {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$next_from&to=$next_to&search=${in_search}\">次ページ</a>";
-    } else {
-      print "<a href=\"$script?in=" . ${in_in} . "&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&from=$next_from&to=$next_to\">次ページ</a>";
-    }
+    print "<a href=\"javascript:jump_to($next_from, $next_to)\">次ページ</a>";
   } else {
     print "以上";
   }
@@ -461,7 +426,6 @@ EOF
   return;
 }
 
-
 ## ディスク容量表示
 sub print_disk_space
 {
@@ -478,10 +442,9 @@ EOF
 ## 操作
 sub print_action
 {
-  print <<EOD;
-<form action="#" name="fact" method="GET">
+  print <<EOF;
 操作:
-<select name="action" size="1" onChange="act()">
+<select name="operation" size="1" onChange="act()">
 <option value="nop">-- 操作を選択 --</option>
 <optgroup label="選択">
 <option value="allCheck">全項目選択</option>
@@ -502,13 +465,11 @@ sub print_action
 <option value="move">移動</option>
 </optgroup>
 </select>
-<!-- <input type="button" value="実行" onClick="act()"> -->
-</form>
 <script type="text/javascript">
 <!--
 function act() {
-  var sw = document.fact.action.value;
-  document.fact.action.options[0].selected = true;  // 変更後はnopに
+  var sw = document.file_check.operation.value;
+  document.file_check.operation.options[0].selected = true;  // 変更後はnopに
   switch (sw) {
     case "allCheck":
       allImgCheck();
@@ -518,6 +479,7 @@ function act() {
       break;
     case "resize":
       document.file_check.mode.value = "resize";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "convert":
@@ -527,41 +489,63 @@ function act() {
       break;
     case "combine":
       document.file_check.mode.value = "combine";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "divide":
       document.file_check.mode.value = "divide";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "newfolder":
       document.file_check.mode.value = "newfolder";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "upload":
       document.file_check.mode.value = "upload";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "download":
       document.file_check.mode.value = "download";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "delfile":
       document.file_check.mode.value = "delfile";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "rename":
       document.file_check.mode.value = "rename";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
     case "move":
+      var elem = document.createElement("f_dest");
+      elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_in}">'
+                     + '<input type="hidden" name="f_dest_dir" value="${in_dir}">';
+      document.getElementById("editParam").appendChild(elem);
       document.file_check.mode.value = "move";
+      document.file_check.action = "${EDIT_CGI}";
       document.file_check.submit();
       break;
   }
 }
 -->
 </script>
-EOD
+EOF
 }
 
-exit(0);
+## 要素が存在するか
+
+sub contain
+{
+  my ($key, $list) = @_;
+  foreach (@$list) {
+    return 1 if ($key eq $_);
+  }
+
+  return 0;
+}
