@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use utf8;
+use Encode;
 use CGI;
 
 use XML::Simple;
@@ -226,16 +227,16 @@ exit(0);
 sub get_imglink {
   my $path_of_dir = ParamPath->get_up_path("${base}${path}");
   my $path_of_inode = ParamPath->get_up_path($form->param('in'));
-  if(opendir( DIR, "$path_of_dir" )) {
+  if (opendir(my $dir, "$path_of_dir")) {
     my @jpg_list = ();
-    while( my $entry = readdir DIR ) {
-      if( length($entry) >=0 ) {
-        if( lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/ ) {
+    while (my $entry = decode('utf-8', readdir $dir)) {
+      if (length($entry) >= 0) {
+        if (lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/) {
           push(@jpg_list, $entry);
         }
       }
     }
-    closedir(DIR);
+    closedir($dir);
     @jpg_list = sort {$a cmp $b} @jpg_list;
     $img_num = $#jpg_list;
 
@@ -260,16 +261,16 @@ sub show_dir_imglist {
   ### ディレクトリ内の写真
   my $path_of_dir = ParamPath->get_up_path($path);
   my $path_of_inode = ParamPath->get_up_path($in_in);
-  if(opendir( DIR, "$path_of_dir" )) {
+  if (opendir(my $dir, "$path_of_dir")) {
     my @jpg_list = ();
-    while( my $entry = readdir DIR ) {
-      if( length($entry) >=0 ) {
-        if( lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/ ) {
+    while (my $entry = decode('utf-8', readdir $dir)) {
+      if (length($entry) >= 0) {
+        if (lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/) {
           push(@jpg_list, $entry);
         }
       }
     }
-    closedir(DIR);
+    closedir($dir);
     @jpg_list = sort {$a cmp $b} @jpg_list;
     print "<p>\n";
     my $img_idx = 0;

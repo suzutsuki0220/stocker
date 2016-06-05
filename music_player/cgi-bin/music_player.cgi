@@ -168,28 +168,28 @@ print "<script type=\"text/javascript\">\n";
 print "<!--\n";
 my $music_count = 0;
 opendir(my $DIR, $media_dir) or HTML_Elem->error("ディレクトリ展開に失敗しました");
-while( my $entry = readdir $DIR ) {
-  if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' ) {
-    if( -f "$media_dir/$entry" ) {
-      if( lc($entry) =~ /\.mp3$/ ) {
+while (my $entry = decode('utf-8', readdir $DIR)) {
+  if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
+    if ( -f "$media_dir/$entry") {
+      if (lc($entry) =~ /\.mp3$/) {
         $music_count++;
         my %tag_t = &get_mp3_info($media_dir ."/". $entry);
         print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
         print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
         print "  track.push(tag);\n";
-      } elsif( lc($entry) =~ /\.wma$/ ) {
+      } elsif (lc($entry) =~ /\.wma$/) {
         $music_count++;
         my %tag_t = &get_wma_info($media_dir ."/". $entry);
         print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
         print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
         print "  track.push(tag);\n";
-      } elsif( lc($entry) =~ /\.wav$/ ) {
+      } elsif (lc($entry) =~ /\.wav$/) {
         $music_count++;
         my %tag_t = &get_wav_info($media_dir ."/". $entry);
         print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
         print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
         print "  track.push(tag);\n";
-      } elsif( lc($entry) =~ /\.flac$/ ) {
+      } elsif (lc($entry) =~ /\.flac$/) {
         $music_count++;
         my %tag_t = &get_flac_info($media_dir ."/". $entry);
         print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
