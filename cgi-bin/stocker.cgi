@@ -278,23 +278,58 @@ foreach my $checked (@checked_list) {
     print "  document.getElementsByName('" . $checked_in . "')[0].value = 1;\n";  # hidden属性
   }
 }
-print "function allImgCheck() {\n";
-foreach (@visible_list) {
-  print "  document.getElementsByName('" . $_ . "')[0].checked = true;\n";
+print "var visible_list = [";
+for (my $i=0; $i<@visible_list; $i++) {
+  if ($i != 0) {
+    print ", ";
+  }
+  print "\"". $visible_list[$i]. "\"";
 }
-foreach (@un_visible_list) {
-  print "  document.getElementsByName('" . $_ . "').value = 1;\n";
+print "];\n";
+print "var un_visible_list = [";
+for (my $i=0; $i<@un_visible_list; $i++) {
+  if ($i != 0) {
+    print ", ";
+  }
+  print "\"". $un_visible_list[$i]. "\"";
 }
-print "}\n";
-print "function allImgUnCheck() {\n";
-foreach (@visible_list) {
-  print "  document.getElementsByName('" . $_ . "')[0].checked = false;\n";
-}
-foreach (@un_visible_list) {
-  print "  document.getElementsByName('" . $_ . "').value = 0;\n";
-}
-print "}\n";
+print "];\n";
 print <<EOF;
+function allCheck() {
+  for (var key in visible_list) {
+    document.getElementsByName(visible_list[key])[0].checked = true;
+  }
+  for (var key in un_visible_list) {
+    document.getElementsByName(un_visible_list[key]).value = 1;
+  }
+}
+function allUnCheck() {
+  for (var key in visible_list) {
+    document.getElementsByName(visible_list[key])[0].checked = false;
+  }
+  for (var key in un_visible_list) {
+    document.getElementsByName(un_visible_list[key]).value = 0;
+  }
+}
+function isAnyChecked() {
+  for (var key in visible_list) {
+    if (document.getElementsByName(visible_list[key])[0].checked) {
+      return true;
+    }
+  }
+  return false;
+}
+function actionClickedIcon (action, elem) {
+  if (isAnyChecked()) {
+    if (document.getElementsByName(elem)[0].checked == false) {
+      document.getElementsByName(elem)[0].checked = true;
+    } else {
+      document.getElementsByName(elem)[0].checked = false;
+    }
+  } else {
+    location.href = action;
+  }
+}
 function changeDirectory() {
   document.file_check.dir.value = document.file_check.fm_dir.value;
   document.file_check.in.value = "";
@@ -413,7 +448,7 @@ sub print_icon
   print <<EOF;
 <div class="imagebox" style="width: ${BOX_WIDTH}px; height: ${BOX_HEIGHT}px">
 <p class="image" style="width: ${BOX_WIDTH}px; height: 75px">
-<a href="${action}"><img src="${icon}"></p>
+<a href="javascript:actionClickedIcon('${action}', '${inode}')"><img src="${icon}"></a></p>
 <span style="position: absolute; top: 3px; right: 3px;">
 <input type="checkbox" name="${inode}" value="1">
 </span>
@@ -472,10 +507,10 @@ function act() {
   document.file_check.operation.options[0].selected = true;  // 変更後はnopに
   switch (sw) {
     case "allCheck":
-      allImgCheck();
+      allCheck();
       break;
     case "allUnCheck":
-      allImgUnCheck();
+      allUnCheck();
       break;
     case "resize":
       document.file_check.mode.value = "resize";
