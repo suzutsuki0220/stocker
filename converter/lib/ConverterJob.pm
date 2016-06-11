@@ -17,10 +17,10 @@ sub new {
     source => '',
     out_dir => '',
     format => '',
-    set_position => '',
     pass2 => '',
-    ss => '',
-    t => '',
+    set_position => '',
+    ss => undef,
+    t => undef,
     v_v_map => '',
     v_v_copy => '',
     v_enable_crop => '', 
@@ -110,10 +110,20 @@ sub get
   $self->{'source'}               = $self->_elm($gnl->{'source'}[0]);
   $self->{'out_dir'}              = $self->_elm($gnl->{'out_dir'}[0]);
   $self->{'format'}               = $self->_elm($gnl->{'format'}[0]);
-  $self->{'set_position'}         = $self->_elm($gnl->{'set_position'}[0]);
   $self->{'pass2'}                = $self->_elm($gnl->{'pass2'}[0]);
-  $self->{'ss'}                   = $self->_elm($gnl->{'ss'}[0]);
-  $self->{'t'}                    = $self->_elm($gnl->{'t'}[0]);
+  $self->{'set_position'}         = $self->_elm($gnl->{'set_position'}[0]);
+  if ($self->{'set_position'}) {
+    my $i = 0;
+    my @ss_list = ();
+    my @t_list  = ();
+    while (my $pos = $gnl->{'position'}[$i]) {
+      push(@ss_list, $self->_elm($pos->{'ss'}[0]));
+      push(@t_list,  $self->_elm($pos->{'t'}[0] ? $pos->{'t'}[0] : 0));
+      $i++;
+    }
+    $self->{'ss'}                 = \@ss_list;
+    $self->{'t'}                  = \@t_list;
+  }
 
   my $vid = $gnl->{'video'}[0];
   $self->{'v_v_map'}              = $self->_elm($vid->{'v_map'}[0]);
@@ -413,10 +423,20 @@ sub make_job_xml
   $data .= "    <source>".&escape_xml($self->{'source'})."</source>\n";
   $data .= "    <out_dir>".&escape_xml($self->{'out_dir'})."</out_dir>\n";
   $data .= "    <format>".$self->{'format'}."</format>\n";
-  $data .= "    <set_position>".$self->{'set_position'}."</set_position>\n";
-  $data .= "    <ss>".$self->{'ss'}."</ss>\n";
-  $data .= "    <t>".$self->{'t'}."</t>\n";
   $data .= "    <pass2>".$self->{'pass2'}."</pass2>\n";
+  $data .= "    <set_position>".$self->{'set_position'}."</set_position>\n";
+  if ($self->{'set_position'} eq "true") {
+    my $i = 0;
+    my $ssref = $self->{'ss'};
+    my $tref  = $self->{'t'};
+    foreach my $ss (@$ssref) {
+      $data .= "    <position>\n";
+      $data .= "      <ss>".$ss."</ss>\n";
+      $data .= "      <t>".(@$tref)[$i]."</t>\n";
+      $data .= "    </position>\n";
+      $i++;
+    }
+  }
   $data .= "    <video>\n";
   $data .= "        <v_map>".$self->{'v_v_map'}."</v_map>\n";
   $data .= "        <v_copy>".$self->{'v_v_copy'}."</v_copy>\n";

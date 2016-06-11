@@ -56,11 +56,6 @@ my $in   = $q->param('in');
 my $dir  = $q->param('dir');
 my $out_dir = $q->param('out_dir');
 
-if(! ${in} || length(${in}) <= 0 ) {
-  HTML_Elem->header();
-  HTML_Elem->error("パスが指定されていません。");
-}
-
 my @files = ();
 my $up_inode = ${in};
 my $path;
@@ -89,7 +84,9 @@ if(-f "${base}${path}") {
   # 複数ファイルの指定
   @files = ParamPath->get_checked_list(\$q, "${base}${path}");
   @files = sort {$a cmp $b} @files;
-} else {
+}
+
+if (@files.length == 0) {
   HTML_Elem->header();
   HTML_Elem->error("指定されたファイルが存在しません。");
 }
@@ -152,10 +149,22 @@ sub add_encodejob()
   $job->{source} = $source;
   $job->{out_dir} = decode('utf-8', $q->param('out_dir'));
   $job->{format} = $q->param('format');
-  $job->{set_position} = $q->param('set_position') ? 'true' : 'false';
+  if ($q->param('set_position')) {
+    $job->{set_position} = 'true';
+    my @ss_list = ();
+    my @t_list = ();
+    my $i = 0;
+    while ($q->param('ss'.$i)) {
+      push(@ss_list, $q->param('ss'.$i));
+      push(@t_list, $q->param('t'.$i) ? $q->param('t'.$i) : 0);
+      $i++;
+    }
+    $job->{ss} = \@ss_list;
+    $job->{t}  = \@t_list;
+  } else {
+    $job->{set_position} = 'false';
+  }
   $job->{pass2} = $q->param('pass2') ? 'true' : 'false';
-  $job->{ss} = $q->param('ss');
-  $job->{t} = $q->param('t');
   $job->{v_v_map} = $q->param('v_map');
   $job->{v_v_copy} = $q->param('v_copy') ? 'true' : 'false'; 
   $job->{v_enable_crop} = $q->param('enable_crop') ? 'true' : 'false';
@@ -211,7 +220,10 @@ sub print_form() {
   my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
   $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
 
-  my @jslist = ("%htdocs_root%/converter_form.js");
+  my @jslist = (
+      "%htdocs_root%/converter_form.js",
+      "%htdocs_root%/ajax_html_request.js",
+  );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
   $html->header();
@@ -557,7 +569,7 @@ EOD
     document.enc_setting.s_w.value = 1280;
     document.enc_setting.s_h.value = 720;
     document.enc_setting.r.value = 29.97;
-    document.enc_setting.b.value = 4096;
+    document.enc_setting.b.value = 4000;
     //document.enc_setting.deinterlace.checked = false;
   }
 
@@ -575,11 +587,103 @@ EOD
     document.enc_setting.cutoff.value = 18000;
   }
 
-  function openTimerSelector(target, ss) {
-    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target + "&ss=" + ss,
+  function openTimerSelector(target, pos, sf, ef, df) {
+    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target + "&pos=" + pos + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df,
                 "timersel",
                 'width=680, height=700, menubar=no, toolbar=no, scrollbars=yes'
                );
+  }
+
+  function addJob() {
+    var httpRequest = ajax_init();
+    if (!httpRequest) {
+      alert("中断 :( XMLHTTPインスタンスを生成できませんでした");
+      return false;
+    }
+    ajax_set_instance(httpRequest, function() { getAddJobResult(httpRequest); });
+    ajax_post(httpRequest, "$ENV{'SCRIPT_NAME'}", query);
+  }
+
+  function getAddJobResult(httpRequest) {
+    try {
+      if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
+        document.getElementById('sStatus').innerHTML = "読み込み中...";
+      } else if (httpRequest.readyState == 4) {
+        if (httpRequest.status == 200) {
+          //document.getElementById('sStatus').innerHTML = "";
+          document.getElementById('sValue').innerHTML = httpRequest.responseText;
+        } else {
+          document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
+        }
+      }
+    } catch(e) {
+      alert("ERROR: " + e.description);
+    }
+  }
+
+  var timeSelNum = 0;
+  function addTimeSel() {
+    var elm = document.getElementById("TimeSelAddtion");
+    var newValue = document.getElementsByName("tend"+timeSelNum)[0].value;  // 一つ上の範囲の終了時間を次の開始時間にする
+    timeSelNum++;
+
+    var selectArea = document.createElement("div");
+    selectArea.setAttribute("id", "sarea"+timeSelNum);
+    var textElem = document.createTextNode("開始位置 ");
+    selectArea.appendChild(textElem);
+    var ssArea = document.createElement("input");
+    ssArea.setAttribute("type", "text");
+    ssArea.setAttribute("name", "ss"+timeSelNum);
+    ssArea.setAttribute("value", newValue);
+    ssArea.setAttribute("onClick", "openTimerSelector('ss"+timeSelNum+"', document.getElementsByName('ss"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    selectArea.appendChild(ssArea);
+    textElem = document.createTextNode(" (時:分:秒.ミリ秒) ～ ");
+    selectArea.appendChild(textElem);
+    var tendArea = document.createElement("input");
+    tendArea.setAttribute("type", "text");
+    tendArea.setAttribute("name", "tend"+timeSelNum);
+    tendArea.setAttribute("value", newValue);
+    tendArea.setAttribute("onClick", "openTimerSelector('tend"+timeSelNum+"', document.getElementsByName('tend"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    selectArea.appendChild(tendArea);
+    textElem = document.createTextNode(" (時:分:秒.ミリ秒) 長さ ");
+    selectArea.appendChild(textElem);
+    var tArea = document.createElement("input");
+    tArea.setAttribute("type", "text");
+    tArea.setAttribute("name", "t"+timeSelNum);
+    tArea.setAttribute("value", "00:00:00.000");
+    tArea.setAttribute("readonly", "true");
+    selectArea.appendChild(tArea);
+    var delArea = document.createElement("input");
+    delArea.setAttribute("type", "button");
+    delArea.setAttribute("name", "btnDel"+timeSelNum);
+    delArea.setAttribute("value", "削除");
+    delArea.setAttribute("onClick", "deleteTimeSel("+timeSelNum+")");
+    selectArea.appendChild(delArea);
+    elm.appendChild(selectArea);
+  }
+
+  function deleteTimeSel(idx) {
+    if (idx <= timeSelNum) {
+      var elm = document.getElementById("TimeSelAddtion");
+      var i = idx;
+
+      // 間に空いた部分を詰める
+      while (i < timeSelNum) {
+        var nextIdx = i + 1;
+        var nextSs = document.getElementsByName('ss'+nextIdx)[0].value;
+        var nextTend = document.getElementsByName('tend'+nextIdx)[0].value;
+        var nextT = document.getElementsByName('t'+nextIdx)[0].value;
+        document.getElementsByName('ss'+i)[0].value = nextSs;
+        document.getElementsByName('tend'+i)[0].value = nextTend;
+        document.getElementsByName('t'+i)[0].value = nextT;
+        i++;
+      }
+
+      // 最後を消す
+      var selectArea = document.getElementById("sarea"+timeSelNum);
+      elm.removeChild(selectArea);
+      timeSelNum--;
+    }
   }
 -->
 </script>
@@ -593,7 +697,7 @@ EOD
 EOF
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" onChange=\"select_existdir()\">\n";
-    while(my $entry = readdir(DIR)) {
+    while(my $entry = decode('utf-8', readdir(DIR))) {
       if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' &&
           -d "$CONV_OUT_DIR/$entry" )
       {
@@ -613,9 +717,11 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-開始位置 <input type="text" name="ss" value="00:00:00.000" onClick="openTimerSelector('ss', document.enc_setting.ss.value)"> (時:分:秒.ミリ秒)
- ～ <input type="text" name="tend" value="00:00:00.000" onClick="openTimerSelector('tend', document.enc_setting.tend.value)"> (時:分:秒.ミリ秒)
- 長さ <input type="text" name="t" value="00:00:00.000" readonly>
+開始位置 <input type="text" name="ss0" value="00:00:00.000" onClick="openTimerSelector('ss0', document.enc_setting.ss0.value, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
+ ～ <input type="text" name="tend0" value="00:00:00.000" onClick="openTimerSelector('tend0', document.enc_setting.tend0.value, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
+ 長さ <input type="text" name="t0" value="00:00:00.000" readonly>
+<div id="TimeSelAddtion"></div>
+<input type="button" name="add_time_sel" onClick="addTimeSel()" value="追加">
 </div>
 </fieldset><br>
 ファイルフォーマット <select name="format" onchange="changeEncodeParameter()">
@@ -757,6 +863,8 @@ weight
 </fieldset>
 <br>
 
+<div id="sStatus"></div>
+<!-- <input type="button" value="変換する" onClick="addJob()"> -->
 <input type="submit" value="変換する">
 </form>
 EOF

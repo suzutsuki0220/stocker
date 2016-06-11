@@ -49,6 +49,8 @@ sub worker
 {
   my ($job, $job_num) = @_;
   my $out_file = "";
+  my @ss_list = ();
+  my @t_list  = ();
 
   $$job->get($job_num);
   $$job->delete($job_num);
@@ -65,85 +67,103 @@ sub worker
 
   my $log_file = ${outdir}."/encodelog_".$$job->{'_jobid'}.".txt";
 
-  if($$job->{'pass2'} eq "true") {
-    # 2pass 有効
-    mkpath("${TMP_PATH}");
+  if ($$job->{'set_position'} eq "true") {
+    my $ssref = $$job->{'ss'};
+    my $tref  = $$job->{'t'};
+    @ss_list = @$ssref;
+    @t_list  = @$tref;
+    $$job->{'ss'} = shift(@ss_list);
+    $$job->{'t'}  = shift(@t_list);
+  }
 
-    my $ret;
-    my $cmd = &make_cmd($job, 1, \$out_file);
-    if (length($cmd) == 0) {
-      #error;
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
-      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+  while ($job) {
+    if($$job->{'pass2'} eq "true") {
+      # 2pass 有効
+      mkpath("${TMP_PATH}");
+
+      my $ret;
+      my $cmd = &make_cmd($job, 1, \$out_file);
+      if (length($cmd) == 0) {
+        #error;
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
+        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+          close($fd);
+        }
+        return
+      }
+      if (open(my $fd, ">> $log_file")) {
+        print $fd "=== pass 1 ===\n". $cmd ."\n=====\n";
         close($fd);
       }
-      return
-    }
-    if (open(my $fd, ">> $log_file")) {
-      print $fd "=== pass 1 ===\n". $cmd ."\n=====\n";
-      close($fd);
-    }
-    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-    if ($ret != 0) {
-      #error
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
-      rename($out_file, $error_name);
-      return
-    }
+      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
+      if ($ret != 0) {
+        #error
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
+        rename($out_file, $error_name);
+        return
+      }
 
-    unlink($out_file);
+      unlink($out_file);
 
-    $cmd = &make_cmd($job, 2, \$out_file);
-    if (length($cmd) == 0) {
-      #error;
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
-      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+      $cmd = &make_cmd($job, 2, \$out_file);
+      if (length($cmd) == 0) {
+        #error;
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
+        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+          close($fd);
+        }
+        return
+      }
+      if (open(my $fd, ">> $log_file")) {
+        print $fd "=== pass 2 ===\n". $cmd ."\n=====\n";
         close($fd);
       }
-      return
-    }
-    if (open(my $fd, ">> $log_file")) {
-      print $fd "=== pass 2 ===\n". $cmd ."\n=====\n";
-      close($fd);
-    }
-    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-    if ($ret != 0) {
-      #error
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
-      rename($out_file, $error_name);
-      return
-    }
+      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
+      if ($ret != 0) {
+        #error
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
+        rename($out_file, $error_name);
+        return
+      }
 
-    rename($out_file, &rev_temporary_name($out_file, 2));
+      rename($out_file, &rev_temporary_name($out_file, 2));
 
-    rmtree("${TMP_PATH}");
-  } else {
-    # 2pass 無効
-    my $cmd = &make_cmd($job, 0, \$out_file);
-    if (length($cmd) == 0) {
-      #error;
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
-      if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+      rmtree("${TMP_PATH}");
+    } else {
+      # 2pass 無効
+      my $cmd = &make_cmd($job, 0, \$out_file);
+      if (length($cmd) == 0) {
+        #error;
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
+        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+          close($fd);
+        }
+        return
+      }
+
+      if (open(my $fd, ">> $log_file")) {
+        print $fd "=====\n". $cmd ."\n=====\n";
         close($fd);
       }
-      return
+
+      my $ret;
+      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
+      if ($ret != 0) {
+        #error
+        my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
+        rename($out_file, $error_name);
+        return
+      }
+
+      rename($out_file, &rev_temporary_name($out_file, 0));
     }
 
-    if (open(my $fd, ">> $log_file")) {
-      print $fd "=====\n". $cmd ."\n=====\n";
-      close($fd);
+    if ($$job->{'set_position'} eq "true" && $#ss_list >= 0) {
+      $$job->{'ss'} = shift(@ss_list);
+      $$job->{'t'}  = shift(@t_list);
+    } else {
+      undef($job);
     }
-
-    my $ret;
-    $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-    if ($ret != 0) {
-      #error
-      my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
-      rename($out_file, $error_name);
-      return
-    }
-
-    rename($out_file, &rev_temporary_name($out_file, 0));
   }
 
   return;

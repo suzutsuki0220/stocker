@@ -77,16 +77,23 @@ sub frame_selector
   $html->{'javascript'} = \@jslist;
   $html->header('timer selector');
 
-  my $ss = $q->param('ss');
-  my $target = $q->param('target') eq 'tend' ? "tend" : "ss";
-  my $duration = get_video_duration($encfile);
+  my $pos        = $q->param('pos');
+  my $target     = $q->param('target');
+  my $start_f    = $q->param('start_f');
+  my $end_f      = $q->param('end_f');
+  my $duration_f = $q->param('duration_f');
+  my $duration   = get_video_duration($encfile);
 
-  &print_script($target);
+  if (!$target || !$start_f || !$end_f || !$duration_f) {
+    HTML_Elem->error("parameter is not enough");
+  }
+
+  &print_script($target, $start_f, $end_f, $duration_f);
 
   print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
 <div style="position: relative; width: 640px;">
-  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${ss}" id="preview" name="preview">
+  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${pos}" id="preview" name="preview">
   <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
     Reloading...
   </div>
@@ -104,7 +111,7 @@ print <<EOF;
 </select>&nbsp;
 <input type="button" name="btnUp" value="+" onClick="upTime(document.f1.skip.value)">
 <br>
-Time: <input type="text" name="selectedTime" size="30" value="${ss}"><br>
+Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
 <br>
 <input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
 <input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
@@ -225,7 +232,7 @@ sub get_video_duration
 
 sub print_script
 {
-  my ($target) = @_;
+  my ($target, $start_f, $end_f, $duration_f) = @_;
 
   print <<EOF;
 <script type="text/javascript">
@@ -243,14 +250,14 @@ sub print_script
     if (selected_time) {
       window.opener.document.enc_setting.${target}.value = selected_time;
 
-      var ss = window.opener.document.enc_setting.ss.value;
-      var te = window.opener.document.enc_setting.tend.value;
+      var ss = window.opener.document.enc_setting.${start_f}.value;
+      var te = window.opener.document.enc_setting.${end_f}.value;
       var duration = getEncTimeDuration(ss, te);
       if (duration > 0) {
-        window.opener.document.enc_setting.t.value = getEncTimeString(duration);
+        window.opener.document.enc_setting.${duration_f}.value = getEncTimeString(duration);
       } else {
-        window.opener.document.enc_setting.tend.value = ss;
-        window.opener.document.enc_setting.t.value = getEncTimeString(0);
+        window.opener.document.enc_setting.${end_f}.value = ss;
+        window.opener.document.enc_setting.${duration_f}.value = getEncTimeString(0);
       }
     } else {
       alert("Timeが選択されていません");
