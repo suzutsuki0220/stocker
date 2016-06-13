@@ -396,11 +396,16 @@ function getEncTimeDuration(ss, te) {
 function getEncTimeString(length) {
     var len_hour = Math.floor(length / 3600000);
     var len_min  = Math.floor((length - (len_hour*3600000)) / 60000);
-    var len_sec  = (length - (len_hour*3600000) - (len_min*60000)) / 1000;
+    var len_sec  = (length - (len_hour*3600000) - (len_min*60000));
+    var len_mili = len_sec % 1000;
+
+    len_sec = (len_sec - len_mili) / 1000;
 
     if (len_hour < 10) { len_hour = "0" + len_hour; }
     if (len_min  < 10) { len_min  = "0" + len_min; }
     if (len_sec  < 10) { len_sec  = "0" + len_sec; }
+    if (len_mili < 10) { len_mili = "00" + len_mili; }
+    else if (len_mili < 100) { len_mili = "0" + len_mili; }
 
-    return len_hour + ":" + len_min + ":" + len_sec;
+    return len_hour + ":" + len_min + ":" + len_sec + "." + len_mili;
 }
