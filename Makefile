@@ -14,7 +14,7 @@ TRASH_DIR  = $(BASE_DIR)/trash
 
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
 DOC_FILES  = icons ajax_html_request.js
-CGI_FILES  = download.cgi edit.cgi edit_filefunc.pl media_out_mp4.cgi media_out_mp4.cgi_fwrite stocker.cgi text_viewer.cgi
+CGI_FILES  = download.cgi edit.cgi edit_filefunc.pl stocker.cgi text_viewer.cgi
 CONF_FILES = BaseDirs.pl SupportTypes.pl stocker.conf
 
 all:
