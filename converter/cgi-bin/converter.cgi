@@ -74,14 +74,21 @@ if ($@) {
 
 if(-f "${base}${path}") {
   # 1ファイルの指定
-  my $filename = "/$path";
-  $filename =~ /(.*)\/([^\/]{1,})$/;
-  $path = $1;
-  $filename = $2;
+  my $filename;
+  if ($path =~ m/(.*)\/(.*)$/) {
+    $path = $1 . "/";
+    $filename = $2;
+  } else {
+    $filename = $path;
+    $path = "";
+  }
   push(@files, $filename);
   $up_inode = ParamPath->get_up_path(${in});
 } elsif(-d "${base}${path}") {
   # 複数ファイルの指定
+  if (length($path) > 0 && $path !~ /\/$/) {
+    $path .= "/";
+  }
   @files = ParamPath->get_checked_list(\$q, "${base}${path}");
   @files = sort {$a cmp $b} @files;
 }
@@ -91,7 +98,7 @@ if (@files.length == 0) {
   HTML_Elem->error("指定されたファイルが存在しません。");
 }
 
-my $encfile = $base . $path ."/". $files[0];
+my $encfile = $base . $path . $files[0];
 my $encfile_inode = $up_inode ."/". (stat "${encfile}")[1];
 
 my $mtype = &check_capable_type($encfile);
@@ -124,16 +131,16 @@ sub perform_encode() {
 
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
-      &add_encodejob("${base}${path}/$_");
+      &add_encodejob("${base}${path}$_");
     }
   } elsif ($q->param('multi_editmode') eq "combine") {
     my $concat = "concat:";
     foreach (@files) {
-      $concat .= "${base}${path}/$_|";
+      $concat .= "${base}${path}$_|";
     }
     &add_encodejob("$concat");
   } else {
-    &add_encodejob("${base}${path}/$files[0]");
+    &add_encodejob("${base}${path}$files[0]");
   }
 
   print "<a href=\"${STOCKER_CGI}?in=$up_inode&dir=${dir}\">← フォルダーに戻る</a></p>";
@@ -244,7 +251,7 @@ EOF
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
-    print $path . "/" . $_ . "<br>\n";
+    print $path . $_ . "<br>\n";
   }
 
   print "<h2>情報</h2>\n";
@@ -335,7 +342,7 @@ EOF
     print "<br></p>\n";
   }
   foreach (@files) {
-    my $inode = (stat "${base}${path}/$_")[1];
+    my $inode = (stat "${base}${path}$_")[1];
     print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
   }
 
@@ -348,7 +355,7 @@ EOF
     path = path.substr(1,path.length);
   }
   var pathArray = path.split("/");
-  for( i=0; i<pathArray.length; i++ ) {
+  for( i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
     document.write("/ <a href=\\"javascript:fillFolderName('" + pathArray[i] + "')\\">" + pathArray[i] + "</a>&nbsp;");
   }
 
