@@ -323,7 +323,7 @@ sub make_cmd()
 
   my $position = "";
   if ($$job->{'set_position'} eq "true" && $$job->{'ss'} ne '00:00:00.000') {
-    $position = "-ss ".$$job->{'ss'};
+    $position = " -ss ".$$job->{'ss'};
 
     my $ss_sec = $$job->{'ss'};
     $ss_sec =~ s/[:\.]//g;
@@ -358,7 +358,7 @@ sub make_cmd()
 #    while ($pos <= $duration_sec) {
 #      my $cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
 #      my $out = $out_path ."/". sprintf("%06d_", $pos). $$out_file .".jpg";
-#      $position = "-ss $pos";
+#      $position = " -ss $pos";
 #      $cmd =~ s/%%POSITION%%/$position/;
 #      $cmd =~ s/%%INPUT%%/$$job->{'source'}/;
 #      $cmd =~ s/%%OUTPUT%%/$out/;
@@ -407,21 +407,15 @@ sub make_cmd()
     return;
   }
 
-  $$out_file = &get_temporary_name($$out_file, $pass);
-
-  my $enc_cmd = "${FFMPEG_CMD} %%POSITION%% -i \"%%INPUT%%\" %%PASSOPT%% %%OPTION%% \"%%OUTPUT%%\"";
-  $enc_cmd =~ s/%%POSITION%%/$position/;
-  $enc_cmd =~ s/%%INPUT%%/$$job->{'source'}/;
-  $enc_cmd =~ s/%%OUTPUT%%/$$out_file/;
-  $enc_cmd =~ s/%%OPTION%%/$option/;
-
   my $pass_opt = "";
   if($pass == 1) {
-    $pass_opt = "-pass 1 -passlogfile ${tmpfile}";
+    $pass_opt = " -pass 1 -passlogfile ${tmpfile}";
   } elsif($pass == 2) {
-    $pass_opt = "-pass 2 -passlogfile ${tmpfile}";
+    $pass_opt = " -pass 2 -passlogfile ${tmpfile}";
   }
-  $enc_cmd =~ s/%%PASSOPT%%/$pass_opt/;
+  $$out_file = &get_temporary_name($$out_file, $pass);
+
+  my $enc_cmd = ${FFMPEG_CMD} . ${position} . " -i \"" . $$job->{'source'} . "\"" . $pass_opt . $option . " \"" . $$out_file . "\"";
 
   return $enc_cmd;
 }
