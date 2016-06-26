@@ -20,6 +20,7 @@ CONF_FILES = BaseDirs.pl SupportTypes.pl stocker.conf
 all:
 	make -C GPS_viewer/
 	make -C converter/
+	make -C get_file/
 	make -C music_player/
 	make -C picture_viewer/
 	make -C thumbnail/
@@ -27,6 +28,7 @@ all:
 clean:
 	make -C GPS_viewer/ clean
 	make -C converter/ clean
+	make -C get_file/ clean
 	make -C music_player/ clean
 	make -C picture_viewer/ clean
 	make -C thumbnail/ clean
@@ -71,6 +73,7 @@ install-cgi:
 install-modules:
 	make -C GPS_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C converter/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C get_file/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
