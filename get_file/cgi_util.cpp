@@ -242,17 +242,17 @@ get_bits(const unsigned char *c, unsigned char *bits, size_t start, size_t size)
  * @return 処理結果
  */
 int
-cgi_util::decodeBase64URL(std::string &data, std::string &str)
+cgi_util::decodeBase64URL(std::string &str)
 {
+    std::string data;
     unsigned char *buff = NULL;
     size_t buff_size = 0;
     int ret;
 
     ret = decodeBase64URL(&buff, &buff_size, str);
-    data.clear();
 
     if (buff) {
-        data.append((char*)buff);
+        data.append((char*)buff, buff_size);
         free(buff);
 
         if (data.size() != buff_size) {
@@ -260,6 +260,7 @@ cgi_util::decodeBase64URL(std::string &data, std::string &str)
             ret = -2;
         }
     }
+    str = data;
 
     return ret;
 }
@@ -295,17 +296,17 @@ cgi_util::decodeBase64URL(unsigned char **data, size_t *size, std::string &str)
  * @return 処理結果
  */
 int
-cgi_util::decodeBase64(std::string &data, std::string &str)
+cgi_util::decodeBase64(std::string &str)
 {
+    std::string data;
     unsigned char *buff = NULL;
     size_t buff_size = 0;
     int ret;
 
     ret = decodeBase64(&buff, &buff_size, str);
-    data.clear();
 
     if (buff) {
-        data.append((char*)buff);
+        data.append((char*)buff, buff_size);
         free(buff);
 
         if (data.size() != buff_size) {
@@ -313,6 +314,7 @@ cgi_util::decodeBase64(std::string &data, std::string &str)
             ret = -2;
         }
     }
+    str = data;
 
     return ret;
 }

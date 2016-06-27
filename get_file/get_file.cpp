@@ -62,7 +62,10 @@ main(int argc, char** argv)
         }
 
         f_dir  = cgi->decodeFormURL(f_dir);
-        cgi->decodeBase64URL(f_file, f_file);
+        if (cgi->decodeBase64URL(f_file) != 0) {
+	    print_400_header("failed to decode file parameter");
+	    return -1;
+	}
         f_mime = cgi->decodeFormURL(f_mime);
 
         fu = new fileutil(f_file.c_str()); // TODO:ファイル名

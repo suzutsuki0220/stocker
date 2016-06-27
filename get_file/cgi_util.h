@@ -22,9 +22,9 @@ public:
     int parse_param(void);
     std::string decodeFormURL(std::string &str);
     std::string encodeFormURL(std::string &str);
-    int decodeBase64URL(std::string &data, std::string &str);
+    int decodeBase64URL(std::string &str);
     int decodeBase64URL(unsigned char **data, size_t *size, std::string &str);
-    int decodeBase64(std::string &data, std::string &str);
+    int decodeBase64(std::string &str);
     int decodeBase64(unsigned char **data, size_t *size, std::string &str);
     std::string encodeBase64URL(std::string &data);
     std::string encodeBase64URL(const unsigned char *data, size_t size);
