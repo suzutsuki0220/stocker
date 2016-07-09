@@ -67,7 +67,7 @@ if($form->param('size') && $form->param('size') != 0) {
 
 my $lastmodified = (stat ${base}.${path})[9];
 
-if ($form->param('size') == 640 && ! $form->param('set_position') && ! $form->param('enable_adjust') && ! $form->param('enable_crop') && ! $form->param('enable_pad')) {
+if (&judgeMakeCache($size) == 1) {
   if (&img_fromcache($cache, $lastmodified) == 0) {
     exit(0);
   }
@@ -85,6 +85,17 @@ exit(0);
 
 
 ##
+
+sub judgeMakeCache()
+{
+  my ($size) = @_;
+  if ($size == 640 && ! $form->param('enable_adjust') && ! $form->param('enable_crop') && ! $form->param('enable_pad')) {
+    if (!$form->param('set_position') || $form->param('ss') eq '00:00:00.000') {
+      return 1;
+    }
+  }
+  return 0;
+}
 
 sub img_fromcache()
 {
@@ -168,10 +179,8 @@ sub make_imgcache()
   }
   close $fd;
 
-  if (! $form->param('ss') && ! $form->param('enable_adjust')) {
-    if ($form->param('size') == 640 && length($position) == 0) {
-      &save_imgcache($cache, $lastmodified);
-    }
+  if (&judgeMakeCache($size) == 1) {
+    &save_imgcache($cache, $lastmodified);
   }
   unlink($TMP_PATH);
 
@@ -187,9 +196,6 @@ sub save_imgcache()
   if(! -d "${cache_dir}") {
     if(! mkpath("${cache_dir}")) {
       my $reason = $!;
-      print "Content-Type: image/jpeg\n";
-      print "Content-Length: 0\n";
-      print "\n";
       print STDERR "Thumbnail generate missing. ($reason)";
       return -1;
     }

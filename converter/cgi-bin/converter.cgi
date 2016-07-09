@@ -7,6 +7,7 @@ use Encode;
 use CGI;
 use File::Path;
 use XML::Simple;
+use MIME::Base64::URLSafe;
 
 use lib '%libs_dir%';
 use ParamPath;
@@ -16,6 +17,7 @@ use ConverterJob;
 our $STOCKER_CGI    = "";
 our $SELECTOR_CGI   = "";
 our $MOVIEIMG_CGI   = "";
+our $GETFILE_CGI    = "";
 our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
 our $MOVIE_INFO_CMD = "";
@@ -220,7 +222,11 @@ sub add_encodejob()
 ### 動画情報表示
 sub print_form() {
   my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-  my $mp4_url = "media_out_mp4.cgi?in=${encfile_inode}&dir=${dir}";
+
+  my $base64_path = urlsafe_b64encode(encode('utf-8', ${encfile}));
+  chomp($base64_path);
+
+  my $mp4_url = "${GETFILE_CGI}?file=${base64_path}&dir=${dir}&mime=video/mp4";
   my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
   my $mes;
 
@@ -761,7 +767,7 @@ EOF
 サイズ <input type="text" name="crop_w" onChange="print_aspect('crop')" size="5">x<input type="text" name="crop_h" onChange="print_aspect('crop')" size="5">
 (比率 <span id="crop_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="crop_x" size="5">x<input type="text" name="crop_y" size="5">
-<input type="button" onClick="preview_img(document.enc_setting.ss.value)" value="preview">
+<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview">
 </span>
 <br>
 <input type="checkbox" name="enable_pad" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp; 
@@ -770,7 +776,7 @@ EOF
 (比率 <span id="padding_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="pad_x" size="5">x<input type="text" name="pad_y" size="5">
 &nbsp;&nbsp;色 <select name="pad_color" size="1"><option selected>black</option><option>white</option><option>gray</option></select>
-<input type="button" onClick="preview_img(document.enc_setting.ss.value)" value="preview">
+<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview">
 ※オリジナルサイズより大きい値を指定してください
 </span>
 <br>
@@ -849,7 +855,7 @@ weight
 <input type="button" name="weight_plus" value="&gt;" onClick="adj_weight(0.03)">
 <input type="button" name="weight_default" value="default:1.0" onClick="set_weight(1.0)">
 (0〜1)<br>
-<input type="button" onClick="preview_img(document.enc_setting.ss.value)" value="preview"><br>
+<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview"><br>
 </div>
 </fieldset>
 <input type="checkbox" name="deinterlace" checked> インタレース解除<br>
