@@ -15,7 +15,7 @@ TRASH_DIR  = $(BASE_DIR)/trash
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
 DOC_FILES  = icons ajax_html_request.js
 CGI_FILES  = download.cgi edit.cgi edit_filefunc.pl stocker.cgi text_viewer.cgi
-CONF_FILES = BaseDirs.pl SupportTypes.pl stocker.conf
+CONF_FILES = BaseDirs.pl basedirs.conf SupportTypes.pl stocker.conf
 
 all:
 	make -C GPS_viewer/
@@ -73,7 +73,7 @@ install-cgi:
 install-modules:
 	make -C GPS_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C converter/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C get_file/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C get_file/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)

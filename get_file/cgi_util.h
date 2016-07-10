@@ -8,6 +8,7 @@ class cgi_util {
 private:
     std::string err_message;
     std::multimap<std::string, std::string> param;
+    size_t max_content_length;
 
     std::string get_query(void);
 
@@ -20,6 +21,7 @@ public:
     std::list<std::string> get_values(const char *key);
 
     int parse_param(void);
+    void setMaxContentLength(size_t maxlength);
     std::string decodeFormURL(std::string &str);
     std::string encodeFormURL(std::string &str);
     int decodeBase64URL(std::string &str);

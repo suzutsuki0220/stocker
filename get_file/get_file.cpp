@@ -9,6 +9,11 @@
 #include "cgi_util.h"
 #include "fileutil.h"
 #include "Range.h"
+#include "Config.h"
+
+#ifndef CONFDIR
+#define CONFDIR "/var/www/stocker/conf"
+#endif
 
 void
 print_200_header(const char *ctype, size_t clength)
@@ -38,6 +43,31 @@ print_416_header(const char *message)
 }
 
 int
+get_basedir(std::string &basedir, const char* confdir, const char *f_dir)
+{
+    int ret = -1;
+
+    Config *conf = new Config();
+    char confpath[512] = {0};
+    snprintf(confpath, sizeof(confpath), "%s/basedirs.conf", confdir);
+
+    if (conf->parse(confpath) != 0) {
+        fprintf(stderr, "failed to parse basedir - %s %s\n", conf->getErrorMessage(), confpath);
+        goto end;
+    }
+
+    basedir = conf->get(f_dir);
+    if (basedir.empty()) {
+        fprintf(stderr, "basedir get failed [%s] - %s\n", f_dir, conf->getErrorMessage());
+        goto end;
+    }
+    ret = 0;
+
+end:
+    return ret;
+}
+
+int
 main(int argc, char** argv)
 {
     int ret = -1;
@@ -50,25 +80,37 @@ main(int argc, char** argv)
         Range *range = new Range();
 
         cgi = new cgi_util();
-        cgi->parse_param();
+        if (cgi->parse_param() != 0) {
+            print_400_header(cgi->get_err_message().c_str());
+            return -1;
+        }
 
+        std::string filepath;
         std::string f_dir  = cgi->get_value("dir");
         std::string f_file = cgi->get_value("file");
         std::string f_mime = cgi->get_value("mime");
 
-        if (f_dir.empty() || f_file.empty() || f_mime.empty()) {
+        //if (f_dir.empty() || f_file.empty() || f_mime.empty()) {
+        if (f_file.empty() || f_mime.empty()) {
             print_400_header("Invalid parameter");
             return -1;
         }
 
-        f_dir  = cgi->decodeFormURL(f_dir);
+        f_dir = cgi->decodeFormURL(f_dir);
         if (cgi->decodeBase64URL(f_file) != 0) {
-	    print_400_header("failed to decode file parameter");
-	    return -1;
-	}
+            print_400_header("failed to decode file parameter");
+            return -1;
+        }
         f_mime = cgi->decodeFormURL(f_mime);
 
-        fu = new fileutil(f_file.c_str()); // TODO:ファイル名
+        if (get_basedir(filepath, CONFDIR, f_dir.c_str()) != 0) {
+            print_400_header("failed to determine filepath");
+            return -1;
+        }
+        filepath.append("/");
+        filepath.append(f_file);
+
+        fu = new fileutil(filepath.c_str());
  
         // ファイルサイズ取得
         filesize = fu->get_filesize();

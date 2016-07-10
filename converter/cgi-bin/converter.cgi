@@ -62,12 +62,14 @@ my @files = ();
 my $up_inode = ${in};
 my $path;
 my $base;
+my $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $q->param('dir'));
   $ins->init();
   $path = $ins->inode_to_path($q->param('in'));
   $base = $ins->{base};
+  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
@@ -223,10 +225,12 @@ sub add_encodejob()
 sub print_form() {
   my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-  my $base64_path = urlsafe_b64encode(encode('utf-8', ${encfile}));
+  my $base64_path = urlsafe_b64encode(encode('utf-8', $path . $files[0]));
   chomp($base64_path);
+  my $f_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
+  chomp($f_dir);
 
-  my $mp4_url = "${GETFILE_CGI}?file=${base64_path}&dir=${dir}&mime=video/mp4";
+  my $mp4_url = "${GETFILE_CGI}?file=${base64_path}&dir=${f_dir}&mime=video/mp4";
   my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
   my $mes;
 

@@ -3,14 +3,18 @@
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>
+#include <unistd.h>
 #include <stdexcept>  // invalid argument
 
 #include "cgi_util.h"
+
+#define MAX_CONTENT_LEN 1024*1024
 
 cgi_util::cgi_util()
 {
     this->err_message = "";
     this->param.clear();
+    this->max_content_length = MAX_CONTENT_LEN;
 }
 
 cgi_util::~cgi_util()
@@ -55,15 +59,21 @@ cgi_util::get_values(const char *key)
 int
 cgi_util::parse_param(void)
 {
-    std::string param_str = get_query();
-    std::string::iterator it = param_str.begin();
     std::string key;
     std::string value;
     bool keyget = false;
 
+    std::string param_str = get_query();
+    if (param_str.empty() && !err_message.empty()) {
+        return -1;
+    }
+
+    std::string::iterator it = param_str.begin();
     while (it != param_str.end()) {
         if (*it == '&') {
-            param.insert(std::make_pair(key, value));
+            if (keyget) {
+                param.insert(std::make_pair(key, value));
+            }
             keyget = false;
             key.clear();
             value.clear();
@@ -101,19 +111,63 @@ cgi_util::get_query(void)
                 ret = query;
             }
         } else if (strcmp(method, "POST") == 0) {
+            const char *clen;
             char buf[BUFSIZ] = {0};
-            while (fgets(buf, sizeof(buf)-1, stdin) != NULL) {
+            long long remain_len;
+            clen = getenv("CONTENT_LENGTH");
+            if (clen == NULL) {
+                err_message = "no content length header";
+                goto end;
+            } else {
+                char *endptr;
+                remain_len = strtoll(clen, &endptr, 10);
+                if (*endptr != '\0' || remain_len < 0) {
+                    err_message = "invalid content length";
+                    goto end;
+                }
+                if (remain_len > (long long)max_content_length) {
+                    err_message = "content length too long";
+                    goto end;
+                }
+            }
+            while (remain_len > 0) {
+                size_t read_len;
+                size_t s = (long long)sizeof(buf) > remain_len ? (size_t)remain_len : sizeof(buf) -1;
+                read_len = read(fileno(stdin), buf, s);
+                if (read_len < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    err_message = "query get failed - ";
+                    err_message.append(strerror(errno));
+                    goto end;
+                } else if (read_len == 0) {
+                    break;
+                }
                 ret += buf;
-                memset(buf, '\0', sizeof(buf)); 
+                memset(buf, '\0', sizeof(buf));
+                remain_len -= (long long)read_len;
             }
-            if (ferror(stdin)) {
-//ERROR
-                err_message = "query get failed ";
-            }
+	    if (remain_len != 0) {
+		ret.clear();
+		err_message = "content length mismatch";
+		goto end;
+	    }
         }
     }
 
+end:
     return ret;
+}
+
+/**
+ * Content-Lengthの受け入れる最大サイズを設定する
+ * @param maxlength
+ */
+void
+cgi_util::setMaxContentLength(size_t maxlength)
+{
+    this->max_content_length = maxlength;
 }
 
 /**
