@@ -25,16 +25,9 @@ all: $(OBJECTS)
 %.o: %.cpp %.h
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
-$(TARGET): $(OBJECTS) get_file.cpp .dummy.h
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $@ $^
-	$(RM) .dummy.h
-
 clean:
-	$(RM) $(TARGET) $(OBJECTS) get_file.o .dummy.h *~
+	$(RM) $(TARGET) $(OBJECTS) get_file.o *~
 
-.dummy.h:
-	@if [ ! -f $@ ]; then touch $@; fi
-
-install: $(TARGET)
+install:
 	mkdir -p $(CGI_DIR)
-	cp $(TARGET) $(CGI_DIR)
+	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) get_file.cpp
