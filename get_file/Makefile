@@ -1,15 +1,19 @@
 debug=1
 
 TARGET=get_file
-OBJECTS=fileutil.o cgi_util.o Range.o Config.o
+OBJECTS=Range.o
 CC=gcc
 CPP=g++
+
+MODULES=../common_module/libcommonmodule.a
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
 else
 	CFLAGS=-O2 -Wall -DNDEBUG
 endif
+CFLAGS+= -I../common_module
+
 CPPFLAGS=$(CFLAGS)
 
 DESTDIR   = /var/www
@@ -20,14 +24,18 @@ CONF_DIR  = $(BASE_DIR)/conf
 
 .phony: all clean install
 
-all: $(OBJECTS)
+all: $(OBJECTS) $(MODULES)
+
+../common_module/libcommonmodule.a:
+	make -C ../common_module/
 
 %.o: %.cpp %.h
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 clean:
 	$(RM) $(TARGET) $(OBJECTS) get_file.o *~
+	make -C ../common_module/ clean
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) get_file.cpp
+	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) get_file.cpp $(MODULES)
