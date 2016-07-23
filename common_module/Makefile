@@ -1,7 +1,7 @@
 debug=1
 
 TARGET=libcommonmodule.a
-OBJECTS=fileutil.o cgi_util.o Config.o
+OBJECTS=fileutil.o cgi_util.o Config.o htmlutil.o
 CC=gcc
 CPP=g++
 

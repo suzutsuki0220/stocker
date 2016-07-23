@@ -16,8 +16,10 @@ CGI_FILES  = get_media.cgi music_player.cgi
 CONF_FILES = music_player.conf
 
 all:
+	make -C taginfo
 
 clean:
+	make -C taginfo clean
 
 make-directory:
 	mkdir -p $(CGI_DIR)
@@ -54,5 +56,8 @@ install-cgi:
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
-install: make-directory install-config install-cgi
+install-bin:
+	make -C taginfo install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
+
+install: make-directory install-config install-cgi install-bin
 

@@ -5,6 +5,7 @@ use warnings;
 use utf8;
 use Encode;
 use CGI;
+use MIME::Base64::URLSafe;
 
 use MP3::Tag;   # http://search.cpan.org/~ilyaz/MP3-Tag-1.13/lib/MP3/Tag.pm
 use Audio::WMA; # http://search.cpan.org/~daniel/Audio-WMA-1.3/WMA.pm
@@ -18,18 +19,21 @@ use HTML_Elem;
 our $STOCKER_CGI   = "";
 our $GET_MEDIA_CGI = "";
 our $BASE_DIR_CONF = "";
+our $TAGINFO_CGI   = "taginfo";
 require '%conf_dir%/music_player.conf';
 
 my $form = eval{new CGI};
 
 my $path;
 my $base;
+my $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
                            param_dir => $form->param('dir'));
   $ins->init();
   $path = $ins->inode_to_path($form->param('in'));
   $base = $ins->{base};
+  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
@@ -42,6 +46,8 @@ my $file_inode = $2;
 
 my $player_src = ${GET_MEDIA_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
 my $stocker_src = ${STOCKER_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
+
+my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
 #### ディレクトリ一覧 ####
 $path =~ /(.*)\/([^\/]{1,})$/;
@@ -78,6 +84,8 @@ print <<EOF;
       else if (support_ogg == 'maybe' || support_ogg == 'probably') { play_type="ogg"; }
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
+
+    document.coverart.src = track[track_no][7];
 
     if(!audio_player.error && !audio_player.paused && !audio_player.ended) {
       audio_player.src = "${player_src}/"+ track[track_no][1]+"&type="+play_type;
@@ -171,30 +179,42 @@ opendir(my $DIR, $media_dir) or HTML_Elem->error("ディレクトリ展開に失
 while (my $entry = decode('utf-8', readdir $DIR)) {
   if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
     if ( -f "$media_dir/$entry") {
+      my $coverart = &coverart_url($entry);
       if (lc($entry) =~ /\.mp3$/) {
-        $music_count++;
-        my %tag_t = &get_mp3_info($media_dir ."/". $entry);
-        print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-        print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
-        print "  track.push(tag);\n";
+        eval {
+            my %tag_t = &get_mp3_info($media_dir ."/". $entry);
+            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+            print "  track.push(tag);\n";
+            $music_count++;
+        };
       } elsif (lc($entry) =~ /\.wma$/) {
-        $music_count++;
-        my %tag_t = &get_wma_info($media_dir ."/". $entry);
-        print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-        print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
-        print "  track.push(tag);\n";
+        eval {
+            my %tag_t = &get_wma_info($media_dir ."/". $entry);
+            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+            print "  track.push(tag);\n";
+            $music_count++;
+        };
       } elsif (lc($entry) =~ /\.wav$/) {
-        $music_count++;
-        my %tag_t = &get_wav_info($media_dir ."/". $entry);
-        print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-        print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
-        print "  track.push(tag);\n";
+        eval {
+            my %tag_t = &get_wav_info($media_dir ."/". $entry);
+            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+            print "  track.push(tag);\n";
+            $music_count++;
+        };
       } elsif (lc($entry) =~ /\.flac$/) {
-        $music_count++;
-        my %tag_t = &get_flac_info($media_dir ."/". $entry);
-        print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-        print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\");\n";
-        print "  track.push(tag);\n";
+        eval {
+            my %tag_t = &get_flac_info($media_dir ."/". $entry);
+            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+            print "  track.push(tag);\n";
+            $music_count++;
+        };
+      }
+      if ($@) {
+          print STDERR "Tag get ERROR: $@\n";
       }
     }
   }
@@ -210,6 +230,7 @@ if ($music_count > 0) {
 
   print <<DATA;
 <p>
+<img src="${graypad}" name="coverart" width="120" height="120">
 <!-- <audio src="" id="player" autobuffer>
 お使いの環境では、プレイヤーを起動できません。
 </audio><br> -->
@@ -265,6 +286,19 @@ if(play_tnum >= 0) {
   playit(play_tnum);
 }
 
+// CoverArt
+if (document.coverart.addEventListener) {
+  document.coverart.addEventListener("error", errorCoverart, false);
+  document.coverart.addEventListener("abort", errorCoverart, false);
+} else if (document.coverart.attachEvent) {  // for InternetExplorer
+  document.coverart.attachEvent("onerror", errorCoverart);
+  document.coverart.attachEvent("onabort", errorCoverart);
+}
+
+function errorCoverart() {
+  document.coverart.src = "${graypad}";
+}
+
 -->
 </script>
 DATA
@@ -277,6 +311,19 @@ HTML_Elem->tail();
 exit(0);
 
 ####
+
+sub coverart_url
+{
+  my (${entry}) = @_;
+  my $base64_path = urlsafe_b64encode(encode('utf-8', substr($media_dir, length($base)) . "/". $entry));
+  chomp($base64_path);
+  my $f_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
+  chomp($f_dir);
+
+  my $url = $TAGINFO_CGI . "?mode=picture&dir=${f_dir}&file=${base64_path}";
+
+  return $url;
+}
 
 sub get_mp3_info
 {

@@ -7,6 +7,8 @@ use CGI;
 use lib '%libs_dir%';
 use ParamPath;
 
+$|=1;  # enable autofulsh
+
 our $BASE_DIR_CONF = "";
 our $AUDIO_CONVERTER_CMD = "/usr/bin/ffmpeg";
 our $AUDIO_CONVERT_BITRATE = "256k";
@@ -24,10 +26,8 @@ eval {
   $base = $ins->{base}
 };
 if ($@) {
-  print STDERR "Music Out ERROR: $@\n";
-  print "Content-Type: audio/mpeg\n";
-  print "Content-Length: 0\n";
-  print "\n";
+  print "Status: 503\n\n";
+  print "Music Out ERROR: failed to output - $@\n";
   exit(1);
 }
 
@@ -53,10 +53,8 @@ if($type eq "wav") {
      &output_mp3(1);
   }
 } else {
-  print STDERR "Music Out ERROR: unknown filetype [$media_path]\n";
-  print "Content-Type: audio/mpeg\n";
-  print "Content-Length: 0\n";
-  print "\n";
+  print "Status: 503\n\n";
+  print "Music Out ERROR: unknown filetype [$media_path]\n";
 }
 
 exit(0);
