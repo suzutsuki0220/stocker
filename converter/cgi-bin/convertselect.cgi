@@ -288,8 +288,12 @@ sub print_script
 
     if (document.preview.addEventListener) {
       document.preview.addEventListener("load", unsetLoading, false);
+      document.preview.addEventListener("error", unsetLoading, false);
+      document.preview.addEventListener("abort", unsetLoading, false);
     } else if (document.preview.attachEvent) {
       document.preview.attachEvent("onload", unsetLoading);
+      document.preview.attachEvent("onerror", unsetLoading);
+      document.preview.attachEvent("onabort", unsetLoading);
     }
 
     var ss = document.f1.selectedTime.value;
@@ -303,8 +307,12 @@ sub print_script
   function unsetLoading() {
     if (document.preview.removeEventListener) {
       document.preview.removeEventListener("load", unsetLoading, false);
+      document.preview.removeEventListener("error", unsetLoading, false);
+      document.preview.removeEventListener("abort", unsetLoading, false);
     } else if (document.preview.detachEvent) {
       document.preview.detachEvent("onload", unsetLoading);
+      document.preview.detachEvent("onerror", unsetLoading);
+      document.preview.detachEvent("onabort", unsetLoading);
     }
 
     document.getElementById("PreviewReloading").style.display = "none";

@@ -605,9 +605,14 @@ EOD
   }
 
   function openTimerSelector(target, pos, sf, ef, df) {
+    var size_w = 670;
+    var size_h = 660;
+    var pos_l = (screen.width - size_w) / 2;
+    var pos_t = (screen.height - size_h) / 2;
+
     window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target + "&pos=" + pos + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df,
                 "timersel",
-                'width=680, height=700, menubar=no, toolbar=no, scrollbars=yes'
+                'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
                );
   }
 
