@@ -100,11 +100,13 @@ sub frame_selector
 </div>
 <div style="text-align: center">
 <input type="button" name="btnDown" value="-" onClick="upTime(document.f1.skip.value * (-1))">&nbsp;
-<select name="skip">
+<select name="skip" onChange="document.f1.skip.blur()">
 EOF
 
   foreach my $so (@skip_options) {
-    print "<option value=\"" . @{$so}[0] * 1000 . "\">" . @{$so}[1] . "</option>\n";
+    my $selected = "";
+    if (@{$so}[0] eq "1") { $selected = " selected"; }
+    print "<option value=\"" . @{$so}[0] * 1000 . "\"". $selected .">" . @{$so}[1] . "</option>\n";
   }
 
 print <<EOF;
@@ -240,6 +242,13 @@ sub print_script
   var loading = false;  // previewの更新多発を抑止するフラグ
   var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
 
+  // キーボードのキー入力イベント
+  if (document.addEventListener) {
+    document.addEventListener("keydown", keyDownWork);
+  } else if (document.attachEvent) {
+    document.attachEvent("onkeydown", keyDownWork);
+  }
+
   function setTime() {
     if (!window.opener || window.opener.closed) {
       window.alert("メインウィンドウが閉じられています");
@@ -278,6 +287,18 @@ sub print_script
 
   function closeWindow() {
     window.close();
+  }
+
+  function selectSkipDown(cnt) {
+    var idx = document.f1.skip.selectedIndex;
+    idx += cnt;
+    if (idx < 0) {
+      idx = 0;
+    }
+    if (idx > document.f1.skip.options.length -1) {
+      idx = document.f1.skip.options.length -1;
+    }
+    document.f1.skip.options[idx].selected = true;
   }
 
   function reloadImage() {
@@ -321,6 +342,31 @@ sub print_script
     if (load_again) {
       load_again = false;
       reloadImage();
+    }
+  }
+
+  function keyDownWork(e) {
+    var key_code = e.keyCode;
+
+    switch(key_code) {
+      case 13: // enter
+        apply();
+        break;
+      case 27: // escape
+        closeWindow();
+        break;
+      case 37: // left
+        upTime(document.f1.skip.value * (-1));
+        break;
+      case 39: // right
+        upTime(document.f1.skip.value);
+        break;
+      case 38: // up     
+        selectSkipDown(-1);
+        break;
+      case 40: // down
+        selectSkipDown(1);
+        break;
     }
   }
 
