@@ -295,7 +295,7 @@ EOF
     $movie_info = $xml->XMLin($movie_info_xml);
   };
   if ($@) {
-    print "情報取得失敗 [$@]";
+    print "情報取得失敗 $@";
   } else {
     $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
     $has_audio_stream = $movie_info->{'movie_info'}[0]->{'audio'}[0]->{'no'};
@@ -321,7 +321,7 @@ EOF
     1 while $mov_filesize =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
   }
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"enc_setting\" method=\"POST\">";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"enc_setting\" method=\"POST\" autocomplete=\"off\">";
 
   print "<table border=\"3\">\n";
   print "<tr><th colspan=\"3\">全般</th></tr>\n";
@@ -330,14 +330,18 @@ EOF
   print "<tr><th colspan=\"2\">フォーマット</th><td>$mov_format</td></tr>\n";
   if ($has_video_stream) {
     print "<tr><th colspan=\"3\">映像ストリーム</th></tr>\n";
+
+    my $best_st = &get_best_video_stream_id(\@{$movie_info->{'movie_info'}[0]->{'video'}});
     for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'video'}}; $i++) {
-      &print_table_video(\$movie_info->{'movie_info'}[0]->{'video'}[${i}], $i);
+      &print_table_video(\$movie_info->{'movie_info'}[0]->{'video'}[${i}], $best_st);
     }
   }
   if ($has_audio_stream) {
     print "<tr><th colspan=\"3\">音声ストリーム</th></tr>\n";
+
+    my $best_st = &get_best_audio_stream_id(\@{$movie_info->{'movie_info'}[0]->{'audio'}});
     for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'audio'}}; $i++) {
-      &print_table_audio(\$movie_info->{'movie_info'}[0]->{'audio'}[${i}], $i);
+      &print_table_audio(\$movie_info->{'movie_info'}[0]->{'audio'}[${i}], $best_st);
     }
   }
   print "</table>\n";
@@ -896,10 +900,10 @@ EOF
 
 sub print_table_video
 {
-  my ($vid_info, $num) = @_;
+  my ($vid_info, $checked_st) = @_;
 
   my $checked = "";
-  if ($num == 0) {
+  if ($checked_st == $$vid_info->{'no'}[0]) {
     $checked = " checked";
   }
 
@@ -916,7 +920,7 @@ sub print_table_video
   my $disp_aspect  = $$vid_info->{'disp_aspect'}[0];
   my $vid_gop_size = $$vid_info->{'gop_size'}[0];
 
-  print "<tr><th rowspan=\"6\"><input type=\"radio\" name=\"v_map\" value=\"${vid_no}\"${checked}></th>";
+  print "<tr><td rowspan=\"6\"><input type=\"radio\" name=\"v_map\" value=\"${vid_no}\"${checked}>${vid_no}</td>";
   print "<th>幅 x 高さ</th><td>${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>\n";
   print "<tr><th>表示上のサイズ</th><td>${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>\n";
   print "<tr><th>ビットレート</th><td>$vid_bitrate</td></tr>\n";
@@ -931,10 +935,10 @@ sub print_table_video
 
 sub print_table_audio
 {
-  my ($aud_info, $num) = @_;
+  my ($aud_info, $checked_st) = @_;
 
   my $checked = "";
-  if ($num == 0) {
+  if ($checked_st == $$aud_info->{'no'}[0]) {
     $checked = " checked";
   }
 
@@ -945,12 +949,114 @@ sub print_table_audio
   my $aud_bits        = $$aud_info->{'sample_fmt'}[0];
   my $aud_codec       = $$aud_info->{'codec'}[0];
 
-  print "<tr><th rowspan=\"5\"><input type=\"radio\" name=\"a_map\" value=\"${aud_no}\"${checked}></th>";
+  print "<tr><td rowspan=\"5\"><input type=\"radio\" name=\"a_map\" value=\"${aud_no}\"${checked}>${aud_no}</td>";
   print "<th>サンプリングレート</th><td>$aud_sample_rate</td></tr>\n";
   print "<tr><th>チャンネル</th><td>$aud_channel</td></tr>\n";
   print "<tr><th>ビットレート</th><td>$aud_bitrate</td></tr>\n";
   print "<tr><th>ビット数</th><td>$aud_bits</td></tr>\n";
   print "<tr><th>コーデック</th><td>$aud_codec</td></tr>\n";
+}
+
+sub get_best_video_stream_id
+{
+  my ($vid_info) = @_;
+  my $id = 0;
+
+  my @array_max_pixel_idx = ();
+  my @array_max_fps_idx = ();
+  my $max_pixel = 0;
+  my $max_fps = 0;
+  my $max_bitrate = 0;
+
+  for (my $i = 0; $i < @$vid_info; $i++) {
+    my $pixel = $$vid_info[$i]->{'width'}[0] * $$vid_info[$i]->{'height'}[0];
+    if ($pixel > $max_pixel) {
+      $max_pixel = $pixel;
+    }
+  }
+
+  for (my $i = 0; $i < @$vid_info; $i++) {
+    my $pixel = $$vid_info[$i]->{'width'}[0] * $$vid_info[$i]->{'height'}[0];
+    if ($max_pixel == $pixel) {
+      my $fps = $$vid_info[$i]->{'fps'}[0];
+      if ($fps > $max_fps) {
+        $max_fps = $fps;
+      }
+      push(@array_max_pixel_idx, $i);
+    }
+  }
+
+  foreach my $i (@array_max_pixel_idx) {
+    my $fps = $$vid_info[$i]->{'fps'}[0];
+    if ($fps == $max_fps) {
+      my $bitrate = $$vid_info[$i]->{'bitrate'}[0];
+      if ($bitrate > $max_bitrate) {
+        $max_bitrate = $bitrate;
+      }
+      push(@array_max_fps_idx, $i);
+    }
+  }
+
+  foreach my $i (@array_max_fps_idx) {
+    my $bitrate = $$vid_info[$i]->{'bitrate'}[0];
+    if ($bitrate == $max_bitrate) {
+      $id = $$vid_info[$i]->{'no'}[0];
+      last;
+    }
+  }
+
+  return $id;
+}
+
+sub get_best_audio_stream_id
+{
+  my ($aud_info) = @_;
+  my $id = 0;
+
+  my @array_max_channel_idx = ();
+  my @array_max_sample_rate_idx = ();
+  my $max_channel = 0;
+  my $max_sample_rate = 0;
+  my $max_bitrate = 0;
+
+  for (my $i = 0; $i < @$aud_info; $i++) {
+    my $channel = $$aud_info[$i]->{'channel'}[0];
+    if ($channel > $max_channel) {
+      $max_channel = $channel;
+    }
+  }
+
+  for (my $i = 0; $i < @$aud_info; $i++) {
+    my $channel = $$aud_info[$i]->{'channel'}[0];
+    if ($max_channel == $channel) {
+      my $sample_rate = $$aud_info[$i]->{'sample_rate'}[0];
+      if ($sample_rate > $max_sample_rate) {
+        $max_sample_rate = $sample_rate;
+      }
+      push(@array_max_channel_idx, $i);
+    }
+  }
+
+  foreach my $i (@array_max_channel_idx) {
+    my $sample_rate = $$aud_info[$i]->{'sample_rate'}[0];
+    if ($max_sample_rate == $sample_rate) {
+      my $bitrate = $$aud_info[$i]->{'bitrate'}[0];
+      if ($bitrate > $max_bitrate) {
+        $max_bitrate = $bitrate;
+      }
+      push(@array_max_sample_rate_idx, $i);
+    }
+  }
+
+  foreach my $i (@array_max_sample_rate_idx) {
+    my $bitrate = $$aud_info[$i]->{'bitrate'}[0];
+    if ($bitrate == $max_bitrate) {
+      $id = $$aud_info[$i]->{'no'}[0];
+      last;
+    }
+  }
+
+  return $id;
 }
 
 sub get_date_string

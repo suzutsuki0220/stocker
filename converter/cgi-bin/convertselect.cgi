@@ -91,7 +91,7 @@ sub frame_selector
   &print_script($target, $start_f, $end_f, $duration_f);
 
   print <<EOF;
-<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
+<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 <div style="position: relative; width: 640px;">
   <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${pos}" id="preview" name="preview">
   <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
@@ -144,7 +144,7 @@ sub print_timesel
   &print_script($target);
 
   print <<EOF;
-<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1">
+<form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 間隔: <select name="skip" onChange="document.f1.submit()">
 EOF
 
@@ -247,6 +247,10 @@ sub print_script
     document.addEventListener("keydown", keyDownWork);
   } else if (document.attachEvent) {
     document.attachEvent("onkeydown", keyDownWork);
+  }
+
+  window.onload = function() {
+    document.f1.selectedTime.focus();
   }
 
   function setTime() {
