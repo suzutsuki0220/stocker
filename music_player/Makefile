@@ -30,6 +30,9 @@ make-directory:
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
 
+libcheck:
+	./library_check.sh
+
 install-config:
 	cp -rn $(addprefix Conf/,$(CONF_FILES)) $(CONF_DIR)
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
@@ -59,5 +62,5 @@ install-cgi:
 install-bin:
 	make -C taginfo install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 
-install: make-directory install-config install-cgi install-bin
+install: libcheck make-directory install-config install-cgi install-bin
 

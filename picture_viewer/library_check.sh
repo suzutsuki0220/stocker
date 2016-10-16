@@ -3,14 +3,12 @@
 ### enumerate the library below
 
 my @librarys = (
- "utf8"
-,"CGI"
-,"File::Copy"
-,"File::Path"
-,"XML::Simple"
-,"MIME::Base64::URLSafe"
-,"Encode"
-,"Encode::Guess"
+ "CGI"
+ ,"File::Path"
+ ,"File::Copy"
+ ,"utf8"
+ ,"Encode"
+ ,"XML::Simple"
 );
 
 #####

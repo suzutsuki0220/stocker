@@ -28,6 +28,9 @@ make-directory:
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
 
+libcheck:
+	./library_check.sh
+
 install-config:
 	cp -rn $(addprefix Conf/,$(CONF_FILES)) $(CONF_DIR)
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
@@ -54,5 +57,5 @@ install-cgi:
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
-install: make-directory install-config install-cgi
+install: libcheck make-directory install-config install-cgi
 

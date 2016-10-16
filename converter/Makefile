@@ -32,6 +32,9 @@ make-directory:
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
 
+libcheck:
+	./library_check.sh
+
 install-config:
 	cp -rn $(addprefix Conf/,$(CONF_FILES)) $(CONF_DIR)
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
@@ -63,5 +66,5 @@ install-bin:
 	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 	make -C convert_worker install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
 
-install: make-directory install-config install-htdocs install-cgi install-bin install-libs
+install: libcheck make-directory install-config install-htdocs install-cgi install-bin install-libs
 

@@ -4,13 +4,13 @@
 
 my @librarys = (
  "utf8"
-,"CGI"
-,"File::Copy"
-,"File::Path"
-,"XML::Simple"
-,"MIME::Base64::URLSafe"
 ,"Encode"
-,"Encode::Guess"
+,"CGI"
+,"MIME::Base64::URLSafe"
+,"MP3::Tag"
+,"Audio::WMA"
+,"Audio::FLAC::Header"
+,"Audio::Wav"
 );
 
 #####
