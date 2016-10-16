@@ -39,6 +39,7 @@
 #include <taglib/mp4file.h>
 #include <taglib/id3v2tag.h>
 
+#include "noimage.h"
 #include "htmlutil.h"
 #include "cgi_util.h"
 #include "Config.h"
@@ -215,8 +216,9 @@ outputPicture(TagLib::FileRef &f)
     }
 
     if (bytevector.isNull() || bytevector.size() == 0) {
-        print_400_header("no picture");  // TODO: 200 OK "no picture image" return
-        return -1;
+        mimetype = "image/png";
+        print_200_header(mimetype, sizeof(noimage_data));
+        fwrite(noimage_data, sizeof(noimage_data), sizeof(char), stdout);
     } else {
         print_200_header(mimetype, (size_t)bytevector.size());
         fwrite(bytevector.data(), (size_t)bytevector.size(), sizeof(char), stdout);

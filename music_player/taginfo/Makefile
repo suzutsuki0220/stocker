@@ -26,7 +26,7 @@ CONF_DIR  = $(BASE_DIR)/conf
 .phony: all clean install
 
 #all: $(TARGET)
-all: $(OBJECTS) $(COMMON_MODULE)
+all: make_noimage noimage.h $(OBJECTS) $(COMMON_MODULE)
 
 %.o: %.cpp %.h
 	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LIBPARAM)
@@ -37,8 +37,14 @@ all: $(OBJECTS) $(COMMON_MODULE)
 $(COMMON_MODULE):
 	make -C ../../common_module
 
+make_noimage: make_noimage.c
+	$(CC) $(CFLAGS) $< -o $@
+
+noimage.h: noimage/noimage.png
+	./make_noimage $< $@
+
 clean:
-	$(RM) $(TARGET) $(OBJECTS) *~
+	$(RM) $(TARGET) $(OBJECTS) noimage.h make_noimage *~
 	make -C ../../common_module clean
 
 install:
