@@ -386,6 +386,10 @@ sub print_script
       var tm = parseInt(hour * 3600000 + min * 60000 + sec * 1000 + mili);
       tm += parseInt(num);
 
+      if (tm < 0) {
+        tm = 0;
+      }
+
       hour = Math.floor(tm / 3600000);
       min  = Math.floor((tm - hour * 3600000) / 60000);
       sec  = Math.floor(((tm - hour * 3600000) - (min * 60000)) / 1000);
