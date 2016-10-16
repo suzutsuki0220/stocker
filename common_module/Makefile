@@ -1,14 +1,15 @@
 debug=1
 
-TARGET=libcommonmodule.a
+TARGET_SHARE=libstockercommon.so
+TARGET_STATIC=libstockercommon.a
 OBJECTS=fileutil.o cgi_util.o Config.o htmlutil.o
 CC=gcc
 CPP=g++
 
 ifeq ($(debug), 1)
-	CFLAGS=-g -Wall
+	CFLAGS=-g -Wall -fPIC
 else
-	CFLAGS=-O2 -Wall -DNDEBUG
+	CFLAGS=-O2 -Wall -DNDEBUG -fPIC
 endif
 CPPFLAGS=$(CFLAGS)
 
@@ -20,13 +21,16 @@ CONF_DIR  = $(BASE_DIR)/conf
 
 .phony: all clean install
 
-all: $(TARGET)
+all: $(TARGET_SHARE) $(TARGET_STATIC)
 
 %.o: %.cpp %.h
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) $(TARGET) $(OBJECTS) *~
+	$(RM) $(TARGET_STATIC) $(TARGET_SHARE) $(OBJECTS) *~
 
-$(TARGET): $(OBJECTS)
+$(TARGET_SHARE): $(OBJECTS)
+	$(CPP) $(CPPFLAGS) -shared $^ -o $@
+
+$(TARGET_STATIC): $(OBJECTS)
 	ar rv $@ $^

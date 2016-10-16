@@ -5,7 +5,7 @@ OBJECTS=Range.o
 CC=gcc
 CPP=g++
 
-MODULES=../common_module/libcommonmodule.a
+COMMON_MODULE=../common_module/libstockercommon.a
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -24,9 +24,9 @@ CONF_DIR  = $(BASE_DIR)/conf
 
 .phony: all clean install
 
-all: $(OBJECTS) $(MODULES)
+all: $(OBJECTS) $(COMMON_MODULE)
 
-../common_module/libcommonmodule.a:
+$(COMMON_MODULE):
 	make -C ../common_module/
 
 %.o: %.cpp %.h
@@ -38,4 +38,4 @@ clean:
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) get_file.cpp $(MODULES)
+	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) get_file.cpp $(COMMON_MODULE)

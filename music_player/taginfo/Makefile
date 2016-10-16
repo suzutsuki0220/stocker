@@ -6,7 +6,7 @@ CC=gcc
 CPP=g++
 LIBPARAM=-ltag
 
-MODULES=../../common_module/libcommonmodule.a
+COMMON_MODULE=../../common_module/libstockercommon.a
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -26,15 +26,15 @@ CONF_DIR  = $(BASE_DIR)/conf
 .phony: all clean install
 
 #all: $(TARGET)
-all: $(OBJECTS) $(MODULES)
+all: $(OBJECTS) $(COMMON_MODULE)
 
 %.o: %.cpp %.h
 	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LIBPARAM)
 
-#$(TARGET): $(OBJECTS) $(MODULES)
+#$(TARGET): $(OBJECTS) $(COMMON_MODULE)
 #	$(CPP) $(CPPFLAGS) -o $@ $^ $(LIBPARAM)
 
-../../common_module/libcommonmodule.a:
+$(COMMON_MODULE):
 	make -C ../../common_module
 
 clean:
@@ -43,4 +43,4 @@ clean:
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -o $(CGI_DIR)/$(TARGET) $(OBJECTS) taginfo.cpp $(MODULES) $(LIBPARAM)
+	$(CPP) $(CPPFLAGS) -o $(CGI_DIR)/$(TARGET) $(OBJECTS) taginfo.cpp $(COMMON_MODULE) $(LIBPARAM)
