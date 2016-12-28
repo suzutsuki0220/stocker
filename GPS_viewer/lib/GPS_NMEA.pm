@@ -41,10 +41,10 @@ sub read
     if ($gprmc_flag == 1 && $gpgpa_flag == 1) {
       last;
     }
-    if ($line =~ /^\$GPGGA/) {
+    if ($line =~ /^\$G[PN]GGA/) {
       $gpgpa_flag = 1;
     }
-    if ($line =~ /^\$GPRMC/) {
+    if ($line =~ /^\$G[PN]RMC/) {
       $gprmc_flag = 1;
     }
   }
@@ -56,7 +56,7 @@ sub read
   seek ($fin, 0, 0);
   while (my $line = <$fin>) {
     if ($gpgpa_flag) {
-      if ($line =~ /^\$GPGGA/) {
+      if ($line =~ /^\$G[PN]GGA/) {
         my @col = split(/,/, $line);
         if (@col) {
           my $lat = $col[2] ? &_get_degree($col[2]) : 0;
@@ -68,7 +68,7 @@ sub read
         }
       }
     } elsif ($gprmc_flag) {
-      if ($line =~ /^\$GPRMC/) {
+      if ($line =~ /^\$G[PN]RMC/) {
         my @col = split(/,/, $line);
         if (@col) {
           my $lat = $col[3] ? &_get_degree($col[3]) : 0;

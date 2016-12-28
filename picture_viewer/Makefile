@@ -18,6 +18,7 @@ CONF_FILES = picture_viewer.conf
 all:
 
 clean:
+	rm -f *~
 
 make-directory:
 	mkdir -p $(CGI_DIR)

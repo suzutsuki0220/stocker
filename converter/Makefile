@@ -21,6 +21,7 @@ all:
 	make -C movie_info
 
 clean:
+	rm -f *~
 	make -C movie_info clean
 
 make-directory:
