@@ -1,6 +1,7 @@
 #ifndef __CGI_UTIL_H__
 #define __CGI_UTIL_H__ 1
 
+#include <string>
 #include <map>
 #include <list>
 

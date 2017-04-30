@@ -1,10 +1,12 @@
 #include <stdio.h>
 
 void
-print_200_header(const char *ctype, size_t clength)
+print_200_header(const char *ctype, size_t clength, bool range)
 {
     printf("Content-Type: %s\n", ctype);
-    printf("Accept-Ranges: bytes\n");
+    if (range) {
+        printf("Accept-Ranges: bytes\n");
+    }
     printf("Content-Length: %zu\n", clength);
     printf("\n");
 }
