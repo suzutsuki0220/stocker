@@ -1,7 +1,10 @@
 debug=1
 
-TARGET=fs_status
-SRC=fs_status.cpp
+FS_STATUS=fs_status
+MEM_STATUS=mem_status
+
+TARGET=$(FS_STATUS) $(MEM_STATUS)
+SRC=$(FS_STATUS).cpp  $(MEM_STATUS).cpp
 OBJS=$(SRC:.cpp=.o)
 LIBFLAG=-L./
 CC=g++
@@ -30,7 +33,10 @@ all: $(TARGET) $(COMMON_MODULE)
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) -o $@ -c $<
 
-$(TARGET): $(OBJS) $(COMMON_MODULE)
+$(FS_STATUS): $(FS_STATUS).o $(COMMON_MODULE)
+	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
+
+$(MEM_STATUS): $(MEM_STATUS).o $(COMMON_MODULE)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
 $(COMMON_MODULE):
