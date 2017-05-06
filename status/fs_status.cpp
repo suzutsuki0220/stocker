@@ -54,17 +54,29 @@ main(int argc, char **argv)
 	    return -1;
 	}
 
-	std::string f_path = cgi->get_value("path");
+	std::list<std::string> f_path = cgi->get_values("path");
+	std::list<std::string>::iterator f_path_it = f_path.begin();
 
-	getFsStatus(f_path.c_str(), &s);
+	if (f_path.size() == 0) {
+            throw std::invalid_argument("no path parameters");
+	}
 
         ss << "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>" << std::endl;
-        ss << "<fs_stat>"   << std::endl;
-	ss << "  <path>"    << f_path << "</path>" << std::endl;
-        ss << "  <total>"   << kscale(s.f_blocks, s.f_bsize) << "</total>" << std::endl;
-        ss << "  <use>"     << kscale(s.f_blocks - s.f_bfree, s.f_bsize) << "</use>" << std::endl;
-        ss << "  <free>"    << kscale(s.f_bavail, s.f_bsize) << "</free>" << std::endl;
-        ss << "  <percent>" << percent(s.f_blocks, s.f_blocks - s.f_bfree) << "</percent>" << std::endl;
+        ss << "<fs_stat>" << std::endl;
+
+	while (f_path_it != f_path.end()) {
+	    getFsStatus(f_path_it->c_str(), &s);
+
+	    ss << "<status>"    << std::endl;
+	    ss << "  <path>"    << *f_path_it << "</path>" << std::endl;
+            ss << "  <total>"   << kscale(s.f_blocks, s.f_bsize) << "</total>" << std::endl;
+            ss << "  <use>"     << kscale(s.f_blocks - s.f_bfree, s.f_bsize) << "</use>" << std::endl;
+            ss << "  <free>"    << kscale(s.f_bavail, s.f_bsize) << "</free>" << std::endl;
+            ss << "  <percent>" << percent(s.f_blocks, s.f_blocks - s.f_bfree) << "</percent>" << std::endl;
+	    ss << "</status>"   << std::endl;
+	    f_path_it++;
+	}
+
         ss << "</fs_stat>" << std::endl;
 
         print_200_header("application/xml", ss.str().length(), false);

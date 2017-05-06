@@ -23,6 +23,7 @@ all:
 	make -C get_file/
 	make -C music_player/
 	make -C picture_viewer/
+	make -C status/
 	make -C thumbnail/
 
 clean:
@@ -31,6 +32,7 @@ clean:
 	make -C get_file/ clean
 	make -C music_player/ clean
 	make -C picture_viewer/ clean
+	make -C status/ clean
 	make -C thumbnail/ clean
 
 make-directory:
@@ -76,6 +78,8 @@ install-modules:
 	make -C get_file/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C status/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
+	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
 
 install: make-directory install-config install-libs install-htdocs install-cgi install-modules

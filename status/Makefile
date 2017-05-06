@@ -17,7 +17,13 @@ CFLAGS+= -I../common_module
 
 CPPFLAGS=$(CFLAGS)
 
-.PHONY: all clean
+DESTDIR   = /var/www
+CGI_DIR   = $(DESTDIR)/cgi-bin/stocker
+BASE_DIR  = $(DESTDIR)/stocker
+BIN_DIR   = $(BASE_DIR)/bin
+CONF_DIR  = $(BASE_DIR)/conf
+
+.PHONY: all clean install
 
 all: $(TARGET) $(COMMON_MODULE)
 
@@ -33,3 +39,7 @@ $(COMMON_MODULE):
 clean:
 	rm -f $(TARGET) $(OBJS) *~
 	make -C ../common_module clean
+
+install:
+	mkdir -p $(CGI_DIR)
+	cp $(TARGET) $(CGI_DIR)
