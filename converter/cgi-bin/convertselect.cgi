@@ -43,22 +43,22 @@ if ($@) {
 }
 
 my @skip_options = (
-  ["0.001", "1/100 秒"],
-  ["0.031", "1/32 秒"],
-  ["0.063", "1/16 秒"],
-  ["0.125", "1/8 秒"],
-  ["0.25", "1/4 秒"],
-  ["0.5", "1/2 秒"],
-  ["1", "1 秒"],
-  ["3", "3 秒"],
-  ["5", "5 秒"],
-  ["15", "15 秒"],
-  ["30", "30 秒"],
-  ["60", "1 分"],
-  ["180", "3 分"],
-  ["900", "15 分"],
-  ["1800", "30 分"],
   ["3600", "60 分"],
+  ["1800", "30 分"],
+  ["900", "15 分"],
+  ["180", "3 分"],
+  ["60", "1 分"],
+  ["30", "30 秒"],
+  ["15", "15 秒"],
+  ["5", "5 秒"],
+  ["3", "3 秒"],
+  ["1", "1 秒"],
+  ["0.5", "1/2 秒"],
+  ["0.25", "1/4 秒"],
+  ["0.125", "1/8 秒"],
+  ["0.063", "1/16 秒"],
+  ["0.031", "1/32 秒"],
+  ["0.001", "1/100 秒"],
 );
 
 my $encfile = $base . $path;
@@ -99,6 +99,13 @@ sub frame_selector
   </div>
 </div>
 <div style="text-align: center">
+<input type="range" name="seekbar" style="width: 100%" min="0" max="1000" step="1" value="0">
+<br>
+＜&nbsp;
+<input type="button" name="btnDown4" value="60" onClick="upTime(-60000)">
+<input type="button" name="btnDown3" value="15" onClick="upTime(-15000)">
+<input type="button" name="btnDown2" value="1" onClick="upTime(-1000)">
+<input type="button" name="btnDown1" value=".5" onClick="upTime(-500)">&nbsp;&nbsp;
 <input type="button" name="btnDown" value="-" onClick="upTime(document.f1.skip.value * (-1))">&nbsp;
 <select name="skip" onChange="document.f1.skip.blur()">
 EOF
@@ -111,7 +118,12 @@ EOF
 
 print <<EOF;
 </select>&nbsp;
-<input type="button" name="btnUp" value="+" onClick="upTime(document.f1.skip.value)">
+<input type="button" name="btnUp" value="+" onClick="upTime(document.f1.skip.value)">&nbsp;&nbsp;
+<input type="button" name="btnUp1" value=".5" onClick="upTime(500)">
+<input type="button" name="btnUp2" value="1" onClick="upTime(1000)">
+<input type="button" name="btnUp3" value="15" onClick="upTime(15000)">
+<input type="button" name="btnUp4" value="60" onClick="upTime(60000)">
+&nbsp;＞
 <br>
 Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
 <br>
@@ -250,7 +262,7 @@ sub print_script
   }
 
   window.onload = function() {
-    document.f1.selectedTime.focus();
+    document.f1.btnApply.focus();
   }
 
   function setTime() {
@@ -360,9 +372,11 @@ sub print_script
         closeWindow();
         break;
       case 37: // left
+      case 71:
         upTime(document.f1.skip.value * (-1));
         break;
       case 39: // right
+      case 72:
         upTime(document.f1.skip.value);
         break;
       case 38: // up     
@@ -370,6 +384,30 @@ sub print_script
         break;
       case 40: // down
         selectSkipDown(1);
+        break;
+      case 70: // f
+        upTime(-500);
+        break;
+      case 68: // d
+        upTime(-1000);
+        break;
+      case 83: // s
+        upTime(-15000);
+        break;
+      case 65: // a
+        upTime(-60000);
+        break;
+      case 74: // j
+        upTime(500);
+        break;
+      case 75: // k
+        upTime(1000);
+        break;
+      case 76: // l
+        upTime(15000);
+        break;
+      case 187: // ;
+        upTime(60000);
         break;
     }
   }

@@ -504,57 +504,73 @@ EOD
     }
 */
 
-    if( checked_format == 'dvd' ) {
+    if( checked_format == 'mts' ) {
+      document.enc_setting.v_copy.checked = true;
+      document.enc_setting.a_copy.checked = false;
+      document.enc_setting.ar.options[0].selected = true;  // Original
+      document.enc_setting.ab.options[1].selected = true;  // 256kbps
+    } else if ( checked_format == 'dvd' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 720;
       document.enc_setting.s_h.value = 480;
       document.enc_setting.r.value = 29.97;
       document.enc_setting.b.value = 5000;
       document.enc_setting.deinterlace.checked = false;
+      document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[1].selected = true;  // 48k
       document.enc_setting.ab.options[2].selected = true;  // 192kbps
       document.enc_setting.cutoff.value = 18000;
     } else if ( checked_format == 'mpeg4' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 640;
       document.enc_setting.s_h.value = 480;
       document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 1024;
       //document.enc_setting.deinterlace.checked = false;
+      document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[0].selected = true;  // Original
       document.enc_setting.ab.options[5].selected = true;  // 96kbps
       document.enc_setting.cutoff.value = 12000;
     } else if ( checked_format == 'H.264' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 640;
       document.enc_setting.s_h.value = 480;
       document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 1024;
       //document.enc_setting.deinterlace.checked = false;
+      document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[0].selected = true;  // Original
       document.enc_setting.ab.options[3].selected = true;  // 160kbps
       document.enc_setting.cutoff.value = 0;
     } else if ( checked_format == 'wmv' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = true;
       document.enc_setting.s_w.value = ${vid_width};
       document.enc_setting.s_h.value = ${vid_height};
       document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = ${default_bps};
       //document.enc_setting.deinterlace.checked = false;
+      document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[0].selected = true;  // Original
       document.enc_setting.ab.options[3].selected = true;  // 160kbps
       document.enc_setting.cutoff.value = 18000;
     } else if ( checked_format == 'asf' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 320;
       document.enc_setting.s_h.value = 160;
       document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 512;
       //document.enc_setting.deinterlace.checked = false;
+      document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[4].selected = true;  // 24k
       document.enc_setting.ab.options[6].selected = true;  // 64kbps
       document.enc_setting.cutoff.value = 12000;
     } else if ( checked_format == 'I-Frame' || checked_format == 'HighLight' ) {
+      document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = ture;
       document.enc_setting.s_w.value = ${vid_width};
       document.enc_setting.s_h.value = ${vid_height};

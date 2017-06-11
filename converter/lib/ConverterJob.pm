@@ -233,6 +233,16 @@ sub add
   close($fd);
 }
 
+sub add_xml
+{
+  my $self = shift;
+  my ($xml) = @_;
+
+  // TODO: get
+
+  // TODO: add
+}
+
 sub delete
 {
   my $self = shift;

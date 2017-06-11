@@ -12,10 +12,25 @@ use lib '%libs_dir%';
 use HTML_Elem;
 use ConverterJob;
 
+my $form = eval{new CGI};
+my $mode = decode('utf-8', $form->param('mode'));
+
+if ($mode eq "xml_upload") {
+  &xml_upload_work();
+  exit(0);
+}
+
 HTML_Elem->header();
+
+my $script = $ENV{'SCRIPT_NAME'};
 
 my $msg = <<EOF;
 <h2>エンコードリスト</h2>
+<form action="${script}" name="f1" method="POST" enctype="multipart/form-data">
+<input type="hidden" name="mode" value="xml_upload">
+parameter.xmlからエンコードJobを登録: <input type="file" name="xml_file">
+<input type="submit" value="アップロード">
+</form>
 <hr>
 EOF
 print encode('utf-8', $msg);
@@ -24,22 +39,25 @@ our $STOCKER_CGI    = "";
 our $ENCBATCH_LIST  = "";
 require '%conf_dir%/converter.conf';
 
-my $buffer;
-my $guess;
-my $i = 1;
+eval {
+  my $job  = ConverterJob->new(listfile => $ENCBATCH_LIST);
+  my @list = $job->list();
 
-my $job  = ConverterJob->new(listfile => $ENCBATCH_LIST);
-my @list = $job->list();
+  my $i = 1;
 
-&print_table_head();
+  &print_table_head();
 
-foreach my $job_num (@list) {
-  print "<tr>\n<td>$i</td>";
-  &make_desc(\$job, $job_num);
-  print "</tr>\n";
-  $i++;
+  foreach my $job_num (@list) {
+    print "<tr>\n<td>$i</td>";
+    &make_desc(\$job, $job_num);
+    print "</tr>\n";
+    $i++;
+  }
+  print "</table>\n";
+};
+if ($@) {
+  print "<p>Jobは登録されていません</p>";
 }
-print "</table>\n";
 
 HTML_Elem->tail();
 
@@ -91,3 +109,24 @@ sub make_desc {
   print "<td>".$$job->{'a_ar'}."</td>";
   print "<td>".$$job->{'a_ab'}."</td>";
 }
+
+sub xml_upload_work {
+  eval {
+    my $job  = ConverterJob->new(listfile => $ENCBATCH_LIST);
+
+    my $buffer = "";
+    my $fh = $form->upload('xml_file');
+    while(<$fh>) {
+      $buffer .= $_;
+    }
+
+    $job->add_xml($buffer);
+  };
+  if ($@) {
+    HTML_Elem->header();
+    HTML_Elem->error($@);
+  }
+
+  # redirect to ${script}
+}
+
