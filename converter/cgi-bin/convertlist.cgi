@@ -12,6 +12,12 @@ use lib '%libs_dir%';
 use HTML_Elem;
 use ConverterJob;
 
+our $STOCKER_CGI    = "";
+our $ENCBATCH_LIST  = "";
+require '%conf_dir%/converter.conf';
+
+my $script = $ENV{'SCRIPT_NAME'};
+
 my $form = eval{new CGI};
 my $mode = decode('utf-8', $form->param('mode'));
 
@@ -21,8 +27,6 @@ if ($mode eq "xml_upload") {
 }
 
 HTML_Elem->header();
-
-my $script = $ENV{'SCRIPT_NAME'};
 
 my $msg = <<EOF;
 <h2>エンコードリスト</h2>
@@ -34,10 +38,6 @@ parameter.xmlからエンコードJobを登録: <input type="file" name="xml_fil
 <hr>
 EOF
 print encode('utf-8', $msg);
-
-our $STOCKER_CGI    = "";
-our $ENCBATCH_LIST  = "";
-require '%conf_dir%/converter.conf';
 
 eval {
   my $job  = ConverterJob->new(listfile => $ENCBATCH_LIST);
@@ -112,7 +112,7 @@ sub make_desc {
 
 sub xml_upload_work {
   eval {
-    my $job  = ConverterJob->new(listfile => $ENCBATCH_LIST);
+    my $job = ConverterJob->new(listfile => $ENCBATCH_LIST);
 
     my $buffer = "";
     my $fh = $form->upload('xml_file');
@@ -127,6 +127,6 @@ sub xml_upload_work {
     HTML_Elem->error($@);
   }
 
-  # redirect to ${script}
+  print "Location: ${script}\n\n";
 }
 

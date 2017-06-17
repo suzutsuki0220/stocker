@@ -67,43 +67,14 @@ sub new {
   return bless $self, $class;
 }
 
-sub get
+sub pushEncodeJob
 {
   my $self = shift;
-  my ($job_num) = @_;
-  my $job_matched = 0;
-  my $buffer = "";
-  my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
-
-  if (length($self->{'listfile'}) == 0) {
-    die("listfile is not set");
-  }
-
-  open(my $in, "$self->{'listfile'}") or die("failed to read convert list");
-  flock($in, 1);  # 書込みロック
-  while (my $line = <$in>) {
-    if ($line =~ /^<job/) {
-      $line =~ /id=\"(.+)\"/;
-      if ($1 eq $job_num) {
-        $job_matched = 1;
-      }
-    }
-    if ($job_matched == 1) {
-      $buffer .= $line;
-      if ($line =~ /^<\/job>/) {
-        last;
-      }
-    }
-  }
-  close($in);
-
-  if ($job_matched == 0) {
-    # job not found
-    return -1;
-  }
+  my ($job_num, $buffer) = @_;
 
   $self->{'_jobid'} = $job_num;
 
+  my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
   my $job = $xml->XMLin($buffer);
 
   my $gnl = $job->{'job'}->{$job_num};
@@ -168,6 +139,45 @@ sub get
   $self->{'a_ac'}                 = $self->_elm($aud->{'ac'}[0]);
   $self->{'a_cutoff'}             = $self->_elm($aud->{'cutoff'}[0]);
   $self->{'a_volume'}             = $self->_elm($aud->{'volume'}[0]);
+
+  return 0;
+}
+
+sub get
+{
+  my $self = shift;
+  my ($job_num) = @_;
+  my $job_matched = 0;
+  my $buffer = "";
+
+  if (length($self->{'listfile'}) == 0) {
+    die("listfile is not set");
+  }
+
+  open(my $in, "$self->{'listfile'}") or die("failed to read convert list");
+  flock($in, 1);  # 書込みロック
+  while (my $line = <$in>) {
+    if ($line =~ /^<job/) {
+      $line =~ /id=\"(.+)\"/;
+      if ($1 eq $job_num) {
+        $job_matched = 1;
+      }
+    }
+    if ($job_matched == 1) {
+      $buffer .= $line;
+      if ($line =~ /^<\/job>/) {
+        last;
+      }
+    }
+  }
+  close($in);
+
+  if ($job_matched == 0) {
+    # job not found
+    return -1;
+  }
+
+  $self->pushEncodeJob($job_num, $buffer);
 
   return 0;
 }
@@ -237,10 +247,16 @@ sub add_xml
 {
   my $self = shift;
   my ($xml) = @_;
+  my $job_num = 0;
 
-  // TODO: get
+  if ($xml =~ /<job id=\"(.+)\"/) {
+    $job_num = $1;
+  } else {
+    die("XML data has no job ID");
+  }
 
-  // TODO: add
+  $self->pushEncodeJob($job_num, $xml);
+  $self->add();
 }
 
 sub delete
