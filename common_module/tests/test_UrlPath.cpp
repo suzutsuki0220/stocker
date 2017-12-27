@@ -9,21 +9,53 @@ typedef struct test_pattern {
 } test_pattern_t;
 
 test_pattern_t pattern[] = {
-    "usr/share/mount", "aaa/bbb/ccc",
-    "/usr/share/mount", "aaa/bbb/ccc",
-    "/usr//share/mount", "aaa/bbb/ccc",
-    "//usr/share/mount", "aaa/bbb/ccc",
-    "/usr/share/mount/", "aaa/bbb/ccc",
-    "usr/share/mount", "aaa/bbb/ccc",
-    "usr//share////mount", "aaa/bbb/ccc",
-    "file", "aaa",
-    "", "",
+    "",                    "",
+    "/",                   "/",
+    "file",                "ZmlsZQ",
+    "file/",               "ZmlsZQ/",
+    "/file",               "/ZmlsZQ",
+    "//file",              "/ZmlsZQ",
+    "file//",              "ZmlsZQ/",
+    "usr/share/mount",     "dXNy/c2hhcmU/bW91bnQ",
+    "/usr/share/mount",    "/dXNy/c2hhcmU/bW91bnQ",
+    "/usr//share/mount",   "/dXNy/c2hhcmU/bW91bnQ",
+    "//usr/share/mount",   "/dXNy/c2hhcmU/bW91bnQ",
+    "/usr/share/mount/",   "/dXNy/c2hhcmU/bW91bnQ/",
+    "usr//share////mount", "dXNy/c2hhcmU/bW91bnQ",
 };
 
 /**
- * $B%Q%?!<%s%A%'%C%/%F%9%H$r9T$&(B
+ * encode の後に decode したら元の値と同じかチェックする
+**/
+static inline bool
+checkReverse(std::string &decoded, std::string &input)
+{
+    bool ret = false;
+    std::string canon_decoded;
+    std::string canon_input;
+
+    fileutil *futil = new fileutil(NULL);
+
+
+    futil->getCanonicalizePath(canon_decoded, decoded);
+    futil->getCanonicalizePath(canon_input, input);
+
+    if (canon_decoded.compare(canon_input) == 0) {
+        std::cout << ", decode reverse [OK]";
+	ret = true;
+    } else {
+        std::cout << ", decode reverse [Fail] -> [" << canon_decoded << "]";
+    }
+
+    delete futil;
+
+    return ret;
+}
+
+/**
+ * パターンチェックテストを行う
  * 
- * return: 0$B@.8y(B or $B<:GT$7$??t(B
+ * return: 0成功 or 失敗した数
 **/
 int
 main(int argc, char **argv)
@@ -36,7 +68,7 @@ main(int argc, char **argv)
     index = 0;
     while (index < sizeof(pattern) / sizeof(pattern[0])) {
         urlpath->encode(encoded, pattern[index].input);
-        urlpath->decode(decoded, encoded);  // encode -> decode $B$G85$N7k2L$K$J$k$+(B
+        urlpath->decode(decoded, encoded);  // encode -> decode して元に戻るかチェックする目的
 
 	std::cout << "UrlPath Encode input[" << pattern[index].input << "], expect [" << pattern[index].output << "], ";
 	std::cout << "output [" << encoded << "]";
@@ -44,17 +76,18 @@ main(int argc, char **argv)
             std::cout << " [OK]";
 	} else {
             std::cout << " [Fail]";
-	    ret++;  // $B<:GT$7$??t$r%+%&%s%H(B
+	    ret++;  // 失敗した数をカウント
 	}
 
-	if (decoded.compare(pattern[index].input) == 0) {
-	    std::cout << ", decode reverse [OK]";
-	} else {
-	    std::cout << ", decode reverse [Fail] -> [" << decoded << "]";
+	if (checkReverse(decoded, pattern[index].input) == false) {
+	    ret++;
 	}
+
 	std::cout << std::endl;
         index++;
     }
+
+    delete urlpath;
 
     return ret;
 }

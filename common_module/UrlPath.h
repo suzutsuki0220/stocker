@@ -18,8 +18,8 @@ public:
     UrlPath();
     ~UrlPath();
 
-    int encode(std::string &url_path, std::string &file_path);
-    int decode(std::string &file_path, std::string &url_path);
+    void encode(std::string &url_path, std::string &file_path);
+    void decode(std::string &file_path, std::string &url_path);
 
     const char* getErrorMessage(void);
 };

@@ -2,8 +2,8 @@ debug=1
 
 TEST_URL_PATH_PROG=test_UrlPath
 TEST_URL_PATH_SRC=test_UrlPath.cpp
+TEST_PROGS+=$(TEST_URL_PATH_PROG)
 
-#OBJECTS=../fileutil.o ../cgi_util.o ../Config.o ../htmlutil.o ../UrlPath.o
 OBJECTS=../*.o
 CC=gcc
 CPP=g++
@@ -23,7 +23,7 @@ BASE_DIR  = $(DESTDIR)/stocker
 BIN_DIR   = $(BASE_DIR)/bin
 CONF_DIR  = $(BASE_DIR)/conf
 
-.phony: all clean install
+.phony: all clean install test
 
 all: $(TEST_URL_PATH_PROG)
 
@@ -35,4 +35,7 @@ clean:
 
 $(TEST_URL_PATH_PROG): $(TEST_URL_PATH_SRC) $(OBJECTS)
 	$(CPP) $(CPPFLAGS) -o $@ $^
+
+test: $(TEST_PROGS)
+	$(TEST_PROGS)
 

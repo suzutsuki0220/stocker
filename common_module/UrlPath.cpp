@@ -33,18 +33,13 @@ UrlPath::appendSubnameEncode(std::string &subname, std::string &url_path)
     }
 }
 
-int
+void
 UrlPath::encode(std::string &url_path, std::string &file_path)
 {
-    int ret = 0;
     std::string split_name;
     std::string::size_type start_pos, end_pos;
 
     url_path.clear();
-
-    if (futil->isTraversalPath(file_path)) {
-	return -1;
-    }
 
     if (*file_path.c_str() == '/') {
         url_path = "/";
@@ -67,14 +62,11 @@ UrlPath::encode(std::string &url_path, std::string &file_path)
         split_name = file_path.substr(start_pos);
         appendSubnameEncode(split_name, url_path);
     }
-
-    return ret;
 }
 
-int
+void
 UrlPath::decode(std::string &file_path, std::string &url_path)
 {
-    int ret = 0;
     std::string split_name;
     std::string::size_type start_pos, end_pos;
 
@@ -101,13 +93,6 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
         cgi->decodeBase64URL(split_name);
         file_path.append(split_name);
     }
-
-    if (futil->isTraversalPath(file_path)) {
-	file_path.clear();
-	ret = -1;
-    }
-
-    return ret;
 }
 
 const char*
