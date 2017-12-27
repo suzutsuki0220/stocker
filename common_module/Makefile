@@ -2,7 +2,7 @@ debug=1
 
 TARGET_SHARE=libstockercommon.so
 TARGET_STATIC=libstockercommon.a
-OBJECTS=fileutil.o cgi_util.o Config.o htmlutil.o
+OBJECTS=fileutil.o cgi_util.o Config.o htmlutil.o UrlPath.o
 CC=gcc
 CPP=g++
 
