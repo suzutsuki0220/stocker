@@ -3,13 +3,13 @@
 
 #include <string>
 
-#include "fileutil.h"
+#include "FileUtil.h"
 #include "cgi_util.h"
 
 class UrlPath {
 private:
     cgi_util *cgi;
-    fileutil *futil;
+    FileUtil *futil;
     std::string err_message;
 
     void appendSubnameEncode(std::string &subname, std::string &url_path);

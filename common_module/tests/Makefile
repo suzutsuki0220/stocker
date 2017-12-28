@@ -1,10 +1,13 @@
 debug=1
 
 TEST_URL_PATH_PROG=test_UrlPath
-TEST_URL_PATH_SRC=test_UrlPath.cpp
 TEST_PROGS+=$(TEST_URL_PATH_PROG)
 
-OBJECTS=../*.o
+TEST_FILEUTIL_PROG=test_FileUtil
+TEST_FILEUTIL_HEADERS=test_FileUtil_*_check_patterns.h
+TEST_PROGS+=$(TEST_FILEUTIL_PROG)
+
+LIBSTOCKER_COMMON=../libstockercommon.a
 CC=gcc
 CPP=g++
 
@@ -13,7 +16,7 @@ ifeq ($(debug), 1)
 else
 	CFLAGS=-O2 -Wall -DNDEBUG -fPIC
 endif
-CFLAGS+=-I../
+CFLAGS+=-I../ -I./
 
 CPPFLAGS=$(CFLAGS)
 
@@ -25,17 +28,20 @@ CONF_DIR  = $(BASE_DIR)/conf
 
 .phony: all clean install test
 
-all: $(TEST_URL_PATH_PROG)
+all: $(TEST_PROGS)
 
-$(OBJECTS):
+$(LIBSTOCKER_COMMON):
 	make -C ../
 
 clean:
-	$(RM) $(TEST_URL_PATH_PROG) *~
+	$(RM) $(TEST_PROGS) *~
 
-$(TEST_URL_PATH_PROG): $(TEST_URL_PATH_SRC) $(OBJECTS)
+$(TEST_URL_PATH_PROG): $(TEST_URL_PATH_PROG).cpp $(LIBSTOCKER_COMMON)
 	$(CPP) $(CPPFLAGS) -o $@ $^
 
+$(TEST_FILEUTIL_PROG): $(TEST_FILEUTIL_PROG).cpp $(TEST_FILEUTIL_HEADERS) $(LIBSTOCKER_COMMON)
+	$(CPP) $(CPPFLAGS) -o $@ $< $(LIBSTOCKER_COMMON)
+
 test: $(TEST_PROGS)
-	$(TEST_PROGS)
+	for prog in $(TEST_PROGS); do $${prog}; done
 

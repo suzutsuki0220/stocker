@@ -34,11 +34,10 @@ checkReverse(std::string &decoded, std::string &input)
     std::string canon_decoded;
     std::string canon_input;
 
-    fileutil *futil = new fileutil(NULL);
+    FileUtil *fileutil = new FileUtil(NULL);
 
-
-    futil->getCanonicalizePath(canon_decoded, decoded);
-    futil->getCanonicalizePath(canon_input, input);
+    fileutil->getCanonicalizePath(canon_decoded, decoded);
+    fileutil->getCanonicalizePath(canon_input, input);
 
     if (canon_decoded.compare(canon_input) == 0) {
         std::cout << ", decode reverse [OK]";
@@ -47,7 +46,7 @@ checkReverse(std::string &decoded, std::string &input)
         std::cout << ", decode reverse [Fail] -> [" << canon_decoded << "]";
     }
 
-    delete futil;
+    delete fileutil;
 
     return ret;
 }

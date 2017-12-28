@@ -9,7 +9,7 @@
 UrlPath::UrlPath()
 {
     this->cgi = new cgi_util();
-    this->futil = new fileutil(NULL);
+    this->futil = new FileUtil(NULL);
     this->err_message.clear();
 }
 

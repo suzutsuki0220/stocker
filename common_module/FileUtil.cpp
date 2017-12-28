@@ -5,27 +5,27 @@
 #include <string>
 #include <sstream>
 
-#include "fileutil.h"
+#include "FileUtil.h"
 
-fileutil::fileutil(const char *file)
+FileUtil::FileUtil(const char *file)
 {
     this->file = file;
     this->err_message = "";
 }
 
-fileutil::~fileutil()
+FileUtil::~FileUtil()
 {
 
 }
 
 std::string
-fileutil::get_err_message(void)
+FileUtil::get_err_message(void)
 {
     return this->err_message;
 }
 
 int 
-fileutil::output_data(FILE *out_fp, size_t start, size_t size)
+FileUtil::output_data(FILE *out_fp, size_t start, size_t size)
 {
     int ret = -1;
     FILE *fp = NULL;
@@ -74,7 +74,7 @@ END:
 }
 
 size_t
-fileutil::getFilesize(std::string &path)
+FileUtil::getFilesize(std::string &path)
 {
     size_t ret = 0;
     struct stat st;
@@ -121,7 +121,7 @@ checkPathType(std::string &path)
  * ディレクトリトラバーサルチェック (".."を含めて予期しないパスのアクセスを防ぐ)
  **/
 bool
-fileutil::isTraversalPath(std::string &path)
+FileUtil::isTraversalPath(std::string &path)
 {
     std::string::size_type start_pos, end_pos;
     std::string split_name;
@@ -152,7 +152,7 @@ fileutil::isTraversalPath(std::string &path)
  * パスを正規化する
 **/
 void
-fileutil::getCanonicalizePath(std::string &outpath, std::string &path)
+FileUtil::getCanonicalizePath(std::string &outpath, std::string &path)
 {
     std::string::size_type start_pos, end_pos;
     std::string split_name;

@@ -10,14 +10,14 @@ typedef enum {
     PATH_FIFO
 } path_stat;
 
-class fileutil {
+class FileUtil {
 private:
     const char *file;
     std::string err_message;
 
 public:
-    fileutil(const char* file);
-    ~fileutil();
+    FileUtil(const char* file);
+    ~FileUtil();
 
     std::string get_err_message(void);
 
