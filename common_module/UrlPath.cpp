@@ -5,12 +5,17 @@
 #include <cstring>
 
 #include "UrlPath.h"
+#include "Config.h"
 
-UrlPath::UrlPath()
+UrlPath::UrlPath(const char *confdir)
 {
     this->cgi = new cgi_util();
-    this->futil = new FileUtil(NULL);
+    this->futil = new FileUtil();
     this->err_message.clear();
+
+    if (confdir) {
+        this->confdir = confdir; /* @param : confdir (IN)   basedir.confがあるディレクトリ */
+    }
 }
 
 UrlPath::~UrlPath()
@@ -31,6 +36,37 @@ UrlPath::appendSubnameEncode(std::string &subname, std::string &url_path)
     } else {
         url_path.append(subname_encode);
     }
+}
+
+/**
+ * basedirs.conf に設定された、メディアのディレクトリを取得する
+ *
+ * @param : basedir (OUT)  メディアのディレクトリ
+ * @param : dir_param (IN) 設定ファイルに定義されているディレクトリの名前
+**/
+int
+UrlPath::getBaseDir(std::string &basedir, const char *dir_param)
+{
+    int ret = -1;
+
+    Config *conf = new Config();
+    char confpath[512] = {0};
+    snprintf(confpath, sizeof(confpath), "%s/basedirs.conf", this->confdir.c_str());
+
+    if (conf->parse(confpath) != 0) {
+        fprintf(stderr, "failed to parse basedir - %s %s\n", conf->getErrorMessage(), confpath);
+        goto end;
+    }
+
+    basedir = conf->get(dir_param);
+    if (basedir.empty()) {
+        fprintf(stderr, "basedir get failed [%s] - %s\n", dir_param, conf->getErrorMessage());
+        goto end;
+    }
+    ret = 0;
+
+end:
+    return ret;
 }
 
 void

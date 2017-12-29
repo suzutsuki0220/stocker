@@ -7,39 +7,14 @@
 #include <stdexcept>  // invalid argument
 
 #include "cgi_util.h"
-#include "fileutil.h"
+#include "FileUtil.h"
 #include "htmlutil.h"
+#include "UrlPath.h"
 #include "Range.h"
-#include "Config.h"
 
 #ifndef CONFDIR
 #define CONFDIR "/var/www/stocker/conf"
 #endif
-
-int
-get_basedir(std::string &basedir, const char* confdir, const char *f_dir)
-{
-    int ret = -1;
-
-    Config *conf = new Config();
-    char confpath[512] = {0};
-    snprintf(confpath, sizeof(confpath), "%s/basedirs.conf", confdir);
-
-    if (conf->parse(confpath) != 0) {
-        fprintf(stderr, "failed to parse basedir - %s %s\n", conf->getErrorMessage(), confpath);
-        goto end;
-    }
-
-    basedir = conf->get(f_dir);
-    if (basedir.empty()) {
-        fprintf(stderr, "basedir get failed [%s] - %s\n", f_dir, conf->getErrorMessage());
-        goto end;
-    }
-    ret = 0;
-
-end:
-    return ret;
-}
 
 int
 main(int argc, char** argv)
@@ -47,13 +22,12 @@ main(int argc, char** argv)
     int ret = -1;
     size_t filesize;
 
-    cgi_util *cgi = NULL;
-    fileutil *fu = NULL;
-
     try {
-        Range *range = new Range();
+        Range *range  = new Range();
+        cgi_util *cgi = new cgi_util();
+        FileUtil *fu  = new FileUtil();
+        UrlPath  *urlpath = new UrlPath(CONFDIR);
 
-        cgi = new cgi_util();
         if (cgi->parse_param() != 0) {
             print_400_header(cgi->get_err_message().c_str());
             return -1;
@@ -77,17 +51,15 @@ main(int argc, char** argv)
         }
         f_mime = cgi->decodeFormURL(f_mime);
 
-        if (get_basedir(filepath, CONFDIR, f_dir.c_str()) != 0) {
+	if (urlpath->getBaseDir(filepath, f_dir.c_str()) != 0) {
             print_400_header("failed to determine filepath");
             return -1;
         }
         filepath.append("/");
         filepath.append(f_file);
-
-        fu = new fileutil(filepath.c_str());
  
         // ファイルサイズ取得
-        filesize = fu->get_filesize();
+        filesize = fu->getFilesize(filepath);
         if (filesize == 0 && !fu->get_err_message().empty()) {
             print_400_header(fu->get_err_message().c_str());
             return -1;
@@ -126,7 +98,7 @@ main(int argc, char** argv)
 
         if (range->get_listsize() == 0) {
             print_200_header(f_mime.c_str(), filesize);
-            ret = fu->output_data(stdout, 0, filesize);
+            ret = fu->readFile(stdout, filepath.c_str(), 0, filesize);
         } else if (range->get_listsize() == 1) {
             printf("Status: 206\n");
             printf("Content-Type: %s\n", f_mime.c_str());
@@ -135,7 +107,7 @@ main(int argc, char** argv)
             printf("Content-Range: bytes %zu-%zu/%zu\n", range->get_start(0), range->get_end(0), filesize);
             printf("\n");
 
-            ret = fu->output_data(stdout, range->get_start(0), range->get_size(0));
+            ret = fu->readFile(stdout, filepath.c_str(), range->get_start(0), range->get_size(0));
         } else {
             std::string boundary = "_.oOOo.__.oOOo.__.oOOo.__.oOOo.____.oOOo._";
             std::string ctype_byterange = "Content-Type: multipart/byteranges; boundary=\"" + boundary + "\"";
@@ -162,12 +134,10 @@ main(int argc, char** argv)
                 printf("Content-Type: %s\r\n", f_mime.c_str());
                 printf("Content-Range: bytes %zu-%zu/%zu\r\n\r\n", range->get_start(i), range->get_end(i), filesize);
 
-                ret = fu->output_data(stdout, range->get_start(i), range->get_size(i));
+                ret = fu->readFile(stdout, filepath.c_str(), range->get_start(i), range->get_size(i));
             }
             printf("\r\n--%s--\r\n", boundary.c_str());
         }
-
-
     } catch (std::bad_alloc ex) {
         fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
         goto END;

@@ -34,7 +34,7 @@ checkReverse(std::string &decoded, std::string &input)
     std::string canon_decoded;
     std::string canon_input;
 
-    FileUtil *fileutil = new FileUtil(NULL);
+    FileUtil *fileutil = new FileUtil();
 
     fileutil->getCanonicalizePath(canon_decoded, decoded);
     fileutil->getCanonicalizePath(canon_input, input);
@@ -61,7 +61,7 @@ main(int argc, char **argv)
 {
     int ret = 0;
     size_t index;
-    UrlPath *urlpath = new UrlPath();
+    UrlPath *urlpath = new UrlPath(NULL);
     std::string encoded, decoded;
 
     index = 0;

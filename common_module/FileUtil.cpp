@@ -7,9 +7,8 @@
 
 #include "FileUtil.h"
 
-FileUtil::FileUtil(const char *file)
+FileUtil::FileUtil()
 {
-    this->file = file;
     this->err_message = "";
 }
 
@@ -25,16 +24,16 @@ FileUtil::get_err_message(void)
 }
 
 int 
-FileUtil::output_data(FILE *out_fp, size_t start, size_t size)
+FileUtil::readFile(FILE *out_fp, const char *path, size_t start, size_t size)
 {
     int ret = -1;
     FILE *fp = NULL;
     char buff[BUFSIZ];
 
-    fp = fopen(file, "r");
+    fp = fopen(path, "r");
     if(fp == NULL) {
 	err_message = "file open failed - ";
-	err_message += file;
+	err_message += path; 
         return -1;
     }
 
@@ -51,7 +50,8 @@ FileUtil::output_data(FILE *out_fp, size_t start, size_t size)
         read_size = fread(buff, sizeof(char), out_size, fp);
         if (read_size <= 0) {
             if (feof(fp)) {
-                fprintf(stderr, "read file reached EOF, size parameter is bigger than filesize? - start=%zu, size=%zu, read=%zu", start, size, size-remain);
+	        std::stringstream ss;
+                ss << "read file reached EOF, size parameter is bigger than filesize? - start=" << start << ", size=" << size << ", read=" << size-remain;
                 break;
             } else if (ferror(fp)) {
 	        std::stringstream ss;

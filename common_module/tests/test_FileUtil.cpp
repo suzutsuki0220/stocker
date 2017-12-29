@@ -67,7 +67,7 @@ main(int argc, char **argv)
 {
     int ret;
 
-    FileUtil *fileutil = new FileUtil(NULL);
+    FileUtil *fileutil = new FileUtil();
 
     ret = do_traversal_check(fileutil);
     if (ret != 0) 

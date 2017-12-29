@@ -12,16 +12,15 @@ typedef enum {
 
 class FileUtil {
 private:
-    const char *file;
     std::string err_message;
 
 public:
-    FileUtil(const char* file);
+    FileUtil();
     ~FileUtil();
 
     std::string get_err_message(void);
 
-    int output_data(FILE *out_fp, size_t start, size_t size);
+    int readFile(FILE *out_fp, const char *path, size_t start, size_t size);
     size_t getFilesize(std::string &path);
     path_stat checkPathType(std::string &path);
     bool isTraversalPath(std::string &path);

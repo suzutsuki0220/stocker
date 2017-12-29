@@ -11,13 +11,15 @@ private:
     cgi_util *cgi;
     FileUtil *futil;
     std::string err_message;
+    std::string confdir;
 
     void appendSubnameEncode(std::string &subname, std::string &url_path);
  
 public:
-    UrlPath();
+    UrlPath(const char *confdir);
     ~UrlPath();
 
+    int  getBaseDir(std::string &basedir, const char *dir_param);
     void encode(std::string &url_path, std::string &file_path);
     void decode(std::string &file_path, std::string &url_path);
 
