@@ -178,7 +178,9 @@ FileUtil::getCanonicalizePath(std::string &outpath, std::string &path)
     }
     if (start_pos != path.length()) {
 	split_name = path.substr(start_pos);
-	outpath.append(split_name);
+	if (split_name.compare(".") != 0) {  // '.' のみは無視する
+	    outpath.append(split_name);
+	}
     }
 }
 
