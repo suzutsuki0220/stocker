@@ -52,6 +52,7 @@ FileUtil::readFile(FILE *out_fp, const char *path, size_t start, size_t size)
             if (feof(fp)) {
 	        std::stringstream ss;
                 ss << "read file reached EOF, size parameter is bigger than filesize? - start=" << start << ", size=" << size << ", read=" << size-remain;
+                err_message = ss.str();
                 break;
             } else if (ferror(fp)) {
 	        std::stringstream ss;

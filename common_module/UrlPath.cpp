@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <sstream>
 
 #include "UrlPath.h"
 #include "Config.h"
@@ -41,26 +42,35 @@ UrlPath::appendSubnameEncode(std::string &subname, std::string &url_path)
 /**
  * basedirs.conf に設定された、メディアのディレクトリを取得する
  *
- * @param : basedir (OUT)  メディアのディレクトリ
- * @param : dir_param (IN) 設定ファイルに定義されているディレクトリの名前
+ * @param : basedir (OUT) メディアのディレクトリ
+ * @param : dir_name (IN) 設定ファイルに定義されているディレクトリの名前 (URLエンコードされた値)
 **/
 int
-UrlPath::getBaseDir(std::string &basedir, const char *dir_param)
+UrlPath::getBaseDir(std::string &basedir, std::string &dir_name)
 {
     int ret = -1;
 
     Config *conf = new Config();
-    char confpath[512] = {0};
-    snprintf(confpath, sizeof(confpath), "%s/basedirs.conf", this->confdir.c_str());
+    std::string confpath, decoded_dir_name;
 
-    if (conf->parse(confpath) != 0) {
-        fprintf(stderr, "failed to parse basedir - %s %s\n", conf->getErrorMessage(), confpath);
+    basedir.clear();
+
+    confpath = this->confdir;
+    confpath.append("/basedirs.conf");
+
+    if (conf->parse(confpath.c_str()) != 0) {
+	std::stringstream ss;
+        ss << "failed to parse basedir - " << conf->getErrorMessage() << " " <<  confpath;
+	err_message = ss.str();
         goto end;
     }
 
-    basedir = conf->get(dir_param);
+    decoded_dir_name = cgi->decodeFormURL(dir_name);
+    basedir = conf->get(decoded_dir_name.c_str());
     if (basedir.empty()) {
-        fprintf(stderr, "basedir get failed [%s] - %s\n", dir_param, conf->getErrorMessage());
+	std::stringstream ss;
+        ss << "basedir get failed [" << decoded_dir_name << "] - " << conf->getErrorMessage();
+	err_message = ss.str();
         goto end;
     }
     ret = 0;
@@ -117,7 +127,11 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
     while (end_pos != std::string::npos) {
         if (start_pos != end_pos) {
             split_name = url_path.substr(start_pos, end_pos - start_pos);
-            cgi->decodeBase64URL(split_name);
+            if (cgi->decodeBase64URL(split_name) != 0) {
+		err_message = "failed to decode file parameter";
+		file_path.clear();
+                return;
+	    }
             file_path.append(split_name);
             file_path.append("/");
         }
@@ -126,9 +140,41 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
     }
     if (start_pos != url_path.length()) {
         split_name = url_path.substr(start_pos);
-        cgi->decodeBase64URL(split_name);
-        file_path.append(split_name);
+        if (cgi->decodeBase64URL(split_name) == 0) {
+            file_path.append(split_name);
+	} else {
+	    err_message = "failed to decode file parameter";
+	    file_path.clear();
+	}
     }
+}
+
+int
+UrlPath::getDecodedPath(std::string &decoded_path, std::string &basedir_name, std::string &url_path)
+{
+    std::string path;
+    std::string canonicalized_path;
+
+    decoded_path.clear();
+
+    if (getBaseDir(decoded_path, basedir_name) != 0) {
+        // no such directory
+	return -1;
+    }
+
+    decode(path, url_path);
+    futil->getCanonicalizePath(canonicalized_path, path);
+
+    if (futil->isTraversalPath(canonicalized_path) == true) {
+	// invalid URL path
+        decoded_path.clear();
+	return -2;
+    }
+
+    decoded_path.append("/");
+    decoded_path.append(canonicalized_path);
+
+    return 0;
 }
 
 const char*

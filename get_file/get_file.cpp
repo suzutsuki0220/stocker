@@ -38,27 +38,20 @@ main(int argc, char** argv)
         std::string f_file = cgi->get_value("file");
         std::string f_mime = cgi->get_value("mime");
 
-        //if (f_dir.empty() || f_file.empty() || f_mime.empty()) {
         if (f_file.empty() || f_mime.empty()) {
             print_400_header("Invalid parameter");
             return -1;
         }
 
-        f_dir = cgi->decodeFormURL(f_dir);
-        if (cgi->decodeBase64URL(f_file) != 0) {
-            print_400_header("failed to decode file parameter");
-            return -1;
-        }
         f_mime = cgi->decodeFormURL(f_mime);
 
-	if (urlpath->getBaseDir(filepath, f_dir.c_str()) != 0) {
-            print_400_header("failed to determine filepath");
+	if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
+	    std::stringstream ss;
+	    ss << "failed to determine filepath - " << urlpath->getErrorMessage();
+            print_400_header(ss.str().c_str());
             return -1;
         }
-        filepath.append("/");
-        filepath.append(f_file);
  
-        // ファイルサイズ取得
         filesize = fu->getFilesize(filepath);
         if (filesize == 0 && !fu->get_err_message().empty()) {
             print_400_header(fu->get_err_message().c_str());

@@ -1,34 +1,15 @@
 #include <iostream>
 #include <string>
 
+#include "test_UrlPath_encode_decode_check_patterns.h"
+#include "test_UrlPath_basedir_check_patterns.h"
 #include "UrlPath.h"
-
-typedef struct test_pattern {
-    std::string input;
-    std::string output;
-} test_pattern_t;
-
-test_pattern_t pattern[] = {
-    "",                    "",
-    "/",                   "/",
-    "file",                "ZmlsZQ",
-    "file/",               "ZmlsZQ/",
-    "/file",               "/ZmlsZQ",
-    "//file",              "/ZmlsZQ",
-    "file//",              "ZmlsZQ/",
-    "usr/share/mount",     "dXNy/c2hhcmU/bW91bnQ",
-    "/usr/share/mount",    "/dXNy/c2hhcmU/bW91bnQ",
-    "/usr//share/mount",   "/dXNy/c2hhcmU/bW91bnQ",
-    "//usr/share/mount",   "/dXNy/c2hhcmU/bW91bnQ",
-    "/usr/share/mount/",   "/dXNy/c2hhcmU/bW91bnQ/",
-    "usr//share////mount", "dXNy/c2hhcmU/bW91bnQ",
-};
 
 /**
  * encode の後に decode したら元の値と同じかチェックする
 **/
 static inline bool
-checkReverse(std::string &decoded, std::string &input)
+checkEncodeReverse(std::string &decoded, std::string &input)
 {
     bool ret = false;
     std::string canon_decoded;
@@ -52,33 +33,30 @@ checkReverse(std::string &decoded, std::string &input)
 }
 
 /**
- * パターンチェックテストを行う
- * 
- * return: 0成功 or 失敗した数
+ * URLパスのエンコードチェック
 **/
 int
-main(int argc, char **argv)
+do_encode_decode_check(UrlPath *urlpath)
 {
     int ret = 0;
     size_t index;
-    UrlPath *urlpath = new UrlPath(NULL);
     std::string encoded, decoded;
 
     index = 0;
-    while (index < sizeof(pattern) / sizeof(pattern[0])) {
-        urlpath->encode(encoded, pattern[index].input);
+    while (index < sizeof(encode_decode_pattern) / sizeof(encode_decode_pattern[0])) {
+        urlpath->encode(encoded, encode_decode_pattern[index].input);
         urlpath->decode(decoded, encoded);  // encode -> decode して元に戻るかチェックする目的
 
-	std::cout << "UrlPath Encode input[" << pattern[index].input << "], expect [" << pattern[index].output << "], ";
+	std::cout << "UrlPath Encode input[" << encode_decode_pattern[index].input << "], expect [" << encode_decode_pattern[index].output << "], ";
 	std::cout << "output [" << encoded << "]";
-	if (encoded.compare(pattern[index].output) == 0) {
+	if (encoded.compare(encode_decode_pattern[index].output) == 0) {
             std::cout << " [OK]";
 	} else {
             std::cout << " [Fail]";
 	    ret++;  // 失敗した数をカウント
 	}
 
-	if (checkReverse(decoded, pattern[index].input) == false) {
+	if (checkEncodeReverse(decoded, encode_decode_pattern[index].input) == false) {
 	    ret++;
 	}
 
@@ -86,6 +64,71 @@ main(int argc, char **argv)
         index++;
     }
 
+    return ret;
+}
+
+/**
+ * ディレクトリ取得チェック
+**/
+int
+do_basedir_check(UrlPath *urlpath)
+{
+    int ret = 0;
+    size_t index;
+
+    int get_result;
+    std::string basepath;
+
+    index = 0;
+    while (index < sizeof(basedir_pattern) / sizeof(basedir_pattern[0])) {
+        get_result = urlpath->getBaseDir(basepath, basedir_pattern[index].dir_name);
+
+	std::cout << "UrlPath basedir name[" << basedir_pattern[index].dir_name << "], expect ";
+       	if (basedir_pattern[index].expect == 0) {
+	    std::cout << "[" << basedir_pattern[index].basepath << "], basepath [" << basepath << "]";
+	    if (basepath.compare(basedir_pattern[index].basepath) == 0) {
+                std::cout << " [OK]";
+	    } else {
+                std::cout << " [Fail]";
+	        ret++;  // 失敗した数をカウント
+	    }
+	} else {
+            std::cout << "[!!FALSE!!], ";
+	    if (get_result == basedir_pattern[index].expect) {
+                std::cout << " [OK]";
+	    } else {
+                std::cout << " [Fail]";
+	        ret++;  // 失敗した数をカウント
+	    }
+	}
+
+	std::cout << std::endl;
+        index++;
+    }
+
+    return ret;
+}
+
+/**
+ * パターンチェックテストを行う
+ *
+ * return: 0成功 or 失敗した数
+**/
+int
+main(int argc, char **argv)
+{
+    int ret;
+    UrlPath *urlpath = new UrlPath("./Conf");
+
+    ret = do_encode_decode_check(urlpath);
+    if (ret != 0)
+	goto END;
+
+    ret = do_basedir_check(urlpath);
+    if (ret != 0)
+	goto END;
+
+END:
     delete urlpath;
 
     return ret;

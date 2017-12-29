@@ -1,10 +1,11 @@
 debug=1
 
 TEST_URL_PATH_PROG=test_UrlPath
+TEST_URL_PATH_HEADERS=Inc/test_UrlPath_*_check_patterns.h
 TEST_PROGS+=$(TEST_URL_PATH_PROG)
 
 TEST_FILEUTIL_PROG=test_FileUtil
-TEST_FILEUTIL_HEADERS=test_FileUtil_*_check_patterns.h
+TEST_FILEUTIL_HEADERS=Inc/test_FileUtil_*_check_patterns.h
 TEST_PROGS+=$(TEST_FILEUTIL_PROG)
 
 LIBSTOCKER_COMMON=../libstockercommon.a
@@ -16,7 +17,7 @@ ifeq ($(debug), 1)
 else
 	CFLAGS=-O2 -Wall -DNDEBUG -fPIC
 endif
-CFLAGS+=-I../ -I./
+CFLAGS+=-I../ -I./Inc
 
 CPPFLAGS=$(CFLAGS)
 
@@ -34,10 +35,10 @@ $(LIBSTOCKER_COMMON):
 	make -C ../
 
 clean:
-	$(RM) $(TEST_PROGS) *~
+	$(RM) $(TEST_PROGS) *~ Inc/*~ Conf/*~
 
-$(TEST_URL_PATH_PROG): $(TEST_URL_PATH_PROG).cpp $(LIBSTOCKER_COMMON)
-	$(CPP) $(CPPFLAGS) -o $@ $^
+$(TEST_URL_PATH_PROG): $(TEST_URL_PATH_PROG).cpp $(TEST_URL_PATH_HEADERS) $(LIBSTOCKER_COMMON)
+	$(CPP) $(CPPFLAGS) -o $@ $< $(LIBSTOCKER_COMMON)
 
 $(TEST_FILEUTIL_PROG): $(TEST_FILEUTIL_PROG).cpp $(TEST_FILEUTIL_HEADERS) $(LIBSTOCKER_COMMON)
 	$(CPP) $(CPPFLAGS) -o $@ $< $(LIBSTOCKER_COMMON)
