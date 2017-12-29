@@ -44,6 +44,7 @@ UrlPath::appendSubnameEncode(std::string &subname, std::string &url_path)
  *
  * @param : basedir (OUT) メディアのディレクトリ
  * @param : dir_name (IN) 設定ファイルに定義されているディレクトリの名前 (URLエンコードされた値)
+ * @return 0:成功  -1:失敗
 **/
 int
 UrlPath::getBaseDir(std::string &basedir, std::string &dir_name)
@@ -79,6 +80,9 @@ end:
     return ret;
 }
 
+/**
+ * ファイルパスからURLパスを求める
+**/
 void
 UrlPath::encode(std::string &url_path, std::string &file_path)
 {
@@ -110,6 +114,9 @@ UrlPath::encode(std::string &url_path, std::string &file_path)
     }
 }
 
+/**
+ * URLパスからファイルパスを求める
+**/
 void
 UrlPath::decode(std::string &file_path, std::string &url_path)
 {
@@ -122,30 +129,36 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
         file_path = "";
     }
 
-    start_pos = 0;
-    end_pos = url_path.find('/');
-    while (end_pos != std::string::npos) {
-        if (start_pos != end_pos) {
-            split_name = url_path.substr(start_pos, end_pos - start_pos);
-            if (cgi->decodeBase64URL(split_name) != 0) {
+    try {
+	start_pos = 0;
+	end_pos = url_path.find('/');
+	while (end_pos != std::string::npos) {
+	    if (start_pos != end_pos) {
+		split_name = url_path.substr(start_pos, end_pos - start_pos);
+		if (cgi->decodeBase64URL(split_name) != 0) {
+		    err_message = "failed to decode file parameter";
+		    file_path.clear();
+		    return;
+		}
+		file_path.append(split_name);
+		file_path.append("/");
+	    }
+	    start_pos = end_pos + 1;
+	    end_pos = url_path.find('/', start_pos);
+	}
+	if (start_pos != url_path.length()) {
+	    split_name = url_path.substr(start_pos);
+	    if (cgi->decodeBase64URL(split_name) == 0) {
+		file_path.append(split_name);
+	    } else {
 		err_message = "failed to decode file parameter";
 		file_path.clear();
-                return;
 	    }
-            file_path.append(split_name);
-            file_path.append("/");
-        }
-        start_pos = end_pos + 1;
-        end_pos = url_path.find('/', start_pos);
-    }
-    if (start_pos != url_path.length()) {
-        split_name = url_path.substr(start_pos);
-        if (cgi->decodeBase64URL(split_name) == 0) {
-            file_path.append(split_name);
-	} else {
-	    err_message = "failed to decode file parameter";
-	    file_path.clear();
 	}
+    } catch (std::invalid_argument e) {
+	err_message = e.what();
+	file_path.clear();
+	return;
     }
 }
 
@@ -153,26 +166,32 @@ int
 UrlPath::getDecodedPath(std::string &decoded_path, std::string &basedir_name, std::string &url_path)
 {
     std::string path;
-    std::string canonicalized_path;
+    std::string decoded;
 
     decoded_path.clear();
 
-    if (getBaseDir(decoded_path, basedir_name) != 0) {
+    if (getBaseDir(path, basedir_name) != 0) {
         // no such directory
 	return -1;
     }
 
-    decode(path, url_path);
-    futil->getCanonicalizePath(canonicalized_path, path);
+    if (!url_path.empty()) {
+	decode(decoded, url_path);
+	    if (decoded.empty()) {
+	    // decode failed
+	    return -2;
+	}
 
-    if (futil->isTraversalPath(canonicalized_path) == true) {
-	// invalid URL path
-        decoded_path.clear();
-	return -2;
+	if (futil->isTraversalPath(decoded) == true) {
+	    // invalid URL path
+	    return -3;
+	}
+
+	path.append("/");
+	path.append(decoded);
     }
 
-    decoded_path.append("/");
-    decoded_path.append(canonicalized_path);
+    futil->getCanonicalizePath(decoded_path, path);
 
     return 0;
 }

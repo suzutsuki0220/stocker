@@ -3,6 +3,7 @@
 
 #include "test_UrlPath_encode_decode_check_patterns.h"
 #include "test_UrlPath_basedir_check_patterns.h"
+#include "test_UrlPath_get_decoded_path_check_patterns.h"
 #include "UrlPath.h"
 
 /**
@@ -68,7 +69,7 @@ do_encode_decode_check(UrlPath *urlpath)
 }
 
 /**
- * ディレクトリ取得チェック
+ * baseディレクトリ取得チェック
 **/
 int
 do_basedir_check(UrlPath *urlpath)
@@ -110,7 +111,53 @@ do_basedir_check(UrlPath *urlpath)
 }
 
 /**
- * パターンチェックテストを行う
+ * ファイルパスが取れることのチェック
+**/
+int
+do_get_decoded_path_check(UrlPath *urlpath)
+{
+    int ret = 0;
+    size_t index;
+
+    int ret_code;
+    std::string result;
+    test_get_decoded_pattern_t *pattern;
+
+    index = 0;
+    while (index < sizeof(get_decoded_pattern) / sizeof(get_decoded_pattern[0])) {
+	pattern = &get_decoded_pattern[index];
+        ret_code = urlpath->getDecodedPath(result, pattern->basedir_name, pattern->url_path);
+
+	std::cout << "UrlPath getDecodedPath name[" << pattern->basedir_name << "], ";
+	std::cout << "URL path[" << pattern->url_path << "], ";
+	std::cout << "expect ";
+       	if (pattern->return_code == 0) {
+	    std::cout << "[" << pattern->decoded_path << "], result[" << result << "]";
+	    if (result.compare(pattern->decoded_path) == 0) {
+                std::cout << " [OK]";
+	    } else {
+                std::cout << " [Fail]";
+	        ret++;  // 失敗した数をカウント
+	    }
+	} else {
+            std::cout << "[!!FALSE!!], ";
+	    if (ret_code == pattern->return_code) {
+                std::cout << " [OK]";
+	    } else {
+                std::cout << " [Fail]";
+	        ret++;  // 失敗した数をカウント
+	    }
+	}
+
+	std::cout << std::endl;
+        index++;
+    }
+
+    return ret;
+}
+
+/**
+ * main: パターンチェックテストを行う
  *
  * return: 0成功 or 失敗した数
 **/
@@ -125,6 +172,10 @@ main(int argc, char **argv)
 	goto END;
 
     ret = do_basedir_check(urlpath);
+    if (ret != 0)
+	goto END;
+
+    ret = do_get_decoded_path_check(urlpath);
     if (ret != 0)
 	goto END;
 

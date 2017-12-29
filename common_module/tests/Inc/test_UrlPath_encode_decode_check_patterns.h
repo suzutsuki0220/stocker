@@ -20,6 +20,7 @@ test_encode_decode_pattern_t encode_decode_pattern[] = {
     "//usr/share/mount",   "/dXNy/c2hhcmU/bW91bnQ",
     "/usr/share/mount/",   "/dXNy/c2hhcmU/bW91bnQ/",
     "usr//share////mount", "dXNy/c2hhcmU/bW91bnQ",
+    "../../etc/passwd",    "Li4/Li4/ZXRj/cGFzc3dk"
 };
 
 #endif  // __TEST_URLPATH_ENCODE_DECODE_CHECK_PATTERNS_H__

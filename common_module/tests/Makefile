@@ -44,5 +44,5 @@ $(TEST_FILEUTIL_PROG): $(TEST_FILEUTIL_PROG).cpp $(TEST_FILEUTIL_HEADERS) $(LIBS
 	$(CPP) $(CPPFLAGS) -o $@ $< $(LIBSTOCKER_COMMON)
 
 test: $(TEST_PROGS)
-	for prog in $(TEST_PROGS); do $${prog}; done
+	for prog in $(TEST_PROGS); do $${prog}; if [ $$? -ne 0 ] ;then exit 1 ;fi ;done
 
