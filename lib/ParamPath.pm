@@ -4,6 +4,7 @@ use utf8;
 use strict;
 use warnings;
 use Encode;
+use MIME::Base64::URLSafe;  # UrlPath decode/encode
 
 our @BASE_DIRS;
 
@@ -116,36 +117,42 @@ sub inode_to_path {
   return $subdir;
 }
 
-sub path_inode {
+sub urlpath_encode {
   my $self = shift;
-  my($path, $files) = @_;
+  my($file_path) = @_;
 
-  if (length($path) == 0) {
+  if (length($file_path) == 0) {
     return "";
   }
 
-  $files =~ s/^\///;
-  my $all_inode = "";
+  $file_path =~ s/^\///;
+  my $url_path = "";
 
-  foreach my $elem (split('/', $files)) {
-    my $match_flag = 0;
-    opendir(my $dir, $path) or return;
-    while (my $entry = decode('utf-8', readdir $dir)) {
-      if("$elem" eq "$entry") {
-        my $point_inode = (stat "$path/$entry")[1];
-        $match_flag = 1;
-        $path .= "/" . $entry;
-        $all_inode .= "/" . $point_inode;
-        last;
-      }
-    }
-    closedir($dir);
-    if($match_flag == 0) {
-      return "";
-    }
+  foreach my $elem (split('/', $file_path)) {
+    my $point_path = urlsafe_b64encode($elem);
+    $url_path .= "/" . $point_path;
   }
 
-  return $all_inode;
+  return $url_path;
+}
+
+sub urlpath_decode {
+  my $self = shift;
+  my($url_path) = @_;
+
+  if (length($url_path) == 0) {
+    return "";
+  }
+
+  $url_path =~ s/^\///;
+  my $file_path = "";
+
+  foreach my $elem (split('/', $url_path)) {
+    my $point_path = urlsafe_b64decode($elem);
+    $file_path .= "/" . $point_path;
+  }
+
+  return $file_path;
 }
 
 ### チェックされたファイルをリストに保持

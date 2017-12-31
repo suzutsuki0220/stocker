@@ -183,7 +183,7 @@ UrlPath::getDecodedPath(std::string &decoded_path, std::string &basedir_name, st
 	}
 
 	if (futil->isTraversalPath(decoded) == true) {
-	    // invalid URL path
+	    err_message = "invalid URL path";
 	    return -3;
 	}
 
