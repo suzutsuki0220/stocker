@@ -45,6 +45,31 @@ sub init {
   }
 }
 
+sub init_by_base_name {
+  my $self = shift;
+  my $basename = shift;
+
+  require $self->{base_dir_conf};
+
+  foreach my $lst (@BASE_DIRS) {
+    if(${basename} eq decode('utf-8', @{$lst}[0])) {
+      $self->{base_name} = decode('utf-8', @{$lst}[0]);  # 表示名
+      $self->{base} = decode('utf-8', @{$lst}[2]);  # 基点となるパス
+      if ($self->{base} !~ /\/$/) {
+        $self->{base} .= "/";
+      }
+      last;
+    }
+  }
+
+  if (length($self->{base}) == 0) {
+    die(${basename}." is not in configuration");
+  }
+  if (! -d ($self->{base})) {
+    die("missing configure, [".${basename}."] is invalid directory");
+  }
+}
+
 sub base_dirs_count {
   return @BASE_DIRS;
 }

@@ -7,7 +7,7 @@ my @librarys = (
 ,"Encode"
 ,"CGI"
 ,"MIME::Base64::URLSafe"
-,"MP3::Tag"
+#,"MP3::Tag"
 ,"Audio::WMA"
 ,"Audio::FLAC::Header"
 ,"Audio::Wav"

@@ -3,9 +3,11 @@
 use strict;
 use warnings;
 use CGI;
+use Encode;
 
 use lib '%libs_dir%';
 use ParamPath;
+use HTML_Elem;
 
 $|=1;  # enable autofulsh
 
@@ -18,12 +20,12 @@ my $form = eval{new CGI};
 
 my $base;
 my $path;
+my $base_name = HTML_Elem->url_decode($form->param('dir'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
-  $base = $ins->{base}
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name($base_name);
+  $path = $ins->urlpath_decode($form->param('file'));
+  $base = $ins->{base};
 };
 if ($@) {
   print "Status: 503\n\n";

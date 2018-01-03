@@ -7,10 +7,12 @@ use Encode;
 use CGI;
 use MIME::Base64::URLSafe;
 
-use MP3::Tag;   # http://search.cpan.org/~ilyaz/MP3-Tag-1.13/lib/MP3/Tag.pm
+## TODO: to get from taginfo
+#use MP3::Tag;   # http://search.cpan.org/~ilyaz/MP3-Tag-1.13/lib/MP3/Tag.pm  # MP3::Tag occurs error in Perl 5.26
 use Audio::WMA; # http://search.cpan.org/~daniel/Audio-WMA-1.3/WMA.pm
 use Audio::FLAC::Header;  # https://metacpan.org/pod/Audio::FLAC::Header
 use Audio::Wav;
+###
 
 use lib '%libs_dir%';
 use ParamPath;
@@ -26,26 +28,29 @@ my $form = eval{new CGI};
 
 my $path;
 my $base;
-my $base_name;
+my $base_name = HTML_Elem->url_decode($form->param('dir'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name($base_name);
+  $path = $ins->urlpath_decode($form->param('file'));
   $base = $ins->{base};
-  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
   HTML_Elem->error($@);
 }
 
+## TODO: delete
 $form->param('in') =~ /(.*)\/([^\/]{1,})/;
 my $dir_inode = $1;
 my $file_inode = $2;
 
-my $player_src = ${GET_MEDIA_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
-my $stocker_src = ${STOCKER_CGI}."?dir=".$form->param('dir')."&in=".$dir_inode;
+my $encoded_path = $form->param('file');
+$encoded_path =~ /(.*)\/([^\/]{1,})$/;
+
+my $player_src = ${GET_MEDIA_CGI}."?dir=".$base_name."&file=".$1;
+my $stocker_src = ${STOCKER_CGI}; #."?dir=".$form->param('dir')."&in=".$dir_inode;
+###
 
 my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
@@ -53,7 +58,7 @@ my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKet
 $path =~ /(.*)\/([^\/]{1,})$/;
 my $media_dir  = $base.$1;
 my $media_file = $2;
-
+ 
 $media_dir =~ /([^\/]{1,})$/;
 my $directory_name = $1;
 HTML_Elem->header($directory_name);
@@ -180,26 +185,27 @@ while (my $entry = decode('utf-8', readdir $DIR)) {
   if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
     if ( -f "$media_dir/$entry") {
       my $coverart = &coverart_url($entry);
+      my $sub_encoded = ParamPath->urlpath_encode($entry);
       if (lc($entry) =~ /\.mp3$/) {
-        eval {
-            my %tag_t = &get_mp3_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
-            print "  track.push(tag);\n";
-            $music_count++;
-        };
+	  # eval {
+	  #  my %tag_t = &get_mp3_info($media_dir ."/". $entry);
+	  #  print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
+	  #  print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+	  #  print "  track.push(tag);\n";
+	  #  $music_count++;
+	  # };
       } elsif (lc($entry) =~ /\.wma$/) {
         eval {
             my %tag_t = &get_wma_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
-            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
+            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
+	    print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
             print "  track.push(tag);\n";
             $music_count++;
         };
       } elsif (lc($entry) =~ /\.wav$/) {
         eval {
             my %tag_t = &get_wav_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
             print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
             print "  track.push(tag);\n";
             $music_count++;
@@ -207,7 +213,7 @@ while (my $entry = decode('utf-8', readdir $DIR)) {
       } elsif (lc($entry) =~ /\.flac$/) {
         eval {
             my %tag_t = &get_flac_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". (stat("$media_dir/$entry"))[1] ."\", \"". $tag_t{"title"} ."\", \"";
+            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
             print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
             print "  track.push(tag);\n";
             $music_count++;
@@ -276,9 +282,9 @@ for(i=0 ; i<track.length ; i++) {
   document.write("<td>"+ track[i][6] +"</td>");
   document.write("</tr>");
 
-  if (track[i][1] == ${file_inode}) {
-    play_tnum = i;
-  }
+//  if (track[i][1] == ${file_inode}) {
+//    play_tnum = i;
+//  }
 }
 document.write("</table>");
 
@@ -315,16 +321,17 @@ exit(0);
 sub coverart_url
 {
   my (${entry}) = @_;
-  my $base64_path = urlsafe_b64encode(encode('utf-8', substr($media_dir, length($base)) . "/". $entry));
-  chomp($base64_path);
-  my $f_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
-  chomp($f_dir);
 
-  my $url = $TAGINFO_CGI . "?mode=picture&dir=${f_dir}&file=${base64_path}";
+  $path =~ /(.*)\/([^\/]{1,})$/;
+  my $encoded_path = ParamPath->urlpath_encode(encode('utf-8', $1 . "/". $entry));
+  chomp($encoded_path);
+
+  my $url = $TAGINFO_CGI . "?mode=picture&dir=${base_name}&file=${encoded_path}";
 
   return $url;
 }
 
+=pod
 sub get_mp3_info
 {
   my ($media_file) = @_;
@@ -355,6 +362,7 @@ sub get_mp3_info
 
   return %tag_t;
 }
+=cut
 
 sub get_wma_info
 {

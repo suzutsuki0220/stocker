@@ -19,6 +19,7 @@ all:
 	make -C taginfo
 
 clean:
+	rm -f *~
 	make -C taginfo clean
 
 make-directory:

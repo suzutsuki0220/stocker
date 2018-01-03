@@ -42,6 +42,7 @@
 #include "noimage.h"
 #include "htmlutil.h"
 #include "cgi_util.h"
+#include "UrlPath.h"
 #include "Config.h"
 
 using namespace std;
@@ -66,31 +67,6 @@ conv(string &str)
     iconv_close(ic);
 
     str = ptr_out;
-}
-
-int
-get_basedir(std::string &basedir, const char* confdir, const char *f_dir)
-{
-    int ret = -1;
-
-    Config *conf = new Config();
-    char confpath[512] = {0};
-    snprintf(confpath, sizeof(confpath), "%s/basedirs.conf", confdir);
-
-    if (conf->parse(confpath) != 0) {
-        fprintf(stderr, "failed to parse basedir - %s %s\n", conf->getErrorMessage(), confpath);
-        goto end;
-    }
-
-    basedir = conf->get(f_dir);
-    if (basedir.empty()) {
-        fprintf(stderr, "basedir get failed [%s] - %s\n", f_dir, conf->getErrorMessage());
-        goto end;
-    }
-    ret = 0;
-
-end:
-    return ret;
 }
 
 int
@@ -125,7 +101,8 @@ outputAudioTags(TagLib::FileRef &f)
         ss << "  <bitrate>"     << properties->bitrate()    << "</bitrate>"     << endl;
         ss << "  <sample_rate>" << properties->sampleRate() << "</sample_rate>" << endl;
         ss << "  <channels>"    << properties->channels()   << "</channels>"    << endl;
-        ss << "  <length>" << minutes << ":" << setfill('0') << setw(2) << seconds << "</length>" << endl;
+	ss << "  <duration>" << properties->lengthInMilliseconds() << "</duration>"    << endl;
+        ss << "  <time>" << minutes << ":" << setfill('0') << setw(2) << seconds << "</time>" << endl;
     }
 
     ss << "</tag>" << endl;
@@ -232,6 +209,7 @@ main(int argc, char *argv[])
 {
     int ret = -1;
     cgi_util *cgi = NULL;
+    UrlPath  *urlpath = NULL;
 
     try {
         cgi = new cgi_util();
@@ -240,23 +218,19 @@ main(int argc, char *argv[])
             return -1;
         }
 
+	urlpath = new UrlPath(CONFDIR);
+
         std::string filepath;
         std::string f_dir  = cgi->get_value("dir");
         std::string f_file = cgi->get_value("file");
         std::string f_mode = cgi->get_value("mode");
 
         f_dir = cgi->decodeFormURL(f_dir);
-        if (cgi->decodeBase64URL(f_file) != 0) {
-            print_400_header("failed to decode file parameter");
-            return -1;
-        }
 
-        if (get_basedir(filepath, CONFDIR, f_dir.c_str()) != 0) {
+        if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
             print_400_header("failed to determine filepath");
             return -1;
         }
-        filepath.append("/");
-        filepath.append(f_file);
 
         f_mode = cgi->decodeFormURL(f_mode);
 

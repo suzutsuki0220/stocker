@@ -195,6 +195,8 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
 ### ディレクトリ内のentry表示
 foreach my $entry (@dir_list) {
   my $inode = ${in_in} ."/". (stat "${base}${path}/${entry}")[1];
+  my $enc_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
+  my $encoded = ParamPath->urlpath_encode("${path}/${entry}");
   if ($content_cnt >= $cont_from && $content_cnt <= $cont_to) {
     if( -d "${base}${path}/${entry}" ) {
       # ディレクトリ
@@ -238,7 +240,7 @@ foreach my $entry (@dir_list) {
         &print_icon(${base}.${path}, $entry, $icon, $action);
       } elsif( lc($entry) =~ /\.mp3$/ || lc($entry) =~ /\.wma$/ || lc($entry) =~ /\.wav$/ || lc($entry) =~ /\.flac$/ ) {
         my $icon   = $ICON_AUDIO;
-        my $action = "${MUSIC_PLAYER_CGI}?in=$inode&dir=${in_dir}";
+        my $action = "${MUSIC_PLAYER_CGI}?file=${encoded}&dir=${enc_dir}";
         &print_icon(${base}.${path}, $entry, $icon, $action);
       } elsif( lc($entry) =~ /\.kml$/ || lc($entry) =~ /\.kmz$/ || lc($entry) =~ /\.gpx$/ || lc($entry) =~ /\.nmea$/ ) {
         my $icon   = $ICON_MAP;
