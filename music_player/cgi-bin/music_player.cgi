@@ -61,7 +61,18 @@ my $media_file = $2;
  
 $media_dir =~ /([^\/]{1,})$/;
 my $directory_name = $1;
-HTML_Elem->header($directory_name);
+
+eval {
+  my @jslist = (
+      "%htdocs_root%/ajax_html_request.js",
+  );
+  my $html = HTML_Elem->new(javascript => \@jslist);
+  $html->header($directory_name);
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
 
 print <<EOF;
 <script type="text/javascript">

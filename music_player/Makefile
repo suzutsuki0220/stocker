@@ -1,7 +1,9 @@
 .PHONY: all clean install
 
+HTDOCS_ROOT = /stocker
+
 DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
+CGI_DIR    = $(DESTDIR)/cgi-bin$(HTDOCS_ROOT)
 DOCS_DIR   = $(DESTDIR)/html/stocker
 BASE_DIR   = $(DESTDIR)/stocker
 BIN_DIR    = $(BASE_DIR)/bin
@@ -57,6 +59,7 @@ install-cgi:
 	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
