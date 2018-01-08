@@ -7,13 +7,6 @@ use Encode;
 use CGI;
 use MIME::Base64::URLSafe;
 
-## TODO: to get from taginfo
-#use MP3::Tag;   # http://search.cpan.org/~ilyaz/MP3-Tag-1.13/lib/MP3/Tag.pm  # MP3::Tag occurs error in Perl 5.26
-use Audio::WMA; # http://search.cpan.org/~daniel/Audio-WMA-1.3/WMA.pm
-use Audio::FLAC::Header;  # https://metacpan.org/pod/Audio::FLAC::Header
-use Audio::Wav;
-###
-
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
@@ -28,10 +21,10 @@ my $form = eval{new CGI};
 
 my $path;
 my $base;
-my $base_name = HTML_Elem->url_decode($form->param('dir'));
+my $base_name = $form->param('dir');
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name($base_name);
+  $ins->init_by_base_name(HTML_Elem->url_decode($form->param('dir')));
   $path = $ins->urlpath_decode($form->param('file'));
   $base = $ins->{base};
 };
@@ -47,10 +40,12 @@ my $file_inode = $2;
 
 my $encoded_path = $form->param('file');
 $encoded_path =~ /(.*)\/([^\/]{1,})$/;
-
-my $player_src = ${GET_MEDIA_CGI}."?dir=".$base_name."&file=".$1;
-my $stocker_src = ${STOCKER_CGI}; #."?dir=".$form->param('dir')."&in=".$dir_inode;
+my $encoded_dir_path = $1;
 ###
+
+$base_name = HTML_Elem->url_encode($form->param('dir'));
+
+my $stocker_src = ${STOCKER_CGI}; #."?dir=".$form->param('dir')."&in=".$dir_inode;
 
 my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
@@ -65,8 +60,11 @@ my $directory_name = $1;
 eval {
   my @jslist = (
       "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/music_player.js",
   );
-  my $html = HTML_Elem->new(javascript => \@jslist);
+  my $html = HTML_Elem->new(
+      javascript => \@jslist
+  );
   $html->header($directory_name);
 };
 if ($@) {
@@ -77,7 +75,6 @@ if ($@) {
 print <<EOF;
 <script type="text/javascript">
 <!--
-  var track = new Array();
   var audio_player = new Audio();
 
   var support_mp3 = audio_player.canPlayType("audio/mp3");
@@ -101,15 +98,12 @@ print <<EOF;
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
 
-    document.coverart.src = track[track_no][7];
+    document.coverart.src = "${TAGINFO_CGI}?mode=picture&dir=" + track[track_no][7] + "&file=" + track[track_no][1];
+    audio_player.src = "${GET_MEDIA_CGI}?dir=" + track[track_no][7] + "&file=" +track[track_no][1] + "&type=" + play_type;
+    audio_player.play();
+    document.controller.button_pause.value = "Pause";
 
-    if(!audio_player.error && !audio_player.paused && !audio_player.ended) {
-      audio_player.src = "${player_src}/"+ track[track_no][1]+"&type="+play_type;
-      audio_player.play();
-    } else {
-      audio_player.src = "${player_src}/"+ track[track_no][1]+"&type="+play_type;
-      audio_player.play();
-      document.controller.button_pause.value = "Pause";
+    if(audio_player.error || audio_player.paused || audio_player.ended) {
 /* ended event is not work correctly in iOS */
 /*
       audio_player.addEventListener('ended',   function() {
@@ -187,65 +181,10 @@ print <<EOF;
 </script>
 EOF
 
-### Audioデーターの一覧
-print "<script type=\"text/javascript\">\n";
-print "<!--\n";
-my $music_count = 0;
-opendir(my $DIR, $media_dir) or HTML_Elem->error("ディレクトリ展開に失敗しました");
-while (my $entry = decode('utf-8', readdir $DIR)) {
-  if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
-    if ( -f "$media_dir/$entry") {
-      my $coverart = &coverart_url($entry);
-      my $sub_encoded = ParamPath->urlpath_encode($entry);
-      if (lc($entry) =~ /\.mp3$/) {
-	  # eval {
-	  #  my %tag_t = &get_mp3_info($media_dir ."/". $entry);
-	  #  print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
-	  #  print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
-	  #  print "  track.push(tag);\n";
-	  #  $music_count++;
-	  # };
-      } elsif (lc($entry) =~ /\.wma$/) {
-        eval {
-            my %tag_t = &get_wma_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
-	    print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
-            print "  track.push(tag);\n";
-            $music_count++;
-        };
-      } elsif (lc($entry) =~ /\.wav$/) {
-        eval {
-            my %tag_t = &get_wav_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
-            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
-            print "  track.push(tag);\n";
-            $music_count++;
-        };
-      } elsif (lc($entry) =~ /\.flac$/) {
-        eval {
-            my %tag_t = &get_flac_info($media_dir ."/". $entry);
-            print "  tag = new Array(". $tag_t{"no"} .", \"". ${sub_encoded} ."\", \"". $tag_t{"title"} ."\", \"";
-            print $tag_t{"duration"} ."\", \"". $tag_t{"artist"} ."\", \"". $tag_t{"album"} ."\", \"". $tag_t{"year"} ."\", \"${coverart}\");\n";
-            print "  track.push(tag);\n";
-            $music_count++;
-        };
-      }
-      if ($@) {
-          print STDERR "Tag get ERROR: $@\n";
-      }
-    }
-  }
-}
-print "-->\n";
-print "</script>\n";
-closedir($DIR);
-
-print "<a href=\"${stocker_src}\">← 戻る</a>\n";
-print "<hr>\n";
-if ($music_count > 0) {
-  print "<h2>${directory_name}</h2>\n";
-
-  print <<DATA;
+print <<DATA;
+<a href=\"${stocker_src}\">← 戻る</a>
+<hr>
+<h2>${directory_name}</h2>
 <p>
 <img src="${graypad}" name="coverart" width="120" height="120">
 <!-- <audio src="" id="player" autobuffer>
@@ -260,6 +199,8 @@ Type: <input type="radio" name="type" value="wav">wav <input type="radio" name="
 </form>
 </p>
 
+<div id="music_list">音楽ファイルが見つかりません。</div>
+
 <script type="text/javascript">
 <!--
 var player_timer = document.getElementById('AudioTimer');
@@ -268,40 +209,6 @@ var player_timer = document.getElementById('AudioTimer');
 if      (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }
 else if (support_ogg == 'maybe' || support_ogg == 'probably') { document.controller.type[2].checked = true; }
 else if (support_wav == 'maybe' || support_wav == 'probably') { document.controller.type[0].checked = true; }
-
-for(i=track.length-1 ; i>0 ; i--) {
-  for(j=0 ; j<i ; j++) {
-    if(parseInt(track[j][0]) > parseInt(track[j+1][0])) {
-      var temp = track[j+1];
-      track[j+1] = track[j];
-      track[j] = temp;
-    }
-  }
-}
-
-var play_tnum = -1;
-document.write("<table border=1>");
-document.write("<tr><th>No.</th><th>title</th><th>time</th><th>artist</th><th>album</th><th>year</th></tr>");
-for(i=0 ; i<track.length ; i++) {
-  var num = i+1;
-  document.write("<tr id='track" + i + "'>");
-  document.write("<td>"+ num +"</td>");
-  document.write("<td><a href=\\"javascript:playit('"+ i +"')\\">"+ track[i][2] +"</a></td>");
-  document.write("<td>"+ track[i][3] +"</td>");
-  document.write("<td>"+ track[i][4] +"</td>");
-  document.write("<td>"+ track[i][5] +"</td>");
-  document.write("<td>"+ track[i][6] +"</td>");
-  document.write("</tr>");
-
-//  if (track[i][1] == ${file_inode}) {
-//    play_tnum = i;
-//  }
-}
-document.write("</table>");
-
-if(play_tnum >= 0) {
-  playit(play_tnum);
-}
 
 // CoverArt
 if (document.coverart.addEventListener) {
@@ -315,163 +222,26 @@ if (document.coverart.addEventListener) {
 function errorCoverart() {
   document.coverart.src = "${graypad}";
 }
-
--->
-</script>
 DATA
-} else {
-  print "音楽ファイルが見つかりません。";
+
+### Audioデーターの一覧
+opendir(my $DIR, $media_dir) or HTML_Elem->error("ディレクトリ展開に失敗しました");
+while (my $entry = decode('utf-8', readdir $DIR)) {
+  if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
+    if ( -f "$media_dir/$entry") {
+      if (lc($entry) =~ /\.mp3$/ || lc($entry) =~ /\.wma$/ || lc($entry) =~ /\.wav$/ || lc($entry) =~ /\.flac$/) {
+        my $sub_encoded = ParamPath->urlpath_encode($entry);
+	print "getMusicProperties('" . ${TAGINFO_CGI} . "','" . ${base_name} . "','" . $encoded_dir_path . "/". $sub_encoded . "', addToMusicList);\n";
+      }
+    }
+  }
 }
+closedir($DIR);
+
+print "-->\n";
+print "</script>\n";
 
 HTML_Elem->tail();
 
 exit(0);
 
-####
-
-sub coverart_url
-{
-  my (${entry}) = @_;
-
-  $path =~ /(.*)\/([^\/]{1,})$/;
-  my $encoded_path = ParamPath->urlpath_encode(encode('utf-8', $1 . "/". $entry));
-  chomp($encoded_path);
-
-  my $url = $TAGINFO_CGI . "?mode=picture&dir=${base_name}&file=${encoded_path}";
-
-  return $url;
-}
-
-=pod
-sub get_mp3_info
-{
-  my ($media_file) = @_;
-  my %tag_t;
-
-  # Get tag data from mp3 file
-  my $mp3 = MP3::Tag->new($media_file);
-  #$mp3->get_tags;
-  $tag_t{'duration'} = HTML_Elem->escape_html($mp3->time_mm_ss());
-  if( $tag_t{'duration'} eq '00:00' ) {
-    $tag_t{'duration'} = "--:--";
-  }
-  my $track_num = 1;
-  my $disc_num  = 1;
-  $track_num       = HTML_Elem->escape_html($mp3->track1);
-  $disc_num        = HTML_Elem->escape_html($mp3->disk1);
-  $tag_t{'title'}  = HTML_Elem->escape_html(encode('utf-8', $mp3->title));
-  $tag_t{'artist'} = HTML_Elem->escape_html(encode('utf-8', $mp3->artist));
-  $tag_t{'album'}  = HTML_Elem->escape_html(encode('utf-8', $mp3->album));
-  $tag_t{'year'}   = HTML_Elem->escape_html($mp3->year);
-  $mp3->close();
-
-  if(! $tag_t{'title'} || length($tag_t{'title'}) == 0) {
-    $media_file =~ /\/([^\/]+)$/;
-    $tag_t{'title'} = $1;
-  }
-  $tag_t{'no'} = sprintf("%d%02d", $disc_num ? $disc_num : 1, $track_num ? $track_num : 1);
-
-  return %tag_t;
-}
-=cut
-
-sub get_wma_info
-{
-  my ($media_file) = @_;
-  my %tag_t;
-
-  my $wma = Audio::WMA->new($media_file);
-  $wma->setConvertTagsToUTF8(1);
-  my $wma_info = $wma->info();
-  my $wma_tags = $wma->tags();
-  my $playtime = int($wma_info->{'playtime_seconds'});
-  my $playsec  = $playtime % 60;
-  my $playmin  = ($playtime - $playsec) / 60;
-  $tag_t{'duration'} = sprintf("%02d:%02d", $playmin, $playsec);
-  my $track_num = 1;
-  my $disc_num  = 1;
-  $track_num       = HTML_Elem->escape_html($wma_tags->{'TRACK'});
-  $tag_t{'title'}  = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'TITLE'}));
-  $tag_t{'artist'} = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'AUTHOR'}));
-  $tag_t{'album'}  = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'ALBUMTITLE'}));
-  $tag_t{'year'}   = HTML_Elem->escape_html($wma_tags->{'YEAR'});
-
-  # if tag's information is invalid
-#  $tag_t{'no'} =~ s/[^0-9]//g;
-  if(! $tag_t{'title'} || length($tag_t{'title'}) == 0) {
-    $media_file =~ /\/([^\/]+)$/;
-    $tag_t{'title'} = $1;
-  }
-  $tag_t{'no'} = sprintf("%d%02d", $disc_num ? $disc_num : 1, $track_num ? $track_num : 1);
-
-  return %tag_t;
-}
-
-sub get_wav_info
-{
-  my ($media_file) = @_;
-  my %tag_t;
-
-  my $wav = Audio::Wav->read($media_file);
-  my $details = $wav->details();
-  my $playtime = int($wav->length_seconds());
-  my $playsec  = $playtime % 60;
-  my $playmin  = ($playtime - $playsec) / 60;
-  $tag_t{'duration'} = sprintf("%02d:%02d", $playmin, $playsec);
-  my $track_num = 1;
-  my $disc_num  = 1;
-#  $tag_t{'no'}     = HTML_Elem->escape_html($wma_tags->{'TRACK'});
-#  $tag_t{'title'}  = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'TITLE'}));
-#  $tag_t{'artist'} = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'AUTHOR'}));
-#  $tag_t{'album'}  = HTML_Elem->escape_html(encode('utf-8', $wma_tags->{'ALBUMTITLE'}));
-#  $tag_t{'year'}   = HTML_Elem->escape_html($wma_tags->{'YEAR'});
-
-  # if tag's information is invalid
-#  $tag_t{'no'} =~ s/[^0-9]//g;
-  if(! $tag_t{'title'} || length($tag_t{'title'}) == 0) {
-    $media_file =~ /\/([^\/]+)$/;
-    $tag_t{'title'} = $1;
-  }
-  $tag_t{'no'} = sprintf("%d%02d", $disc_num ? $disc_num : 1, $track_num ? $track_num : 1);
-
-  return %tag_t;
-}
-
-sub get_flac_info
-{
-  my ($media_file) = @_;
-  my %tag_t;
-
-  my $flac = Audio::FLAC::Header->new($media_file);
-  my $info = $flac->info();
-  my $tags = $flac->tags();
-  my $playtime = int($info->{'TOTALSAMPLES'}/$info->{'SAMPLERATE'});
-  my $playsec  = $playtime % 60;
-  my $playmin  = ($playtime - $playsec) / 60;
-  $tag_t{'duration'} = sprintf("%02d:%02d", $playmin, $playsec);
-  my $track_num = 1;
-  my $disk_num  = 1;
-  foreach my $key (keys %$tags) {
-    if (lc($key) eq "tracknumber") {
-      $track_num       = HTML_Elem->escape_html($tags->{$key});
-    } elsif (lc($key) eq "discnumber") {
-      $disk_num        = HTML_Elem->escape_html($tags->{$key});
-    } elsif (lc($key) eq "title") {
-      $tag_t{'title'}  = HTML_Elem->escape_html($tags->{$key});
-    } elsif (lc($key) eq "artist") {
-      $tag_t{'artist'} = HTML_Elem->escape_html($tags->{$key});
-    } elsif (lc($key) eq "album") {
-      $tag_t{'album'}  = HTML_Elem->escape_html($tags->{$key});
-    } elsif (lc($key) eq "date") {
-      $tag_t{'year'}   = HTML_Elem->escape_html($tags->{$key});
-    }
-  }
-
-  if(! $tag_t{'title'} || length($tag_t{'title'}) == 0) {
-    $media_file =~ /\/([^\/]+)$/;
-    $tag_t{'title'} = $1;
-  }
-  $tag_t{'no'} = sprintf("%d%02d", $disk_num ? $disk_num : 1, $track_num ? $track_num : 1);
-
-  return %tag_t;
-}

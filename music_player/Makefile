@@ -13,7 +13,7 @@ CACHE_DIR  = $(BASE_DIR)/cache
 TRASH_DIR  = $(BASE_DIR)/trash
 
 LIB_FILES  =
-DOC_FILES  =
+DOC_FILES  = music_player.js
 CGI_FILES  = get_media.cgi music_player.cgi
 CONF_FILES = music_player.conf
 
@@ -66,5 +66,5 @@ install-cgi:
 install-bin:
 	make -C taginfo install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 
-install: libcheck make-directory install-config install-cgi install-bin
+install: libcheck make-directory install-config install-htdocs install-cgi install-bin
 
