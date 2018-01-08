@@ -2,15 +2,18 @@ debug=1
 
 TARGET_SHARE=libstockercommon.so
 TARGET_STATIC=libstockercommon.a
-OBJECTS=FileUtil.o cgi_util.o Config.o htmlutil.o UrlPath.o
+INC=$(wildcard Inc/*.h Inc/*.hpp)
+SRC=$(wildcard Src/*.cpp)
+OBJECTS=$(subst .cpp,.o,$(SRC))
 CC=gcc
 CPP=g++
 
 ifeq ($(debug), 1)
-	CFLAGS=-g -Wall -fPIC
+	CFLAGS=-g
 else
-	CFLAGS=-O2 -Wall -DNDEBUG -fPIC
+	CFLAGS=-O2 -DNDEBUG
 endif
+CFLAGS+=-I./Inc -fPIC -Wall
 CPPFLAGS=$(CFLAGS)
 
 DESTDIR   = /var/www
@@ -23,11 +26,11 @@ CONF_DIR  = $(BASE_DIR)/conf
 
 all: $(TARGET_SHARE) $(TARGET_STATIC)
 
-%.o: %.cpp %.h
+%.o: %.cpp $(INC)
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) $(TARGET_STATIC) $(TARGET_SHARE) $(OBJECTS) *~
+	$(RM) $(TARGET_STATIC) $(TARGET_SHARE) $(OBJECTS) *~ Inc/*~ Src/*~
 
 $(TARGET_SHARE): $(OBJECTS)
 	$(CPP) $(CPPFLAGS) -shared $^ -o $@

@@ -16,7 +16,7 @@ ifeq ($(debug), 1)
 else
 	CFLAGS=-O2 -Wall
 endif
-CFLAGS+= -I../common_module
+CFLAGS+= -I../common_module/Inc
 
 CPPFLAGS=$(CFLAGS)
 

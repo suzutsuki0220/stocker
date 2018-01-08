@@ -17,7 +17,7 @@ ifeq ($(debug), 1)
 else
 	CFLAGS=-O2 -Wall -DNDEBUG -fPIC
 endif
-CFLAGS+=-I../ -I./Inc
+CFLAGS+=-I../Inc -I./Inc
 
 CPPFLAGS=$(CFLAGS)
 

@@ -13,7 +13,7 @@ ifeq ($(debug), 1)
 else
 	CFLAGS=-O2 -Wall -DNDEBUG
 endif
-CFLAGS+= -I$(COMMON_MODULE_DIR)
+CFLAGS+= -I$(COMMON_MODULE_DIR)/Inc
 
 CPPFLAGS=$(CFLAGS)
 
