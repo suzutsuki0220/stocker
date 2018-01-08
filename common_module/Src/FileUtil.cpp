@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cerrno>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <string>
 #include <sstream>
 
@@ -21,6 +22,34 @@ std::string
 FileUtil::get_err_message(void)
 {
     return this->err_message;
+}
+
+bool
+FileUtil::compareSubDirName(std::string &path, std::string pattern)
+{
+    std::string::size_type start_pos, end_pos;
+    std::string split_name;
+
+    start_pos = 0;
+    end_pos = path.find('/');
+    while (end_pos != std::string::npos) {
+        if (start_pos != end_pos) {
+            split_name = path.substr(start_pos, end_pos - start_pos);
+            if (split_name.compare(pattern) == 0) {
+		return true;
+            }
+        }
+        start_pos = end_pos + 1;
+        end_pos = path.find('/', start_pos);
+    }
+    if (start_pos != path.length()) {
+        split_name = path.substr(start_pos);
+        if (split_name.compare(pattern) == 0) {
+	    return true;
+        }
+    }
+
+    return false;
 }
 
 int 
@@ -90,11 +119,49 @@ FileUtil::getFilesize(std::string &path)
     return ret;
 }
 
+int
+FileUtil::getDirectoryList(std::list<std::string> &dirlist, std::string &path, bool skip_hide)
+{
+    int ret = -1;
+    DIR *dir;
+    struct dirent *entry;
+
+    dirlist.clear();
+
+    dir = opendir(path.c_str());
+    if (dir == NULL) {
+	std::stringstream ss;
+	ss << "file status get failed - " << path << " " << strerror(errno) << "(" << errno << ")";
+        err_message = ss.str();
+	goto END;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+	if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+	    continue;
+	}
+	if (strcmp(entry->d_name, "lost+found") == 0 {
+	    continue;
+	}
+	if (skip_hide == true && strncmp(entry->d_name, ".", 1) == 0) {
+	    continue;
+	}
+	//printf("DIR: %s\n", entry->d_name);
+	dirlist.push_back(entry->d_name);
+    }
+
+    closedir(dir);
+    ret = 0;
+
+END:
+    return ret;
+}
+
 /**
  * 指定されたpathの種類をチェックする
 **/
 path_stat
-checkPathType(std::string &path)
+FileUtil::checkPathType(std::string &path)
 {
     path_stat result = PATH_NOTFOUND;
     int rc;
@@ -118,35 +185,19 @@ checkPathType(std::string &path)
     return result;
 }
 
+bool
+FileUtil::isLostFound(std::string &path)
+{
+    return compareSubDirName(path, "lost+found");
+}
+
 /**
  * ディレクトリトラバーサルチェック (".."を含めて予期しないパスのアクセスを防ぐ)
  **/
 bool
 FileUtil::isTraversalPath(std::string &path)
 {
-    std::string::size_type start_pos, end_pos;
-    std::string split_name;
-
-    start_pos = 0;
-    end_pos = path.find('/');
-    while (end_pos != std::string::npos) {
-        if (start_pos != end_pos) {
-            split_name = path.substr(start_pos, end_pos - start_pos);
-            if (split_name.compare("..") == 0) {
-		return true;
-            }
-        }
-        start_pos = end_pos + 1;
-        end_pos = path.find('/', start_pos);
-    }
-    if (start_pos != path.length()) {
-        split_name = path.substr(start_pos);
-        if (split_name.compare("..") == 0) {
-	    return true;
-        }
-    }
-
-    return false;
+    return compareSubDirName(path, "..");;
 }
 
 /**

@@ -177,7 +177,7 @@ UrlPath::getDecodedPath(std::string &decoded_path, std::string &basedir_name, st
 
     if (!url_path.empty()) {
 	decode(decoded, url_path);
-	    if (decoded.empty()) {
+	if (decoded.empty()) {
 	    // decode failed
 	    return -2;
 	}
@@ -185,6 +185,11 @@ UrlPath::getDecodedPath(std::string &decoded_path, std::string &basedir_name, st
 	if (futil->isTraversalPath(decoded) == true) {
 	    err_message = "invalid URL path";
 	    return -3;
+	}
+
+	if (futil->isLostFound(decoded) == true) {
+	    err_message = "path not found";
+	    return -4;
 	}
 
 	path.append("/");
