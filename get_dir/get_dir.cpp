@@ -6,6 +6,8 @@
 #include <sstream>
 #include <stdexcept>  // invalid argument
 #include <list>
+#include <sys/stat.h>
+#include <ctime>
 
 #include "cgi_util.h"
 #include "FileUtil.h"
@@ -15,6 +17,91 @@
 #ifndef CONFDIR
 #define CONFDIR "/var/www/stocker/conf"
 #endif
+
+static void
+getTimeString(std::string &timestr, time_t time)
+{
+    char buf[256];
+    struct tm t;
+
+    localtime_r(&time, &t);
+    snprintf(buf, sizeof(buf), "%02d/%02d/%02d %02d:%02d",
+	    t.tm_year >= 100 ? t.tm_year - 100 : t.tm_year,
+	    t.tm_mon + 1,
+	    t.tm_mday,
+	    t.tm_hour,
+	    t.tm_min
+	    );
+
+    timestr = buf;
+}
+
+static inline void
+makePropertiesTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, std::string &path, size_t elements)
+{
+    std::string decoded_path;
+    std::string encoded_uppath, basename, updir;
+
+    urlpath->decode(decoded_path, path);
+
+    fileutil->getBasename(basename, decoded_path);
+    fileutil->getUpPath(updir, decoded_path);
+    urlpath->encode(encoded_uppath, updir);
+
+    ss << "  <properties>" << std::endl;
+    ss << "    <name>" << basename << "</name>" << std::endl;
+    ss << "    <elements>" << elements << "</elements>" << std::endl;
+    ss << "    <up_path>" << encoded_uppath << "</up_path>" << std::endl;
+    ss << "    <up_dir>" << updir << "</up_dir>" << std::endl;
+    ss << "  </properties>" << std::endl;
+}
+
+static inline void
+makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, std::string &p_path, std::string &path, const int num, std::string &name)
+{
+    size_t filesize;
+    std::string elem_type;
+    std::string lastmodified;
+    std::string decoded_path, encoded;
+    struct stat st;
+
+    // 実際にアクセスする為のフルパス
+    std::string filepath = p_path;
+    filepath.append("/");
+    filepath.append(name);
+
+    // パラメータ用パス
+    urlpath->decode(decoded_path, path);
+    decoded_path.append("/");
+    decoded_path.append(name);
+    urlpath->encode(encoded, decoded_path);
+
+    if (stat(filepath.c_str(), &st) == 0) {
+	if (S_ISDIR(st.st_mode)) {
+	    std::list<std::string> li;
+	    elem_type = "DIRECTORY";
+	    fileutil->getDirectoryList(li, filepath);
+	    filesize = li.size();  // ディレクトリの場合はその中身の数
+	} else {
+	    elem_type = "FILE";
+	    filesize  = st.st_size;
+	}
+	getTimeString(lastmodified, st.st_mtime);
+    } else {
+	filesize = 0;
+	elem_type = "ERROR";
+	lastmodified = "";
+    }
+
+    ss << "    <element>" << std::endl;
+    ss << "      <name>" << name << "</name>" << std::endl;
+    ss << "      <path>" << encoded << "</path>" << std::endl;
+    ss << "      <type>" << elem_type << "</type>" << std::endl;
+    ss << "      <size>" << filesize << "</size>" << std::endl;
+    ss << "      <last_modified>" << lastmodified << "</last_modified>" << std::endl;
+    ss << "      <num>" << num << "</num>" << std::endl;
+    ss << "    </element>" << std::endl;
+}
 
 int
 main(int argc, char** argv)
@@ -69,41 +156,19 @@ main(int argc, char** argv)
 	}
 
 	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
-	ss << "<directory>" << std::endl;
-	ss << "  <properties>" << std::endl;
-	ss << "    <name>" << "</name>" << std::endl;
-	ss << "    <elements>" << elements << "</elements>" << std::endl;
-	ss << "    <up_path>" << "</up_path>" << std::endl;
-	ss << "    <up_dir>" << "</up_dir>" << std::endl;
-	ss << "  </properties>" << std::endl;
+        ss << "<directory>" << std::endl;
+
+	makePropertiesTag(ss, fileutil, urlpath, f_file, elements);
 
 	if (!entries.empty()) {
-	    size_t filesize;
-	    std::string elem_type;
 	    auto itr = entries.begin();
-	    int num = 0;
+	    int num;
 
 	    ss << "  <contents>" << std::endl;
+
+	    num = 0;
 	    while(itr != entries.end()) {
-		std::string encoded;
-		std::string filepath = p_path;
-		filepath.append("/");
-		filepath.append(*itr);
-
-		filesize = fileutil->getFilesize(filepath);
-		elem_type = fileutil->checkPathType(filepath) == PATH_DIRECTORY ? "DIRECTORY" : "FILE";
-		urlpath->encode(encoded, filepath);
-
-
-		ss << "    <element>" << std::endl;
-		ss << "      <name>" << *itr << "</name>" << std::endl;
-		ss << "      <path>" << encoded << "</path>" << std::endl;
-		ss << "      <type>" << elem_type << "</type>" << std::endl;
-		ss << "      <size>" << filesize << "</size>" << std::endl;
-		ss << "      <last_modified>" << "</last_modified>" << std::endl;
-		ss << "      <num>" << num << "</num>" << std::endl;
-		ss << "    </element>" << std::endl;
-
+		makeElementTag(ss, fileutil, urlpath, p_path, f_file, num, *itr);
 		num++;
 		itr++;
 	    }

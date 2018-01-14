@@ -140,7 +140,7 @@ FileUtil::getDirectoryList(std::list<std::string> &dirlist, std::string &path, b
 	if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
 	    continue;
 	}
-	if (strcmp(entry->d_name, "lost+found") == 0 {
+	if (strcmp(entry->d_name, "lost+found") == 0) {
 	    continue;
 	}
 	if (skip_hide == true && strncmp(entry->d_name, ".", 1) == 0) {
@@ -211,7 +211,7 @@ FileUtil::getCanonicalizePath(std::string &outpath, std::string &path)
 
     outpath.clear();
 
-    if (*path.c_str() == '/') {
+    if (path.front() == '/') {
 	outpath = "/";
     }
 
@@ -234,5 +234,52 @@ FileUtil::getCanonicalizePath(std::string &outpath, std::string &path)
 	    outpath.append(split_name);
 	}
     }
+}
+
+void
+FileUtil::getUpPath(std::string &output, std::string &path)
+{
+    std::string::size_type start_pos, end_pos;
+    std::string ca_path;
+    std::string split_name;
+
+    output.clear();
+
+    getCanonicalizePath(ca_path, path);
+
+    if (ca_path.back() == '/') {
+	ca_path = ca_path.substr(0, ca_path.length() - 1);
+    }
+
+    start_pos = 0;
+    end_pos = ca_path.find('/');
+    while (end_pos != std::string::npos) {
+	split_name = path.substr(start_pos, end_pos - start_pos);
+	output.append(split_name);
+	output.append("/");
+
+	start_pos = end_pos + 1;
+	end_pos = ca_path.find('/', start_pos);
+    }
+}
+
+void
+FileUtil::getBasename(std::string &output, std::string &path)
+{
+    std::string::size_type start_pos, end_pos;
+    std::string ca_path;
+
+    output.clear();
+
+    getCanonicalizePath(ca_path, path);
+
+    start_pos = 0;
+    end_pos = ca_path.find('/');
+    while (end_pos != std::string::npos) {
+	start_pos = end_pos + 1;
+	end_pos = ca_path.find('/', start_pos);
+    }
+
+    output = ca_path.substr(start_pos);
 }
 

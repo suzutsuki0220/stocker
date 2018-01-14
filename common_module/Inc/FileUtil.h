@@ -30,6 +30,8 @@ public:
     bool isLostFound(std::string &path);
     bool isTraversalPath(std::string &path);
     void getCanonicalizePath(std::string &outpath, std::string &path);
+    void getUpPath(std::string &output, std::string &path);
+    void getBasename(std::string &output, std::string &path);
 };
 
 #endif // __FILEUTIL_H__

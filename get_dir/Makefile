@@ -36,7 +36,7 @@ $(LIBSTOCKER_COMMON):
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) $(TARGET) $(OBJECTS) $(TARGET) *~
+	$(RM) $(TARGET) $(OBJECTS) *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
