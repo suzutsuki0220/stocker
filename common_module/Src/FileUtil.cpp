@@ -245,21 +245,35 @@ FileUtil::getUpPath(std::string &output, std::string &path)
 
     output.clear();
 
-    getCanonicalizePath(ca_path, path);
-
-    if (ca_path.back() == '/') {
-	ca_path = ca_path.substr(0, ca_path.length() - 1);
+    if ((path.length() == 1 && path.front() == '.') || 
+	(path.length() > 1 && path.substr(0, 2) == "./"))
+    {
+        output.insert(output.begin(), '.');
     }
 
-    start_pos = 0;
-    end_pos = ca_path.find('/');
-    while (end_pos != std::string::npos) {
-	split_name = path.substr(start_pos, end_pos - start_pos);
-	output.append(split_name);
-	output.append("/");
+    getCanonicalizePath(ca_path, path);
 
-	start_pos = end_pos + 1;
-	end_pos = ca_path.find('/', start_pos);
+    if (ca_path.length() > 1) {
+	if (ca_path.back() == '/') {
+	    ca_path = ca_path.substr(0, ca_path.length() - 1);
+	}
+
+	start_pos = 0;
+	end_pos = ca_path.find('/');
+	while (end_pos != std::string::npos) {
+	    split_name = ca_path.substr(start_pos, end_pos - start_pos);
+	    if (start_pos > 0) {
+		output.append("/");
+	    }
+	    output.append(split_name);
+
+	    start_pos = end_pos + 1;
+	    end_pos = ca_path.find('/', start_pos);
+	}
+    }
+
+    if (output.empty() && ca_path.front() == '/') {
+	output = "/";
     }
 }
 

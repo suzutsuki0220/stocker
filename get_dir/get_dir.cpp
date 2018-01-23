@@ -165,7 +165,6 @@ main(int argc, char** argv)
 	    int num;
 
 	    ss << "  <contents>" << std::endl;
-
 	    num = 0;
 	    while(itr != entries.end()) {
 		makeElementTag(ss, fileutil, urlpath, p_path, f_file, num, *itr);

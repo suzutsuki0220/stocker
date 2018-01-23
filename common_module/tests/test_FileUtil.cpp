@@ -3,6 +3,8 @@
 
 #include "test_FileUtil_traversal_check_patterns.h"
 #include "test_FileUtil_canonicalize_check_patterns.h"
+#include "test_FileUtil_basename_check_patterns.h"
+#include "test_FileUtil_uppath_check_patterns.h"
 #include "FileUtil.h"
 
 static bool
@@ -57,6 +59,58 @@ do_canonicalize_check(FileUtil *fileutil)
     return ret;
 }
 
+static bool
+do_basename_check(FileUtil *fileutil)
+{
+    int ret = 0;
+    size_t index;
+    std::string basename;
+
+    index = 0;
+    while (index < sizeof(basename_check) / sizeof(basename_check[0])) {
+        fileutil->getBasename(basename, basename_check[index].input);
+
+	std::cout << "Basename check input[" << basename_check[index].input << "], expect [" << basename_check[index].expect << "], ";
+	if (basename.compare(basename_check[index].expect) == 0) {
+            std::cout << " [OK]";
+	} else {
+            std::cout << " [Fail], basename -> [" << basename << "]";
+	    ret++;  // 失敗した数をカウント
+	}
+
+	std::cout << std::endl;
+        index++;
+    }
+
+    return ret;
+}
+
+static bool
+do_uppath_check(FileUtil *fileutil)
+{
+    int ret = 0;
+    size_t index;
+    std::string uppath;
+
+    index = 0;
+    while (index < sizeof(uppath_check) / sizeof(uppath_check[0])) {
+        fileutil->getUpPath(uppath, uppath_check[index].input);
+
+	std::cout << "UpPath check input[" << uppath_check[index].input << "], expect [" << uppath_check[index].expect << "], ";
+	if (uppath.compare(uppath_check[index].expect) == 0) {
+            std::cout << " [OK]";
+	} else {
+            std::cout << " [Fail], uppath -> [" << uppath << "]";
+	    ret++;  // 失敗した数をカウント
+	}
+
+	std::cout << std::endl;
+        index++;
+    }
+
+    return ret;
+}
+
 /**
  * パターンチェックテストを行う
  * 
@@ -74,6 +128,14 @@ main(int argc, char **argv)
 	goto END;
 
     ret = do_canonicalize_check(fileutil);
+    if (ret != 0) 
+	goto END;
+
+    ret = do_basename_check(fileutil);
+    if (ret != 0) 
+	goto END;
+
+    ret = do_uppath_check(fileutil);
     if (ret != 0) 
 	goto END;
 
