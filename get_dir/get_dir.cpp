@@ -18,6 +18,8 @@
 #define CONFDIR "/var/www/stocker/conf"
 #endif
 
+#define NUM_PARAM_NO_SET -1
+
 static void
 getTimeString(std::string &timestr, time_t time)
 {
@@ -107,6 +109,7 @@ int
 main(int argc, char** argv)
 {
     int ret = -1;
+    char *endptr;
     std::list<std::string> entries;
 
     try {
@@ -114,6 +117,8 @@ main(int argc, char** argv)
         cgi_util *cgi = new cgi_util();
         FileUtil *fileutil = new FileUtil();
         UrlPath  *urlpath  = new UrlPath(CONFDIR);
+	int from = NUM_PARAM_NO_SET;
+	int to   = NUM_PARAM_NO_SET;
 
 	size_t elements;
 	path_stat type;
@@ -139,6 +144,21 @@ main(int argc, char** argv)
             print_400_header(ss.str().c_str());
             return -1;
         }
+
+	if (!f_from.empty()){
+	    from = strtol(f_from.c_str(), &endptr, 10);
+	    if (*endptr != '\0') {
+		print_400_header("Invalid parameter [from]");
+		return -1;
+	    }
+	}
+	if (!f_to.empty()) {
+	    to = strtol(f_to.c_str(), &endptr, 10);
+	    if (*endptr != '\0') {
+		print_400_header("Invalid parameter [to]");
+		return -1;
+	    }
+	}
  
 	type = fileutil->checkPathType(p_path);
 	if (type == PATH_NOTFOUND) {
@@ -167,7 +187,11 @@ main(int argc, char** argv)
 	    ss << "  <contents>" << std::endl;
 	    num = 0;
 	    while(itr != entries.end()) {
-		makeElementTag(ss, fileutil, urlpath, p_path, f_file, num, *itr);
+		if (from == NUM_PARAM_NO_SET || from <= num) {
+		    if (to == NUM_PARAM_NO_SET || num <= to) {
+			makeElementTag(ss, fileutil, urlpath, p_path, f_file, num, *itr);
+		    }
+		}
 		num++;
 		itr++;
 	    }
