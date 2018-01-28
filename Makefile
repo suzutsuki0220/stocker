@@ -1,6 +1,7 @@
 .PHONY: all clean install
 
 HTDOCS_ROOT = /stocker
+CGI_ROOT    = /cgi-bin/stocker
 
 DESTDIR    = /var/www
 CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
@@ -13,9 +14,11 @@ CACHE_DIR  = $(BASE_DIR)/cache
 TRASH_DIR  = $(BASE_DIR)/trash
 
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
-DOC_FILES  = icons ajax_html_request.js
+DOC_FILES  = $(wildcard htdocs/*)
 CGI_FILES  = download.cgi edit.cgi edit_filefunc.pl stocker.cgi text_viewer.cgi
 CONF_FILES = BaseDirs.pl basedirs.conf SupportTypes.pl stocker.conf
+
+INSTALL_PARAM = DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 
 all:
 	make -C GPS_viewer/
@@ -60,8 +63,10 @@ install-libs:
 	cp -r lib/* $(LIBS_DIR)
 
 install-htdocs:
-	cp -r $(addprefix htdocs/,$(DOC_FILES)) $(DOCS_DIR)
-#	chmod 644 $(addprefix $(DOCS_DIR)/,$(DOC_FILES))
+	cp -r $(DOC_FILES) $(DOCS_DIR)
+	sed -i -e 's|%cgi_root%|$(CGI_ROOT)|g' \
+	       $(DOCS_DIR)/*.js $(DOCS_DIR)/*.html
+	find $(DOCS_DIR) -type f -exec chmod 644 {} \;
 
 install-cgi:
 	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)
@@ -73,14 +78,14 @@ install-cgi:
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
 install-modules:
-	make -C GPS_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C converter/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C get_file/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
-	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C picture_viewer/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C status/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
-	make -C music_player/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
-	make -C thumbnail/ install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT)
+	make -C GPS_viewer/ install $(INSTALL_PARAM)
+	make -C converter/ install $(INSTALL_PARAM)
+	make -C get_file/ install $(INSTALL_PARAM)
+	make -C music_player/ install $(INSTALL_PARAM)
+	make -C picture_viewer/ install $(INSTALL_PARAM)
+	make -C status/ install $(INSTALL_PARAM)
+	make -C music_player/ install $(INSTALL_PARAM)
+	make -C thumbnail/ install $(INSTALL_PARAM)
 
 install: make-directory install-config install-libs install-htdocs install-cgi install-modules
 

@@ -22,6 +22,7 @@ my $form = eval{new CGI};
 my $path;
 my $base;
 my $base_name = $form->param('dir');
+my $encoded_path = $form->param('file');
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name(HTML_Elem->url_decode($form->param('dir')));
@@ -36,11 +37,6 @@ if ($@) {
 ## TODO: delete
 $form->param('in') =~ /(.*)\/([^\/]{1,})/;
 my $dir_inode = $1;
-my $file_inode = $2;
-
-my $encoded_path = $form->param('file');
-$encoded_path =~ /(.*)\/([^\/]{1,})$/;
-my $encoded_dir_path = $1;
 ###
 
 $base_name = HTML_Elem->url_encode($form->param('dir'));
@@ -60,6 +56,7 @@ my $directory_name = $1;
 eval {
   my @jslist = (
       "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/get_directory_list.js",
       "%htdocs_root%/music_player.js",
   );
   my $html = HTML_Elem->new(
@@ -222,24 +219,52 @@ if (document.coverart.addEventListener) {
 function errorCoverart() {
   document.coverart.src = "${graypad}";
 }
-DATA
 
-### Audioデーターの一覧
-opendir(my $DIR, $media_dir) or HTML_Elem->error("ディレクトリ展開に失敗しました");
-while (my $entry = decode('utf-8', readdir $DIR)) {
-  if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
-    if ( -f "$media_dir/$entry") {
-      if (lc($entry) =~ /\.mp3$/ || lc($entry) =~ /\.wma$/ || lc($entry) =~ /\.wav$/ || lc($entry) =~ /\.flac$/) {
-        my $sub_encoded = ParamPath->urlpath_encode($entry);
-	print "getMusicProperties('" . ${TAGINFO_CGI} . "','" . ${base_name} . "','" . $encoded_dir_path . "/". $sub_encoded . "', addToMusicList);\n";
+getDirectoryList("${base_name}", "${encoded_path}", 0, 0, musicList);
+
+function musicList(data) {
+  try {
+    const properties = data.getElementsByTagName('properties').item(0);
+    const up_path    = getXMLfirstChildData(properties.getElementsByTagName('up_path').item(0));
+
+    getDirectoryList("${base_name}", up_path, 0, 0, getMusicFiles);
+  } catch(e) {
+     alert("ERROR: " + e.description);
+  }
+}
+
+function getMusicFiles(data) {
+  const contents = data.getElementsByTagName('contents').item(0);
+  if (contents == null) {
+    alert("ERROR: music files list is NULL");
+    return;
+  }
+
+  const elements = contents.getElementsByTagName('element');
+  if (elements == null) {
+    alert("ERROR: music list has no elements");
+    return;
+  }
+
+  for (var i=0; i<elements.length; i++) {
+    var name_elem = elements.item(i).getElementsByTagName('name');
+    var path_elem = elements.item(i).getElementsByTagName('path');
+    if (name_elem != null && path_elem != null) {
+      var name = name_elem.item(0).firstChild.data;
+      var path = path_elem.item(0).firstChild.data;
+
+      var music_pattern = /\\.(mp3|wma|wav|flac)\$/;  // 拡張子判定
+      if (music_pattern.test(name.toLowerCase())) {
+        getMusicProperties("${TAGINFO_CGI}", "${base_name}", path, addToMusicList)
       }
     }
   }
 }
-closedir($DIR);
 
-print "-->\n";
-print "</script>\n";
+-->
+</script>
+
+DATA
 
 HTML_Elem->tail();
 

@@ -1,10 +1,6 @@
 var track = new Array();
 var music_count = 0;  // ajaxを読んだ数とcallbackが実行された数が一致した時にリスト内の情報を全て読み込んだと判断する
 
-function getMusicFiles() {
-    return;
-}
-
 function getXMLfirstChildData(node) {
     if (node) {
         if (node.firstChild) {
