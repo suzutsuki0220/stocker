@@ -28,7 +28,7 @@ sub header {
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width; initial-scale=1.0;">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 EOF
@@ -45,146 +45,8 @@ EOF
     }
   }
 
+  print encode('utf-8', "<title>${title}</title>");
   print <<EOF;
-<style type="text/css">
-<!--
-  .partition {
-    clear: both;
-    padding-top: 5px;
-    padding-bottom: 5px;
-   /* border-top: solid 1px; */
-    margin: 5px 5px 0px 0px;
-  }
-  .listtext {
-    margin-left: 10px;
-    margin-right: 0px;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    font-weight: bold;
-    font-size: 12pt;
-  }
-  a.content {
-    /* text-decoration: none; */
-  }
-  div.imagebox {
-    border: 1px dashed #0000cc;
-    position: relative;
-    background-color: #eeeeff;
-    float: left;
-    margin: 2px;
-    word-break: break-word;
-  }
-  p.image, p.caption {
-    text-align: center;
-    font-size: 9pt;
-    margin: 0px;
-    overflow: hidden;
-  }
-/*
-  p.image img {
-    position:relative;
-    left: -13px;
-    top: -10px;
-  }
-*/
-  p.caption {
-    color: darkblue;
-  }
-  table.tb1 {
-    border: 1ps solid #666666;
-    border-collapse: collapse;
-    empty-cells: show;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    margin-left: 0em;
-    margin-right: 0em;
-  }
-  table.tb1 th {
-    font-size: 10pt;
-    word-break: break-all;
-    border: 1px solid #666666;
-    padding: 0px 3px;
-    background-color: #ccccff;
-    color: #333366;
-  }
-  table.tb1 td {
-    font-size: 10pt;
-    word-break: break-all;
-    border: 1px solid #666666;
-    padding: 0px 3px;
-  }
-  table.center td {
-    text-align: center;
-    word-break: break-all;
-  }
-  table.tb1 caption {
-    font-size: 10pt;
-    text-align: left;
-  }
-  table.tb1 table th {
-    border: 0px solid #666666;
-  }
-  table.tb1 table td {
-    border: 0px solid #666666;
-  }
--->
-</style>
-<title>${title}</title>
-</head>
-<body>
-EOF
-
-  return;
-}
-
-sub header_smp {
-  my $self = shift;
-  my($title) = @_;
-  $title = encode('utf-8', $title) if(utf8::is_utf8($title));
-
-  print "Content-Type: text/html\n\n";
-  print <<EOF;
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width: initial-scale=1.0; maximum-scale=1.0; user-scalable=no;">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-touch-fullscreen" content="YES">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<link rel="apple-touch-icon-precomposed" href="/stocker/icons/categories/applications-internet.png">
-<style type="text/css">
-<!--
-  body {
-    font-size: 11pt;
-  }
-
-  div.center {
-    text-align: center;
-  }
-
-  input.submit_button {
-    background-color: #4169e1;
-    color: #ffffff;
-    font-family: Arial;
-    border: 1px solid #ff9966;
-    margin: 0px;
-    padding: 5px 50px 5px 50px;
-  }
-
-  input.normal_button {
-    background-color: #ffffff;
-    color: #000000;
-    font-family: Arial;
-    border: 1px solid #ff9966;
-    margin: 0px;
-    padding: 5px 35px 5px 35px;
-  }
--->
-</style>
-<title>${title}</title>
 </head>
 <body>
 EOF

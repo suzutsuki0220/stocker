@@ -15,7 +15,6 @@ our $BASE_DIR_CONF;
 our $BOX_WIDTH;
 our $BOX_HEIGHT;
 our $BOX_SPACE;
-our $BOXES_DEFAULT;
 our $MAX_DISPLAY_NAME;
 our ($EDIT_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $DOWNLOAD_CGI);
@@ -30,8 +29,6 @@ my $in_in     = $form->param('in');
 my $in_search = decode('utf-8', $form->param('search'));
 my $in_from   = $form->param('from');
 my $in_to     = $form->param('to');
-my $in_s_width  = $form->param('s_width');
-my $in_s_height = $form->param('s_height');
 
 my $script = $ENV{'SCRIPT_NAME'};
 
@@ -52,45 +49,37 @@ if ($@) {
 }
 
 #### ディレクトリ一覧 ####
-$path =~ /([^\/]{1,})$/;
-HTML_Elem->header($1); # 直下のディレクトリ名をタイトルにする
+
+eval {
+  my @jslist = (
+      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/stocker_list.js",
+      "%htdocs_root%/get_directory_list.js",
+  );
+  my @csslist = (
+      "%htdocs_root%/stocker_list.css",
+  );
+  my $html = HTML_Elem->new(
+      javascript => \@jslist,
+      css => \@csslist
+  );
+  $html->header();
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
+
+my $encoded_path = ParamPath->urlpath_encode($path);
+my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
 opendir(my $DIR, "${base}${path}") or HTML_Elem->error("ディレクトリのopenに失敗しました - ${path}");
 
-### スクリーンサイズに合わせてアイコン表示数を変える ###
-if( ! $in_s_width || ! $in_s_height ) {
-print <<EOF;
-<form action="${script}" name="f1" method="POST">
-<input type="hidden" name="s_width" value="">
-<input type="hidden" name="s_height" value="">
-<input type="hidden" name="dir" value="${in_dir}">
-<input type="hidden" name="in" value="${in_in}">
-<input type="hidden" name="search" value="${in_search}">
-<input type="hidden" name="from" value="${in_from}">
-<input type="hidden" name="to" value="${in_to}">
-</form>
-<script type="text/javascript">
-<!--
-  document.f1.s_width.value = document.documentElement.clientWidth;
-  document.f1.s_height.value = document.documentElement.clientHeight;
-  if(! document.f1.s_width.value || ! document.f1.s_height.value) {
-    document.f1.s_width.value = 640;
-    document.f1.s_height.value = 480;
-  }
-  document.f1.submit();
--->
-</script>
-EOF
+#my $disp_box_x = int(${in_s_width} / (int($BOX_WIDTH) + int($BOX_SPACE)));    # 横に表示出来る数
+#my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 縦に表示出来る数
 
-  HTML_Elem->tail();
-  exit(0);
-}
-
-my $boxes = $BOXES_DEFAULT;
-my $disp_box_x = int(${in_s_width} / (int($BOX_WIDTH) + int($BOX_SPACE)));    # 横に表示出来る数
-my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 縦に表示出来る数
-
-$boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
+#my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
+my $boxes = 150;  # TODO:
 if ($in_to eq '') { $in_to = $boxes; }
 
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
@@ -99,8 +88,6 @@ print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
 print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
 print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
 print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
-print "<input type=\"hidden\" name=\"s_width\" value=\"${in_s_width}\">\n";
-print "<input type=\"hidden\" name=\"s_height\" value=\"${in_s_height}\">\n";
 print "<div id=\"editParam\"></div>\n";
 print "ディレクトリ: ";
 print "<select name=\"fm_dir\" size=\"1\" onChange=\"changeDirectory()\">\n";
@@ -139,7 +126,7 @@ for( i=0 ; i<pathArray.length ; i++ ) {
   for( j=0 ; j<=i ; j++ ) {
     paInum += "/" + inumArray[j];
   }
-  document.write("/ <a href=\\\"$script?in=" + paInum + "&dir=${in_dir}&s_width=${in_s_width}&s_height=$in_s_height}&to=$boxes\\\">" + pathArray[i] + "</a>&nbsp;");
+  document.write("/ <a href=\\\"$script?in=" + paInum + "&dir=${in_dir}\\\">" + pathArray[i] + "</a>&nbsp;");
 }
 -->
 </script>
@@ -158,7 +145,7 @@ print "</span></div>\n";
 print "<div style=\"clear: both\">";
 if( $in_in && length($in_in) > 0 ) {
   my $up_path = ParamPath->get_up_path(${in_in});
-  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes\">↑UP</a>\n";
+  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}\">↑UP</a>\n";
 }
   print "</div>\n";
 
@@ -193,17 +180,95 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
 }
 
 ### ディレクトリ内のentry表示
+print <<EOD;
+<p id="directoryListArea"></p>
+<script type="text/javascript">
+<!--
+var boxes = ${boxes};
+var encoded_dir = "${encoded_dir}";
+
+getDirectoryList(encoded_dir, "${encoded_path}", ${cont_from}, ${cont_to}, directoryList);
+
+function directoryList(data) {
+  // 拡張子判定
+  var music_pattern = /\\.(mp3|wma|wav|flac)\$/;
+
+  try {
+    const properties_elem = data.getElementsByTagName('properties');
+    if (properties_elem == null) {
+      alert("ERROR: properties tag is not found");
+      return;
+    }
+
+    // titleをディレクトリ名にする
+    const title_elem = properties_elem.item(0).getElementsByTagName('name');
+    if (title_elem != null) {
+      if (title_elem.item(0).firstChild) {
+        document.title = title_elem.item(0).firstChild.data;
+      } else {
+        document.title = "";
+      }
+    }
+
+    const contents_elem = data.getElementsByTagName('contents');
+    if (contents_elem == null) {
+      alert("ERROR: files list is NULL");
+      return;
+    }
+
+    const elements = contents_elem.item(0).getElementsByTagName('element');
+    if (elements == null) {
+      alert("ERROR: files list has no elements");
+      return;
+    }
+
+    document.getElementById('directoryListArea').innerHTML = "";
+
+    for (var i=0; i<elements.length; i++) {
+      var name_elem = elements.item(i).getElementsByTagName('name');
+      var path_elem = elements.item(i).getElementsByTagName('path');
+      var type_elem = elements.item(i).getElementsByTagName('type');
+      var size_elem = elements.item(i).getElementsByTagName('size');
+      var last_modified_elem = elements.item(i).getElementsByTagName('last_modified');
+
+      if (name_elem != null && path_elem != null && type_elem != null && size_elem != null && last_modified_elem != null) {
+        var icon;
+        var action;
+
+        var name = name_elem.item(0).firstChild.data;
+        var path = path_elem.item(0).firstChild.data;
+        var type = type_elem.item(0).firstChild.data;
+        var size = size_elem.item(0).firstChild.data;
+        var last_modified = last_modified_elem.item(0).firstChild.data;
+
+        if (type === "DIRECTORY") {
+            icon   = "${ICON_DIRECTORY}";
+            action = "dir:" + path;
+        } else {
+          if (music_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_AUDIO}";
+            action = "${MUSIC_PLAYER_CGI}?file=" + path + "&dir=" + encoded_dir;
+	  } else {
+            icon   = "${ICON_UNKNOWN}";
+            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+          }
+        }
+        printIcon(${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
+      }
+    }
+  } catch(e) {
+     alert("ERROR: " + e.description);
+  }
+}
+-->
+</script>
+EOD
+
 foreach my $entry (@dir_list) {
   my $inode = ${in_in} ."/". (stat "${base}${path}/${entry}")[1];
-  my $enc_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
   my $encoded = ParamPath->urlpath_encode("${path}/${entry}");
   if ($content_cnt >= $cont_from && $content_cnt <= $cont_to) {
-    if( -d "${base}${path}/${entry}" ) {
-      # ディレクトリ
-      my $icon   = $ICON_DIRECTORY;
-      my $action = "$script?in=$inode&dir=${in_dir}&s_width=${in_s_width}&s_height=${in_s_height}&to=$boxes";
-      &print_icon(${base}.${path}, $entry, $icon, $action);
-    } elsif( -f "${base}${path}/${entry}" ) {
+    if( -f "${base}${path}/${entry}" ) {
       if( lc($entry) =~ /\.avi$/ || lc($entry) =~ /\.flv$/  || lc($entry) =~ /\.mov$/ ||
           lc($entry) =~ /\.mpg$/ || lc($entry) =~ /\.mpeg$/ || lc($entry) =~ /\.m2p$/ ||
           lc($entry) =~ /\.ts$/  || lc($entry) =~ /\.mts$/  || lc($entry) =~ /\.m2ts$/ ||
@@ -212,7 +277,7 @@ foreach my $entry (@dir_list) {
         )
       {
         my $icon   = "${GET_THUMBNAIL_CGI}?in=$inode&dir=${in_dir}";
-        my $action = "${CONVERTER_CGI}?in=$inode&dir=${in_dir}&s_width=${in_s_width}";
+        my $action = "${CONVERTER_CGI}?in=$inode&dir=${in_dir}";
         &print_icon(${base}.${path}, $entry, $icon, $action);
       } elsif( lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/ ) {
         my $icon   = "${GET_THUMBNAIL_CGI}?in=$inode&dir=${in_dir}";
@@ -237,10 +302,6 @@ foreach my $entry (@dir_list) {
       } elsif( lc($entry) =~ /\.ppt$/ || lc($entry) =~ /\.pptx$/ ) {
         my $icon   = $ICON_MS_POWERPOINT;
         my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.mp3$/ || lc($entry) =~ /\.wma$/ || lc($entry) =~ /\.wav$/ || lc($entry) =~ /\.flac$/ ) {
-        my $icon   = $ICON_AUDIO;
-        my $action = "${MUSIC_PLAYER_CGI}?file=${encoded}&dir=${enc_dir}";
         &print_icon(${base}.${path}, $entry, $icon, $action);
       } elsif( lc($entry) =~ /\.kml$/ || lc($entry) =~ /\.kmz$/ || lc($entry) =~ /\.gpx$/ || lc($entry) =~ /\.nmea$/ ) {
         my $icon   = $ICON_MAP;
@@ -283,9 +344,9 @@ foreach my $checked (@checked_list) {
 print "var visible_list = [";
 for (my $i=0; $i<@visible_list; $i++) {
   if ($i != 0) {
-    print ", ";
+      #  print ", ";
   }
-  print "\"". $visible_list[$i]. "\"";
+  #  print "\"". $visible_list[$i]. "\"";
 }
 print "];\n";
 print "var un_visible_list = [";
@@ -296,58 +357,6 @@ for (my $i=0; $i<@un_visible_list; $i++) {
   print "\"". $un_visible_list[$i]. "\"";
 }
 print "];\n";
-print <<EOF;
-function allCheck() {
-  for (var key in visible_list) {
-    document.getElementsByName(visible_list[key])[0].checked = true;
-  }
-  for (var key in un_visible_list) {
-    document.getElementsByName(un_visible_list[key]).value = 1;
-  }
-}
-function allUnCheck() {
-  for (var key in visible_list) {
-    document.getElementsByName(visible_list[key])[0].checked = false;
-  }
-  for (var key in un_visible_list) {
-    document.getElementsByName(un_visible_list[key]).value = 0;
-  }
-}
-function isAnyChecked() {
-  for (var key in visible_list) {
-    if (document.getElementsByName(visible_list[key])[0].checked) {
-      return true;
-    }
-  }
-  return false;
-}
-function actionClickedIcon (action, elem) {
-  if (isAnyChecked()) {
-    if (document.getElementsByName(elem)[0].checked == false) {
-      document.getElementsByName(elem)[0].checked = true;
-    } else {
-      document.getElementsByName(elem)[0].checked = false;
-    }
-  } else {
-    location.href = action;
-  }
-}
-function changeDirectory() {
-  document.file_check.dir.value = document.file_check.fm_dir.value;
-  document.file_check.in.value = "";
-  document.file_check.submit();
-}
-function jump_to(from, to) {
-  document.file_check.from.value = from;
-  document.file_check.to.value = to;
-  document.file_check.submit();
-}
-function jump_select() {
-  document.file_check.from.value = document.getElementsByName('boxval')[0].value - $boxes;
-  document.file_check.to.value = document.getElementsByName('boxval')[0].value;
-  document.file_check.submit();
-}
-EOF
 print "-->\n";
 print "</script>\n";
 closedir($DIR);
@@ -373,7 +382,7 @@ sub show_pagelink {
   print "&nbsp;";
 
   my $pg = 1;
-  print "<select name=\"boxval\" onChange=\"jump_select()\">\n";
+  print "<select name=\"boxval\" onChange=\"jump_select(${boxes})\">\n";
   for(my $i=0;$i<=$#dir_list;$i=$i+$boxes) {
     my $tt = $i + $boxes;
     if($i>=$cont_from && $i < $cont_from + $boxes) {

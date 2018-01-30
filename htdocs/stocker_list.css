@@ -1,0 +1,49 @@
+.partition {
+    clear: both;
+    padding-top: 5px;
+    padding-bottom: 5px;
+ /* border-top: solid 1px; */
+    margin: 5px 5px 0px 0px;
+}
+
+.listtext {
+    margin-left: 10px;
+    margin-right: 0px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 12pt;
+}
+
+a.content {
+    /* text-decoration: none; */
+}
+
+div.imagebox {
+    border: 1px dashed #0000cc;
+    position: relative;
+    background-color: #eeeeff;
+    float: left;
+    margin: 2px;
+    word-break: break-word;
+}
+
+p.image, p.caption {
+    text-align: center;
+    font-size: 9pt;
+    margin: 0px;
+    overflow: hidden;
+}
+
+/*
+p.image img {
+    position:relative;
+    left: -13px;
+    top: -10px;
+}
+*/
+
+p.caption {
+    color: darkblue;
+}
+
