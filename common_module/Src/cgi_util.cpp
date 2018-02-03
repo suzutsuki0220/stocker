@@ -148,11 +148,11 @@ cgi_util::get_query(void)
                 memset(buf, '\0', sizeof(buf));
                 remain_len -= (long long)read_len;
             }
-	    if (remain_len != 0) {
-		ret.clear();
-		err_message = "content length mismatch";
-		goto end;
-	    }
+            if (remain_len != 0) {
+                ret.clear();
+                err_message = "content length mismatch";
+                goto end;
+            }
         }
     }
 
@@ -574,5 +574,46 @@ cgi_util::encodeBase64(const unsigned char *data, size_t size)
     }
 
     return result;
+}
+
+/**
+ * 表示データがタグ解釈されないようにエスケープする処理
+ * @param data データ
+ * @return escapeしたデータ
+ **/
+std::string
+cgi_util::escapeHtml(std::string &data)
+{
+    unsigned int i;
+    std::string d, escaped_data;
+    std::string::size_type spos, epos;
+    const char *table[] = {
+         "&", "&amp;"
+        ,"<", "&lt;"
+        ,">", "&gt;"
+        ,"\"", "&quot;"
+        ,"\r", "&#x0d;"
+        ,"\n", "&#x0a;"
+    };
+
+    // replace work
+    d = data;
+    for (i=0; i<sizeof(table) / sizeof(table[0]); i+=2) {
+        escaped_data.clear();
+        spos = 0;
+        while ((epos = d.find(table[i], spos)) != std::string::npos) {
+            if (spos != epos) {
+                escaped_data.append(d.substr(spos, epos));
+            }
+            escaped_data.append(table[i+1]);
+            spos = epos + strlen(table[i]);
+        }
+        if (spos != d.length()) {
+            escaped_data.append(d.substr(spos, d.length() - spos));
+        }
+        d = escaped_data;
+    }
+
+    return escaped_data;
 }
 

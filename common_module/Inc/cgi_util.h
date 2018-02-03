@@ -33,6 +33,7 @@ public:
     std::string encodeBase64URL(const unsigned char *data, size_t size);
     std::string encodeBase64(std::string &data);
     std::string encodeBase64(const unsigned char *data, size_t size);
+    std::string escapeHtml(std::string &data);
 };
 
 #endif  // __CGI_UTIL_H__
