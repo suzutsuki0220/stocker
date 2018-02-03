@@ -26,7 +26,7 @@ my $encoded_path = $form->param('file');
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name(HTML_Elem->url_decode($form->param('dir')));
-  $path = $ins->urlpath_decode($form->param('file'));
+  $path = decode('utf-8', $ins->urlpath_decode($form->param('file')));
   $base = $ins->{base};
 };
 if ($@) {
@@ -34,14 +34,9 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-## TODO: delete
-$form->param('in') =~ /(.*)\/([^\/]{1,})/;
-my $dir_inode = $1;
-###
-
 $base_name = HTML_Elem->url_encode($form->param('dir'));
 
-my $stocker_src = ${STOCKER_CGI}; #."?dir=".$form->param('dir')."&in=".$dir_inode;
+my $stocker_src = "${STOCKER_CGI}?dir=${base_name}&file=${encoded_path}";
 
 my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 

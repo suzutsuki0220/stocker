@@ -20,11 +20,11 @@ my $form = eval{new CGI};
 
 my $base;
 my $path;
-my $base_name = HTML_Elem->url_decode($form->param('dir'));
+my $base_name = HTML_Elem->url_decode(scalar ($form->param('dir')));
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name($base_name);
-  $path = $ins->urlpath_decode($form->param('file'));
+  $path = decode('utf-8', $ins->urlpath_decode(scalar ($form->param('file'))));
   $base = $ins->{base};
 };
 if ($@) {
@@ -33,23 +33,23 @@ if ($@) {
   exit(1);
 }
 
-my $media_path = $base.$path;
-my $type = lc($form->param('type'));
+my $media_path = encode('utf-8', $base.$path);
+my $type = lc(scalar ($form->param('type')));
 
 if($type eq "wav") {
-  if(lc($media_path) =~ /\.wav$/) {
+  if(lc($path) =~ /\.wav$/) {
      &output_wav(0);
   } else {
      &output_wav(1);
   }
 } elsif($type eq "ogg") {
-  if(lc($media_path) =~ /\.ogg$/) {
+  if(lc($path) =~ /\.ogg$/) {
      &output_ogg(0);
   } else {
      &output_ogg(1);
   }
 } elsif($type eq "mp3") {
-  if(lc($media_path) =~ /\.mp3$/) {
+  if(lc($path) =~ /\.mp3$/) {
      &output_mp3(0);
   } else {
      &output_mp3(1);
