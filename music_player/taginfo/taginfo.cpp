@@ -70,7 +70,7 @@ conv(string &str)
 }
 
 int
-outputAudioTags(TagLib::FileRef &f)
+outputAudioTags(cgi_util *cgi, TagLib::FileRef &f)
 {
     if (f.isNull() || !f.tag()) {
         print_400_header("invalid file reference");
@@ -80,18 +80,25 @@ outputAudioTags(TagLib::FileRef &f)
     std::stringstream ss;
     TagLib::Tag *tag = f.tag();
 
+    std::string title, artist, album, comment, genre;
+    title   = tag->title().to8Bit(true);
+    artist  = tag->artist().to8Bit(true);
+    album   = tag->album().to8Bit(true);
+    comment = tag->comment().to8Bit(true);
+    genre   = tag->genre().to8Bit(true);
+
      //string title = tag->title().toCString();
      //conv(title);
 
     ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
     ss << "<tag>" << endl;
-    ss << "  <title>"   << tag->title().to8Bit(true)   << "</title>"   << endl;
-    ss << "  <artist>"  << tag->artist().to8Bit(true)  << "</artist>"  << endl;
-    ss << "  <album>"   << tag->album().to8Bit(true)   << "</album>"   << endl;
-    ss << "  <year>"    << tag->year()                 << "</year>"    << endl;
-    ss << "  <comment>" << tag->comment().to8Bit(true) << "</comment>" << endl;
-    ss << "  <track>"   << tag->track()                << "</track>"   << endl;
-    ss << "  <genre>"   << tag->genre().to8Bit(true)   << "</genre>"   << endl;
+    ss << "  <title>"   << cgi->escapeHtml(title)   << "</title>"   << endl;
+    ss << "  <artist>"  << cgi->escapeHtml(artist)  << "</artist>"  << endl;
+    ss << "  <album>"   << cgi->escapeHtml(album)   << "</album>"   << endl;
+    ss << "  <year>"    << tag->year()              << "</year>"    << endl;
+    ss << "  <comment>" << cgi->escapeHtml(comment) << "</comment>" << endl;
+    ss << "  <track>"   << tag->track()             << "</track>"   << endl;
+    ss << "  <genre>"   << cgi->escapeHtml(genre)   << "</genre>"   << endl;
 
     if (f.audioProperties()) {
         TagLib::AudioProperties *properties = f.audioProperties();
@@ -239,7 +246,7 @@ main(int argc, char *argv[])
         TagLib::FileRef f(filepath.c_str());
 
         if (f_mode.empty() || f_mode == "tag") {
-            outputAudioTags(f);
+            outputAudioTags(cgi, f);
         } else if (f_mode == "picture") {
             outputPicture(f);
         }

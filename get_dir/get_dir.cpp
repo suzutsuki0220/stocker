@@ -39,7 +39,7 @@ getTimeString(std::string &timestr, time_t time)
 }
 
 static inline void
-makePropertiesTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, std::string &path, size_t elements)
+makePropertiesTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, cgi_util *cgi, std::string &path, size_t elements)
 {
     std::string decoded_path;
     std::string encoded_uppath, basename, updir;
@@ -51,15 +51,15 @@ makePropertiesTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, s
     urlpath->encode(encoded_uppath, updir);
 
     ss << "  <properties>" << std::endl;
-    ss << "    <name>" << basename << "</name>" << std::endl;
+    ss << "    <name>" << cgi->escapeHtml(basename) << "</name>" << std::endl;
     ss << "    <elements>" << elements << "</elements>" << std::endl;
     ss << "    <up_path>" << encoded_uppath << "</up_path>" << std::endl;
-    ss << "    <up_dir>" << updir << "</up_dir>" << std::endl;
+    ss << "    <up_dir>" << cgi->escapeHtml(updir) << "</up_dir>" << std::endl;
     ss << "  </properties>" << std::endl;
 }
 
 static inline void
-makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, std::string &p_path, std::string &path, const int num, std::string &name)
+makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, cgi_util *cgi, std::string &p_path, std::string &path, const int num, std::string &name)
 {
     size_t filesize;
     std::string elem_type;
@@ -96,7 +96,7 @@ makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, std:
     }
 
     ss << "    <element>" << std::endl;
-    ss << "      <name>" << name << "</name>" << std::endl;
+    ss << "      <name>" << cgi->escapeHtml(name) << "</name>" << std::endl;
     ss << "      <path>" << encoded << "</path>" << std::endl;
     ss << "      <type>" << elem_type << "</type>" << std::endl;
     ss << "      <size>" << filesize << "</size>" << std::endl;
@@ -178,7 +178,7 @@ main(int argc, char** argv)
 	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
         ss << "<directory>" << std::endl;
 
-	makePropertiesTag(ss, fileutil, urlpath, f_file, elements);
+	makePropertiesTag(ss, fileutil, urlpath, cgi, f_file, elements);
 
 	if (!entries.empty()) {
 	    auto itr = entries.begin();
@@ -189,7 +189,7 @@ main(int argc, char** argv)
 	    while(itr != entries.end()) {
 		if (from == NUM_PARAM_NO_SET || from <= num) {
 		    if (to == NUM_PARAM_NO_SET || num <= to) {
-			makeElementTag(ss, fileutil, urlpath, p_path, f_file, num, *itr);
+			makeElementTag(ss, fileutil, urlpath, cgi, p_path, f_file, num, *itr);
 		    }
 		}
 		num++;
