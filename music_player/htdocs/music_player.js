@@ -50,7 +50,7 @@ function printMusicList() {
     document.getElementById('music_list').innerHTML = content;
 }
 
-function addToMusicList(data, base_name, url_path) {
+function addToMusicList(data, base_name, name, num, url_path) {
     const title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0));
     const artist   = getXMLfirstChildData(data.getElementsByTagName('artist').item(0));
     const album    = getXMLfirstChildData(data.getElementsByTagName('album').item(0));
@@ -79,32 +79,32 @@ function addToMusicList(data, base_name, url_path) {
     console.log(time ? time : "");
 **/
 
-    var tag = new Array(track_no, url_path, title, time, artist, album, year, base_name);
+    var tag = new Array(track_no != 0 ? track_no : num, url_path, title ? title : name, time, artist, album, year, base_name);
     track.push(tag);
 
     printMusicList();
 }
 
-function getMusicProperties(get_media_cgi, base_name, url_path, receive_func) {
+function getMusicProperties(get_media_cgi, base_name, name, num, url_path, receive_func) {
     var httpRequest = ajax_init();
     if (!httpRequest) {
         alert('情報取得プロセスの起動に失敗しました');
         return false;
     }
-    ajax_set_instance(httpRequest, function() { getMusicPropertiesResult(httpRequest, base_name, url_path, receive_func); });
+    ajax_set_instance(httpRequest, function() { getMusicPropertiesResult(httpRequest, base_name, name, num, url_path, receive_func); });
     ajax_post(httpRequest, get_media_cgi, "dir=" + base_name + "&file=" + url_path + "&mode=tag");
 
     music_count++;  // ajaxを呼んだ数
 }
 
-function getMusicPropertiesResult(httpRequest, base_name, url_path, receive_func) {
+function getMusicPropertiesResult(httpRequest, base_name, name, num, url_path, receive_func) {
     try {
         if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
             //document.getElementById('sStatus').innerHTML = "読み込み中...";
         } else if (httpRequest.readyState == 4) {
             if (httpRequest.status == 200) {
                 var data = httpRequest.responseXML;
-                receive_func(data, base_name, url_path);
+                receive_func(data, base_name, name, num, url_path);
             } else {
                 alert("ERROR: " + httpRequest.status);
             }

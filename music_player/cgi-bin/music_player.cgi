@@ -244,13 +244,15 @@ function getMusicFiles(data) {
   for (var i=0; i<elements.length; i++) {
     var name_elem = elements.item(i).getElementsByTagName('name');
     var path_elem = elements.item(i).getElementsByTagName('path');
+    var num_elem = elements.item(i).getElementsByTagName('num');  // tagが無い場合のソート用
     if (name_elem != null && path_elem != null) {
       var name = name_elem.item(0).firstChild.data;
       var path = path_elem.item(0).firstChild.data;
+      var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
       var music_pattern = /\\.(mp3|wma|wav|flac)\$/;  // 拡張子判定
       if (music_pattern.test(name.toLowerCase())) {
-        getMusicProperties("${TAGINFO_CGI}", "${base_name}", path, addToMusicList)
+        getMusicProperties("${TAGINFO_CGI}", "${base_name}", name, num, path, addToMusicList)
       }
     }
   }
