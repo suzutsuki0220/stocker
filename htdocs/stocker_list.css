@@ -19,6 +19,10 @@ a.content {
     /* text-decoration: none; */
 }
 
+div#uppath {
+    clear: both;
+}
+
 div.imagebox {
     border: 1px dashed #0000cc;
     position: relative;

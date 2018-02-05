@@ -19,14 +19,13 @@ my $form = eval{new CGI};
 
 my $path;
 my $base;
-my $base_name;
+my $base_name = scalar($form->param('dir'));
+my $encoded_path = scalar($form->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
-  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
@@ -38,11 +37,13 @@ HTML_Elem->header();
 my $file_name = $path;
 $file_name =~ s/[^\/]*\///g;
 
-my $in_dir = $form->param('dir');
-my $link_dir = ParamPath->get_up_path($form->param('in'));
+$base_name = HTML_Elem->url_encode(scalar($form->param('dir')));
+
+my $up_path = ParamPath->get_up_path($path);
+my $encoded_up_path = ParamPath->urlpath_encode($up_path);
 
 my $msg = <<EOF;
-<a href=\"${STOCKER_CGI}?dir=${in_dir}&in=${link_dir}\">← 戻る</a><br>
+<a href=\"${STOCKER_CGI}?dir=${base_name}&file=${encoded_up_path}\">← 戻る</a><br>
 <h1 style="font-size: 14pt">${file_name}</h1>
 <hr>
 <pre>

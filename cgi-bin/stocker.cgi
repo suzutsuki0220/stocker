@@ -24,29 +24,14 @@ our ($ICON_UNKNOWN, $ICON_DIRECTORY);
 require '%conf_dir%/stocker.conf';
 
 my $form = eval{new CGI};
-my $in_dir    = $form->param('dir');
-my $in_in     = $form->param('in');
-my $in_search = decode('utf-8', $form->param('search'));
-my $in_from   = $form->param('from');
-my $in_to     = $form->param('to');
+my $in_dir    = (scalar $form->param('dir'));
+my $in_file   = (scalar $form->param('file'));
+my $in_search = decode('utf-8', (scalar $form->param('search')));
+my $in_from   = (scalar $form->param('from'));
+my $in_to     = (scalar $form->param('to'));
 
 my $script = $ENV{'SCRIPT_NAME'};
-
-my $path;
-my $base;
-my $base_name;
-eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($in_in);
-  $base = $ins->{base};
-  $base_name = $ins->{base_name};
-};
-if ($@) {
-  HTML_Elem->header();
-  HTML_Elem->error($@);
-}
+my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/";
 
 #### ディレクトリ一覧 ####
 
@@ -70,10 +55,7 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-my $encoded_path = ParamPath->urlpath_encode($path);
-my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
-
-opendir(my $DIR, "${base}${path}") or HTML_Elem->error("ディレクトリのopenに失敗しました - ${path}");
+my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $in_dir));
 
 #my $disp_box_x = int(${in_s_width} / (int($BOX_WIDTH) + int($BOX_SPACE)));    # 横に表示出来る数
 #my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 縦に表示出来る数
@@ -84,10 +66,8 @@ if ($in_to eq '') { $in_to = $boxes; }
 
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
 print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
-print "<input type=\"hidden\" name=\"in\" value=\"${in_in}\">\n";
+print "<input type=\"hidden\" name=\"file\" value=\"${in_file}\">\n";
 print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
-print "<input type=\"hidden\" name=\"from\" value=\"0\">\n";
-print "<input type=\"hidden\" name=\"to\" value=\"$boxes\">\n";
 print "<div id=\"editParam\"></div>\n";
 print "ディレクトリ: ";
 print "<select name=\"fm_dir\" size=\"1\" onChange=\"changeDirectory()\">\n";
@@ -98,21 +78,23 @@ eval {
   $ins->init();
   for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
     my $lst = $ins->get_base_dir_column($i);
-    if ($in_dir eq @{$lst}[1]) {
-      print "<option value=\"@{$lst}[1]\" selected>".@{$lst}[0]."</option>\n";
+    my $name = @{$lst}[0];
+    my $encoded_name = HTML_Elem->url_encode($name);
+    if ($encoded_dir eq $name) {
+      print "<option value=\"${encoded_name}\" selected>".${name}."</option>\n";
     } else {
-      print "<option value=\"@{$lst}[1]\">".@{$lst}[0]."</option>\n";
+      print "<option value=\"${encoded_name}\">".${name}."</option>\n";
     }
   }
 };
 print "</select>\n";
 
-if( $in_in && length($in_in) > 0 ) {
+if(0) {  # TODO: implement with JavaScript
   print <<EOD;
 <script type="text/javascript">
 <!--
 var path = "${path}";
-var inum = "${in_in}";
+var inum = "${in_file}";
 if( path.charAt(0) == "/" ) {
   path = path.substr(1,path.length);
 }
@@ -142,23 +124,18 @@ print "<span style=\"float: right\">\n";
 &print_action();
 print "</span></div>\n";
 
-print "<div style=\"clear: both\">";
-if( $in_in && length($in_in) > 0 ) {
-  my $up_path = ParamPath->get_up_path(${in_in});
-  print "<a href=\"$script?in=". $up_path ."&dir=${in_dir}\">↑UP</a>\n";
-}
-  print "</div>\n";
+print "<div id=\"uppath\"></div>\n";
 
 my @dir_list = ();
-while (my $entry = decode('utf-8', readdir $DIR)) {
-  if( length($entry) > 0 && $entry ne '..'  && $entry !~ /^\./ && $entry ne 'lost+found') {
-    # 絞込みが指定された場合、マッチしない物はリストに入れない
-    if( ${in_search} && $entry !~ /${in_search}/i ) {
-      next;
-    }
-    push(@dir_list, $entry);
-  }
-}
+#while (my $entry = decode('utf-8', readdir $DIR)) {
+#  if( length($entry) > 0 && $entry ne '..'  && $entry !~ /^\./ && $entry ne 'lost+found') {
+#    # 絞込みが指定された場合、マッチしない物はリストに入れない
+#    if( ${in_search} && $entry !~ /${in_search}/i ) {
+#      next;
+#    }
+#    push(@dir_list, $entry);
+#  }
+#}
 @dir_list = sort {$a cmp $b} @dir_list;
 
 my @un_visible_list = ();
@@ -185,15 +162,25 @@ print <<EOD;
 <script type="text/javascript">
 <!--
 var boxes = ${boxes};
-var encoded_dir = "${encoded_dir}";
+var encoded_dir = document.file_check.fm_dir.value;
 
-getDirectoryList(encoded_dir, "${encoded_path}", ${cont_from}, ${cont_to}, directoryList);
+getDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to}, directoryList);
 
 function directoryList(data) {
   // 拡張子判定
+  var movie_pattern = /\\.(avi|flv|mov|mpg|mpe|m2p|ts|mts|m2ts|mp4|m4v|mpg4|asf|wmv)\$/;
   var music_pattern = /\\.(mp3|wma|wav|flac)\$/;
+  var photo_pattern = /\\.(jpg|jpeg)\$/;
+  var gps_pattern = /\\.(kml|kmz|gpx|nmea)\$/;
+  var txt_pattern = /\\.(txt|log)\$/;
+  var doc_pattern = /\\.(doc|dot|docx)\$/;
+  var excel_pattern = /\\.(xls|xlsx)\$/;
+  var ppt_pattern = /\\.(ppt|pptx)\$/;
+  var pdf_pattern = /\\.(pdf)\$/;
 
-  try {
+//  try {
+    encoded_dir = document.file_check.fm_dir.value;
+
     const properties_elem = data.getElementsByTagName('properties');
     if (properties_elem == null) {
       alert("ERROR: properties tag is not found");
@@ -207,6 +194,16 @@ function directoryList(data) {
         document.title = title_elem.item(0).firstChild.data;
       } else {
         document.title = "";
+      }
+    }
+
+    // 上位パスのリンク
+    const uppath_elem = properties_elem.item(0).getElementsByTagName('up_path');
+    if (uppath_elem != null) {
+      if (uppath_elem.item(0).firstChild) {
+        document.getElementById('uppath').innerHTML = "<a href=\\"javascript:getDirectoryList('" + encoded_dir + "', '" + uppath_elem.item(0).firstChild.data + "', 0, " + boxes + ", directoryList)\\">↑UP</a>";
+      } else {
+        document.getElementById('uppath').innerHTML = "";
       }
     }
 
@@ -248,6 +245,30 @@ function directoryList(data) {
           if (music_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_AUDIO}";
             action = "${MUSIC_PLAYER_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (movie_pattern.test(name.toLowerCase())) {
+            icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${CONVERTER_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (photo_pattern.test(name.toLowerCase())) {
+            icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${PICTURE_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (gps_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_MAP}";
+            action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (txt_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_TEXT}";
+            action = "${TEXT_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (doc_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_MS_WORD}";
+            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (excel_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_MS_EXCEL}";
+            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (ppt_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_MS_POWERPOINT}";
+            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+          } else if (pdf_pattern.test(name.toLowerCase())) {
+            icon   = "${ICON_PDF}";
+            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
 	  } else {
             icon   = "${ICON_UNKNOWN}";
             action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
@@ -256,71 +277,14 @@ function directoryList(data) {
         printIcon(${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
       }
     }
-  } catch(e) {
-     alert("ERROR: " + e.description);
-  }
+//  } catch(e) {
+//     alert("ERROR: " + e.description);
+//  }
 }
 -->
 </script>
 EOD
 
-foreach my $entry (@dir_list) {
-  my $inode = ${in_in} ."/". (stat "${base}${path}/${entry}")[1];
-  my $encoded = ParamPath->urlpath_encode("${path}/${entry}");
-  if ($content_cnt >= $cont_from && $content_cnt <= $cont_to) {
-    if( -f "${base}${path}/${entry}" ) {
-      if( lc($entry) =~ /\.avi$/ || lc($entry) =~ /\.flv$/  || lc($entry) =~ /\.mov$/ ||
-          lc($entry) =~ /\.mpg$/ || lc($entry) =~ /\.mpeg$/ || lc($entry) =~ /\.m2p$/ ||
-          lc($entry) =~ /\.ts$/  || lc($entry) =~ /\.mts$/  || lc($entry) =~ /\.m2ts$/ ||
-          lc($entry) =~ /\.mp4$/ || lc($entry) =~ /\.m4v$/ || lc($entry) =~ /\.mpg4$/ ||
-          lc($entry) =~ /\.asf$/ || lc($entry) =~ /\.wmv$/
-        )
-      {
-        my $icon   = "${GET_THUMBNAIL_CGI}?in=$inode&dir=${in_dir}";
-        my $action = "${CONVERTER_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/ ) {
-        my $icon   = "${GET_THUMBNAIL_CGI}?in=$inode&dir=${in_dir}";
-        my $action = "${PICTURE_VIEWER_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.txt$/ || lc($entry) =~ /\.log$/ ) {
-        my $icon   = $ICON_TEXT;
-        my $action = "${TEXT_VIEWER_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.pdf$/ ) {
-        my $icon   = $ICON_PDF;
-        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.doc$/ || lc($entry) =~ /\.dot$/ || lc($entry) =~ /\.docx$/ ) {
-        my $icon   = $ICON_MS_WORD;
-        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.xls$/ || lc($entry) =~ /\.xlsx$/ ) {
-        my $icon   = $ICON_MS_EXCEL;
-        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.ppt$/ || lc($entry) =~ /\.pptx$/ ) {
-        my $icon   = $ICON_MS_POWERPOINT;
-        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } elsif( lc($entry) =~ /\.kml$/ || lc($entry) =~ /\.kmz$/ || lc($entry) =~ /\.gpx$/ || lc($entry) =~ /\.nmea$/ ) {
-        my $icon   = $ICON_MAP;
-        my $action = "${GPS_VIEWER_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      } else {
-        my $icon   = $ICON_UNKNOWN;
-        my $action = "${DOWNLOAD_CGI}?in=$inode&dir=${in_dir}";
-        &print_icon(${base}.${path}, $entry, $icon, $action);
-      }
-    }
-    push(@visible_list, (stat "${base}$path/$entry")[1]);
-  } else {
-    # 画面には表示されていないファイルのcheckbox
-    push(@un_visible_list, (stat "${base}${path}/$entry")[1]);
-    print "<input type=\"hidden\" name=\"". (stat "${base}${path}/$entry")[1] ."\" value=\"0\">\n";
-  }
-  $content_cnt++;
-}
 print "<p class=\"partition\">&nbsp;</p>\n";
 
 if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
@@ -328,19 +292,19 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   print "<br><br>\n";  # ページ下の余白
 }
 
-my @checked_list = ParamPath->get_checked_list(\$form, "${base}${path}");
+my @checked_list; # = ParamPath->get_checked_list(\$form, "${base}${path}");
 
 print "</form>\n";
 print "<script type=\"text/javascript\">\n";
 print "<!--\n";
-foreach my $checked (@checked_list) {
-  my $checked_in = (stat("${base}${path}/${checked}"))[1];
-  if (&contain($checked_in, \@visible_list)) {
-    print "  document.getElementsByName('" . $checked_in . "')[0].checked = true;\n";  # checkbox
-  } elsif (&contain($checked_in, \@un_visible_list)) {
-    print "  document.getElementsByName('" . $checked_in . "')[0].value = 1;\n";  # hidden属性
-  }
-}
+#foreach my $checked (@checked_list) {
+#  my $checked_in = (stat("${base}${path}/${checked}"))[1];
+#  if (&contain($checked_in, \@visible_list)) {
+#    print "  document.getElementsByName('" . $checked_in . "')[0].checked = true;\n";  # checkbox
+#  } elsif (&contain($checked_in, \@un_visible_list)) {
+#    print "  document.getElementsByName('" . $checked_in . "')[0].value = 1;\n";  # hidden属性
+#  }
+#}
 print "var visible_list = [";
 for (my $i=0; $i<@visible_list; $i++) {
   if ($i != 0) {
@@ -359,9 +323,8 @@ for (my $i=0; $i<@un_visible_list; $i++) {
 print "];\n";
 print "-->\n";
 print "</script>\n";
-closedir($DIR);
 
-&print_disk_space("$base");
+#&print_disk_space("$base");
 HTML_Elem->tail();
 
 exit(0);
@@ -430,46 +393,6 @@ sub show_next_pagelink {
     print "以上";
   }
   print "</p>\n";
-}
-
-## アイコン表示
-sub print_icon
-{
-  my ($path, $name, $icon, $action) = @_;
-
-  my $inode = (stat "$path/$name")[1];
-  my ($f_min, $f_hour, $f_mday, $f_mon, $f_year) = (localtime((stat("$path/$name"))[9]))[1..5];
-  $f_year -= 100 if $f_year>=100;  $f_mon += 1;
-  my $last_mod = sprintf("%02d/%02d/%02d %02d:%02d", $f_year, $f_mon, $f_mday, $f_hour, $f_min);
-
-  my $size = "";
-  if (-f "${path}/${name}") {
-    $size = FileOperator->getDisplayFileSize("${path}/${name}");
-  } #elsif (-d "${path}/${name}") {
-#    $size = `du -h --max-depth=0 \"$path/$name\" | sed -e \"s/[ \\t].\\+//\"`;
-#  }
-
-  my $f_name = $name;
-  if (length($f_name) > ${MAX_DISPLAY_NAME}) {
-    utf8::decode($f_name);
-    $f_name = substr($f_name, 0, ${MAX_DISPLAY_NAME}-length("..."));
-    $f_name .= "...";
-    utf8::encode($f_name);
-  }
-  print <<EOF;
-<div class="imagebox" style="width: ${BOX_WIDTH}px; height: ${BOX_HEIGHT}px">
-<p class="image" style="width: ${BOX_WIDTH}px; height: 75px">
-<a href="javascript:actionClickedIcon('${action}', '${inode}')"><img src="${icon}"></a></p>
-<span style="position: absolute; top: 3px; right: 3px;">
-<input type="checkbox" name="${inode}" value="1">
-</span>
-<p class="caption">
-<a href="${action}">$f_name</a><br>
-$size<br>$last_mod
-</p></div>
-EOF
-
-  return;
 }
 
 ## ディスク容量表示
@@ -570,7 +493,7 @@ function act() {
       break;
     case "move":
       var elem = document.createElement("f_dest");
-      elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_in}">'
+      elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_file}">'
                      + '<input type="hidden" name="f_dest_dir" value="${in_dir}">';
       document.getElementById("editParam").appendChild(elem);
       document.file_check.mode.value = "move";

@@ -29,21 +29,21 @@ function allUnCheck() {
 }
 
 function isAnyChecked() {
-    for (var key in visible_list) {
-        if (document.getElementsByName(visible_list[key])[0].checked) {
-            return true;
-        }
-    }
+//    for (var key in visible_list) {  // TODO: rework
+//        if (document.getElementsByName(visible_list[key])[0].checked) {
+//            return true;
+//        }
+//    }
     return false;
 }
 
 function actionClickedIcon (action, elem) {
     if (isAnyChecked()) {
-        // $B%A%'%C%/$rIU$1$k!&30$9(B
+        // チェックを付ける・外す
         document.getElementsByName(elem)[0].checked = ! document.getElementsByName(elem)[0].checked;
     } else {
         if (action.indexOf('dir:') === 0) {
-            getDirectoryList(encoded_dir, action.substr(4), 0, boxes, directoryList);
+            getDirectoryList(document.file_check.fm_dir.value, action.substr(4), 0, boxes, directoryList);
         } else {
             location.href = action;
         }
@@ -51,9 +51,7 @@ function actionClickedIcon (action, elem) {
 }
 
 function changeDirectory() {
-    document.file_check.dir.value = document.file_check.fm_dir.value;
-    document.file_check.in.value = "";
-    document.file_check.submit();
+    getDirectoryList(document.file_check.fm_dir.value, "", 0, boxes, directoryList);
 }
 
 function jump_to(from, to) {
