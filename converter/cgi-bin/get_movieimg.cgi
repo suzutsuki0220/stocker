@@ -3,12 +3,14 @@
 use strict;
 #use warnings;
 use utf8;
+use Encode;
 use CGI;
 use File::Copy;
 use File::Path;
 
 use lib '%libs_dir%';
 use ParamPath;
+use HTML_Elem;
 
 our $BASE_DIR_CONF;
 our $MOVIE_IMAGE_CACHE_DIR = "";
@@ -24,11 +26,12 @@ my $form = eval{new CGI};
 
 my $base;
 my $path;
+my $base_name = scalar($form->param('dir'));
+my $encoded_path = scalar($form->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base}
 };
 if ($@) {
@@ -39,8 +42,9 @@ if ($@) {
   exit(1);
 }
 
-if(length($form->param('in')) <= 0 || ! -f "${base}${path}") {
-  print STDERR "get_movieimg.cgi ERROR: file not found - ${base}${path}";
+my $media_path = encode('utf-8', "${base}${path}");
+if(length(${path}) <= 0 || ! -f ${media_path}) {
+  print STDERR "get_movieimg.cgi ERROR: file not found - " . decode('utf-8', ${media_path});
   print "Content-Type: image/jpeg\n";
   print "Content-Length: 0\n";
   print "\n";
@@ -65,7 +69,7 @@ if($form->param('size') && $form->param('size') != 0) {
   }
 }
 
-my $lastmodified = (stat ${base}.${path})[9];
+my $lastmodified = (stat ${media_path})[9];
 
 if (&judgeMakeCache($size) == 1) {
   if (&img_fromcache($cache, $lastmodified) == 0) {
@@ -167,7 +171,7 @@ sub make_imgcache()
   $cmd_movie_img =~ s/%%INPUT%%/${base}${path}/;
   $cmd_movie_img =~ s/%%OUTPUT%%/$TMP_PATH/;
   $cmd_movie_img =~ s/%%OPTION%%/${option}/;
-  system($cmd_movie_img);
+  system(encode('utf-8', $cmd_movie_img));
 
   print "Content-Type: image/jpeg\n";
   print "Content-Length: ". (-s $TMP_PATH). "\n";

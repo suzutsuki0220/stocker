@@ -53,21 +53,19 @@ my @encode_audio_types = (
 );
 
 my $q = eval{new CGI};
-my $mode = $q->param('mode');
-my $in   = $q->param('in');
-my $dir  = $q->param('dir');
-my $out_dir = $q->param('out_dir');
+my $mode = scalar($q->param('mode'));
+my $dir  = scalar($q->param('dir'));
+my $out_dir = scalar($q->param('out_dir'));
+my $encoded_path = scalar($q->param('file'));
 
 my @files = ();
-my $up_inode = ${in};
 my $path;
 my $base;
 my $base_name;
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $q->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($q->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($dir));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
   $base_name = $ins->{base_name};
 };
@@ -75,6 +73,11 @@ if ($@) {
   HTML_Elem->header();
   HTML_Elem->error($@);
 }
+
+$dir = HTML_Elem->url_encode($dir);
+
+my $up_path = ParamPath->get_up_path($path);
+my $encoded_up_path = ParamPath->urlpath_encode($up_path);
 
 if(-f "${base}${path}") {
   # 1ファイルの指定
@@ -87,7 +90,6 @@ if(-f "${base}${path}") {
     $path = "";
   }
   push(@files, $filename);
-  $up_inode = ParamPath->get_up_path(${in});
 } elsif(-d "${base}${path}") {
   # 複数ファイルの指定
   if (length($path) > 0 && $path !~ /\/$/) {
@@ -103,7 +105,6 @@ if (@files.length == 0) {
 }
 
 my $encfile = $base . $path . $files[0];
-my $encfile_inode = $up_inode ."/". (stat "${encfile}")[1];
 
 my $mtype = &check_capable_type($encfile);
 if ($mtype eq "unsupported") {
@@ -147,7 +148,7 @@ sub perform_encode() {
     &add_encodejob("${base}${path}$files[0]");
   }
 
-  print "<a href=\"${STOCKER_CGI}?in=$up_inode&dir=${dir}\">← フォルダーに戻る</a></p>";
+  print "<a href=\"${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}\">← フォルダーに戻る</a></p>";
 
   HTML_Elem->tail();
 }
@@ -225,13 +226,8 @@ sub add_encodejob()
 sub print_form() {
   my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-  my $base64_path = urlsafe_b64encode(encode('utf-8', $path . $files[0]));
-  chomp($base64_path);
-  my $f_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
-  chomp($f_dir);
-
-  my $mp4_url = "${GETFILE_CGI}?file=${base64_path}&dir=${f_dir}&mime=video/mp4";
-  my $thm_url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=640";
+  my $mp4_url = "${GETFILE_CGI}?file=${encoded_path}&dir=${dir}&mime=video/mp4";
+  my $thm_url = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${dir}&size=640";
   my $mes;
 
   my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
@@ -246,7 +242,7 @@ sub print_form() {
   $html->header();
 
   $mes = <<EOF;
-<a href="${STOCKER_CGI}?in=${up_inode}&dir=${dir}">← 戻る</a><br>
+<a href="${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}">← 戻る</a><br>
 <h1>ファイル変換</h1>
 EOF
   print encode('utf8', $mes);
@@ -389,7 +385,7 @@ EOD
 
   print <<EOD;
   function get_preview_url(ss, width) {
-    var url = "${MOVIEIMG_CGI}?in=${encfile_inode}&dir=${dir}&size=" + width;
+    var url = "${MOVIEIMG_CGI}?dir=${dir}&file={$encoded_path}&size=" + width;
     if (document.enc_setting.set_position.checked == true) {
       url += "&set_position=1";
       url += "&ss=" + ss;
@@ -630,7 +626,7 @@ EOD
     var pos_l = (screen.width - size_w) / 2;
     var pos_t = (screen.height - size_h) / 2;
 
-    window.open("${SELECTOR_CGI}?in=${encfile_inode}&dir=${dir}&target=" + target + "&pos=" + pos + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df,
+    window.open("${SELECTOR_CGI}?file=${encoded_path}&dir=${dir}&target=" + target + "&pos=" + pos + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df,
                 "timersel",
                 'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
                );
@@ -752,7 +748,7 @@ EOF
 
   print <<EOF;
 <br><br>
-<input type="hidden" name="in" value="${in}">
+<input type="hidden" name="file" value="${encoded_path}">
 <input type="hidden" name="dir" value="${dir}">
 <input type="hidden" name="mode" value="encode">
 <fieldset>

@@ -34,11 +34,12 @@ my $in_in  = $form->param('in');
 
 my $base;
 my $path;
+my $base_name = scalar($form->param('dir'));
+my $encoded_path = scalar($form->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
 if ($@) {
@@ -62,14 +63,14 @@ print "(".($img_idx+1)."/".($img_num+1).")";
 print "&nbsp;&nbsp;";
 if ($link_head ne "") {
   print "<a href=\"$script_name?$form->&in=$link_head\">|≪</a>｜";
-  print "<a href=\"$script_name?dir=${in_dir}&in=$link_prev\">＜</a>｜";
+  print "<a href=\"$script_name?dir=${base_name}&file=$link_prev\">＜</a>｜";
 } else {
   print "|≪｜＜｜";
 }
-print "<a href=\"${STOCKER_CGI}?dir=${in_dir}&in=$link_dir\">∧</a>｜";
+print "<a href=\"${STOCKER_CGI}?dir=${base_name}&file=$link_dir\">∧</a>｜";
 if ($link_tail ne "") {
-  print "<a href=\"$script_name?dir=${in_dir}&in=$link_next\">＞</a>｜";
-  print "<a href=\"$script_name?dir=${in_dir}&in=$link_tail\">≫</a>|";
+  print "<a href=\"$script_name?dir=${base_name}&file=$link_next\">＞</a>｜";
+  print "<a href=\"$script_name?dir=${base_name}&file=$link_tail\">≫</a>|";
 } else {
   print "＞｜≫|";
 }
@@ -99,15 +100,15 @@ if ($has_exif == 1) {
   my $pic_height = $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0];
 
   if($pic_width == 0 || $pic_height == 0) {
-    print "<img src=\"${GET_THUMBNAIL_CGI}?in=$in_in&dir=$in_dir\" width=\"640\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\')\">\n";
+    print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"640\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
   } else {
     my $pic_scale  = 640 / $pic_width;
     $pic_width  = int($pic_width * $pic_scale);
     $pic_height = int($pic_height * $pic_scale);
-    print "<img src=\"${GET_THUMBNAIL_CGI}?in=$in_in&dir=$in_dir\" width=\"$pic_width\" height=\"$pic_height\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\')\">\n";
+    print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"$pic_width\" height=\"$pic_height\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
   }
 } else {
-  print "<img src=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\" id=\"ImageArea\">\n";
+  print "<img src=\"${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\" id=\"ImageArea\">\n";
 }
 print "</div>\n";
 
@@ -166,9 +167,9 @@ function touchEnd(e) {
   else if( Math.abs(EndPoint.Y - StartPoint.Y) <= cut_off_threshold ) {
     if( Math.abs(EndPoint.X - StartPoint.X) > cut_off_threshold ) {
       if( EndPoint.X > StartPoint.X ) {
-        if('$link_prev' != '') document.location = '$script_name?dir=${in_dir}&in=$link_prev';  /* left */
+        if('$link_prev' != '') document.location = '$script_name?dir=${base_name}&in=$link_prev';  /* left */
       } else {
-        if('$link_next' != '') document.location = '$script_name?dir=${in_dir}&in=$link_next';  /* right */
+        if('$link_next' != '') document.location = '$script_name?dir=${base_name}&in=$link_next';  /* right */
       }
     }
   }
@@ -192,11 +193,11 @@ function touchEnd(e) {
 </script>
 EOF
 
-  print "<p>Download: ";
-  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir\" target=\"_blank\">Orignal</a>&nbsp;&nbsp;";
-  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=1920\" target=\"_blank\">L</a>&nbsp;&nbsp;";
-  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=800\" target=\"_blank\">M</a>&nbsp;&nbsp;";
-  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\" target=\"_blank\">S</a><br><br>";
+#  print "<p>Download: ";
+#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir\" target=\"_blank\">Orignal</a>&nbsp;&nbsp;";
+#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=1920\" target=\"_blank\">L</a>&nbsp;&nbsp;";
+#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=800\" target=\"_blank\">M</a>&nbsp;&nbsp;";
+#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\" target=\"_blank\">S</a><br><br>";
   my $file_size = (-s "${base}${path}");
   1 while $file_size =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
   print "サイズ: ". $file_size ." Byte<br>";

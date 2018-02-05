@@ -24,7 +24,7 @@ function getDirectoryList(base_name, url_path, from, to, receive_func) {
 }
 
 function getDirectoryListResult(httpRequest, receive_func) {
-    try {
+//    try {
         if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
             //document.getElementById('sStatus').innerHTML = "読み込み中...";
         } else if (httpRequest.readyState == 4) {
@@ -35,8 +35,8 @@ function getDirectoryListResult(httpRequest, receive_func) {
                 alert("ERROR: " + httpRequest.status);
             }
         }
-    } catch(e) {
-        alert("ERROR: " + e.description);
-    }
+//    } catch(e) {
+//        alert("ERROR: " + e.description);
+//    }
 }
 
