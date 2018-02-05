@@ -2,6 +2,8 @@
 
 use strict;
 use warnings;
+use utf8;
+use Encode;
 use CGI;
 use File::Path;
 use File::Copy 'copy';
@@ -9,6 +11,7 @@ use File::Copy 'copy';
 
 use lib '%libs_dir%';
 use ParamPath;
+use HTML_Elem;
 
 our $BASE_DIR_CONF;
 our $SUPPORT_TYPES;
@@ -29,16 +32,15 @@ my $movie_thumb_cmd = $FFMPEG_CMD." -i \"%%INPUT%%\" -vf \"scale=%%SIZE%%:-1\" -
 my $image_thumb_cmd = $CONVERT_CMD." \"%%INPUT%%\" -thumbnail %%SIZE%% -strip \"%%OUTPUT%%\"";
 
 my $form = eval{new CGI};
-my $f_dir = scalar($form->param('dir'));
-my $f_in  = scalar($form->param('in'));
 
 my $base;
 my $path;
+my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
+my $encoded_path = scalar($form->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $f_dir);
-  $ins->init();
-  $path = $ins->inode_to_path($f_in);
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name($base_name);
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
 if ($@) {
@@ -49,7 +51,7 @@ if ($@) {
   exit(1);
 }
 
-my $ret = &thumbnail_cache($f_dir, $base, $path);
+my $ret = &thumbnail_cache($base_name, $base, $path);
 
 if ($ret != 0) {
   $path =~ /\.(.*)$/;
@@ -92,7 +94,7 @@ sub thumbnail_cache
   if (! $param_dir || length($param_dir) == 0) {
     $param_dir = "DEFAULT";
   }
-  my $cache_path = $THM_CACHE_DIR."/".$param_dir."/".$path;
+  my $cache_path = encode('utf-8', $THM_CACHE_DIR."/".$param_dir."/".$path);
    
   if(-f "$cache_path") {
     if((-s "$cache_path") == 0) {
@@ -142,8 +144,8 @@ sub save_thumcache
     }
   }
 
-  copy("${thm_file}", "$cache_path");
-  utime(undef, $lastmodified, "$cache_path");
+  copy("${thm_file}", encode('utf-8', "$cache_path"));
+  utime(undef, $lastmodified, encode('utf-8', "$cache_path"));
 
   return 0;
 }
@@ -157,7 +159,7 @@ sub thumbnail_exif
 
   $exif_thumb_cmd =~ s/%%INPUT%%/${file}/;
   $exif_thumb_cmd =~ s/%%OUTPUT%%/${TMP_FILE}/;
-  my $ret = system($exif_thumb_cmd." >/dev/null 2>/dev/null");
+  my $ret = system(encode('utf-8', $exif_thumb_cmd)." >/dev/null 2>/dev/null");
   if($ret == 0) {
     print "Content-Type: image/jpeg\n";
     print "Content-Length: ". (-s "${TMP_FILE}") ." \n";
@@ -168,15 +170,12 @@ sub thumbnail_exif
       }
       close($IMAGE);
     }
-  } else {
-    unlink("${TMP_FILE}");
-    return 1;
   }
 
   unlink("${TMP_FILE}");
-  return 0;
+  return $ret;
 }
-;
+
 # コマンドからサムネイルを作成
 sub thumbnail_cmd
 {
@@ -187,7 +186,7 @@ sub thumbnail_cmd
   $cmd =~ s/%%INPUT%%/${base}${path}/;
   $cmd =~ s/%%OUTPUT%%/${TMP_FILE}/;
   $cmd =~ s/%%SIZE%%/${THUMB_SIZE}/;
-  my $ret = system($cmd." 2>/dev/null >/dev/null");
+  my $ret = system(encode('utf-8', $cmd)." 2>/dev/null >/dev/null");
   if($ret == 0) {
     print "Content-Type: image/jpeg\n";
     print "Content-Length: ". (-s "${TMP_FILE}") ." \n";
@@ -198,17 +197,13 @@ sub thumbnail_cmd
       }
       close($IMAGE);
     }
-  } else {
-    unlink("${TMP_FILE}");
-    return 1;
+    eval { # 失敗した時に TMP_FILE が残ることをevalで防ぐ
+      &save_thumcache($base_name, $base, $path, ${TMP_FILE});
+    };
   }
 
-  eval { # 失敗した時に TMP_FILE が残ることをevalで防ぐ
-    &save_thumcache($f_dir, $base, $path, ${TMP_FILE});
-  };
-
   unlink("${TMP_FILE}");
-  return 0;
+  return $ret;
 }
 
 ## GDライブラリで作成する
