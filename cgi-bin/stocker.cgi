@@ -55,7 +55,7 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $in_dir));
+my $encoded_dir = HTML_Elem->url_encode($in_dir);
 
 #my $disp_box_x = int(${in_s_width} / (int($BOX_WIDTH) + int($BOX_SPACE)));    # 横に表示出来る数
 #my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 縦に表示出来る数
@@ -67,20 +67,19 @@ if ($in_to eq '') { $in_to = $boxes; }
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
 print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
 print "<input type=\"hidden\" name=\"file\" value=\"${in_file}\">\n";
-print "<input type=\"hidden\" name=\"dir\" value=\"${in_dir}\">\n";
+print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 print "<div id=\"editParam\"></div>\n";
 print "ディレクトリ: ";
 print "<select name=\"fm_dir\" size=\"1\" onChange=\"changeDirectory()\">\n";
 
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
   for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
     my $lst = $ins->get_base_dir_column($i);
     my $name = @{$lst}[0];
     my $encoded_name = HTML_Elem->url_encode($name);
-    if ($encoded_dir eq $name) {
+    if ($encoded_dir eq $encoded_name) {
       print "<option value=\"${encoded_name}\" selected>".${name}."</option>\n";
     } else {
       print "<option value=\"${encoded_name}\">".${name}."</option>\n";
@@ -108,7 +107,7 @@ for( i=0 ; i<pathArray.length ; i++ ) {
   for( j=0 ; j<=i ; j++ ) {
     paInum += "/" + inumArray[j];
   }
-  document.write("/ <a href=\\\"$script?in=" + paInum + "&dir=${in_dir}\\\">" + pathArray[i] + "</a>&nbsp;");
+  document.write("/ <a href=\\\"$script?in=" + paInum + "&dir=${encoded_dir}\\\">" + pathArray[i] + "</a>&nbsp;");
 }
 -->
 </script>
@@ -494,7 +493,7 @@ function act() {
     case "move":
       var elem = document.createElement("f_dest");
       elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_file}">'
-                     + '<input type="hidden" name="f_dest_dir" value="${in_dir}">';
+                     + '<input type="hidden" name="f_dest_dir" value="${encoded_dir}">';
       document.getElementById("editParam").appendChild(elem);
       document.file_check.mode.value = "move";
       document.file_check.action = "${EDIT_CGI}";
