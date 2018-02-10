@@ -46,10 +46,6 @@ my $media_file = $2;
 my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
 my $stocker_src = "${STOCKER_CGI}?dir=${base_name}&file=${encoded_up_path}";
 
-my $media_dir  = $base.$up_path;
-$media_dir =~ /([^\/]{1,})$/;
-my $directory_name = $1;
-
 eval {
   my @jslist = (
       "%htdocs_root%/ajax_html_request.js",
@@ -59,7 +55,7 @@ eval {
   my $html = HTML_Elem->new(
       javascript => \@jslist
   );
-  $html->header($directory_name);
+  $html->header();
 };
 if ($@) {
   HTML_Elem->header();
@@ -178,7 +174,7 @@ EOF
 print <<DATA;
 <a href=\"${stocker_src}\">← 戻る</a>
 <hr>
-<h2>${directory_name}</h2>
+<h2 id="directory_name_area"></h2>
 <p>
 <img src="${graypad}" name="coverart" width="120" height="120">
 <!-- <audio src="" id="player" autobuffer>
@@ -231,6 +227,15 @@ function musicList(data) {
 }
 
 function getMusicFiles(data) {
+  const properties = data.getElementsByTagName('properties');
+  if (properties != null) {
+    const name_elem = properties.item(0).getElementsByTagName('name');
+    if (name_elem != null) {
+      document.title = name_elem.item(0).firstChild.data;
+      document.getElementById('directory_name_area').innerHTML = name_elem.item(0).firstChild.data;
+    }
+  }
+
   const contents = data.getElementsByTagName('contents').item(0);
   if (contents == null) {
     alert("ERROR: music files list is NULL");
