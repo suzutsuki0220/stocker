@@ -73,7 +73,7 @@ function printIcon(box_width, box_height, path, name, size, last_modified, icon,
     html += "<p class=\"image\" style=\"width: " + box_width + "px; height: 75px\">";
     html += "<a href=\"javascript:actionClickedIcon('" + action + "', '" + path + "')\"><img src=\"" + icon + "\"></a></p>";
     html += "<span style=\"position: absolute; top: 3px; right: 3px;\">";
-    html += "<input type=\"checkbox\" name=\"" + path + "\" value=\"1\">";
+    html += "<input type=\"checkbox\" name=\"file\" value=\"" + path + "\">";
     html += "</span>";
     html += "<p class=\"caption\">";
     html += "<a href=\"javascript:actionClickedIcon('" + action + "', '" + path + "')\">" + name + "</a><br>";

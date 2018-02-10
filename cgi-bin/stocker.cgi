@@ -66,7 +66,6 @@ if ($in_to eq '') { $in_to = $boxes; }
 
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
 print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
-print "<input type=\"hidden\" name=\"file\" value=\"${in_file}\">\n";
 print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 print "<div id=\"editParam\"></div>\n";
 print "ディレクトリ: ";
@@ -167,7 +166,7 @@ getDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to}, directoryL
 
 function directoryList(data) {
   // 拡張子判定
-  var movie_pattern = /\\.(avi|flv|mov|mpg|mpe|m2p|ts|mts|m2ts|mp4|m4v|mpg4|asf|wmv)\$/;
+  var movie_pattern = /\\.(avi|flv|mov|mpg|mpeg|mpe|m2p|ts|mts|m2ts|mp4|m4v|mpg4|asf|wmv)\$/;
   var music_pattern = /\\.(mp3|wma|wav|flac)\$/;
   var photo_pattern = /\\.(jpg|jpeg)\$/;
   var gps_pattern = /\\.(kml|kmz|gpx|nmea)\$/;

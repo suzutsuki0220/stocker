@@ -54,18 +54,17 @@ my @encode_audio_types = (
 
 my $q = eval{new CGI};
 my $mode = scalar($q->param('mode'));
-my $dir  = scalar($q->param('dir'));
+my $dir  = HTML_Elem->url_decode(scalar($q->param('dir')));
 my $out_dir = scalar($q->param('out_dir'));
-my $encoded_path = scalar($q->param('file'));
+my @files = $q->param('file');
 
-my @files = ();
 my $path;
 my $base;
 my $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode($dir));
-  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
+  $ins->init_by_base_name($dir);
+  $path =decode('utf-8', $ins->urlpath_decode($files[0]));
   $base = $ins->{base};
   $base_name = $ins->{base_name};
 };
@@ -75,41 +74,24 @@ if ($@) {
 }
 
 $dir = HTML_Elem->url_encode($dir);
+my $encoded_path = $files[0];
 
 my $up_path = ParamPath->get_up_path($path);
-my $encoded_up_path = ParamPath->urlpath_encode($up_path);
-
-if(-f "${base}${path}") {
-  # 1ファイルの指定
-  my $filename;
-  if ($path =~ m/(.*)\/(.*)$/) {
-    $path = $1 . "/";
-    $filename = $2;
-  } else {
-    $filename = $path;
-    $path = "";
-  }
-  push(@files, $filename);
-} elsif(-d "${base}${path}") {
-  # 複数ファイルの指定
-  if (length($path) > 0 && $path !~ /\/$/) {
-    $path .= "/";
-  }
-  @files = ParamPath->get_checked_list(\$q, "${base}${path}");
-  @files = sort {$a cmp $b} @files;
-}
+my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
 
 if (@files.length == 0) {
   HTML_Elem->header();
   HTML_Elem->error("指定されたファイルが存在しません。");
 }
 
-my $encfile = $base . $path . $files[0];
+@files = sort {$a cmp $b} @files;
+
+my $encfile = $base . decode('utf-8', ParamPath->urlpath_decode($encoded_path));
 
 my $mtype = &check_capable_type($encfile);
 if ($mtype eq "unsupported") {
   HTML_Elem->header();
-  HTML_Elem->error("対応していない形式です: $encfile");
+  HTML_Elem->error("対応していない形式です: " . encode('utf-8', $encfile));
 }
 
 # エンコード出力先
@@ -136,19 +118,19 @@ sub perform_encode() {
 
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
-      &add_encodejob("${base}${path}$_");
+      &add_encodejob("${base}" . decode('utf-8', ParamPath->urlpath_decode($_)));
     }
   } elsif ($q->param('multi_editmode') eq "combine") {
     my $concat = "concat:";
     foreach (@files) {
-      $concat .= "${base}${path}$_|";
+      $concat .= "${base}" . decode('utf-8', ParamPath->urlpath_decode($_)) . "|";
     }
     &add_encodejob("$concat");
   } else {
-    &add_encodejob("${base}${path}$files[0]");
+    &add_encodejob("${base}${path}");
   }
 
-  print "<a href=\"${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}\">← フォルダーに戻る</a></p>";
+  print "<a href=\"${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}\">← フォルダーに戻る</a>";
 
   HTML_Elem->tail();
 }
@@ -230,9 +212,6 @@ sub print_form() {
   my $thm_url = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${dir}&size=640";
   my $mes;
 
-  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
-  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
-
   my @jslist = (
       "%htdocs_root%/converter_form.js",
       "%htdocs_root%/ajax_html_request.js",
@@ -248,7 +227,7 @@ EOF
   print encode('utf8', $mes);
 
   if ($mtype eq "video") {
-    if (lc($files[0]) =~ /\.mp4$/ || lc($files[0]) =~ /\.m4v$/ || lc($files[0]) =~ /\.mpg4$/) {
+    if (lc($path) =~ /\.mp4$/ || lc($path) =~ /\.m4v$/ || lc($path) =~ /\.mpg4$/) {
       print "<video src=\"$mp4_url\" name=\"vimg\" id=\"player\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
     } else {
       print "<img src=\"$thm_url\" name=\"vimg\" width=\"640\">\n";
@@ -257,11 +236,15 @@ EOF
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
-    print $path . $_ . "<br>\n";
+    print ParamPath->urlpath_decode($_) . "<br>\n";
   }
 
   print "<h2>情報</h2>\n";
-  open (my $IN, "${cmd_movie_info} |");  # FFMpeg APIを使って情報を読み込む
+
+  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
+  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
+
+  open (my $IN, encode('utf-8', ${cmd_movie_info}) . " |");  # FFMpeg APIを使って情報を読み込む
   my $movie_info_xml = "";
   while(my $line = <$IN>) {
     $movie_info_xml .= $line;
@@ -352,8 +335,7 @@ EOF
     print "<br></p>\n";
   }
   foreach (@files) {
-    my $inode = (stat "${base}${path}$_")[1];
-    print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
+    print "<input type=\"hidden\" name=\"file\" value=\"$_\">\n";
   }
 
   $mes = <<EOD;
@@ -748,7 +730,6 @@ EOF
 
   print <<EOF;
 <br><br>
-<input type="hidden" name="file" value="${encoded_path}">
 <input type="hidden" name="dir" value="${dir}">
 <input type="hidden" name="mode" value="encode">
 <fieldset>
