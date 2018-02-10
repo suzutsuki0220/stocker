@@ -17,29 +17,30 @@ our $MOVIE_INFO_CMD = "";
 require '%conf_dir%/converter.conf';
 
 my $q = eval{new CGI};
-my $mode = $q->param('mode');
-my $in   = $q->param('in');
-my $dir  = $q->param('dir');
-my $out_dir = $q->param('out_dir');
+my $mode = scalar($q->param('mode'));
+my $out_dir = scalar($q->param('out_dir'));
 
-if(! ${in} || length(${in}) <= 0 ) {
-  HTML_Elem->header();
-  HTML_Elem->error("パスが指定されていません。");
-}
+my $encoded_dir = HTML_Elem->url_encode(scalar($q->param('dir')));
 
 my @files = ();
 my $path;
 my $base;
+my $base_name = scalar($q->param('dir'));
+my $encoded_path = scalar($q->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $q->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($q->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
 if ($@) {
   HTML_Elem->header();
   HTML_Elem->error($@);
+}
+
+if(! ${encoded_path} || length(${encoded_path}) <= 0 ) {
+  HTML_Elem->header();
+  HTML_Elem->error("パスが指定されていません。");
 }
 
 my @skip_options = (
@@ -93,7 +94,7 @@ sub frame_selector
   print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 <div style="position: relative; width: 640px;">
-  <img src="${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=${pos}" id="preview" name="preview">
+  <img src="${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&size=640&set_position=1&ss=${pos}" id="preview" name="preview">
   <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
     Reloading...
   </div>
@@ -112,7 +113,7 @@ EOF
 
   foreach my $so (@skip_options) {
     my $selected = "";
-    if (@{$so}[0] eq "1") { $selected = " selected"; }
+    if (@{$so}[0] eq "3") { $selected = " selected"; }
     print "<option value=\"" . @{$so}[0] * 1000 . "\"". $selected .">" . @{$so}[1] . "</option>\n";
   }
 
@@ -192,14 +193,14 @@ EOF
     my $timestr = sprintf("%02d:%02d:%02d.%03d", $hh, $mm, $ss, $xx);
     print "<div style=\"background-color: #cccccc; margin-top: 5px; padding-left: 1px; padding-right: 1px; float: left; text-align: center; font-size: 9pt;\">";
     print "<a href=\"javascript: select_time(\'${timestr}\')\">";
-    print "<img src=\"${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=120&set_position=1&ss=${timestr}\">";
+    print "<img src=\"${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&size=120&set_position=1&ss=${timestr}\">";
     print "</a><br>$timestr</div>\n";
     $pos += $skip;
   }
 
   print "<input type=\"hidden\" name=\"mode\" value=\"${mode}\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"file\" value=\"${encoded_path}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
   print "<input type=\"hidden\" name=\"target\" value=\"${target}\">\n";
   print "<input type=\"hidden\" name=\"icons\" value=\"${icons}\">\n";
   print "<input type=\"hidden\" name=\"time\" value=\"${time}\">\n";
@@ -334,7 +335,7 @@ sub print_script
     }
 
     var ss = document.f1.selectedTime.value;
-    var imgurl = "${MOVIEIMG_CGI}?in=${in}&dir=${dir}&size=640&set_position=1&ss=" + ss;
+    var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&size=640&set_position=1&ss=" + ss;
 
     loading = true;
     document.getElementById("preview").src = imgurl;

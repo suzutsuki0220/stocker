@@ -52,7 +52,7 @@ sub init_by_base_name {
   require $self->{base_dir_conf};
 
   foreach my $lst (@BASE_DIRS) {
-    if(${basename} eq decode('utf-8', @{$lst}[0])) {
+    if(!${basename} || ${basename} eq decode('utf-8', @{$lst}[0])) {
       $self->{base_name} = decode('utf-8', @{$lst}[0]);  # 表示名
       $self->{base} = decode('utf-8', @{$lst}[2]);  # 基点となるパス
       if ($self->{base} !~ /\/$/) {

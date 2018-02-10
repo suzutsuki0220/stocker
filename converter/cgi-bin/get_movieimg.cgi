@@ -35,26 +35,18 @@ eval {
   $base = $ins->{base}
 };
 if ($@) {
-  print STDERR "get_movieimg.cgi ERROR: $@\n";
-  print "Content-Type: image/jpeg\n";
-  print "Content-Length: 0\n";
-  print "\n";
-  exit(1);
+  &error("get_movieimg.cgi ERROR: $@");
 }
 
 my $media_path = encode('utf-8', "${base}${path}");
 if(length(${path}) <= 0 || ! -f ${media_path}) {
-  print STDERR "get_movieimg.cgi ERROR: file not found - " . decode('utf-8', ${media_path});
-  print "Content-Type: image/jpeg\n";
-  print "Content-Length: 0\n";
-  print "\n";
-  exit(1);
+  &error("get_movieimg.cgi ERROR: file not found - " . decode('utf-8', ${media_path}));
 }
 
 my $file_name = $path;
 $file_name =~ s/[^\/]*\///g;
 
-my $param_dir = $form->param('dir');
+my $param_dir = scalar($form->param('dir'));
 if (! $param_dir || length($param_dir) == 0) {
   $param_dir = "DEFAULT";
 }
@@ -79,14 +71,10 @@ if (&judgeMakeCache($size) == 1) {
 
 if (&make_imgcache($cache, $lastmodified, $size) != 0)
 {
-  print "Content-Type: image/jpeg\n";
-  print "Content-Length: 0\n";
-  print "\n";
-  exit(1);
+  &error("failed to make image cache");
 }
 
 exit(0);
-
 
 ##
 
@@ -214,3 +202,12 @@ sub remove_temp
 {
   unlink("${TMP_PATH}");
 }
+
+sub error
+{
+  my($message) = @_;
+  print STDERR $message . "\n";
+  print "Status: 400\n\n";
+  exit(1);
+}
+

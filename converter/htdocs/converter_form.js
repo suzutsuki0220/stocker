@@ -101,7 +101,7 @@ function preview_img(ss) {
 /*** 画質調整 ***/
 
 function adjust_preview() {
-    var ss = document.enc_setting.ss.value;
+    var ss = document.enc_setting.ss0.value;
     var url = get_preview_url(ss, 320);
     document.adjpreview.src = url;
 }
