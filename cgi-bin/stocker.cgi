@@ -9,6 +9,7 @@ use Encode;
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
+use MimeTypes;
 use FileOperator;
 
 our $BASE_DIR_CONF;
@@ -17,7 +18,7 @@ our $BOX_HEIGHT;
 our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
 our ($EDIT_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
-our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $DOWNLOAD_CGI);
+our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
 our ($ICON_UNKNOWN, $ICON_DIRECTORY);
@@ -257,19 +258,19 @@ function directoryList(data) {
             action = "${TEXT_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (doc_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MS_WORD}";
-            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
           } else if (excel_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MS_EXCEL}";
-            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-excel";
           } else if (ppt_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MS_POWERPOINT}";
-            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-powerpoint";
           } else if (pdf_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_PDF}";
-            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/pdf";
 	  } else {
             icon   = "${ICON_UNKNOWN}";
-            action = "${DOWNLOAD_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
           }
         }
         printIcon(${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
@@ -516,3 +517,14 @@ sub contain
 
   return 0;
 }
+
+sub getMimeType
+{
+  my ($path) = @_;
+
+  $path =~ /[^\/]+\.(.+)$/;
+  my $extention = $1;
+
+  return MimeTypes->content_type($extention);
+}
+

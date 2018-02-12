@@ -45,9 +45,9 @@ main(int argc, char** argv)
 
         f_mime = cgi->decodeFormURL(f_mime);
 
-	if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
-	    std::stringstream ss;
-	    ss << "failed to determine filepath - " << urlpath->getErrorMessage();
+        if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
+            std::stringstream ss;
+            ss << "failed to determine filepath - " << urlpath->getErrorMessage();
             print_400_header(ss.str().c_str());
             return -1;
         }
@@ -90,7 +90,16 @@ main(int argc, char** argv)
         }
 
         if (range->get_listsize() == 0) {
-            print_200_header(f_mime.c_str(), filesize);
+            std::string filename, url_encode;
+            fu->getBasename(filename, filepath);
+            url_encode = cgi->encodeFormURL(filename);
+
+            printf("Content-Type: %s\n", f_mime.c_str());
+            printf("Accept-Ranges: bytes\n");
+            printf("Content-Length: %zu\n", filesize);
+            printf("Content-Disposition: attachment; filename=\"%s\"; filename*=UTF-8''%s\n", filename.c_str(), url_encode.c_str());
+            printf("\n");
+
             ret = fu->readFile(stdout, filepath.c_str(), 0, filesize);
         } else if (range->get_listsize() == 1) {
             printf("Status: 206\n");
