@@ -22,24 +22,25 @@ our $TRASH_PATH;
 our $TMP_FILE;
 require '%conf_dir%/stocker.conf';
 
+use lib './';
 require 'edit_filefunc.pl';
 
 my $form = eval{new CGI};
-my $mode = $form->param('mode');
-my $in   = $form->param('in');
-my $dir  = $form->param('dir');
-my $out_dir = $form->param('out_dir');
+my $mode = scalar($form->param('mode'));
+my @files = $form->param('file');
+my $dir  = scalar($form->param('dir'));
+my $out_dir = scalar($form->param('out_dir'));
 
+my $up_path = ParamPath->get_up_path(ParamPath->urlpath_decode($files[0])); 
+my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode($up_path) . "&dir=${dir}";
 my $exif_cmd = "/usr/local/bin/exif --tag=%%TAG%% --ifd=EXIF --set-value=%%VALUE%% --output=%%TMP_FILE%% '%%INPUT%%' 2>&1 > /dev/null";
 
 our $path;
 our $base;
 our $base_name;
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($in);
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
   $base = $ins->{base};
   $base_name = $ins->{base_name};
 };
@@ -90,21 +91,14 @@ exit(0);
 #####
 
 sub form_setting() {
-  my @files;
-
   HTML_Elem->header();
-  eval {
-    @files = ParamPath->get_checked_list(\$form, "${base}${path}");
-  };
-  if ($@) {
-    HTML_Elem->error("ディレクトリのアクセスに失敗しました");
-  }
 
   if (@files.length == 0) {
     HTML_Elem->error("ファイルが選択されていません");
   }
 
-  foreach my $entry (@files) {
+  foreach (@files) {
+    my $entry = ParamPath->urlpath_decode($_);
     if( lc($entry) !~ /\.jpg$/  && lc($entry) !~ /\.jpeg$/ && lc($entry) !~ /\.ts$/ &&
         lc($entry) !~ /\.m2ts$/ && lc($entry) !~ /\.mts$/ )
     {
@@ -122,7 +116,7 @@ sub form_setting() {
   my $cmb_ext  = "";
 
   foreach my $file (@files) {
-    my $extention = $file;
+    my $extention = ParamPath->urlpath_decode($file);
     $extention =~ /([^\.]{1,})$/;
     $extention = lc($1);  # change to lower string
 #    if ($extention eq "jpg" || $extention eq "jpeg" || $extention eq "png" || $extention eq "bmp" || $extention eq "tiff" || $extention eq "tif") {
@@ -154,7 +148,7 @@ sub form_setting() {
   my $y_ratio = 1;
 
   if ($img_flag) {
-    my $Img = new GD::Image->newFromJpeg("${base}${path}/$files[0]");
+    my $Img = new GD::Image->newFromJpeg("${base}/" . ParamPath->urlpath_decode($files[0]));
     ($img_width, $img_height) = $Img->getBounds();
 
     my $a = $img_width;
@@ -216,7 +210,7 @@ sub form_setting() {
   }
 
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 
   function sizeSimulate() {
@@ -258,15 +252,14 @@ EOD
     print $file ."<br>\n";
   }
   print "<br>\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
+  print "<input type=\"hidden\" name=\"file\" value=\"" . ${files}[0] . "\">\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
 
-  my $innerPath = substr($path, length($base));
   print "ディレクトリ名: \n";
   print <<EOD;
 <script type="text/javascript">
 <!--
-var path = "$innerPath";
+var path = "${up_path}";
 if( path.charAt(0) == "/" ) {
   path = path.substr(1,path.length);
 }
@@ -381,7 +374,7 @@ sub do_resize {
   }
   print "<hr>\n";
   print "<p>全ての変換が完了しました。<br>";
-  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a>";
+  print "<a href=\"${back_link}\">メディアフォルダーに戻る</a>";
   print "</p>\n";
 
   HTML_Elem->tail();
@@ -465,21 +458,13 @@ sub do_combine() {
 
   system($cmd);
   print "<p><b>結合完了</b><br>";
-  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
+  print "<a href=\"${back_link}\">メディアフォルダーに戻る</a></p>";
 
   HTML_Elem->tail();
 }
 
 sub form_divide() {
-  my @files;
   HTML_Elem->header();
-
-  eval {
-    @files = ParamPath->get_checked_list(\$form, "${base}${path}");
-  };
-  if ($@) {
-    HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
-  }
 
   if (@files.length == 0) {
     HTML_Elem->error("ファイルが選択されていません");
@@ -512,7 +497,7 @@ sub form_divide() {
   }
 
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 -->
 </script>
@@ -527,15 +512,14 @@ EOF
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_divide\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
+  print "<input type=\"hidden\" name=\"file\" value=\"" . ${files}[0] . "\">\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
 
-  my $innerPath = substr($path, length($base));
   print "ディレクトリ名: \n";
   print <<EOD;
 <script type="text/javascript">
 <!--
-var path = "$innerPath";
+var path = "${up_path}";
 if( path.charAt(0) == "/" ) {
   path = path.substr(1,path.length);
 }
@@ -613,7 +597,7 @@ print "CMD: $cmd<br>";
   }
 
   print "<p><b>分離完了</b><br>";
-  print "<a href=\"${STOCKER_CGI}?in=${in}\">メディアフォルダーに戻る</a></p>";
+  print "<a href=\"${back_link}\">メディアフォルダーに戻る</a></p>";
 
   HTML_Elem->tail();
 }
