@@ -2,32 +2,30 @@
 
 use strict;
 use warnings;
-use utf8;
+use Encode;
 use CGI;
 
 use lib '%libs_dir%';
 use HTML_Elem;
 use ParamPath;
 
-use GPS_KML;
-use GPS_GPX;
-use GPS_NMEA;
-
 our $GOOGLE_API_KEY = "";
 our $STOCKER_CGI = "";
 our $BASE_DIR_CONF = "";
+our $GETFILE_CGI = "";
 require '%conf_dir%/GPS_viewer.conf';
 
-my $script_name = $ENV{'SCRIPT_NAME'};
 my $form = eval{new CGI};
+my $in_file = scalar($form->param('file'));
 
 my $path;
 my $base;
+my $base_name = HTML_Elem->url_decode(scalar ($form->param('dir')));
+my $encoded_dir = HTML_Elem->url_encode(${base_name});
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name($base_name);
+  $path = decode('utf-8', $ins->urlpath_decode($in_file));
   $base = $ins->{base};
 };
 if ($@) {
@@ -35,142 +33,53 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-if (length($path) == 0 || ! -e "${base}${path}") {
-  HTML_Elem->header();
-  HTML_Elem->error("GPSログが見つかりません path=[${path}]");
-}
-
 my $file_name = $path;
 $file_name =~ /([^\/]{1,})$/;
 $file_name = $1;
 
-my $up_in = ParamPath->get_up_path($form->param('in'));
-my $in_dir = $form->param('dir');
-
-print "Content-Type: text/html\n\n";
-
-if(HTML_Elem->isSP()) {
-  # スマホ向けのHTMLヘッダ
-  print <<EOF;
-<!DOCTYPE html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=660;">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-touch-fullscreen" content="YES">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<title>$file_name</title>
-EOF
-} else {
-  # PC向けヘッダ
-  print <<EOF;
-<!DOCTYPE html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<title>$file_name</title>
-EOF
-}
-
-my $start_lat;
-my $start_long;
-my @coodinates;
+my $up_path = ParamPath->get_up_path($path);
+my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8', $up_path)) . "&dir=" . $encoded_dir;
 
 eval {
-  my $ins;
-  if (lc(${path}) =~ /\.nmea$/) {
-    $ins = GPS_NMEA->new();
-  } elsif (lc(${path}) =~ /\.gpx$/) {
-    $ins = GPS_GPX->new();
-  } else {
-    $ins = GPS_KML->new();
-  }
-  @coodinates = $ins->read("${base}${path}");
-  ($start_lat, $start_long) = $ins->get_start();
+  my @jslist = (
+      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/map_main.js",
+      "%htdocs_root%/map_distance.js",
+      "//maps.google.com/maps/api/js?v=3&key=${GOOGLE_API_KEY}",
+  );
+  my @csslist = (
+      "%htdocs_root%/GPS_viewer.css",
+  );
+  my $html = HTML_Elem->new(
+      javascript => \@jslist,
+      css => \@csslist
+  );
+  $html->header();
 };
 if ($@) {
-  print "</head><body>\n";
+  HTML_Elem->header();
   HTML_Elem->error($@);
-  exit(0);
 }
 
-my $end_lat  = $start_lat;
-my $end_long = $start_long;
-
 print <<EOF;
-<style type="text/css">
-body { margin: 0; line-height: 160%; font-family: arial,sans-serif; }
-html, body, #map_canvas { width: 100%; height: 95%; }
-</style>
-
-<script src="//maps.google.com/maps/api/js?v=3&key=${GOOGLE_API_KEY}&sensor=false" type="text/javascript" charset="UTF-8"></script>
-<script type="text/javascript">
-<!--
-function map_init() {
-  var canter = new google.maps.LatLng($start_lat, $start_long);
-  var mapOptions = {
-    zoom: 15,
-    center: canter,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  };
-  var map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
-  
-  var route = [
-EOF
-
-  # output coordinates
-  foreach my $point (@coodinates) {
-    #$point =~ s/^ *(.*?) *$/$1/;
-    $point =~ s/[^0-9,\.]//g;
-    if (length($point) == 0) {
-      next;
-    }
-    my ($longitude, $latitude, $altitude) = split(/,/, $point);
-    print "    new google.maps.LatLng($latitude, $longitude),\n";
-    $end_long = $longitude;
-    $end_lat  = $latitude;
-  }
-
-print <<EOF;
-  ];
-
-  var StartMarkerOptions = {
-    position: new google.maps.LatLng($start_lat, $start_long),
-    map: map,
-    title: "Start Point"
-  };
-  var startMM = new google.maps.Marker(StartMarkerOptions);
-
-  var EndPointOptions = {
-    position: new google.maps.LatLng($end_lat, $end_long),
-    map: map,
-    title: "End Point"
-  };
-  var endMM = new google.maps.Marker(EndPointOptions);
-
-  var polyOptions = {
-    path: route,
-    strokeColor: "#0000ff",
-    strokeOpacity: 0.5,
-    strokeWeight: 5
-  }
-  var poly = new google.maps.Polyline(polyOptions);
-  poly.setMap(map);
-}
--->
-</script>
-</head>
-<body onload="map_init()">
-<a href="${STOCKER_CGI}?in=${up_in}&dir=${in_dir}">← 戻る</a>
-<hr>
-<b>$file_name</b><br>
+<body onload="drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}')">
+<div style="height: 5%">
+<span style="float: left">
+<b>${file_name}</b><br>
+</span>
+<span style="float: right">
+<a href="${back_link}">戻る</a>
+</span>
+</div>
 <div id="map_canvas"></div>
+<div id="panorama_canvas"></div>
+<div id="info_field">
+距離: <span id="distance_text">-- km</span><br>
+サンプル数: 有効=<span id="sample_count">0</span>, 無効=<span id="invalid_sample_count">0</span><br>
+開始位置住所: <span id="start_address"></span><br>
+終了位置住所: <span id="end_address"></span>
+</div>
+</body>
+</html>
 EOF
-
-HTML_Elem->tail();
-
-exit(0);
 
