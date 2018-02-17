@@ -1,4 +1,5 @@
-## a part of edit.cgi function
+#!/usr/bin/perl
+
 # ファイルの削除、アップロード、リネームなどのファイル管理の機能
 
 use strict;
@@ -22,8 +23,7 @@ our $BASE_DIR_CONF;
 our $STOCKER_CGI;
 our $TRASH_PATH;
 our $TMP_FILE;
-our $base;
-our $path;
+require '%conf_dir%/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode = scalar($form->param('mode'));
@@ -33,6 +33,44 @@ my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
 my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
+
+my $base;
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(${base_name});
+  $base = $ins->{base};
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
+
+if( ${mode} eq "delfile" ) {
+  &form_delete();
+} elsif( ${mode} eq "do_delete" ) {
+  &do_delete();
+} elsif( ${mode} eq "newfolder" ) {
+  &form_newfolder();
+} elsif( ${mode} eq "do_newfolder" ) {
+  &do_newfolder();
+} elsif( ${mode} eq "upload" ) {
+  &form_upload();
+} elsif( ${mode} eq "do_upload" ) {
+  &do_upload();
+} elsif( ${mode} eq "download" ) {
+  &do_download();
+} elsif( ${mode} eq "rename" ) {
+  &form_rename();
+} elsif( ${mode} eq "do_rename" ) {
+  &do_rename();
+} elsif( ${mode} eq "move" ) {
+  &form_move();
+} elsif( ${mode} eq "do_move" ) {
+  &do_move();
+} else {
+  HTML_Elem->header();
+  HTML_Elem->error("実装されていない機能です");
+}
 
 ########################
 ### 新規フォルダ作成 ###
@@ -268,11 +306,7 @@ EOD
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
-  foreach my $filename (@files) {
-    my $inode = (stat("$base/$path/$filename"))[1];
-    print encode('utf-8', $filename . " → ");
-    print "<input type=\"text\" name=\"${inode}\" value=\"${filename}\"><br>\n";
-  }
+  &printFilesAndHiddenForm();
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_rename\">\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
@@ -287,6 +321,8 @@ EOD
 
 sub do_rename() {
   my @files = ();
+  my $path = "";
+
   opendir(my $dir, "${base}${path}") or die( "ディレクトリのアクセスに失敗しました" );
   while (my $entry = decode('utf-8', readdir $dir)) {
     if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
@@ -388,11 +424,7 @@ EOD
   print "<p>選択: ". @files.length ."ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
-  foreach my $filename (@files) {
-    my $inode = (stat("${base}${path}/$filename"))[1];
-    print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
-    print encode('utf-8', $filename ."<br>\n");
-  }
+  &printFilesAndHiddenForm();
   print "<br>\n";
   print "<fieldset><legend>移動先</legend>\n";
 
@@ -481,7 +513,7 @@ sub do_move() {
       HTML_Elem->header();
       HTML_Elem->error("既に同じ名前が存在するため移動できません($entry)");
     }
-    if(! move("${base}${path}/$entry", "${dest_path}")) {
+    if(! move("${base}/$entry", "${dest_path}")) {
       my $reason = $!;
       HTML_Elem->header();
       HTML_Elem->error("移動に失敗しました($reason)");
@@ -523,11 +555,7 @@ EOD
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
-  foreach my $file (@files) {
-    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
-    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">\n";
-    print encode('utf-8', $filename) ."<br>\n";
-  }
+  &printFilesAndHiddenForm();
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
@@ -545,6 +573,7 @@ sub do_delete() {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
+  my $path = "";
 
   my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${path});
   if(! -d "$save_path") {
@@ -606,6 +635,15 @@ ${title}<br><small>${note}</small><br>
 </body>
 </html>
 EOD
+}
+
+sub printFilesAndHiddenForm
+{
+  foreach my $file (@files) {
+    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
+    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">\n";
+    print encode('utf-8', $filename) ."<br>\n";
+  }
 }
 
 1;

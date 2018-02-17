@@ -17,7 +17,7 @@ our $BOX_WIDTH;
 our $BOX_HEIGHT;
 our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
-our ($EDIT_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
+our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
@@ -442,27 +442,27 @@ function act() {
       break;
     case "newfolder":
       document.file_check.mode.value = "newfolder";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
     case "upload":
       document.file_check.mode.value = "upload";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
     case "download":
       document.file_check.mode.value = "download";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
     case "delfile":
       document.file_check.mode.value = "delfile";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
     case "rename":
       document.file_check.mode.value = "rename";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
     case "move":

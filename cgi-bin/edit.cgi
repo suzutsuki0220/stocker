@@ -22,16 +22,13 @@ our $TRASH_PATH;
 our $TMP_FILE;
 require '%conf_dir%/stocker.conf';
 
-use lib './';
-require 'edit_filefunc.pl';
-
 my $form = eval{new CGI};
 my $mode   = scalar($form->param('mode'));
 my $target = scalar($form->param('target'));
 my @files = $form->param('file');
 my $out_dir   = scalar($form->param('out_dir'));
 
-our $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
+my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
 my $up_path = ParamPath->get_up_path(ParamPath->urlpath_decode($files[0])); 
@@ -60,28 +57,6 @@ if( ${mode} eq "resize" || ${mode} eq "combine" ) {
   &form_divide();
 } elsif( ${mode} eq "do_divide"  ) {
   &do_divide();
-} elsif( ${mode} eq "delfile" ) {
-  &form_delete();
-} elsif( ${mode} eq "do_delete" ) {
-  &do_delete();
-} elsif( ${mode} eq "newfolder" ) {
-  &form_newfolder();
-} elsif( ${mode} eq "do_newfolder" ) {
-  &do_newfolder();
-} elsif( ${mode} eq "upload" ) {
-  &form_upload();
-} elsif( ${mode} eq "do_upload" ) {
-  &do_upload();
-} elsif( ${mode} eq "download" ) {
-  &do_download();
-} elsif( ${mode} eq "rename" ) {
-  &form_rename();
-} elsif( ${mode} eq "do_rename" ) {
-  &do_rename();
-} elsif( ${mode} eq "move" ) {
-  &form_move();
-} elsif( ${mode} eq "do_move" ) {
-  &do_move();
 } else {
   HTML_Elem->header();
   HTML_Elem->error("実装されていない機能です");
