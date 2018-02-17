@@ -67,6 +67,7 @@ if ($in_to eq '') { $in_to = $boxes; }
 
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
 print "<input type=\"hidden\" name=\"mode\" value=\"\">\n";
+print "<input type=\"hidden\" name=\"target\" value=\"${in_file}\">\n";
 print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 print "<div id=\"editParam\"></div>\n";
 print "ディレクトリ: ";
@@ -87,32 +88,7 @@ eval {
   }
 };
 print "</select>\n";
-
-if(0) {  # TODO: implement with JavaScript
-  print <<EOD;
-<script type="text/javascript">
-<!--
-var path = "${path}";
-var inum = "${in_file}";
-if( path.charAt(0) == "/" ) {
-  path = path.substr(1,path.length);
-}
-if( inum.charAt(0) == "/" ) {
-  inum = inum.substr(1,inum.length);
-}
-var pathArray = path.split("/");
-var inumArray = inum.split("/");
-for( i=0 ; i<pathArray.length ; i++ ) {
-  var paInum = "";
-  for( j=0 ; j<=i ; j++ ) {
-    paInum += "/" + inumArray[j];
-  }
-  document.write("/ <a href=\\\"$script?in=" + paInum + "&dir=${encoded_dir}\\\">" + pathArray[i] + "</a>&nbsp;");
-}
--->
-</script>
-EOD
-  }
+print "<span id=\"path_link\"></span>\n";
 
 print "<div style=\"clear: both\">";
 print "<span style=\"float: left\">\n";

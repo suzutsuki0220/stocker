@@ -26,23 +26,25 @@ use lib './';
 require 'edit_filefunc.pl';
 
 my $form = eval{new CGI};
-my $mode = scalar($form->param('mode'));
+my $mode   = scalar($form->param('mode'));
+my $target = scalar($form->param('target'));
 my @files = $form->param('file');
-my $dir  = scalar($form->param('dir'));
-my $out_dir = scalar($form->param('out_dir'));
+my $base_name = scalar($form->param('dir'));
+my $out_dir   = scalar($form->param('out_dir'));
+
+our $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
+my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
 my $up_path = ParamPath->get_up_path(ParamPath->urlpath_decode($files[0])); 
-my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode($up_path) . "&dir=${dir}";
+my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8', $up_path)) . "&dir=" . $encoded_dir; 
 my $exif_cmd = "/usr/local/bin/exif --tag=%%TAG%% --ifd=EXIF --set-value=%%VALUE%% --output=%%TMP_FILE%% '%%INPUT%%' 2>&1 > /dev/null";
 
 our $path;
 our $base;
-our $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
+  $ins->init_by_base_name(${base_name});
   $base = $ins->{base};
-  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
@@ -253,7 +255,7 @@ EOD
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"file\" value=\"" . ${files}[0] . "\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "ディレクトリ名: \n";
   print <<EOD;
@@ -513,7 +515,7 @@ EOF
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_divide\">\n";
   print "<input type=\"hidden\" name=\"file\" value=\"" . ${files}[0] . "\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "ディレクトリ名: \n";
   print <<EOD;
