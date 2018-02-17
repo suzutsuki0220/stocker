@@ -11,20 +11,20 @@ function setScreenSize() {
 }
 
 function allCheck() {
-    for (var key in visible_list) {
-        document.getElementsByName(visible_list[key])[0].checked = true;
-    }
-    for (var key in un_visible_list) {
-        document.getElementsByName(un_visible_list[key]).value = 1;
+    var files = document.getElementsByName("file");
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            files[i].checked = true;
+        }
     }
 }
 
 function allUnCheck() {
-    for (var key in visible_list) {
-        document.getElementsByName(visible_list[key])[0].checked = false;
-    }
-    for (var key in un_visible_list) {
-        document.getElementsByName(un_visible_list[key]).value = 0;
+    var files = document.getElementsByName("file");
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            files[i].checked = false;
+        }
     }
 }
 
@@ -44,7 +44,6 @@ function isAnyChecked() {
 
 function toggleCheckFile(value) {
     var files = document.getElementsByName("file");
-
     if (files) {
         for (var i=0; i<files.length; i++) {
             if (files[i].value === value) {
