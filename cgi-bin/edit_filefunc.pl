@@ -26,9 +26,13 @@ our $base;
 our $path;
 
 my $form = eval{new CGI};
-my $mode = decode('utf-8', scalar($form->param('mode')));
-my $in   = decode('utf-8', $form->param('in'));
-my $dir  = decode('utf-8', scalar($form->param('dir')));
+my $mode = scalar($form->param('mode'));
+my @files  = $form->param('file');
+my $target = scalar($form->param('target'));
+my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
+my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
+
+my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
 ########################
 ### 新規フォルダ作成 ###
@@ -36,11 +40,13 @@ my $dir  = decode('utf-8', scalar($form->param('dir')));
 sub form_newfolder() {
   HTML_Elem->header();
 
+  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
+
   print <<EOD;
 <script type="text/javascript">
 <!--
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 -->
 </script>
@@ -50,9 +56,10 @@ EOD
 <h1>新規フォルダーの作成</h1>
 <form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST">
 <input type="hidden" name="mode" value="do_newfolder">
-<input type="hidden" name="in" value="${in}">
-<input type="hidden" name="dir" value="${dir}">
+<input type="hidden" name="target" value="${target}">
+<input type="hidden" name="dir" value="${encoded_dir}">
 <p>
+作成先: $path<br>
 フォルダー名: <input type="text" name="foldername" value=""><br>
 <br>
 <input type="submit" value="実行">
@@ -66,6 +73,7 @@ EOF
 
 sub do_newfolder() {
   my $newname = decode('utf-8', scalar($form->param('foldername')));
+  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
 
   # ファイル名チェック
   if (! FileOperator->isFilename("$newname")) {
@@ -73,13 +81,15 @@ sub do_newfolder() {
     HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
   }
 
-  # 既存ファイル名重複チェック
-  if( -e "${base}${path}/".$newname) {
+  my $newfolder = encode('utf-8', "${base}${path}/" . $newname);
+
+  # 重複チェック
+  if( -e "${newfolder}") {
     HTML_Elem->header();
     HTML_Elem->error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
   }
 
-  if(! mkdir("${base}${path}/".$newname)) {
+  if(! mkdir("${newfolder}")) {
       my $reason = $!;
       HTML_Elem->header();
       HTML_Elem->error("ディレクトリ作成に失敗しました($reason)");
@@ -92,13 +102,15 @@ sub do_newfolder() {
 ### ファイルのアップロード ###
 ##############################
 sub form_upload() {
+  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
+
   HTML_Elem->header();
 
   print <<EOD;
 <script type="text/javascript">
 <!--
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 -->
 </script>
@@ -106,6 +118,7 @@ EOD
 
   print "<h1>ファイルのアップロード</h1>\n";
 
+  print encode('utf-8', "作成先: $path<br>\n");
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" enctype=\"multipart/form-data\">\n";
   print "ファイル1: <input type=\"file\" name=\"file1\"><br>\n";
   print "ファイル2: <input type=\"file\" name=\"file2\"><br>\n";
@@ -114,8 +127,8 @@ EOD
   print "ファイル5: <input type=\"file\" name=\"file5\"><br>\n";
 
   print "<input type=\"hidden\" name=\"mode\" value=\"do_upload\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"target\" value=\"${target}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
@@ -138,12 +151,14 @@ sub do_upload() {
 sub save_upfile
 {
   my ($formname) = @_;
+  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
 
   if ($form->param($formname)) {
     my $fname = basename(decode('utf-8', scalar($form->param($formname))));
     if ($fname && length($fname) > 0) {
       my $fh = $form->upload($formname);
-      copy ($fh, "${base}${path}/$fname");
+      my $newfile = encode('utf-8', "${base}${path}/" . $fname);
+      copy ($fh, "${newfile}");
       undef $fname;
     }
   }
@@ -153,27 +168,30 @@ sub save_upfile
 ### ダウンロード ###
 ####################
 sub do_download() {
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
 
   if (@files.length == 1) {
-    my $file = ${base}.${path}."/".$files[0];
+    my $file = ${base}."/" . decode('utf-8', ParamPath->urlpath_decode($files[0]));
+    my $file_name = $file;
+    $file_name =~ /([^\/]{1,})$/;
+    $file_name = $1;
+
     # 一つの時はそのまま出力
-    &output_filedata($file, $files[0]);
+    &output_filedata($file, $file_name);
   } else {
     # 複数の時はzipに固めて出力
     my $zip = Archive::Zip->new();
     foreach my $entry (@files) {
 # TODO: 文字コード変換 -> to cp932
-      if (-f "${base}${path}/$entry") {
+      if (-f "${base}/$entry") {
         # ファイルの時
-        $zip->addFile("${base}${path}/$entry", $entry);
-      } elsif (-d "${base}${path}/$entry") {
+        $zip->addFile("${base}/$entry", $entry);
+      } elsif (-d "${base}/$entry") {
         # ディレクトリの時
-        $zip->addTree("${base}${path}/$entry", $entry);
+        $zip->addTree("${base}/$entry", $entry);
       }
     }
 
@@ -226,7 +244,6 @@ sub output_filedata()
 sub form_rename() {
   HTML_Elem->header();
 
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
   }
@@ -243,7 +260,7 @@ sub form_rename() {
     }
   }
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 -->
 </script>
@@ -260,8 +277,7 @@ EOD
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_rename\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
@@ -332,7 +348,6 @@ sub form_move() {
   my @lst_dest = ();
   my $ins;
 
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
@@ -361,7 +376,7 @@ sub form_move() {
     }
   }
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
   function refresh() {
     document.f1.mode.value = "move";
@@ -425,8 +440,7 @@ EOD
   print <<EOF;
 <br>
 <input type="hidden" name="mode" value="do_move">
-<input type="hidden" name="in" value="${in}">
-<input type="hidden" name="dir" value="${dir}">
+<input type="hidden" name="dir" value="${encoded_dir}">
 <input type="hidden" name="dest_dir" value="${f_dest_dir}">
 <input type="hidden" name="dest" value="${f_dest}">
 
@@ -440,8 +454,6 @@ EOF
 }
 
 sub do_move() {
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
-
   my $dest = decode('utf-8', $form->param('dest'));  # 移動先のパス
   my $dest_dir = decode('utf-8', $form->param('dest_dir'));  # 移動先のディレクトリ(base)
 
@@ -487,7 +499,6 @@ sub do_move() {
 sub form_delete() {
   HTML_Elem->header();
 
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
     return;
@@ -504,7 +515,7 @@ sub form_delete() {
     }
   }
   function backPage() {
-    location.href = "${STOCKER_CGI}?in=${in}&dir=${dir}";
+    location.href = "${back_link}";
   }
 -->
 </script>
@@ -521,8 +532,7 @@ EOD
   }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";
-  print "<input type=\"hidden\" name=\"in\" value=\"${in}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${dir}\">\n";
+  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
@@ -578,14 +588,14 @@ sub redirect_to_stocker
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
-<meta http-equiv="Refresh" content="${refresh}; url=${STOCKER_CGI}?in=${in}&dir=${dir}">
+<meta http-equiv="Refresh" content="${refresh}; url=${back_link}">
 <title>${title}</title>
 </head>
 <body>
 <p>
 ${title}<br><small>${note}</small><br>
 <br>
-<a href="${STOCKER_CGI}?in=${in}&dir=${dir}">OK</a>
+<a href="${back_link}">OK</a>
 </p>
 </body>
 </html>

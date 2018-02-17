@@ -29,7 +29,6 @@ my $form = eval{new CGI};
 my $mode   = scalar($form->param('mode'));
 my $target = scalar($form->param('target'));
 my @files = $form->param('file');
-my $base_name = scalar($form->param('dir'));
 my $out_dir   = scalar($form->param('out_dir'));
 
 our $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));

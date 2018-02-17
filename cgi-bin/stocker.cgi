@@ -267,8 +267,6 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   print "<br><br>\n";  # ページ下の余白
 }
 
-my @checked_list; # = ParamPath->get_checked_list(\$form, "${base}${path}");
-
 print "</form>\n";
 print "<script type=\"text/javascript\">\n";
 print "<!--\n";
@@ -413,6 +411,7 @@ sub print_action
 <!--
 function act() {
   var sw = document.file_check.operation.value;
+  document.file_check.dir.value = document.file_check.fm_dir.value;
   document.file_check.operation.options[0].selected = true;  // 変更後はnopに
   switch (sw) {
     case "allCheck":
