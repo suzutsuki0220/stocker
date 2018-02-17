@@ -29,21 +29,39 @@ function allUnCheck() {
 }
 
 function isAnyChecked() {
-//    for (var key in visible_list) {  // TODO: rework
-//        if (document.getElementsByName(visible_list[key])[0].checked) {
-//            return true;
-//        }
-//    }
+    var files = document.getElementsByName("file");
+
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            if (files[i].checked === true) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
-function actionClickedIcon (action, elem) {
+function toggleCheckFile(value) {
+    var files = document.getElementsByName("file");
+
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            if (files[i].value === value) {
+                // チェックを付ける・外す
+                files[i].checked = ! files[i].checked;
+                break;
+            }
+        }
+    }
+}
+
+function actionClickedIcon (action, clicked_path) {
     if (isAnyChecked()) {
-        // チェックを付ける・外す
-        document.getElementsByName(elem)[0].checked = ! document.getElementsByName(elem)[0].checked;
+        toggleCheckFile(clicked_path);
     } else {
         if (action.indexOf('dir:') === 0) {
-            getDirectoryList(document.file_check.fm_dir.value, action.substr(4), 0, boxes, directoryList);
+            reloadDirectoryList(document.file_check.fm_dir.value, action.substr(4), 0, boxes);
         } else {
             location.href = action;
         }
@@ -51,7 +69,7 @@ function actionClickedIcon (action, elem) {
 }
 
 function changeDirectory() {
-    getDirectoryList(document.file_check.fm_dir.value, "", 0, boxes, directoryList);
+    reloadDirectoryList(document.file_check.fm_dir.value, "", 0, boxes);
 }
 
 function jump_to(from, to) {
@@ -82,3 +100,73 @@ function printIcon(box_width, box_height, path, name, size, last_modified, icon,
 
     document.getElementById('directoryListArea').innerHTML += html;
 }
+
+function reloadDirectoryList(encoded_dir, url_path, from, to) {
+    getDirectoryList(encoded_dir, url_path, from, to, directoryList);
+
+    // sub-directory jump link
+    document.getElementById('path_link').innerHTML = "";
+    makeSubdirectoryLink(encoded_dir, url_path);
+
+    document.file_check.target.value = url_path;  // for edit.cgi
+}
+
+function makeSubdirectoryLink(encoded_dir, url_path) {
+    const get_dir_cgi = "%cgi_root%/get_dir";
+
+    var httpRequest = ajax_init();
+    var param = "";
+
+    if (!httpRequest) {
+        document.getElementById('path_link').innerHTML = "";
+        return;
+    }
+
+    param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
+
+    ajax_set_instance(httpRequest, function() { makeSubdirectoryLinkResult(httpRequest, encoded_dir, url_path); } );
+    ajax_post(httpRequest, get_dir_cgi, param);
+}
+
+function makeSubdirectoryLinkResult(httpRequest, encoded_dir, url_path) {
+//    try {
+        if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
+            //document.getElementById('sStatus').innerHTML = "読み込み中...";
+        } else if (httpRequest.readyState == 4) {
+            if (httpRequest.status == 200) {
+                var data = httpRequest.responseXML;
+                addSubdirectoryLink(data, encoded_dir, url_path);
+            } else {
+                alert("ERROR: " + httpRequest.status);
+            }
+        }
+//    } catch(e) {
+//        alert("ERROR: " + e.description);
+//    }
+}
+
+function addSubdirectoryLink(data, encoded_dir, url_path) {
+    const properties_elem = data.getElementsByTagName('properties');
+    if (properties_elem == null) {
+        return;
+    }
+
+    const title_elem = properties_elem.item(0).getElementsByTagName('name');
+    if (title_elem != null) {
+        if (title_elem.item(0).firstChild) {
+            var s = document.getElementById('path_link').innerHTML;
+            document.getElementById('path_link').innerHTML = "/ <a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + url_path + "', 0, " + boxes + ")\">" + title_elem.item(0).firstChild.data + "</a> " + s;
+        }
+    }
+
+    const uppath_elem = properties_elem.item(0).getElementsByTagName('up_path');
+    if (uppath_elem != null) {
+        if (uppath_elem.item(0).firstChild) {
+            const up_path = uppath_elem.item(0).firstChild.data;
+            if (up_path.length !== 0 && up_path !== "/") {
+                makeSubdirectoryLink(encoded_dir, uppath_elem.item(0).firstChild.data);
+            }
+        }
+    }
+}
+

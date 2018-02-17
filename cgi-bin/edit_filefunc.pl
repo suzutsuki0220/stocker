@@ -26,9 +26,9 @@ our $base;
 our $path;
 
 my $form = eval{new CGI};
-my $mode = decode('utf-8', $form->param('mode'));
+my $mode = decode('utf-8', scalar($form->param('mode')));
 my $in   = decode('utf-8', $form->param('in'));
-my $dir  = decode('utf-8', $form->param('dir'));
+my $dir  = decode('utf-8', scalar($form->param('dir')));
 
 ########################
 ### 新規フォルダ作成 ###
@@ -65,7 +65,7 @@ EOF
 }
 
 sub do_newfolder() {
-  my $newname = decode('utf-8', $form->param('foldername'));
+  my $newname = decode('utf-8', scalar($form->param('foldername')));
 
   # ファイル名チェック
   if (! FileOperator->isFilename("$newname")) {
@@ -140,7 +140,7 @@ sub save_upfile
   my ($formname) = @_;
 
   if ($form->param($formname)) {
-    my $fname = basename(decode('utf-8', $form->param($formname)));
+    my $fname = basename(decode('utf-8', scalar($form->param($formname))));
     if ($fname && length($fname) > 0) {
       my $fh = $form->upload($formname);
       copy ($fh, "${base}${path}/$fname");

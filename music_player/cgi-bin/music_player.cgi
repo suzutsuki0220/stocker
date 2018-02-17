@@ -267,7 +267,6 @@ function getMusicFiles(data) {
 
 -->
 </script>
-
 DATA
 
 HTML_Elem->tail();

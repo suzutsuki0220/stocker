@@ -5,9 +5,11 @@ use warnings;
 use CGI;
 use File::Path;
 use File::Copy 'copy';
+use Encode;
 
 use lib '%libs_dir%';
 use ParamPath;
+use HTML_Elem;
 
 our $BASE_DIR_CONF;
 our $VGA_CACHE_DIR = "";
@@ -18,7 +20,7 @@ require '%conf_dir%/picture_viewer.conf';
 $VGA_CACHE_DIR =~ s/\/{1,}$//g;  # 末尾に"/"が付いていたら消す
 
 if (length($VGA_CACHE_DIR) == 0) {
-  print STDERR "get_picgure.cgi ERROR: missing configuration VGA_CACHE_DIR";
+  print STDERR "get_picgure.cgi ERROR: missing configuration VGA_CACHE_DIR\n";
   print "Content-Type: image/jpeg\n";
   print "Content-Length: 0\n";
   print "\n";
@@ -27,17 +29,20 @@ if (length($VGA_CACHE_DIR) == 0) {
 
 my $form = eval{new CGI};
 
+my $size = scalar($form->param('size'));
+
 my $base;
 my $path;
+my $base_name = scalar($form->param('dir'));
+my $encoded_path = scalar($form->param('file'));
 eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                           param_dir => $form->param('dir'));
-  $ins->init();
-  $path = $ins->inode_to_path($form->param('in'));
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
 if ($@) {
-  print STDERR "get_picgure.cgi ERROR: $@";
+  print STDERR "get_picgure.cgi ERROR: $@\n";
   print "Content-Type: image/jpeg\n";
   print "Content-Length: 0\n";
   print "\n";
@@ -47,15 +52,15 @@ if ($@) {
 my $file_name = $path;
 $file_name =~ s/[^\/]*\///g;
 
-if(length($form->param('in')) <= 0 || ! -f "${base}${path}") {
-  print STDERR "get_picture.cgi ERROR: image file not found - ${base}${path}";
+if(! -f "${base}${path}") {
+  print STDERR "get_picture.cgi ERROR: image file not found - ${base}${path}\n";
   print "Content-Type: image/jpeg\n";
   print "Content-Length: 0\n";
   print "\n";
   exit(1);
 }
 
-if(length($form->param('size')) == 0 || $form->param('size') == 0) {
+if(length($size) == 0 || $size == 0) {
   # If size set 0 it output original data
   print "Content-Type: image/jpeg\n";
   print "Content-Disposition: inline; filename=orig_$file_name\n";
@@ -69,19 +74,17 @@ if(length($form->param('size')) == 0 || $form->param('size') == 0) {
   exit(0);
 }
 
-my $size = 640;
-if($form->param('size') && $form->param('size') > 0 && $form->param('size') < 5000) {
-  $size = $form->param('size');
+if(! $size || $size < 0 && $size > 5000) {
+  $size = 640;
 }
 
 my $lastmodified = (stat "${base}${path}")[9];
-my $param_dir = $form->param('dir');
+my $param_dir = $base_name;
 if (! $param_dir || length($param_dir) == 0) {
   $param_dir = "DEFAULT";
 }
-my $cache_path = $VGA_CACHE_DIR."/".$param_dir."/".$path;
-my $cache_dir =  $cache_path;
-   $cache_dir =~ s/[^\/]{1,}$//;
+my $cache_path = encode('utf-8', $VGA_CACHE_DIR."/".$param_dir."/".$path);
+my $cache_dir  = encode('utf-8', $VGA_CACHE_DIR."/".$param_dir."/". ParamPath->get_up_path($path));
 
 ### If thumbnail cache exists output cache image
 eval {
@@ -91,7 +94,7 @@ eval {
         print "Content-Type: image/jpeg\n";
         print "Content-Length: 0\n";
         print "\n";
-        print STDERR "Cache dir make missing.";
+        print STDERR "Cache dir make missing.\n";
         exit(1);
       }
     }

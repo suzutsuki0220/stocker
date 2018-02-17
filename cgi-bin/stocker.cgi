@@ -139,7 +139,7 @@ print <<EOD;
 var boxes = ${boxes};
 var encoded_dir = document.file_check.fm_dir.value;
 
-getDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to}, directoryList);
+reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
 function directoryList(data) {
   // 拡張子判定
@@ -176,7 +176,7 @@ function directoryList(data) {
     const uppath_elem = properties_elem.item(0).getElementsByTagName('up_path');
     if (uppath_elem != null) {
       if (uppath_elem.item(0).firstChild) {
-        document.getElementById('uppath').innerHTML = "<a href=\\"javascript:getDirectoryList('" + encoded_dir + "', '" + uppath_elem.item(0).firstChild.data + "', 0, " + boxes + ", directoryList)\\">↑UP</a>";
+        document.getElementById('uppath').innerHTML = "<a href=\\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + uppath_elem.item(0).firstChild.data + "', 0, " + boxes + ")\\">↑UP</a>";
       } else {
         document.getElementById('uppath').innerHTML = "";
       }
