@@ -175,29 +175,27 @@ sub do_download() {
 
   if (@files.length == 1) {
     my $file = ${base}."/" . decode('utf-8', ParamPath->urlpath_decode($files[0]));
-    my $file_name = $file;
-    $file_name =~ /([^\/]{1,})$/;
-    $file_name = $1;
 
     # 一つの時はそのまま出力
-    &output_filedata($file, $file_name);
+    &output_filedata($file, ParamPath->get_filename($file));
   } else {
     # 複数の時はzipに固めて出力
     my $zip = Archive::Zip->new();
-    foreach my $entry (@files) {
+    foreach my $file (@files) {
+        my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
 # TODO: 文字コード変換 -> to cp932
-      if (-f "${base}/$entry") {
+      if (-f "${base}/${entry}") {
         # ファイルの時
-        $zip->addFile("${base}/$entry", $entry);
-      } elsif (-d "${base}/$entry") {
+        $zip->addFile("${base}/${entry}", ParamPath->get_filename($entry));
+      } elsif (-d "${base}/${entry}") {
         # ディレクトリの時
-        $zip->addTree("${base}/$entry", $entry);
+        $zip->addTree("${base}/${entry}", ParamPath->get_filename($entry));
       }
     }
 
     my $ret;
     if (($ret = $zip->writeToFileNamed($TMP_FILE)) == AZ_OK) {
-      &output_filedata($TMP_FILE, "download[".$files[0]."].zip");
+      &output_filedata($TMP_FILE, "download[" . ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($files[0]))) . "].zip");
       unlink($TMP_FILE);
     } else {
       HTML_Elem->header();
@@ -252,7 +250,7 @@ sub form_rename() {
   print <<EOD;
 <script type="text/javascript">
 <!--
-  function confirm_delete() {
+  function confirm_act() {
     if (confirm("名前の変更を行います。よろしいですか？")) {
       return true;
     } else {
@@ -269,7 +267,7 @@ EOD
   print "<h1>名前の変更</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_delete();\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
   foreach my $filename (@files) {
     my $inode = (stat("$base/$path/$filename"))[1];
     print encode('utf-8', $filename . " → ");
@@ -308,7 +306,7 @@ sub do_rename() {
         }
         # リスト内の重複チェック
         foreach my $f (@files) {
-	  my $i = (stat("$base/$path/$f"))[1];
+          my $i = (stat("$base/$path/$f"))[1];
           my $org_name = decode('utf-8', $form->param($i));
 
           if ($org_name eq $dest_name) {
@@ -507,7 +505,7 @@ sub form_delete() {
   print <<EOD;
 <script type="text/javascript">
 <!--
-  function confirm_rename() {
+  function confirm_act() {
     if (confirm("削除します。よろしいですか？")) {
       return true;
     } else {
@@ -524,10 +522,10 @@ EOD
   print "<h1>ファイルの削除</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_rename();\">\n";
-  foreach my $filename (@files) {
-    my $inode = (stat("${base}${path}/$filename"))[1];
-    print "<input type=\"hidden\" name=\"${inode}\" value=\"1\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
+  foreach my $file (@files) {
+    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
+    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">\n";
     print encode('utf-8', $filename) ."<br>\n";
   }
   print "<br>\n";
@@ -543,32 +541,40 @@ EOD
 }
 
 sub do_delete() {
-  if(! -d $TRASH_PATH."/".$path) {
-    if(! mkpath($TRASH_PATH."/".$path)) {
-      HTML_Elem->header();
-      HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました");
-    }
-  }
-
-  my @files = ParamPath->get_checked_list(\$form, "${base}${path}");
   if (@files == 0) {
     HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
 
-  foreach my $entry (@files) {
-    if (-f "${base}${path}/$entry") {
-      if(! move("${base}${path}/$entry", $TRASH_PATH."/".$path)) {
+  my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${path});
+  if(! -d "$save_path") {
+    eval {
+      mkpath("$save_path");
+    };
+    if ($@) {
+      HTML_Elem->header();
+      HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました - $@");
+    }
+  }
+
+  foreach my $file (@files) {
+    my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
+    my $delete_path = encode('utf-8', "${base}${entry}");
+    if (-f "${delete_path}") {
+      if(! move("${delete_path}", "$save_path")) {
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("削除に失敗しました($reason)。");
       }
-    } elsif (-d "${base}${path}/$entry") {
-      if (! rmdir("${base}${path}/$entry")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
+    } elsif (-d "${delete_path}") {
+      if (! rmdir("${delete_path}")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
         my $reason = $!;
         HTML_Elem->header();
         HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
       }
+    } else {
+      HTML_Elem->header();
+      HTML_Elem->error("ディレクトリの削除に失敗しました(存在しないファイルが指定されていました)");
     }
   }
 

@@ -337,7 +337,9 @@ sub do_resize {
   # sort directory list and count convert images
   my @conv_list = ();
   eval {
-    @conv_list = ParamPath->get_checked_list(\$form, "${base}${path}");
+    foreach my $entry (@files) {
+      push(@conv_list, decode('utf-8', ParamPath->urlpath_decode($entry)));
+    }
   };
   if ($@) {
     HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
@@ -397,7 +399,9 @@ sub do_combine() {
   # sort directory list and count convert images
   my @conv_list = ();
   eval {
-    @conv_list = ParamPath->get_checked_list($form, $path);
+    foreach my $entry (@files) {
+      push(@conv_list, decode('utf-8', ParamPath->urlpath_decode($entry)));
+    }
   };
   if ($@) {
      HTML_Elem->error( "ディレクトリのアクセスに失敗しました" );
@@ -572,7 +576,9 @@ sub do_divide() {
   # sort directory list and count convert images
   my @conv_list = ();
   eval {
-    @conv_list = ParamPath->get_checked_list(\$form, "${base}${path}");
+    foreach my $entry (@files) {
+      push(@conv_list, decode('utf-8', ParamPath->urlpath_decode($entry)));
+    }
   };
   if ($@) {
     HTML_Elem->error($@);
