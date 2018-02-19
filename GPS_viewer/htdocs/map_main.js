@@ -10,6 +10,7 @@ var pre_lng;
 var distance;
 var lat_min, lng_min, lat_max, lng_max;
 
+const stroke_color = "#0000ff";
 var nmea_pattern = /\.(nmea)$/;
 
 function drawMap(get_file_cgi, base_name, url_path, name) {
@@ -138,9 +139,9 @@ function get_latlng(lat, lng) {
   return new google.maps.LatLng(lat, lng);
 }
 
-function map_route(data) {
+function map_route(data, name) {
   var route = [];
-  var sp, ep, latlng;
+  var latlng;
   var invalid_count = 0;
 
   resetLatLngMinMax();
@@ -151,21 +152,10 @@ function map_route(data) {
 
     if (nmea_pattern.test(name.toLowerCase())) {
       // nmeaデータ
-      sp = 0;
-      while((ep = data.indexOf("\n", sp)) != -1) {
-        var line = data.substring(sp, ep);
-        latlng = get_latlng(line); // TODO: lat, lng
-        if (latlng != null) {
-          route.push(latlng);
-        } else {
-          invalid_count++;
-        }
-        sp = ep + 1;
-      }
-      if (sp < data.length) {  // 最後の行(改行で終わっていない)
-        var line = data.substring(sp);
-        //console.log(line);
-        latlng = get_latlng(line);
+      var position = getPositionEmea(data);
+      for (var i=0; i<position.length; i++) {
+        var p = position[i];
+        latlng = get_latlng(p.latitude, p.longitude);
         if (latlng != null) {
           route.push(latlng);
         } else {
@@ -174,6 +164,7 @@ function map_route(data) {
       }
     } else {
         alert("XMLデータを読み込みました");
+	// TODO: KML and GPX
     }
   } catch(e) {
     alert(e.message);
@@ -215,7 +206,7 @@ function map_route(data) {
 
   var polyOptions = {
     path: route,
-    strokeColor: document.f1.fm_color.value,
+    strokeColor: stroke_color,
     strokeOpacity: 0.5,
     strokeWeight: 5
   }

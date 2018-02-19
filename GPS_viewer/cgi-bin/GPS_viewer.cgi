@@ -45,6 +45,7 @@ eval {
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
+      "%htdocs_root%/GPS_nmea.js",
       "//maps.google.com/maps/api/js?v=3&key=${GOOGLE_API_KEY}",
   );
   my @csslist = (
