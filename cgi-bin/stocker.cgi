@@ -62,7 +62,7 @@ my $encoded_dir = HTML_Elem->url_encode($in_dir);
 #my $disp_box_y = int(${in_s_height} / (int($BOX_HEIGHT) + int($BOX_SPACE)));  # 縦に表示出来る数
 
 #my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
-my $boxes = 150;  # TODO:
+my $boxes = 500;  # TODO:
 if ($in_to eq '') { $in_to = $boxes; }
 
 print "<form action=\"${script}\" name=\"file_check\" method=\"POST\">\n";
@@ -138,6 +138,7 @@ print <<EOD;
 <!--
 var boxes = ${boxes};
 var encoded_dir = document.file_check.fm_dir.value;
+var elements;
 
 reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
@@ -188,7 +189,7 @@ function directoryList(data) {
       return;
     }
 
-    const elements = contents_elem.item(0).getElementsByTagName('element');
+    elements = contents_elem.item(0).getElementsByTagName('element');
     if (elements == null) {
       alert("ERROR: files list has no elements");
       return;
@@ -244,7 +245,7 @@ function directoryList(data) {
           } else if (pdf_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_PDF}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/pdf";
-	  } else {
+          } else {
             icon   = "${ICON_UNKNOWN}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
           }
@@ -451,9 +452,7 @@ function act() {
       document.file_check.submit();
       break;
     case "download":
-      document.file_check.mode.value = "download";
-      document.file_check.action = "${FILEFUNC_CGI}";
-      document.file_check.submit();
+      downloadWork(encoded_dir);
       break;
     case "delfile":
       document.file_check.mode.value = "delfile";
@@ -468,10 +467,10 @@ function act() {
     case "move":
       var elem = document.createElement("f_dest");
       elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_file}">'
-                     + '<input type="hidden" name="f_dest_dir" value="${encoded_dir}">';
+                     + '<input type="hidden" name="f_dest_dir" value=\"" + encoded_dir + "\">';
       document.getElementById("editParam").appendChild(elem);
       document.file_check.mode.value = "move";
-      document.file_check.action = "${EDIT_CGI}";
+      document.file_check.action = "${FILEFUNC_CGI}";
       document.file_check.submit();
       break;
   }

@@ -1,3 +1,5 @@
+const get_file_cgi = "%cgi_root%/get_file";
+
 function setScreenSize() {
     var s_width = 640;
     var s_height = 480;
@@ -166,6 +168,52 @@ function addSubdirectoryLink(data, encoded_dir, url_path) {
                 makeSubdirectoryLink(encoded_dir, uppath_elem.item(0).firstChild.data);
             }
         }
+    }
+}
+
+function downloadWork(dir) {
+    var files = document.getElementsByName("file");
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            var filename = "";
+            if (files[i].checked === false) {
+                continue;
+            }
+
+            for (var j=0; j<elements.length; j++) {
+                var name_elem = elements.item(j).getElementsByTagName('name');
+                var path_elem = elements.item(j).getElementsByTagName('path');
+                if (name_elem != null && path_elem != null) {
+                    if (files[i].value === path_elem.item(0).firstChild.data) {
+                        filename  = name_elem.item(0).firstChild.data;
+                        handleDownload(dir, files[i].value, filename);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function handleDownload(dir, file, filename) {
+    const get_url = get_file_cgi + "?mime=application/force-download&dir=" + dir + "&file=" + file;
+    if (window.navigator.msSaveBlob) {  // IE
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", get_url, true);
+        xhr.responseType = "blob";
+        xhr.onload = function (e) {
+            var blob = xhr.response;
+            window.navigator.msSaveBlob(blob, filename);
+        }
+        xhr.send();
+    } else {  // chrome,firefox
+        var a = document.createElement('a');
+        a.href = get_url;
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 }
 

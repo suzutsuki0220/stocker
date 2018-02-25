@@ -12,7 +12,6 @@ use CGI;
 use File::Copy;  # for file move across the different filesystems
 use File::Path;
 use File::Basename;
-use Archive::Zip qw (:ERROR_CODES);  # download one more files at once
 
 use lib '%libs_dir%';
 use ParamPath;
@@ -34,6 +33,20 @@ my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
 my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
+eval {
+  my @jslist = (
+      "%htdocs_root%/filefunc.js",
+      "%htdocs_root%/ajax_html_request.js",
+  );
+  my $html = HTML_Elem->new();
+  $html->{'javascript'} = \@jslist;
+  $html->header();
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
+
 my $base;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
@@ -41,7 +54,6 @@ eval {
   $base = $ins->{base};
 };
 if ($@) {
-  HTML_Elem->header();
   HTML_Elem->error($@);
 }
 
@@ -68,7 +80,6 @@ if( ${mode} eq "delfile" ) {
 } elsif( ${mode} eq "do_move" ) {
   &do_move();
 } else {
-  HTML_Elem->header();
   HTML_Elem->error("実装されていない機能です");
 }
 
@@ -76,19 +87,7 @@ if( ${mode} eq "delfile" ) {
 ### 新規フォルダ作成 ###
 ########################
 sub form_newfolder() {
-  HTML_Elem->header();
-
   my $path = decode('utf-8', ParamPath->urlpath_decode($target));
-
-  print <<EOD;
-<script type="text/javascript">
-<!--
-  function backPage() {
-    location.href = "${back_link}";
-  }
--->
-</script>
-EOD
 
   print <<EOF;
 <h1>新規フォルダーの作成</h1>
@@ -101,7 +100,7 @@ EOD
 フォルダー名: <input type="text" name="foldername" value=""><br>
 <br>
 <input type="submit" value="実行">
-<input type="button" value="キャンセル" onClick="backPage()">
+<input type="button" value="キャンセル" onClick="jump('${back_link}')">
 </p>
 </form>
 EOF
@@ -115,7 +114,6 @@ sub do_newfolder() {
 
   # ファイル名チェック
   if (! FileOperator->isFilename("$newname")) {
-    HTML_Elem->header();
     HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
   }
 
@@ -123,13 +121,11 @@ sub do_newfolder() {
 
   # 重複チェック
   if( -e "${newfolder}") {
-    HTML_Elem->header();
     HTML_Elem->error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
   }
 
   if(! mkdir("${newfolder}")) {
       my $reason = $!;
-      HTML_Elem->header();
       HTML_Elem->error("ディレクトリ作成に失敗しました($reason)");
   }
 
@@ -141,18 +137,6 @@ sub do_newfolder() {
 ##############################
 sub form_upload() {
   my $path = decode('utf-8', ParamPath->urlpath_decode($target));
-
-  HTML_Elem->header();
-
-  print <<EOD;
-<script type="text/javascript">
-<!--
-  function backPage() {
-    location.href = "${back_link}";
-  }
--->
-</script>
-EOD
 
   print "<h1>ファイルのアップロード</h1>\n";
 
@@ -170,7 +154,7 @@ EOD
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
+  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
   HTML_Elem->tail();
@@ -202,84 +186,10 @@ sub save_upfile
   }
 }
 
-####################
-### ダウンロード ###
-####################
-sub do_download() {
-  if (@files.length == 0) {
-    HTML_Elem->header();
-    HTML_Elem->error("チェックが一つも選択されていません");
-  }
-
-  if (@files.length == 1) {
-    my $file = ${base}."/" . decode('utf-8', ParamPath->urlpath_decode($files[0]));
-
-    # 一つの時はそのまま出力
-    &output_filedata($file, ParamPath->get_filename($file));
-  } else {
-    # 複数の時はzipに固めて出力
-    my $zip = Archive::Zip->new();
-    foreach my $file (@files) {
-        my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
-# TODO: 文字コード変換 -> to cp932
-      if (-f "${base}/${entry}") {
-        # ファイルの時
-        $zip->addFile("${base}/${entry}", ParamPath->get_filename($entry));
-      } elsif (-d "${base}/${entry}") {
-        # ディレクトリの時
-        $zip->addTree("${base}/${entry}", ParamPath->get_filename($entry));
-      }
-    }
-
-    my $ret;
-    if (($ret = $zip->writeToFileNamed($TMP_FILE)) == AZ_OK) {
-      &output_filedata($TMP_FILE, "download[" . ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($files[0]))) . "].zip");
-      unlink($TMP_FILE);
-    } else {
-      HTML_Elem->header();
-      my $reason = "";
-      if ($ret == AZ_STREAM_END) {
-        $reason = "The read stream (or central directory) ended normally.";
-      } elsif ($ret == AZ_ERROR) {
-        $reason = "There was some generic kind of error.";
-      } elsif ($ret == AZ_FORMAT_ERROR) {
-        $reason = "There is a format error in a ZIP file being read.";
-      } elsif ($ret == AZ_IO_ERROR) {
-        $reason = "There was an IO error.";
-      } else {
-        $reason = "Unknown error";
-      }
-
-      HTML_Elem->error("圧縮に失敗しました: ${reason}");
-    }
-  }
-
-  return;
-}
-
-sub output_filedata()
-{
-  my ($fullpath, $name) = @_;
-  print "Content-Type: application/octet-stream; charset=utf8\n";
-#TODO: ファイル名をブラウザごとの処理で日本語エンコードする
-## http://d.hatena.ne.jp/maachang/20110730/1312008966
-  print "Content-Disposition: attachment; filename=${name}\n";
-  print "Content-Length: ". (-s $fullpath) ."\n";
-  print "\n";
-  open(my $fd, $fullpath) or die("media file open error");
-  binmode $fd;
-  while(<$fd>) {
-    print $_;
-  }
-  close $fd;
-}
-
 ################
 ### 名前変更 ###
 ################
 sub form_rename() {
-  HTML_Elem->header();
-
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
   }
@@ -295,9 +205,6 @@ sub form_rename() {
       return false;
     }
   }
-  function backPage() {
-    location.href = "${back_link}";
-  }
 -->
 </script>
 EOD
@@ -306,70 +213,51 @@ EOD
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
   print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
-  &printFilesAndHiddenForm();
+  my $i = 0;
+  foreach my $file (@files) {
+    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
+    print "<input type=\"hidden\" name=\"file${i}\" value=\"${file}\">\n";
+    print encode('utf-8', $filename . " → ");
+    print "<input type=\"text\" name=\"newname${i}\" value=\"" . encode('utf-8', ${filename}) . "\"><br>\n";
+    $i++;
+  }
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_rename\">\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
+  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
   HTML_Elem->tail();
 }
 
 sub do_rename() {
-  my @files = ();
-  my $path = "";
+  my $file = decode('utf-8', ParamPath->urlpath_decode($files[0]));
+  my $orig_dir  = ${base} . "/" . ParamPath->get_up_path($file);
+  my $orig_path = encode('utf-8', ${base} . "/" . $file);
 
-  opendir(my $dir, "${base}${path}") or die( "ディレクトリのアクセスに失敗しました" );
-  while (my $entry = decode('utf-8', readdir $dir)) {
-    if (length($entry) > 0 && $entry ne '..'  && $entry ne '.') {
-      my $inode = (stat("$base/$path/$entry"))[1];
-      if ($form->param($inode)) {
-        my $dest_name = decode('utf-8', $form->param($inode));
+  my $dest_name = scalar($form->param('newname'));
+  my $dest_path = encode('utf-8', "${orig_dir}/${dest_name}");
 
-        # ファイル名チェック
-        if (! FileOperator->isFilename($dest_name)) {
-          HTML_Elem->header();
-          HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
-        }
-        # 既存ファイル名重複チェック
-        if (-e "${base}${path}/$dest_name") {
-          HTML_Elem->header();
-          HTML_Elem->error("指定された名前(".$dest_name.")は既に使われています。別の名前を指定してください");
-        }
-        # リスト内の重複チェック
-        foreach my $f (@files) {
-          my $i = (stat("$base/$path/$f"))[1];
-          my $org_name = decode('utf-8', $form->param($i));
-
-          if ($org_name eq $dest_name) {
-            HTML_Elem->header();
-            HTML_Elem->error("名前($dest_name))は重複しています。別の名前を指定してください");
-          }
-        }
-        push(@files, $entry);
-      }
-    }
-  }
-  close($dir);
-
-  foreach my $entry (@files) {
-    my $inode = (stat("$base/$path/$entry"))[1];
-    my $dest_name = decode('utf-8', $form->param($inode));
-
-    my $src = encode('utf-8', "${base}${path}/$entry");
-    my $dst = encode('utf-8', "${base}${path}/$dest_name");
-    if(! rename($src, $dst)) {
-      my $reason = $!;
-      HTML_Elem->header();
-      HTML_Elem->error("$src の名前変更に失敗しました($reason)");
-    }
+  # ファイル名チェック
+  if (! FileOperator->isFilename($dest_name)) {
+    HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
   }
 
-  &redirect_to_stocker("変更完了", "名前を変更しました");
+  # 既存ファイル名重複チェック
+  if (-e "${dest_path}") {
+    HTML_Elem->error("指定された名前(".$dest_name.")は既に使われています。別の名前を指定してください");
+  }
+
+  if(! rename("${orig_path}", "${dest_path}")) {
+    HTML_Elem->error("${dest_name} の名前変更に失敗しました($!)");
+  }
+
+  print encode('utf-8', "変更完了");
+
+  HTML_Elem->tail();
 }
 
 #############
@@ -383,7 +271,6 @@ sub form_move() {
   my $ins;
 
   if (@files.length == 0) {
-    HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
 
@@ -394,11 +281,9 @@ sub form_move() {
     $dest_base = $ins->{base};
   };
   if ($@) {
-    HTML_Elem->header();
     HTML_Elem->error($@);
   }
 
-  HTML_Elem->header();
   print <<EOD;
 <script type="text/javascript">
 <!--
@@ -408,9 +293,6 @@ sub form_move() {
     } else {
       return false;
     }
-  }
-  function backPage() {
-    location.href = "${back_link}";
   }
   function refresh() {
     document.f1.mode.value = "move";
@@ -476,7 +358,7 @@ EOD
 
 <br>
 <input type="submit" value="実行">
-<input type="button" value="キャンセル" onClick="backPage()">
+<input type="button" value="キャンセル" onClick="jump('${back_link}')">
 </form>
 EOF
 
@@ -488,7 +370,6 @@ sub do_move() {
   my $dest_dir = decode('utf-8', $form->param('dest_dir'));  # 移動先のディレクトリ(base)
 
   if (length($dest) == 0) {
-    HTML_Elem->header();
     HTML_Elem->error("移動先のディレクトリが指定されていません");
   }
 
@@ -500,22 +381,18 @@ sub do_move() {
     $dest_path = $ins->{base} . $ins->inode_to_path($dest);
   };
   if ($@) {
-    HTML_Elem->header();
     HTML_Elem->error("不正なパスが指定されました");
   }
 
   foreach my $entry (@files) {
     if(${entry} =~ /\/\./) {
-      HTML_Elem->header();
       HTML_Elem->error("移動先に移動できないパスが指定されています");
     }
     if( -e "${dest_path}/${entry}") {
-      HTML_Elem->header();
       HTML_Elem->error("既に同じ名前が存在するため移動できません($entry)");
     }
     if(! move("${base}/$entry", "${dest_path}")) {
       my $reason = $!;
-      HTML_Elem->header();
       HTML_Elem->error("移動に失敗しました($reason)");
     }
   }
@@ -527,8 +404,6 @@ sub do_move() {
 ### 削 除 ###
 #############
 sub form_delete() {
-  HTML_Elem->header();
-
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
     return;
@@ -543,9 +418,6 @@ sub form_delete() {
     } else {
       return false;
     }
-  }
-  function backPage() {
-    location.href = "${back_link}";
   }
 -->
 </script>
@@ -562,7 +434,7 @@ EOD
 
   print "<br>\n";
   print "<input type=\"submit\" value=\"実行\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"backPage()\">";
+  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
   HTML_Elem->tail();
@@ -570,7 +442,6 @@ EOD
 
 sub do_delete() {
   if (@files == 0) {
-    HTML_Elem->header();
     HTML_Elem->error("チェックが一つも選択されていません");
   }
   my $path = "";
@@ -581,7 +452,6 @@ sub do_delete() {
       mkpath("$save_path");
     };
     if ($@) {
-      HTML_Elem->header();
       HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました - $@");
     }
   }
@@ -592,17 +462,14 @@ sub do_delete() {
     if (-f "${delete_path}") {
       if(! move("${delete_path}", "$save_path")) {
         my $reason = $!;
-        HTML_Elem->header();
         HTML_Elem->error("削除に失敗しました($reason)。");
       }
     } elsif (-d "${delete_path}") {
       if (! rmdir("${delete_path}")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
         my $reason = $!;
-        HTML_Elem->header();
         HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
       }
     } else {
-      HTML_Elem->header();
       HTML_Elem->error("ディレクトリの削除に失敗しました(存在しないファイルが指定されていました)");
     }
   }
