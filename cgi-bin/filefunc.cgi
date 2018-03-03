@@ -69,8 +69,6 @@ if( ${mode} eq "delfile" ) {
   &form_upload();
 } elsif( ${mode} eq "do_upload" ) {
   &do_upload();
-} elsif( ${mode} eq "download" ) {
-  &do_download();
 } elsif( ${mode} eq "rename" ) {
   &form_rename();
 } elsif( ${mode} eq "do_rename" ) {
@@ -82,6 +80,8 @@ if( ${mode} eq "delfile" ) {
 } else {
   HTML_Elem->error("実装されていない機能です");
 }
+
+exit(0);
 
 ########################
 ### 新規フォルダ作成 ###
@@ -195,24 +195,10 @@ sub form_rename() {
   }
   @files = sort {$a cmp $b} @files;
 
-  print <<EOD;
-<script type="text/javascript">
-<!--
-  function confirm_act() {
-    if (confirm("名前の変更を行います。よろしいですか？")) {
-      return true;
-    } else {
-      return false;
-    }
-  }
--->
-</script>
-EOD
-
   print "<h1>名前の変更</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\">\n";
   my $i = 0;
   foreach my $file (@files) {
     my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
@@ -221,12 +207,10 @@ EOD
     print "<input type=\"text\" name=\"newname${i}\" value=\"" . encode('utf-8', ${filename}) . "\"><br>\n";
     $i++;
   }
-  print "<br>\n";
-  print "<input type=\"hidden\" name=\"mode\" value=\"do_rename\">\n";
+  print "<br><br>\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
-
-  print "<br>\n";
-  print "<input type=\"submit\" value=\"実行\">\n";
+  print "<input type=\"hidden\" name=\"back\" value=\"${back_link}\">\n";
+  print "<input type=\"button\" value=\"実行\" onClick=\"do_rename(${i})\">\n";
   print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
@@ -238,7 +222,7 @@ sub do_rename() {
   my $orig_dir  = ${base} . "/" . ParamPath->get_up_path($file);
   my $orig_path = encode('utf-8', ${base} . "/" . $file);
 
-  my $dest_name = scalar($form->param('newname'));
+  my $dest_name = decode('utf-8', scalar($form->param('newname')));
   my $dest_path = encode('utf-8', "${orig_dir}/${dest_name}");
 
   # ファイル名チェック
@@ -287,13 +271,6 @@ sub form_move() {
   print <<EOD;
 <script type="text/javascript">
 <!--
-  function confirm_act() {
-    if (confirm("移動します。よろしいですか？")) {
-      return true;
-    } else {
-      return false;
-    }
-  }
   function refresh() {
     document.f1.mode.value = "move";
     document.f1.submit();
@@ -305,7 +282,7 @@ EOD
   print "<h1>移動</h1>\n";
   print "<p>選択: ". @files.length ."ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act(\"移動\");\">\n";
   &printFilesAndHiddenForm();
   print "<br>\n";
   print "<fieldset><legend>移動先</legend>\n";
@@ -409,24 +386,10 @@ sub form_delete() {
     return;
   }
 
-  print <<EOD;
-<script type="text/javascript">
-<!--
-  function confirm_act() {
-    if (confirm("削除します。よろしいですか？")) {
-      return true;
-    } else {
-      return false;
-    }
-  }
--->
-</script>
-EOD
-
   print "<h1>ファイルの削除</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act();\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act(\"削除\");\">\n";
   &printFilesAndHiddenForm();
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";

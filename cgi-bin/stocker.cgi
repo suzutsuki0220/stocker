@@ -189,6 +189,11 @@ function directoryList(data) {
       return;
     }
 
+    if (contents_elem.item(0) == null) {
+      document.getElementById('directoryListArea').innerHTML = "ファイル・ディレクトリは存在しません";
+      return;
+    }
+
     elements = contents_elem.item(0).getElementsByTagName('element');
     if (elements == null) {
       alert("ERROR: files list has no elements");

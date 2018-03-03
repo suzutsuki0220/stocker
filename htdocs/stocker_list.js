@@ -103,6 +103,8 @@ function printIcon(box_width, box_height, path, name, size, last_modified, icon,
 }
 
 function reloadDirectoryList(encoded_dir, url_path, from, to) {
+    document.getElementById('directoryListArea').innerHTML = "読み込み中...";
+
     getDirectoryList(encoded_dir, url_path, from, to, directoryList);
 
     // sub-directory jump link
