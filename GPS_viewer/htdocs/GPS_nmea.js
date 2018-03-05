@@ -31,15 +31,15 @@ function parseEmeaLine(nmea) {
     if (re_rmc.test(nmea)) {
       var col = nmea.split(",");
       if (col) {
-	var position = new Object();
+        var position = new Object();
         position.latitude  = col[3] ? getDegree(col[3]) : 0;
-	position.longitude = col[5] ? getDegree(col[5]) : 0;
+        position.longitude = col[5] ? getDegree(col[5]) : 0;
 
-	return position;
+        return position;
       }
-    } else {
-	return null;
     }
+
+    return null;
 }
 
 function getDegree(fraction) {

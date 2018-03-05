@@ -146,25 +146,28 @@ function map_route(data, name) {
 
   resetLatLngMinMax();
   try {
+    var position;
+
     distance = 0;
     pre_lat = 0;
     pre_lng = 0;
 
     if (nmea_pattern.test(name.toLowerCase())) {
       // nmeaデータ
-      var position = getPositionEmea(data);
-      for (var i=0; i<position.length; i++) {
-        var p = position[i];
-        latlng = get_latlng(p.latitude, p.longitude);
-        if (latlng != null) {
-          route.push(latlng);
-        } else {
-          invalid_count++;
-        }
-      }
+      position = getPositionEmea(data);
     } else {
-        alert("XMLデータを読み込みました");
-	// TODO: KML and GPX
+      // KML and GPX
+      position = getPositionXml(data);
+    }
+
+    for (var i=0; i<position.length; i++) {
+      var p = position[i];
+      latlng = get_latlng(p.latitude, p.longitude);
+      if (latlng != null) {
+        route.push(latlng);
+      } else {
+        invalid_count++;
+      }
     }
   } catch(e) {
     alert(e.message);
