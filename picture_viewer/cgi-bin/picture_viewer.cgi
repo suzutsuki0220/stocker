@@ -22,8 +22,6 @@ require '%conf_dir%/picture_viewer.conf';
 my $script_name = $ENV{'SCRIPT_NAME'};
 my $img_idx = 0;
 my $img_num = 0;
-my $link_head = "";
-my $link_tail = "";
 my $link_next = "";
 my $link_prev = "";
 my $link_dir = "";
@@ -47,34 +45,43 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-$path =~ /([^\/]{1,})$/;
-my $file_name = $1;
+my $encoded_dir = HTML_Elem->url_encode(${base_name});
+my $up_path = ParamPath->get_up_path($path);
+my $encoded_uppath = ParamPath->urlpath_encode(encode('utf-8', $up_path));
+my $back_link = "${STOCKER_CGI}?file=${encoded_uppath}&dir=${encoded_dir}";
 
-HTML_Elem->header();
+my $file_name = ParamPath->get_filename($path);
 
-&get_imglink();
- # ディレクトリ内の写真
-&show_dir_imglist("${base}${path}", 9);
-
-print "<div style=\"clear: both; width: 640px;\">\n";
-print "<span style=\"float: left;\"><b>$file_name</b></span>\n";
-print "<span style=\"float: right;\">";
-print "(".($img_idx+1)."/".($img_num+1).")";
-print "&nbsp;&nbsp;";
-if ($link_head ne "") {
-  print "<a href=\"$script_name?$form->&in=$link_head\">|≪</a>｜";
-  print "<a href=\"$script_name?dir=${base_name}&file=$link_prev\">＜</a>｜";
-} else {
-  print "|≪｜＜｜";
+eval {
+  my @jslist = (
+      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/get_directory_list.js",
+      "%htdocs_root%/picture_viewer.js",
+  );
+  my @csslist = (
+      "%htdocs_root%/picture_viewer.css",
+  );
+  my $html = HTML_Elem->new(
+      javascript => \@jslist,
+      css => \@csslist
+  );
+  $html->header();
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
 }
-print "<a href=\"${STOCKER_CGI}?dir=${base_name}&file=$link_dir\">∧</a>｜";
-if ($link_tail ne "") {
-  print "<a href=\"$script_name?dir=${base_name}&file=$link_next\">＞</a>｜";
-  print "<a href=\"$script_name?dir=${base_name}&file=$link_tail\">≫</a>|";
-} else {
-  print "＞｜≫|";
-}
-print "</span></div>\n";
+
+print <<EOF;
+<div id="image_list"></div>
+<div style="clear: both;">
+<span id="title_field">
+<a href="${back_link}">← 戻る</a>&nbsp;&nbsp;
+<span id="filename_field">$file_name</span>
+</span>
+<span id="control_field"></span>
+</div>
+EOF
 
 my $has_exif = 0;
 my $exif_data;
@@ -96,32 +103,34 @@ if(length($exif_xml) > 0) {
 
 print "<div style=\"clear: both;\">\n";
 if ($has_exif == 1) {
-  my $pic_width  = $exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0];
-  my $pic_height = $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0];
+  #my $pic_width  = $exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0];
+  #my $pic_height = $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0];
 
-  if($pic_width == 0 || $pic_height == 0) {
-    print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"640\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
-  } else {
-    my $pic_scale  = 640 / $pic_width;
-    $pic_width  = int($pic_width * $pic_scale);
-    $pic_height = int($pic_height * $pic_scale);
-    print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"$pic_width\" height=\"$pic_height\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
-  }
+  print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"100%\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
 } else {
-  print "<img src=\"${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\" id=\"ImageArea\">\n";
+  print "<img src=\"${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\" width=\"100%\" id=\"ImageArea\">\n";
 }
 print "</div>\n";
 
 print <<EOF;
 <script type="text/javascript">
 <!--
-var load_flg = false;
-function get_high_img(img_src) {
-  if(load_flg == false) {
-    document.getElementById('ImageArea').src = img_src;
-    load_flg = true;
-  }
-}
+    setFileName("${file_name}");
+    getImageList("${base_name}", "${encoded_uppath}");
+
+    function getPictureSrc(path) {
+      return "${GET_PICTURE_CGI}?file=" + path + "&dir=${base_name}&size=640";
+    }
+-->
+</script>
+EOF
+
+HTML_Elem->tail();
+exit(0);
+
+print <<EOF;
+<script type="text/javascript">
+<!--
 document.getElementById('ImageArea').addEventListener("touchstart", touchStart, false);
 document.getElementById('ImageArea').addEventListener("touchmove", touchMove, false);
 document.getElementById('ImageArea').addEventListener("touchend", touchEnd, false);
@@ -225,39 +234,7 @@ exit(0);
 
 #####
 
-sub get_imglink {
-  my $path_of_dir = ParamPath->get_up_path("${base}${path}");
-  my $path_of_inode = ParamPath->get_up_path($form->param('in'));
-  if (opendir(my $dir, "$path_of_dir")) {
-    my @jpg_list = ();
-    while (my $entry = decode('utf-8', readdir $dir)) {
-      if (length($entry) >= 0) {
-        if (lc($entry) =~ /\.jpg$/ || lc($entry) =~ /\.jpeg$/) {
-          push(@jpg_list, $entry);
-        }
-      }
-    }
-    closedir($dir);
-    @jpg_list = sort {$a cmp $b} @jpg_list;
-    $img_num = $#jpg_list;
-
-    $img_idx = 0;
-    foreach my $entry (@jpg_list) {
-      if("$path_of_dir/$entry" eq "${base}${path}") {
-        last;
-      }
-      $img_idx++;
-    }
-
-  $link_next = "$path_of_inode/". (stat "$path_of_dir/$jpg_list[$img_idx+1]")[1] if ($img_idx < $#jpg_list);
-  $link_prev = "$path_of_inode/". (stat "$path_of_dir/$jpg_list[$img_idx-1]")[1] if ($img_idx >0);
-  $link_head = "$path_of_inode/". (stat "$path_of_dir/$jpg_list[0]")[1] if ($img_idx >0);
-  $link_tail = "$path_of_inode/". (stat "$path_of_dir/$jpg_list[$#jpg_list]")[1] if ($img_idx < $#jpg_list);
-  $link_dir = $path_of_inode;
-  }
-}
-
-sub show_dir_imglist {
+sub show_dir_imglist {  # TODO: remove
   my ($path, $repeat) = @_;  # (対象ディレクトリ, 画像表示枚数)
   ### ディレクトリ内の写真
   my $path_of_dir = ParamPath->get_up_path($path);

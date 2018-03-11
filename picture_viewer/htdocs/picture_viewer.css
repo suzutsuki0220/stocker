@@ -1,0 +1,30 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: arial,sans-serif;
+}
+
+#title_field {
+    float: left;
+    width: 70%;
+    height: 5%;
+}
+
+#filename_field {
+    font-weight: bold;
+}
+
+#control_field {
+    float: right;
+    width: 30%;
+    height: 5%;
+    text-align: right;
+}
+
+#ImageArea {
+    height: 95%;
+}
+
