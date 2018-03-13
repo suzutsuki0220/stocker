@@ -22,9 +22,6 @@ require '%conf_dir%/picture_viewer.conf';
 my $script_name = $ENV{'SCRIPT_NAME'};
 my $img_idx = 0;
 my $img_num = 0;
-my $link_next = "";
-my $link_prev = "";
-my $link_dir = "";
 
 my $form = eval{new CGI};
 my $in_dir = $form->param('dir');
@@ -101,22 +98,19 @@ if(length($exif_xml) > 0) {
   }
 }
 
-print "<div style=\"clear: both;\">\n";
-if ($has_exif == 1) {
-  #my $pic_width  = $exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0];
-  #my $pic_height = $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0];
+  print <<EOF;
+<div style="clear: both; position: relative;">
+  <img src="${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}" width="100%" name="ImageArea" id="ImageArea">
+  <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="loadingText">
+    loading...
+  </div>
+</div>
 
-  print "<img src=\"${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}\" width=\"100%\" id=\"ImageArea\" onload=\"get_high_img(\'${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\')\">\n";
-} else {
-  print "<img src=\"${GET_PICTURE_CGI}?file=${encoded_path}&dir=${base_name}&size=640\" width=\"100%\" id=\"ImageArea\">\n";
-}
-print "</div>\n";
-
-print <<EOF;
 <script type="text/javascript">
 <!--
     setFileName("${file_name}");
     getImageList("${base_name}", "${encoded_uppath}");
+    imageLoading("${encoded_path}");
 
     function getPictureSrc(path) {
       return "${GET_PICTURE_CGI}?file=" + path + "&dir=${base_name}&size=640";
@@ -127,80 +121,6 @@ EOF
 
 HTML_Elem->tail();
 exit(0);
-
-print <<EOF;
-<script type="text/javascript">
-<!--
-document.getElementById('ImageArea').addEventListener("touchstart", touchStart, false);
-document.getElementById('ImageArea').addEventListener("touchmove", touchMove, false);
-document.getElementById('ImageArea').addEventListener("touchend", touchEnd, false);
-
-function StartPoint(X,Y) {
-  this.X = 0;
-  this.Y = 0;
-}
-
-function EndPoint(X,Y) {
-  this.X = 0;
-  this.Y = 0;
-}
-
-function touchStart(e) {
-  e.preventDefault();
-  var t = e.touches[0];
-  StartPoint.X = t.pageX;
-  StartPoint.Y = t.pageY;
-}
-
-function touchMove(e) {
-  e.preventDefault();
-  var t = e.touches[0];
-  EndPoint.X = t.pageX;
-  EndPoint.Y = t.pageY;
-}
-
-function touchEnd(e) {
-  e.preventDefault();
-
-  var cut_off_threshold = 40;
-
-  if( Math.abs(EndPoint.X - StartPoint.X) <= cut_off_threshold ) {
-    if( Math.abs(EndPoint.Y - StartPoint.Y) > cut_off_threshold ) {
-      if( EndPoint.Y > StartPoint.Y ) {
-        scrollBy(0,-100);  /* up */
-      } else {
-        scrollBy(0,100);  /* down */
-      }
-    }
-  }
-  else if( Math.abs(EndPoint.Y - StartPoint.Y) <= cut_off_threshold ) {
-    if( Math.abs(EndPoint.X - StartPoint.X) > cut_off_threshold ) {
-      if( EndPoint.X > StartPoint.X ) {
-        if('$link_prev' != '') document.location = '$script_name?dir=${base_name}&in=$link_prev';  /* left */
-      } else {
-        if('$link_next' != '') document.location = '$script_name?dir=${base_name}&in=$link_next';  /* right */
-      }
-    }
-  }
-//  else {
-//    if( EndPoint.X > StartPoint.X && EndPoint.Y > StartPoint.Y ) {
-//      /* upleft */
-//    } else if( EndPoint.X > StartPoint.X && EndPoint.Y < StartPoint.Y ) {
-//      /* downleft */
-//    } else if( EndPoint.X < StartPoint.X && EndPoint.Y > StartPoint.Y ) {
-//      /* upright */
-//    } else if( EndPoint.X < StartPoint.X && EndPoint.Y < StartPoint.Y ) {
-//      /* downright */
-//    }
-//  }
-
-  //alert("X: "+StartPoint.X+"-"+EndPoint.X+"  Y: "+StartPoint.Y+"-"+EndPoint.Y);
-  StartPoint.X = 0; StartPoint.Y = 0;
-  EndPoint.X = 0; EndPoint.Y = 0;
-}
--->
-</script>
-EOF
 
 #  print "<p>Download: ";
 #  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir\" target=\"_blank\">Orignal</a>&nbsp;&nbsp;";

@@ -1,16 +1,10 @@
 var load_flg = false;
+var load_again = -1;
 var filename = "";
 var images = new Array();
 
 function setFileName(name) {
     filename = name;
-}
-
-function get_high_img(img_src) {
-  if(load_flg == false) {
-    document.getElementById('ImageArea').src = img_src;
-    load_flg = true;
-  }
 }
 
 function getImageList(base_name, path) {
@@ -92,9 +86,49 @@ function renewControlField(index) {
 function changeImage(index) {
     const img = images[index];
 
-    document.getElementById('filename_field').innerHTML = img.name;
-    document.getElementById('ImageArea').src = getPictureSrc(img.path);
+    if (load_flg === true) {
+	load_again = index;
+	return;
+    }
 
+    document.getElementById('filename_field').innerHTML = img.name;
+    imageLoading(img.path);
     renewControlField(index);
+}
+
+function imageLoading(path) {
+    if (document.ImageArea.addEventListener) {
+      document.ImageArea.addEventListener("load", unsetLoading, false);
+      document.ImageArea.addEventListener("error", unsetLoading, false);
+      document.ImageArea.addEventListener("abort", unsetLoading, false);
+    } else if (document.ImageArea.attachEvent) {
+      document.ImageArea.attachEvent("onload", unsetLoading);
+      document.ImageArea.attachEvent("onerror", unsetLoading);
+      document.ImageArea.attachEvent("onabort", unsetLoading);
+    }
+
+    load_flg = true;
+    document.getElementById('ImageArea').src = getPictureSrc(path);
+    document.getElementById('loadingText').style.display = "block";
+}
+
+function unsetLoading() {
+    if (document.ImageArea.removeEventListener) {
+        document.ImageArea.removeEventListener("load", unsetLoading, false);
+        document.ImageArea.removeEventListener("error", unsetLoading, false);
+        document.ImageArea.removeEventListener("abort", unsetLoading, false);
+    } else if (document.ImageArea.detachEvent) {
+        document.ImageArea.detachEvent("onload", unsetLoading);
+        document.ImageArea.detachEvent("onerror", unsetLoading);
+        document.ImageArea.detachEvent("onabort", unsetLoading);
+    }
+
+    load_flg = false;
+    document.getElementById('loadingText').style.display = "none";
+
+    if (load_again != -1) {
+	changeImage(load_again);
+	load_again = -1;
+    }
 }
 
