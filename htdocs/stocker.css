@@ -1,0 +1,19 @@
+.maruButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  vertical-align: top;
+
+/* 円の大きさ */
+  width: 1.2em;
+  height: 1.2em;
+
+/* 文字の大きさ */
+  font-size: 1.1em;
+  line-height: 1.5em;
+
+/* 円と文字の色 */
+  color: #9e9e9e;
+  border: 1.5px solid #607d8b;
+}

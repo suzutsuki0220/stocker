@@ -40,12 +40,12 @@ function getImageFiles(data) {
       var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
       if (image_pattern.test(name.toLowerCase())) {
-	var img = new Object();
+        var img = new Object();
 
-	img.name = name;
-	img.path = path;
-	img.num  = num;
-	images.push(img);
+        img.name = name;
+        img.path = path;
+        img.num  = num;
+        images.push(img);
       }
     }
   }
@@ -71,11 +71,11 @@ function renewControlField(index) {
     var next_link = "＞";
 
     if (index != 0) {
-	var num = index - 1;
+        var num = index - 1;
         prev_link = "<a href=\"javascript:changeImage(" + num + ")\">＜</a>";
     }
     if (index < images.length -1) {
-	var num = index + 1;
+        var num = index + 1;
         next_link = "<a href=\"javascript:changeImage(" + num + ")\">＞</a>";
     }
 
@@ -87,8 +87,8 @@ function changeImage(index) {
     const img = images[index];
 
     if (load_flg === true) {
-	load_again = index;
-	return;
+        load_again = index;
+        return;
     }
 
     document.getElementById('filename_field').innerHTML = img.name;
@@ -127,8 +127,8 @@ function unsetLoading() {
     document.getElementById('loadingText').style.display = "none";
 
     if (load_again != -1) {
-	changeImage(load_again);
-	load_again = -1;
+        changeImage(load_again);
+        load_again = -1;
     }
 }
 

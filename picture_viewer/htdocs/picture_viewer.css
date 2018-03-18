@@ -14,6 +14,7 @@ body {
 }
 
 #filename_field {
+    margin-left: 2em;
     font-weight: bold;
 }
 
@@ -28,3 +29,11 @@ body {
     height: 95%;
 }
 
+.back_link {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+/*    font-weight: bold; */
+/*    font-size: 100%; */
+    text-decoration: none;
+}

@@ -56,6 +56,7 @@ eval {
       "%htdocs_root%/picture_viewer.js",
   );
   my @csslist = (
+      "%htdocs_root%/stocker.css",
       "%htdocs_root%/picture_viewer.css",
   );
   my $html = HTML_Elem->new(
@@ -71,12 +72,14 @@ if ($@) {
 
 print <<EOF;
 <div id="image_list"></div>
-<div style="clear: both;">
+<div style="clear: both; position: relative;">
 <span id="title_field">
-<a href="${back_link}">← 戻る</a>&nbsp;&nbsp;
 <span id="filename_field">$file_name</span>
 </span>
 <span id="control_field"></span>
+<span class="back_link maruButton">
+<a href="${back_link}">←</a>
+</span>
 </div>
 EOF
 
