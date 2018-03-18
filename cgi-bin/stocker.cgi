@@ -202,6 +202,7 @@ function directoryList(data) {
 
     document.getElementById('directoryListArea').innerHTML = "";
 
+    clearTrimWork();
     for (var i=0; i<elements.length; i++) {
       var name_elem = elements.item(i).getElementsByTagName('name');
       var path_elem = elements.item(i).getElementsByTagName('path');
@@ -255,9 +256,10 @@ function directoryList(data) {
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
           }
         }
-        printIcon(${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
+        printIcon(i, ${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
       }
     }
+    doTrimWork();
 //  } catch(e) {
 //     alert("ERROR: " + e.description);
 //  }

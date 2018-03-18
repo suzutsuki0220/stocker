@@ -1,4 +1,5 @@
 const get_file_cgi = "%cgi_root%/get_file";
+var trimWork = [];
 
 function setScreenSize() {
     var s_width = 640;
@@ -85,12 +86,13 @@ function jump_select(boxes) {
     document.file_check.submit();
 }
 
-function printIcon(box_width, box_height, path, name, size, last_modified, icon, action) {
+function printIcon(i, box_width, box_height, path, name, size, last_modified, icon, action) {
     var html = "";
+    var id = "icon_" + i;
 
     html += "<div class=\"imagebox\" style=\"width: " + box_width + "px; height: " + box_height + "px\">";
     html += "<p class=\"image\" style=\"width: " + box_width + "px; height: 75px\">";
-    html += "<a href=\"javascript:actionClickedIcon('" + action + "', '" + path + "')\"><img src=\"" + icon + "\"></a></p>";
+    html += "<a href=\"javascript:actionClickedIcon('" + action + "', '" + path + "')\"><canvas id=\"" + id + "\"></canvas></a></p>";
     html += "<span style=\"position: absolute; top: 3px; right: 3px;\">";
     html += "<input type=\"checkbox\" name=\"file\" value=\"" + path + "\">";
     html += "</span>";
@@ -100,6 +102,55 @@ function printIcon(box_width, box_height, path, name, size, last_modified, icon,
     html += "</p></div>";
 
     document.getElementById('directoryListArea').innerHTML += html;
+    addTrimWork(id, icon);
+}
+
+function clearTrimWork() {
+    trimWork = [];
+}
+
+function addTrimWork(id, imgUrl) {
+    var work = new Object();
+    work.id = id;
+    work.imgUrl = imgUrl;
+
+    trimWork.push(work);
+}
+
+function doTrimWork() {
+    for (var i=0; i<trimWork.length; i++) {
+        var work = trimWork[i];
+        trimThumbnail(work.id, work.imgUrl);
+    }
+}
+
+function trimThumbnail(id, imgUrl) {
+    const TRIM_SIZE = 75;
+    var canvas = document.getElementById(id);
+    var ctx = canvas.getContext('2d');
+
+    canvas.width = canvas.height = TRIM_SIZE;
+
+    var img = new Image();
+    img.src = imgUrl;
+
+    // imgは読み込んだ後でないとwidth,heightが0
+    img.onload = function() {
+        // 横長か縦長かで場合分けして描画位置を調整
+        var width, height, xOffset, yOffset;
+        if (img.width > img.height) {
+            height = TRIM_SIZE;
+            width = img.width * (TRIM_SIZE / img.height);
+            xOffset = -(width - TRIM_SIZE) / 2;
+            yOffset = 0;
+        } else {
+            width = TRIM_SIZE;
+            height = img.height * (TRIM_SIZE / img.width);
+            yOffset = -(height - TRIM_SIZE) / 2;
+            xOffset = 0;
+        }
+        ctx.drawImage(img, xOffset, yOffset, width, height);
+    };
 }
 
 function reloadDirectoryList(encoded_dir, url_path, from, to) {
