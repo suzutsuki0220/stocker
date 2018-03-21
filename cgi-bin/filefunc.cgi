@@ -37,6 +37,7 @@ eval {
   my @jslist = (
       "%htdocs_root%/filefunc.js",
       "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/get_directory_list.js",
   );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
@@ -248,8 +249,6 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  my $f_dest = decode('utf-8', $form->param('f_dest'));
-  my $f_dest_dir = decode('utf-8', $form->param('f_dest_dir'));
   my $dest_base = "";
   my @lst_dest = ();
   my $ins;
@@ -259,8 +258,7 @@ sub form_move() {
   }
 
   eval {
-    $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                          param_dir => $f_dest_dir);
+    $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
     $ins->init();
     $dest_base = $ins->{base};
   };
@@ -268,107 +266,90 @@ sub form_move() {
     HTML_Elem->error($@);
   }
 
-  print <<EOD;
-<script type="text/javascript">
-<!--
-  function refresh() {
-    document.f1.mode.value = "move";
-    document.f1.submit();
-  }
--->
-</script>
-EOD
+  my $file = decode('utf-8', ParamPath->urlpath_decode($files[0]));
+  my $up_path = ParamPath->get_up_path($file);
+  my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
 
   print "<h1>移動</h1>\n";
   print "<p>選択: ". @files.length ."ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act(\"移動\");\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act('移動');\">\n";
   &printFilesAndHiddenForm();
   print "<br>\n";
   print "<fieldset><legend>移動先</legend>\n";
 
   print "ディレクトリ: ";
-  print "<select name=\"f_dest_dir\" size=\"1\" onChange=\"refresh()\">\n";
+  print "<select name=\"dest_dir\" size=\"1\" onChange=\"refreshMoveDestination(document.f1.dest_dir.value, '')\">\n";
 
-  for (my $i = 0; $i < $ins->base_dirs_count(); $i++) {
-    my $col = $ins->get_base_dir_column($i);
-    my $d = @{$col}[1];
-    if (${f_dest_dir} eq $d) {
-      print "<option value=\"". encode('utf-8', $d) ."\" selected>";
-      $dest_base = @{$col}[2];
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
+  for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
+    my $lst = $ins->get_base_dir_column($i);
+    my $name = @{$lst}[0];
+    my $encoded_name = HTML_Elem->url_encode($name);
+    if ($encoded_dir eq $encoded_name) {
+      print "<option value=\"${encoded_name}\" selected>".${name}."</option>\n";
     } else {
-      print "<option value=\"". encode('utf-8', $d) ."\">";
-    }
-    print @{$col}[0] ."</option>\n";
-  }
-  my $dest_path = $ins->inode_to_path(${f_dest});
-
-  print "</select><br>\n";
-  print encode('utf-8', "パス [" . $dest_path . "]<br>\n");
-  print "<select name=\"f_dest\" size=\"10\" onChange=\"refresh()\">\n";
-  opendir(my $d, "${dest_base}/${dest_path}");
-  while(my $entry = decode('utf-8', readdir $d)) {
-    if (length($entry) > 0 && $entry !~ /^\./ && $entry ne 'lost+found') {
-      if (-d "${dest_base}/${dest_path}/${entry}") {
-        push(@lst_dest, $entry);
-      }
+      print "<option value=\"${encoded_name}\">".${name}."</option>\n";
     }
   }
-  closedir($d);
+};
 
-  if (length(${f_dest}) > 0) {
-    $f_dest =~ /(.*?)\/([^\/]{1,})$/;
-    my $dest_updir = $1;
-    print "<option value=\"${dest_updir}\">..</option>\n";
-  }
-  @lst_dest = sort {$a cmp $b} @lst_dest;
-  foreach my $entry (@lst_dest) {
-    print "<option value=\"${f_dest}/".(stat "${dest_base}/${dest_path}/${entry}")[1]."\">".encode('utf-8', ${entry})."</option>\n";
-  }
-  print "</select></fieldset>\n";
   print <<EOF;
+</select><br>
+パス [<span id="dest_path"></span>]<br>
+<select name="f_dest" size="10" onChange="refreshMoveDestination(document.f1.dest_dir.value, document.f1.f_dest.value)">
+</select></fieldset>
 <br>
 <input type="hidden" name="mode" value="do_move">
 <input type="hidden" name="dir" value="${encoded_dir}">
-<input type="hidden" name="dest_dir" value="${f_dest_dir}">
-<input type="hidden" name="dest" value="${f_dest}">
+<input type="hidden" name="dest" value="">
 
 <br>
 <input type="submit" value="実行">
 <input type="button" value="キャンセル" onClick="jump('${back_link}')">
 </form>
+<script type="text/javascript">
+<!--
+    refreshMoveDestination("${encoded_dir}", "${encoded_up_path}");
+-->
+</script>
 EOF
 
   HTML_Elem->tail();
 }
 
 sub do_move() {
-  my $dest = decode('utf-8', $form->param('dest'));  # 移動先のパス
-  my $dest_dir = decode('utf-8', $form->param('dest_dir'));  # 移動先のディレクトリ(base)
+  my $dest = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('dest'))));  # 移動先のパス
+  my $dest_dir = decode('utf-8', scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
 
-  if (length($dest) == 0) {
-    HTML_Elem->error("移動先のディレクトリが指定されていません");
+  if (@files.length == 0) {
+    HTML_Elem->error("チェックが一つも選択されていません");
   }
 
   my $dest_path = "";
   eval {
-    my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF,
-                             param_dir => $dest_dir);
-    $ins->init();
-    $dest_path = $ins->{base} . $ins->inode_to_path($dest);
+    my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+    $ins->init_by_base_name(${dest_dir});
+    $dest_path = $ins->{base} . $dest;
   };
   if ($@) {
     HTML_Elem->error("不正なパスが指定されました");
   }
 
-  foreach my $entry (@files) {
+  foreach my $file (@files) {
+    my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
+    my $origin_path = encode('utf-8', "${base}${entry}");
+    my $filename = ParamPath->get_filename($entry);
+
     if(${entry} =~ /\/\./) {
       HTML_Elem->error("移動先に移動できないパスが指定されています");
     }
-    if( -e "${dest_path}/${entry}") {
-      HTML_Elem->error("既に同じ名前が存在するため移動できません($entry)");
+    if( -e "${dest_path}/${filename}") {
+      HTML_Elem->error("既に同じ名前が存在するため移動できません($filename)");
     }
-    if(! move("${base}/$entry", "${dest_path}")) {
+    if(! move("${origin_path}", encode('utf-8', "${dest_path}"))) {
       my $reason = $!;
       HTML_Elem->error("移動に失敗しました($reason)");
     }
@@ -389,7 +370,7 @@ sub form_delete() {
   print "<h1>ファイルの削除</h1>\n";
   print "<p>選択: ", @files.length, "ファイル</p>\n";
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act(\"削除\");\">\n";
+  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act('削除');\">\n";
   &printFilesAndHiddenForm();
   print "<br>\n";
   print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";
@@ -404,7 +385,7 @@ sub form_delete() {
 }
 
 sub do_delete() {
-  if (@files == 0) {
+  if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
   }
   my $path = "";
@@ -471,7 +452,7 @@ sub printFilesAndHiddenForm
 {
   foreach my $file (@files) {
     my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
-    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">\n";
+    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">";
     print encode('utf-8', $filename) ."<br>\n";
   }
 }
