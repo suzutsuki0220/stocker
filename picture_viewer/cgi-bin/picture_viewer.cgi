@@ -16,7 +16,6 @@ our $BASE_DIR_CONF = "";
 our $GET_PICTURE_CGI = "";
 our $GET_THUMBNAIL_CGI = "";
 our $STOCKER_CGI = "";
-our $EXIF_CMD = "";
 require '%conf_dir%/picture_viewer.conf';
 
 my $script_name = $ENV{'SCRIPT_NAME'};
@@ -78,7 +77,7 @@ print <<EOF;
 </span>
 <span id="control_field"></span>
 <span class="back_link maruButton">
-<a href="${back_link}">←</a>
+<a href="${back_link}" style="text-decoration: none;">←</a>
 </span>
 </div>
 EOF
@@ -87,7 +86,7 @@ my $has_exif = 0;
 my $exif_data;
 my $exif_xml;
 my $last_mod = substr(localtime((stat("${base}${path}"))[9]), 4);  # cut off weekday
-if(open(IN, "${EXIF_CMD} -x '${base}${path}' 2>/dev/null |")) {
+if(0) { #open(IN, "${EXIF_CMD} -x '${base}${path}' 2>/dev/null |")) {
   while (<IN>) {
     $exif_xml .= $_;
   }
