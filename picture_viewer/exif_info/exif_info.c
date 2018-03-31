@@ -31,9 +31,16 @@ show_entry_xml(ExifEntry *e, void *data)
 }
 
 static void
-show_xml(ExifContent *content, void *data)
+show_xml(ExifData *data)
 {
-    exif_content_foreach_entry(content, show_entry_xml, data);
+    int i;
+
+    fprintf(stdout, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    for(i=0; i<EXIF_IFD_COUNT; i++) {
+        fprintf(stdout, "<%s>\n", exif_ifd_get_name((ExifIfd)i));
+        exif_content_foreach_entry(data->ifd[i], show_entry_xml, NULL);
+        fprintf(stdout, "</%s>\n", exif_ifd_get_name((ExifIfd)i));
+    }
 }
 
 int
@@ -50,7 +57,11 @@ main(int argc, char **argv)
 
     if(ed != NULL) {
         /* Show contents of all IFDs */
-        exif_data_foreach_content(ed, show_xml, NULL);
+        show_xml(ed);
+
+        /* output thumbnail */
+        // ed->data // thumbnail
+        // ed->size // thumbnail image
     }
 
     exif_loader_unref(l);
