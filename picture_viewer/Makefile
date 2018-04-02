@@ -18,9 +18,11 @@ CGI_FILES  = get_picture.cgi picture_viewer.cgi
 CONF_FILES = picture_viewer.conf
 
 all:
+	make -C exif_info
 
 clean:
 	rm -f *~
+	make -C exif_info clean
 
 make-directory:
 	mkdir -p $(CGI_DIR)
@@ -64,5 +66,8 @@ install-cgi:
 	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
-install: libcheck make-directory install-config install-htdocs install-cgi
+install-bin:
+	make -C exif_info install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
+
+install: libcheck make-directory install-config install-htdocs install-cgi install-bin
 

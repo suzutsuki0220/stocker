@@ -322,7 +322,7 @@ EOF
 
 sub do_move() {
   my $dest = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('dest'))));  # 移動先のパス
-  my $dest_dir = decode('utf-8', scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
+  my $dest_dir = HTML_Elem->url_decode(scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
 
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
