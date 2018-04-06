@@ -104,55 +104,6 @@ sub get_filename {
   return $file_name;
 }
 
-sub inode_to_path {
-  my $self = shift;
-  my $inodes = shift;
-  my $subdir = "";
-
-  $inodes =~ s/^\/{1,}//;
-  if(! $inodes || length($inodes) == 0) {
-    return "";
-  }
-
-  if(! $inodes || $inodes =~ /[^0123456789\/]/) {
-    die("Parameter invalid format");
-  }
-
-  if (length($self->{base}) == 0) {
-    die("ParamPath class is not initialized");
-  }
-  if (! -d $self->{base}) {
-    die("Directory not found - ".$self->{base});
-  }
-
-  foreach my $inode (split('/', $inodes)) {
-    my $match_flag = 0;
-    opendir(my $dir, $self->{base}.${subdir}) or die("Failed to open directory DIR[${subdir}]");
-    while (my $entry = decode('utf-8', readdir($dir))) {
-      if ($entry =~ /^\./ || $entry eq 'lost+found') {
-        # Ignore hidden file or directory
-        next;
-      }
-      my $point_inode = (stat $self->{base}."${subdir}/${entry}")[1];
-      if ($inode == $point_inode) {
-        $match_flag = 1;
-        if (length($subdir) == 0) {
-          $subdir = $entry;
-        } else {
-          $subdir .= "/" . $entry;
-        }
-        last;
-      }
-    }
-    closedir($dir);
-    if($match_flag == 0) {
-      die("No element matched with the parameter");
-    }
-  }
-
-  return $subdir;
-}
-
 sub urlpath_encode {
   my $self = shift;
   my($file_path) = @_;
