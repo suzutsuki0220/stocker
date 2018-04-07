@@ -6,13 +6,12 @@ use warnings;
 use Encode;
 use MIME::Base64::URLSafe;  # UrlPath decode/encode
 
-our @BASE_DIRS;
+my @BASE_DIRS;
 
 sub new {
   my $class = shift;
   my $self = {
     base_dir_conf => '',
-    param_dir => '',
     base => '',
     base_name => '',
     @_,
@@ -21,40 +20,29 @@ sub new {
   return bless $self, $class;
 }
 
-sub init {
-  my $self = shift;
-
-  require $self->{base_dir_conf};
-
-  foreach my $lst (@BASE_DIRS) {
-    if($self->{param_dir} eq @{$lst}[1]) {
-      $self->{base_name} = decode('utf-8', @{$lst}[0]);  # 表示名
-      $self->{base} = decode('utf-8', @{$lst}[2]);  # 基点となるパス
-      if ($self->{base} !~ /\/$/) {
-        $self->{base} .= "/";
-      }
-      last;
-    }
-  }
-
-  if (length($self->{base}) == 0) {
-    die("invalid parameter \"dir\" - ".$self->{param_dir});
-  }
-  if (! -d ($self->{base})) {
-    die("missing configure, base directory is not found - ".$self->{base});
-  }
-}
-
 sub init_by_base_name {
   my $self = shift;
   my $basename = shift;
 
-  require $self->{base_dir_conf};
+  if (open(my $fh, $self->{base_dir_conf})) {
+    while (my $data = decode('utf-8', <$fh>)) {
+      chomp($data);
+      if ($data =~ /^[^#]/) {
+        my ($key, $value) = split('=', $data);
+        $key   =~ s/^\s*(.*?)\s*$/$1/;
+        $value =~ s/^\s*(.*?)\s*$/$1/;
+        push(@BASE_DIRS, {name=>$key, path=>$value});
+      }
+    }
+    close($fh);
+  } else {
+    die("failed to load " . $self->{base_dir_conf} . "\n");
+  }
 
   foreach my $lst (@BASE_DIRS) {
-    if(!${basename} || ${basename} eq decode('utf-8', @{$lst}[0])) {
-      $self->{base_name} = decode('utf-8', @{$lst}[0]);  # 表示名
-      $self->{base} = decode('utf-8', @{$lst}[2]);  # 基点となるパス
+    if(!${basename} || ${basename} eq $lst->{name}) {
+      $self->{base_name} = $lst->{name};  # 表示名
+      $self->{base} = $lst->{path};  # 基点となるパス
       if ($self->{base} !~ /\/$/) {
         $self->{base} .= "/";
       }

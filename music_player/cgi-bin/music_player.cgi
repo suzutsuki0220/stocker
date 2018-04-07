@@ -222,7 +222,7 @@ function musicList(data) {
 
     getDirectoryList("${base_name}", up_path, 0, 0, getMusicFiles);
   } catch(e) {
-     alert("ERROR: " + e.description);
+    alert("ERROR: " + e.description);
   }
 }
 

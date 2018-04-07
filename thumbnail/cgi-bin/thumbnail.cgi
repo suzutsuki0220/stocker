@@ -16,7 +16,6 @@ use HTML_Elem;
 our $BASE_DIR_CONF;
 our $SUPPORT_TYPES;
 our $THUMB_SIZE;
-our $EXIF_CMD;
 our $FFMPEG_CMD;
 our $CONVERT_CMD;
 our $THM_CACHE_DIR;
@@ -27,7 +26,6 @@ our @support_video_types;
 our @support_image_types;
 require $SUPPORT_TYPES;
 
-my $exif_thumb_cmd = $EXIF_CMD." -e \"%%INPUT%%\" -o \"%%OUTPUT%%\"";
 my $movie_thumb_cmd = $FFMPEG_CMD." -i \"%%INPUT%%\" -vf \"scale=%%SIZE%%:-1\" -r 1 -vframes 1 -f image2 \"%%OUTPUT%%\"";
 my $image_thumb_cmd = $CONVERT_CMD." \"%%INPUT%%\" -thumbnail %%SIZE%% -strip \"%%OUTPUT%%\"";
 
@@ -65,9 +63,7 @@ if ($ret != 0) {
   if ($ret != 0) {
     foreach my $type (@support_image_types) {
       if ($type eq $suffix) {
-        if (($ret = &thumbnail_exif(${base}.${path})) != 0) {
-          $ret = &thumbnail_cmd($image_thumb_cmd, ${base}, ${path});
-        }
+        $ret = &thumbnail_cmd($image_thumb_cmd, ${base}, ${path});
         last;
       }
     }
@@ -95,7 +91,7 @@ sub thumbnail_cache
     $param_dir = "DEFAULT";
   }
   my $cache_path = encode('utf-8', $THM_CACHE_DIR."/".$param_dir."/".$path);
-   
+
   if(-f "$cache_path") {
     if((-s "$cache_path") == 0) {
       unlink("$cache_path");
@@ -150,32 +146,6 @@ sub save_thumcache
   return 0;
 }
 
-# exifデータからサムネイルを作成
-sub thumbnail_exif
-{
-  my ($file) = @_;
-
-  $SIG{HUP} = $SIG{INT} = $SIG{PIPE} = $SIG{QUIT} = $SIG{TERM} = \&remove_temp;
-
-  $exif_thumb_cmd =~ s/%%INPUT%%/${file}/;
-  $exif_thumb_cmd =~ s/%%OUTPUT%%/${TMP_FILE}/;
-  my $ret = system(encode('utf-8', $exif_thumb_cmd)." >/dev/null 2>/dev/null");
-  if($ret == 0) {
-    print "Content-Type: image/jpeg\n";
-    print "Content-Length: ". (-s "${TMP_FILE}") ." \n";
-    print "\n";
-    if(open(my $IMAGE, "${TMP_FILE}")) {
-      while(<$IMAGE>) {
-        print $_;
-      }
-      close($IMAGE);
-    }
-  }
-
-  unlink("${TMP_FILE}");
-  return $ret;
-}
-
 # コマンドからサムネイルを作成
 sub thumbnail_cmd
 {
@@ -205,27 +175,6 @@ sub thumbnail_cmd
   unlink("${TMP_FILE}");
   return $ret;
 }
-
-## GDライブラリで作成する
-#sub thumbnail_gd
-#{
-#  print "Content-Type: image/jpeg\n\n";
-#
-#  my $srcImage = new GD::Image(${base}.${path});
-#  my($srcWidth, $srcHeight) = $srcImage->getBounds();
-#  my $scope = 0;
-#  if( $srcWidth > $srcHeight) {
-#    $scope = 160 / $srcWidth;
-#  } else {
-#    $scope = 160 / $srcHeight;
-#  }
-#  my $dstWidth = int($srcWidth * $scope);
-#  my $dstHeight = int($srcHeight * $scope);
-#  my $dstImage = new GD::Image($dstWidth,$dstHeight) || return 1;
-#  $dstImage->copyResized($srcImage,0,0,0,0,$dstWidth,$dstHeight,$srcWidth,$srcHeight);
-#  print $dstImage->jpeg(80);
-#  return 0;
-#}
 
 sub remove_temp
 {

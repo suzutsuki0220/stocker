@@ -16,7 +16,7 @@ TRASH_DIR  = $(BASE_DIR)/trash
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
 DOC_FILES  = $(wildcard htdocs/*)
 CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi text_viewer.cgi
-CONF_FILES = BaseDirs.pl basedirs.conf SupportTypes.pl stocker.conf
+CONF_FILES = basedirs.conf SupportTypes.pl stocker.conf
 
 INSTALL_PARAM = DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 

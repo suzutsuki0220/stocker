@@ -249,21 +249,11 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub form_move() {
-  my $dest_base = "";
   my @lst_dest = ();
   my $ins;
 
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
-  }
-
-  eval {
-    $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-    $ins->init();
-    $dest_base = $ins->{base};
-  };
-  if ($@) {
-    HTML_Elem->error($@);
   }
 
   my $file = decode('utf-8', ParamPath->urlpath_decode($files[0]));
@@ -286,7 +276,7 @@ eval {
   $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
   for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
     my $lst = $ins->get_base_dir_column($i);
-    my $name = @{$lst}[0];
+    my $name = $lst->{name};
     my $encoded_name = HTML_Elem->url_encode($name);
     if ($encoded_dir eq $encoded_name) {
       print "<option value=\"${encoded_name}\" selected>".${name}."</option>\n";
