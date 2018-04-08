@@ -1,6 +1,6 @@
 const filefunc_cgi = "%cgi_root%/filefunc.cgi";
 
-var do_count = 0;
+var renameList = new Array();
 
 function jump(url) {
     location.href = url;
@@ -19,19 +19,29 @@ function do_rename(rename_count) {
         return;
     }
 
-    do_count = 0;
     for (var i=0; i<rename_count; i++) {
         var file = document.getElementsByName("file" + i)[0].value;
         var newname = encodeURIComponent(document.getElementsByName("newname" + i)[0].value);
         var param = "mode=do_rename&dir=" + document.f1.dir.value + "&file=" + file + "&newname=" + newname;
 
+        renameList.push(param);
+    }
+
+    popRenameWork();
+}
+
+function popRenameWork() {
+    var param = renameList.pop()
+    if (param) {
         var httpRequest = ajax_init();
-        ajax_set_instance(httpRequest, function() { renameResult(httpRequest, rename_count); } );
+        ajax_set_instance(httpRequest, function() { renameResult(httpRequest); } );
         ajax_post(httpRequest, filefunc_cgi, param);
+    } else {
+        location.href = document.f1.back.value;
     }
 }
 
-function renameResult(httpRequest, rename_count) {
+function renameResult(httpRequest) {
     if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
         //document.getElementById('sStatus').innerHTML = "読み込み中...";
     } else if (httpRequest.readyState == 4) {
@@ -40,10 +50,7 @@ function renameResult(httpRequest, rename_count) {
         } else {
             alert("ERROR: " + httpRequest.status);
         }
-        do_count++;
-        if (do_count === rename_count) {
-            location.href = document.f1.back.value;
-        }
+        popRenameWork();
     }
 }
 
