@@ -6,14 +6,13 @@ use warnings;
 use Encode;
 use MIME::Base64::URLSafe;  # UrlPath decode/encode
 
-my @BASE_DIRS;
-
 sub new {
   my $class = shift;
   my $self = {
     base_dir_conf => '',
     base => '',
     base_name => '',
+    base_dirs => [my @BASE_DIRS],
     @_,
   };
 
@@ -31,7 +30,7 @@ sub init_by_base_name {
         my ($key, $value) = split('=', $data);
         $key   =~ s/^\s*(.*?)\s*$/$1/;
         $value =~ s/^\s*(.*?)\s*$/$1/;
-        push(@BASE_DIRS, {name=>$key, path=>$value});
+        push(@{$self->{base_dirs}}, {name=>$key, path=>$value});
       }
     }
     close($fh);
@@ -39,7 +38,7 @@ sub init_by_base_name {
     die("failed to load " . $self->{base_dir_conf} . "\n");
   }
 
-  foreach my $lst (@BASE_DIRS) {
+  foreach my $lst (@{$self->{base_dirs}}) {
     if(!${basename} || ${basename} eq $lst->{name}) {
       $self->{base_name} = $lst->{name};  # 表示名
       $self->{base} = $lst->{path};  # 基点となるパス
@@ -59,14 +58,16 @@ sub init_by_base_name {
 }
 
 sub base_dirs_count {
-  return @BASE_DIRS;
+  my $self = shift;
+
+  return @{$self->{base_dirs}};
 }
 
 sub get_base_dir_column {
   my $self = shift;
   my $idx = shift;
 
-  return $BASE_DIRS[$idx];
+  return ${$self->{base_dirs}}[$idx];
 }
 
 sub get_up_path {
