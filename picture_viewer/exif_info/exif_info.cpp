@@ -35,9 +35,9 @@ show_entry_xml(ExifEntry *e, void *data)
     /* Remove invalid characters from tag eg. (, ), space */
     remove_bad_chars(t);
 
-    fprintf(stdout, "\t<0x%04x name=\"%s\">", e->tag, t);
+    fprintf(stdout, "\t<data id=\"0x%04x\" name=\"%s\">", e->tag, t);
     fprintf(stdout, "%s", exif_entry_get_value (e, v, sizeof (v)));
-    fprintf(stdout, "</0x%04x>\n", e->tag);
+    fprintf(stdout, "</data>\n");
 }
 
 static void
@@ -47,14 +47,16 @@ show_xml(ExifData *data)
 
     fprintf(stdout, "Content-Type: application/xml\n\n");
     fprintf(stdout, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    fprintf(stdout, "<exif_info>\n");
     for(i=0; i<EXIF_IFD_COUNT; i++) {
-        fprintf(stdout, "<%s>\n", exif_ifd_get_name((ExifIfd)i));
+        fprintf(stdout, "<group name=\"%s\">\n", exif_ifd_get_name((ExifIfd)i));
         exif_content_foreach_entry(data->ifd[i], show_entry_xml, NULL);
-        fprintf(stdout, "</%s>\n", exif_ifd_get_name((ExifIfd)i));
+        fprintf(stdout, "</group>\n");
     }
-    fprintf(stdout, "<THUMBNAIL>\n");
+    fprintf(stdout, "<thumbnail>\n");
     fprintf(stdout, "\t<size>%u</size>\n", data->size);
-    fprintf(stdout, "</THUMBNAIL>\n");
+    fprintf(stdout, "</thumbnail>\n");
+    fprintf(stdout, "</exif_info>\n");
 }
 
 static void
