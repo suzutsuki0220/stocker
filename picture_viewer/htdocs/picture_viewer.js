@@ -159,20 +159,61 @@ function showExif(httpRequest) {
     if (httpRequest.readyState == 4) {
         if (httpRequest.status == 200) {
             var data = httpRequest.responseXML;
+            var version, width, height, created_at, maker, model, f, exposure_time, iso, exposure_bias, focal;
+
+            var groups = data.getElementsByTagName('group');
+            for (var i=0; i<groups.length; i++) {
+                if (getXmlAttribute(groups[i].attributes, "name") === "0") {
+                    var data = groups[i].getElementsByTagName('data');
+                    for (var j=0; j<data.length; j++) {
+                        var name = getXmlAttribute(data[j].attributes, "name");
+                        if (name === "Manufacturer") {
+                            maker = data[j].textContent;
+                        } else if (name === "Model") {
+                            model = data[j].textContent;
+                        }
+                    }
+                }
+                if (getXmlAttribute(groups[i].attributes, "name") === "EXIF") {
+                    var data = groups[i].getElementsByTagName('data');
+                    for (var j=0; j<data.length; j++) {
+                        var name = getXmlAttribute(data[j].attributes, "name");
+                        if (name === "Exif_Version") {
+                            version = data[j].textContent;
+                        } else if (name === "Pixel_X_Dimension") {
+                            width = data[j].textContent;
+                        } else if (name === "Pixel_Y_Dimension") {
+                            height = data[j].textContent;
+                        } else if (name === "Date_and_Time__Original_") {
+                            created_at = data[j].textContent;
+                        } else if (name === "F-Number") {
+                            f = data[j].textContent;
+                        } else if (name === "Exposure_Time") {
+                            exposure_time = data[j].textContent;
+                        } else if (name === "ISO_Speed_Ratings") {
+                            iso = data[j].textContent;
+                        } else if (name === "Exposure_Bias") {
+                            exposure_bias = data[j].textContent;
+                        } else if (name === "Focal_Length") {
+                            focal = data[j].textContent;
+                        }
+                    }
+                }
+            }
 
             content = `
 <h3>EXIF情報</h3>
 <table class="ExifTable">
-<tr><th>EXIFバージョン</th><td>$exif_data->{'exif'}[0]->{'Exif_Version'}[0]</td></tr>
-<tr><th>幅 x 高さ</th><td>$exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0] x $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0]</td></tr>
-<tr><th>作成日時</th><td>$exif_data->{'exif'}[0]->{'Date_and_Time__Original_'}[0]</td></tr>
-<tr><th>メーカー</th><td>$exif_data->{'exif'}[0]->{'Manufacturer'}[0]</td></tr>
-<tr><th>モデル</th><td>$exif_data->{'exif'}[0]->{'Model'}[0]</td></tr>
-<tr><th>絞り値</th><td>$exif_data->{'exif'}[0]->{'F-Number'}[0]</td></tr>
-<tr><th>露出時間</th><td>$exif_data->{'exif'}[0]->{'Exposure_Time'}[0]</td></tr>
-<tr><th>ISO感度</th><td>$exif_data->{'exif'}[0]->{'ISO_Speed_Ratings'}[0]</td></tr>
-<tr><th>露出補正</th><td>$exif_data->{'exif'}[0]->{'Exposure_Bias'}[0]</td></tr>
-<tr><th>焦点距離</th><td>$exif_data->{'exif'}[0]->{'Focal_Length'}[0]</td></tr>
+<tr><th>EXIFバージョン</th><td>${version}</td></tr>
+<tr><th>幅 x 高さ</th><td>${width} x ${height}</td></tr>
+<tr><th>作成日時</th><td>${created_at}</td></tr>
+<tr><th>メーカー</th><td>${maker}</td></tr>
+<tr><th>モデル</th><td>${model}</td></tr>
+<tr><th>絞り値</th><td>${f}</td></tr>
+<tr><th>露出時間</th><td>${exposure_time}</td></tr>
+<tr><th>ISO感度</th><td>${iso}</td></tr>
+<tr><th>露出補正</th><td>${exposure_bias}</td></tr>
+<tr><th>焦点距離</th><td>${focal}</td></tr>
 </table>`;
         } else {
             content = "EXIFが含まれていません";
@@ -180,4 +221,21 @@ function showExif(httpRequest) {
 
         document.getElementById('ExifLayer').innerHTML = content;
     }
+}
+
+function getXmlAttribute(attributes, attribute_name) {
+    var ret = "";
+
+    if (!attributes) {
+      return "";
+    }
+
+    for (var i=0; i<attributes.length; i++) {
+        if (attributes[i].name === attribute_name) {
+            ret = attributes[i].nodeValue;
+            break;
+        }
+    }
+
+    return ret;
 }
