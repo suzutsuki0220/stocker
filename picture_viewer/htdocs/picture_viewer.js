@@ -91,6 +91,9 @@ function changeImage(index) {
         return;
     }
 
+    document.getElementById('ExifLayer').style.display = "none";
+
+    document.title = img.name;
     document.getElementById('filename_field').innerHTML = img.name;
     imageLoading(img.path);
     renewControlField(index);
@@ -109,6 +112,7 @@ function imageLoading(path) {
 
     load_flg = true;
     document.getElementById('ImageArea').src = getPictureSrc(path);
+    document.getElementById('InfoLink').href = getExifInfoHref(path);
     document.getElementById('loadingText').style.display = "block";
 }
 
@@ -132,3 +136,48 @@ function unsetLoading() {
     }
 }
 
+function toggleExifLayer(exif_info_url, base_name, path) {
+    if (document.getElementById('ExifLayer').style.display === "none") {
+        var httpRequest = ajax_init();
+        if (httpRequest) {
+            var query = "mode=exif&dir=" + base_name + "&file=" + path;
+            ajax_set_instance(httpRequest, function() { showExif(httpRequest) });
+            ajax_post(httpRequest, exif_info_url, query);
+            document.getElementById('ExifLayer').style.display = "block";
+            document.getElementById('ExifLayer').innerHTML = "loading";
+        } else {
+            alert("EXIFの読み取りに失敗しました");
+        }
+    } else {
+        document.getElementById('ExifLayer').style.display = "none";
+    }
+}
+
+function showExif(httpRequest) {
+    var content;
+
+    if (httpRequest.readyState == 4) {
+        if (httpRequest.status == 200) {
+            var data = httpRequest.responseXML;
+
+            content = `
+<h3>EXIF情報</h3>
+<table class="ExifTable">
+<tr><th>EXIFバージョン</th><td>$exif_data->{'exif'}[0]->{'Exif_Version'}[0]</td></tr>
+<tr><th>幅 x 高さ</th><td>$exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0] x $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0]</td></tr>
+<tr><th>作成日時</th><td>$exif_data->{'exif'}[0]->{'Date_and_Time__Original_'}[0]</td></tr>
+<tr><th>メーカー</th><td>$exif_data->{'exif'}[0]->{'Manufacturer'}[0]</td></tr>
+<tr><th>モデル</th><td>$exif_data->{'exif'}[0]->{'Model'}[0]</td></tr>
+<tr><th>絞り値</th><td>$exif_data->{'exif'}[0]->{'F-Number'}[0]</td></tr>
+<tr><th>露出時間</th><td>$exif_data->{'exif'}[0]->{'Exposure_Time'}[0]</td></tr>
+<tr><th>ISO感度</th><td>$exif_data->{'exif'}[0]->{'ISO_Speed_Ratings'}[0]</td></tr>
+<tr><th>露出補正</th><td>$exif_data->{'exif'}[0]->{'Exposure_Bias'}[0]</td></tr>
+<tr><th>焦点距離</th><td>$exif_data->{'exif'}[0]->{'Focal_Length'}[0]</td></tr>
+</table>`;
+        } else {
+            content = "EXIFが含まれていません";
+        }
+
+        document.getElementById('ExifLayer').innerHTML = content;
+    }
+}

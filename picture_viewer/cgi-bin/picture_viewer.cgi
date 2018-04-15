@@ -15,6 +15,7 @@ use HTML_Elem;
 our $BASE_DIR_CONF = "";
 our $GET_PICTURE_CGI = "";
 our $GET_THUMBNAIL_CGI = "";
+our $EXIF_INFO_CGI = "";
 our $STOCKER_CGI = "";
 require '%conf_dir%/picture_viewer.conf';
 
@@ -76,80 +77,35 @@ print <<EOF;
 <span id="filename_field">$file_name</span>
 </span>
 <span id="control_field"></span>
-<span class="back_link maruButton">
+<span class="BackLink maruButton">
 <a href="${back_link}" style="text-decoration: none;">←</a>
 </span>
 </div>
-EOF
 
-my $has_exif = 0;
-my $exif_data;
-my $exif_xml;
-my $last_mod = substr(localtime((stat("${base}${path}"))[9]), 4);  # cut off weekday
-if(0) { #open(IN, "${EXIF_CMD} -x '${base}${path}' 2>/dev/null |")) {
-  while (<IN>) {
-    $exif_xml .= $_;
-  }
-  close(IN);
-}
-if(length($exif_xml) > 0) {
-  my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
-  $exif_data = $xml->XMLin($exif_xml);
-  if ($exif_data) {
-    $has_exif = 1;
-  }
-}
-
-  print <<EOF;
-<div style="clear: both; position: relative;">
+<div id="ContentArea">
+  <div id="ExifLayer" style="display: none"></div>
+  <div id="loadingText">loading...</div>
+  <span class="InfoLinkArea maruButton"><a href="javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${base_name}', '${encoded_path}')" id="InfoLink">i</a></span>
   <img src="${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}" width="100%" name="ImageArea" id="ImageArea">
-  <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="loadingText">
-    loading...
-  </div>
 </div>
 
 <script type="text/javascript">
 <!--
+    document.title = "${file_name}";
     setFileName("${file_name}");
     getImageList("${base_name}", "${encoded_uppath}");
     imageLoading("${encoded_path}");
 
     function getPictureSrc(path) {
-      return "${GET_PICTURE_CGI}?file=" + path + "&dir=${base_name}&size=640";
+        return "${GET_PICTURE_CGI}?file=" + path + "&dir=${base_name}&size=640";
+    }
+
+    function getExifInfoHref(path) {
+        return "javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${base_name}', '" + path + "')";
     }
 -->
 </script>
 EOF
-
-HTML_Elem->tail();
-exit(0);
-
-#  print "<p>Download: ";
-#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir\" target=\"_blank\">Orignal</a>&nbsp;&nbsp;";
-#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=1920\" target=\"_blank\">L</a>&nbsp;&nbsp;";
-#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=800\" target=\"_blank\">M</a>&nbsp;&nbsp;";
-#  print "<a href=\"${GET_PICTURE_CGI}?in=$in_in&dir=$in_dir&size=640\" target=\"_blank\">S</a><br><br>";
-  my $file_size = (-s "${base}${path}");
-  1 while $file_size =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
-  print "サイズ: ". $file_size ." Byte<br>";
-  print "更新日時: ". $last_mod;
-  print "</p>\n";
-
-if($has_exif == 1) {
-  print "<h3>EXIF情報</h3>\n";
-  print "<table border=\"1\">\n";
-  print "<tr><th>EXIFバージョン</th><td>$exif_data->{'exif'}[0]->{'Exif_Version'}[0]</td></tr>\n";
-  print "<tr><th>幅 x 高さ</th><td>$exif_data->{'exif'}[0]->{'Pixel_X_Dimension'}[0] x $exif_data->{'exif'}[0]->{'Pixel_Y_Dimension'}[0]</td></tr>\n";
-  print "<tr><th>作成日時</th><td>$exif_data->{'exif'}[0]->{'Date_and_Time__Original_'}[0]</td></tr>\n";
-  print "<tr><th>メーカー</th><td>$exif_data->{'exif'}[0]->{'Manufacturer'}[0]</td></tr>\n";
-  print "<tr><th>モデル</th><td>$exif_data->{'exif'}[0]->{'Model'}[0]</td></tr>\n";
-  print "<tr><th>絞り値</th><td>$exif_data->{'exif'}[0]->{'F-Number'}[0]</td></tr>\n";
-  print "<tr><th>露出時間</th><td>$exif_data->{'exif'}[0]->{'Exposure_Time'}[0]</td></tr>\n";
-  print "<tr><th>ISO感度</th><td>$exif_data->{'exif'}[0]->{'ISO_Speed_Ratings'}[0]</td></tr>\n";
-  print "<tr><th>露出補正</th><td>$exif_data->{'exif'}[0]->{'Exposure_Bias'}[0]</td></tr>\n";
-  print "<tr><th>焦点距離</th><td>$exif_data->{'exif'}[0]->{'Focal_Length'}[0]</td></tr>\n";
-  print "</table>\n";
-}
 
 HTML_Elem->tail();
 exit(0);
