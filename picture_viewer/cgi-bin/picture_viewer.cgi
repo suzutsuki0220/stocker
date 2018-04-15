@@ -85,23 +85,23 @@ print <<EOF;
 <div id="ContentArea">
   <div id="ExifLayer" style="display: none"></div>
   <div id="loadingText">loading...</div>
-  <span class="InfoLinkArea maruButton"><a href="javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${base_name}', '${encoded_path}')" id="InfoLink">i</a></span>
-  <img src="${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${base_name}" width="100%" name="ImageArea" id="ImageArea">
+  <span class="InfoLinkArea maruButton"><a href="javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${encoded_dir}', '${encoded_path}')" id="InfoLink">i</a></span>
+  <img src="${GET_THUMBNAIL_CGI}?file=${encoded_path}&dir=${encoded_dir}" width="100%" name="ImageArea" id="ImageArea">
 </div>
 
 <script type="text/javascript">
 <!--
     document.title = "${file_name}";
     setFileName("${file_name}");
-    getImageList("${base_name}", "${encoded_uppath}");
+    getImageList("${encoded_dir}", "${encoded_uppath}");
     imageLoading("${encoded_path}");
 
     function getPictureSrc(path) {
-        return "${GET_PICTURE_CGI}?file=" + path + "&dir=${base_name}&size=640";
+        return "${GET_PICTURE_CGI}?file=" + path + "&dir=${encoded_dir}&size=640";
     }
 
     function getExifInfoHref(path) {
-        return "javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${base_name}', '" + path + "')";
+        return "javascript:toggleExifLayer('${EXIF_INFO_CGI}', '${encoded_dir}', '" + path + "')";
     }
 -->
 </script>
