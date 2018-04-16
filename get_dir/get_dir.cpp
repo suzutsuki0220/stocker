@@ -181,7 +181,7 @@ main(int argc, char** argv)
 	makePropertiesTag(ss, fileutil, urlpath, cgi, f_file, elements);
 
 	if (!entries.empty()) {
-	    auto itr = entries.begin();
+	    std::list<std::string>::iterator itr = entries.begin();
 	    int num;
 
 	    ss << "  <contents>" << std::endl;

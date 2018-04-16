@@ -51,5 +51,5 @@ $(TEST_CGIUTIL_PROG): $(TEST_CGIUTIL_PROG).cpp $(TEST_CGIUTIL_HEADERS) $(LIBSTOC
 	$(CPP) $(CPPFLAGS) -o $@ $< $(LIBSTOCKER_COMMON)
 
 test: $(TEST_PROGS)
-	for prog in $(TEST_PROGS); do $${prog}; if [ $$? -ne 0 ] ;then exit 1 ;fi ;done
+	for prog in $(TEST_PROGS); do ./$${prog}; if [ $$? -ne 0 ] ;then exit 1 ;fi ;done
 

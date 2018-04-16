@@ -36,7 +36,7 @@ FileUtil::compareSubDirName(std::string &path, std::string pattern)
         if (start_pos != end_pos) {
             split_name = path.substr(start_pos, end_pos - start_pos);
             if (split_name.compare(pattern) == 0) {
-		return true;
+                return true;
             }
         }
         start_pos = end_pos + 1;
@@ -45,7 +45,7 @@ FileUtil::compareSubDirName(std::string &path, std::string pattern)
     if (start_pos != path.length()) {
         split_name = path.substr(start_pos);
         if (split_name.compare(pattern) == 0) {
-	    return true;
+            return true;
         }
     }
 
@@ -61,8 +61,8 @@ FileUtil::readFile(FILE *out_fp, const char *path, size_t start, size_t size)
 
     fp = fopen(path, "r");
     if(fp == NULL) {
-	err_message = "file open failed - ";
-	err_message += path; 
+        err_message = "file open failed - ";
+        err_message += path; 
         return -1;
     }
 
@@ -79,12 +79,12 @@ FileUtil::readFile(FILE *out_fp, const char *path, size_t start, size_t size)
         read_size = fread(buff, sizeof(char), out_size, fp);
         if (read_size <= 0) {
             if (feof(fp)) {
-	        std::stringstream ss;
+                std::stringstream ss;
                 ss << "read file reached EOF, size parameter is bigger than filesize? - start=" << start << ", size=" << size << ", read=" << size-remain;
                 err_message = ss.str();
                 break;
             } else if (ferror(fp)) {
-	        std::stringstream ss;
+                std::stringstream ss;
                 ss << "read error - " << strerror(errno) << "(" << errno << ")";
                 err_message = ss.str();
                 goto END;
@@ -111,8 +111,8 @@ FileUtil::getFilesize(std::string &path)
     if (stat(path.c_str(), &st) == 0) {
         ret = st.st_size;
     } else {
-	std::stringstream ss;
-	ss << "file status get failed - " << path << " " << strerror(errno) << "(" << errno << ")";
+        std::stringstream ss;
+        ss << "file status get failed - " << path << " " << strerror(errno) << "(" << errno << ")";
         err_message = ss.str();
     }
 
@@ -130,24 +130,24 @@ FileUtil::getDirectoryList(std::list<std::string> &dirlist, std::string &path, b
 
     dir = opendir(path.c_str());
     if (dir == NULL) {
-	std::stringstream ss;
-	ss << "file status get failed - " << path << " " << strerror(errno) << "(" << errno << ")";
+        std::stringstream ss;
+        ss << "file status get failed - " << path << " " << strerror(errno) << "(" << errno << ")";
         err_message = ss.str();
-	goto END;
+        goto END;
     }
 
     while ((entry = readdir(dir)) != NULL) {
-	if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-	    continue;
-	}
-	if (strcmp(entry->d_name, "lost+found") == 0) {
-	    continue;
-	}
-	if (skip_hide == true && strncmp(entry->d_name, ".", 1) == 0) {
-	    continue;
-	}
-	//printf("DIR: %s\n", entry->d_name);
-	dirlist.push_back(entry->d_name);
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        if (strcmp(entry->d_name, "lost+found") == 0) {
+            continue;
+        }
+        if (skip_hide == true && strncmp(entry->d_name, ".", 1) == 0) {
+            continue;
+        }
+        //printf("DIR: %s\n", entry->d_name);
+        dirlist.push_back(entry->d_name);
     }
 
     closedir(dir);
@@ -211,28 +211,28 @@ FileUtil::getCanonicalizePath(std::string &outpath, std::string &path)
 
     outpath.clear();
 
-    if (path.front() == '/') {
-	outpath = "/";
+    if (path.length() != 0 && path.at(0) == '/') {
+        outpath = "/";
     }
 
     start_pos = 0;
     end_pos = path.find('/');
     while (end_pos != std::string::npos) {
-	if (start_pos != end_pos) {
-	    split_name = path.substr(start_pos, end_pos - start_pos);
-	    if (split_name.compare(".") != 0) {  // '.' のみは無視する
-		outpath.append(split_name);
-		outpath.append("/");
-	    }
-	}
-	start_pos = end_pos + 1;
-	end_pos = path.find('/', start_pos);
+        if (start_pos != end_pos) {
+            split_name = path.substr(start_pos, end_pos - start_pos);
+            if (split_name.compare(".") != 0) {  // '.' のみは無視する
+                outpath.append(split_name);
+                outpath.append("/");
+            }
+        }
+        start_pos = end_pos + 1;
+        end_pos = path.find('/', start_pos);
     }
     if (start_pos != path.length()) {
-	split_name = path.substr(start_pos);
-	if (split_name.compare(".") != 0) {  // '.' のみは無視する
-	    outpath.append(split_name);
-	}
+        split_name = path.substr(start_pos);
+        if (split_name.compare(".") != 0) {  // '.' のみは無視する
+            outpath.append(split_name);
+        }
     }
 }
 
@@ -245,8 +245,8 @@ FileUtil::getUpPath(std::string &output, std::string &path)
 
     output.clear();
 
-    if ((path.length() == 1 && path.front() == '.') || 
-	(path.length() > 1 && path.substr(0, 2) == "./"))
+    if ((path.length() == 1 && path.at(0) == '.') || 
+        (path.length() > 1 && path.substr(0, 2) == "./"))
     {
         output.insert(output.begin(), '.');
     }
@@ -254,26 +254,26 @@ FileUtil::getUpPath(std::string &output, std::string &path)
     getCanonicalizePath(ca_path, path);
 
     if (ca_path.length() > 1) {
-	if (ca_path.back() == '/') {
-	    ca_path = ca_path.substr(0, ca_path.length() - 1);
-	}
+        if (ca_path.at(ca_path.length() - 1) == '/') {
+            ca_path = ca_path.substr(0, ca_path.length() - 1);
+        }
 
-	start_pos = 0;
-	end_pos = ca_path.find('/');
-	while (end_pos != std::string::npos) {
-	    split_name = ca_path.substr(start_pos, end_pos - start_pos);
-	    if (start_pos > 0) {
-		output.append("/");
-	    }
-	    output.append(split_name);
+        start_pos = 0;
+        end_pos = ca_path.find('/');
+        while (end_pos != std::string::npos) {
+            split_name = ca_path.substr(start_pos, end_pos - start_pos);
+            if (start_pos > 0) {
+                output.append("/");
+            }
+            output.append(split_name);
 
-	    start_pos = end_pos + 1;
-	    end_pos = ca_path.find('/', start_pos);
-	}
+            start_pos = end_pos + 1;
+            end_pos = ca_path.find('/', start_pos);
+        }
     }
 
-    if (output.empty() && ca_path.front() == '/') {
-	output = "/";
+    if (output.empty() && ca_path.length() != 0 && ca_path.at(0) == '/') {
+        output = "/";
     }
 }
 
@@ -290,8 +290,8 @@ FileUtil::getBasename(std::string &output, std::string &path)
     start_pos = 0;
     end_pos = ca_path.find('/');
     while (end_pos != std::string::npos) {
-	start_pos = end_pos + 1;
-	end_pos = ca_path.find('/', start_pos);
+        start_pos = end_pos + 1;
+        end_pos = ca_path.find('/', start_pos);
     }
 
     output = ca_path.substr(start_pos);

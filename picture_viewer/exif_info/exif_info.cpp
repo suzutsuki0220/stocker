@@ -1,8 +1,9 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
-#include <exif-data.h>
-#include <exif-loader.h>
+#include <stdexcept>
+#include <libexif/exif-data.h>
+#include <libexif/exif-loader.h>
 
 #include "htmlutil.h"
 #include "cgi_util.h"
