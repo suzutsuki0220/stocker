@@ -8,7 +8,7 @@ my @librarys = (
 ,"File::Copy"
 ,"File::Path"
 ,"XML::Simple"
-,"MIME::Base64::URLSafe"
+,"MIME::Base64"
 ,"Encode"
 ,"Encode::Guess"
 );

@@ -7,7 +7,6 @@ use Encode;
 use CGI;
 use File::Path;
 use XML::Simple;
-use MIME::Base64::URLSafe;
 
 use lib '%libs_dir%';
 use ParamPath;

@@ -4,7 +4,7 @@ use utf8;
 use strict;
 use warnings;
 use Encode;
-use MIME::Base64::URLSafe;  # UrlPath decode/encode
+use MIME::Base64;
 
 sub new {
   my $class = shift;
@@ -105,7 +105,8 @@ sub urlpath_encode {
   my $url_path = "";
 
   foreach my $elem (split('/', $file_path)) {
-    my $point_path = urlsafe_b64encode($elem);
+    my $point_path = encode_base64($elem, '');
+    $point_path =~ tr|+/=|\-_|d;
     $url_path .= "/" . $point_path;
   }
 
@@ -124,7 +125,14 @@ sub urlpath_decode {
   my $file_path = "";
 
   foreach my $elem (split('/', $url_path)) {
-    my $point_path = urlsafe_b64decode($elem);
+    $elem =~ tr|\-_\t-\x0d |+/|d;
+
+    my $mod4 = length($elem) % 4;
+    if ($mod4) {
+        $elem .= substr('====', $mod4);
+    }
+
+    my $point_path = decode_base64($elem);
     $file_path .= "/" . $point_path;
   }
 

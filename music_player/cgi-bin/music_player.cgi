@@ -5,7 +5,6 @@ use warnings;
 use utf8;
 use Encode;
 use CGI;
-use MIME::Base64::URLSafe;
 
 use lib '%libs_dir%';
 use ParamPath;

@@ -6,7 +6,7 @@ my @librarys = (
  "utf8"
 ,"Encode"
 ,"CGI"
-,"MIME::Base64::URLSafe"
+,"MIME::Base64"
 );
 
 #####
