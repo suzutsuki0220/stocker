@@ -370,8 +370,6 @@ sub show_next_pagelink {
   my $next_to = $cont_to + $boxes + 1;
   if($cont_to < $#dir_list) {
     print "<a href=\"javascript:jump_to($next_from, $next_to)\">次ページ</a>";
-  } else {
-    print "以上";
   }
   print "</p>\n";
 }
