@@ -17,14 +17,9 @@ else
 	CFLAGS=-O2 -Wall
 endif
 CFLAGS+= -I../common_module/Inc
-
 CPPFLAGS=$(CFLAGS)
 
-DESTDIR   = /var/www
-CGI_DIR   = $(DESTDIR)/cgi-bin/stocker
-BASE_DIR  = $(DESTDIR)/stocker
-BIN_DIR   = $(BASE_DIR)/bin
-CONF_DIR  = $(BASE_DIR)/conf
+include ../directory_defs.mk
 
 .PHONY: all clean install
 

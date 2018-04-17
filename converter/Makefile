@@ -1,16 +1,6 @@
 .PHONY: all clean install
 
-HTDOCS_ROOT = /stocker
-
-DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
-BASE_DIR   = $(DESTDIR)/stocker
-BIN_DIR    = $(BASE_DIR)/bin
-LIBS_DIR   = $(BASE_DIR)/lib
-CONF_DIR   = $(BASE_DIR)/conf
-CACHE_DIR  = $(BASE_DIR)/cache
-TRASH_DIR  = $(BASE_DIR)/trash
+include ../directory_defs.mk
 
 LIB_FILES  = ConverterJob.pm
 DOC_FILES  = converter_form.js
@@ -64,8 +54,8 @@ install-cgi:
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
 install-bin:
-	make -C movie_info install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
-	make -C convert_worker install DESTDIR=$(DESTDIR) BIN_DIR=$(BIN_DIR)
+	make -C movie_info install $(INSTALL_PARAM)
+	make -C convert_worker install $(INSTALL_PARAM)
 
 install: libcheck make-directory install-config install-htdocs install-cgi install-bin install-libs
 

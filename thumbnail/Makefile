@@ -1,14 +1,6 @@
 .PHONY: all clean install
 
-DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html/stocker
-BASE_DIR   = $(DESTDIR)/stocker
-BIN_DIR    = $(BASE_DIR)/bin
-LIBS_DIR   = $(BASE_DIR)/lib
-CONF_DIR   = $(BASE_DIR)/conf
-CACHE_DIR  = $(BASE_DIR)/cache
-TRASH_DIR  = $(BASE_DIR)/trash
+include ../directory_defs.mk
 
 LIB_FILES  =
 DOC_FILES  =

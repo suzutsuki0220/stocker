@@ -16,14 +16,9 @@ else
 	CFLAGS=-O2 -Wall -DNDEBUG
 endif
 CFLAGS+= -I$(COMMON_MODULE_DIR)/Inc
-
 CPPFLAGS=$(CFLAGS)
 
-DESTDIR   = /var/www
-CGI_DIR   = $(DESTDIR)/cgi-bin/stocker
-BASE_DIR  = $(DESTDIR)/stocker
-BIN_DIR   = $(BASE_DIR)/bin
-CONF_DIR  = $(BASE_DIR)/conf
+include ../directory_defs.mk
 
 .phony: all clean install
 

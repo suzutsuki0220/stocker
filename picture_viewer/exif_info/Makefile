@@ -7,11 +7,7 @@ CFLAGS += -Wall -O2 -g
 CFLAGS := $(shell pkg-config --cflags $(EXIF_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(EXIF_LIBS)) $(LDLIBS)
 
-DESTDIR   = /var/www
-CGI_DIR   = $(DESTDIR)/cgi-bin/stocker
-BASE_DIR  = $(DESTDIR)/stocker
-BIN_DIR   = $(BASE_DIR)/bin
-CONF_DIR  = $(BASE_DIR)/conf
+include ../../directory_defs.mk
 
 COMMON_MODULE_DIR=../../common_module
 LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a

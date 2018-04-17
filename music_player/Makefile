@@ -1,16 +1,6 @@
 .PHONY: all clean install
 
-HTDOCS_ROOT = /stocker
-
-DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin$(HTDOCS_ROOT)
-DOCS_DIR   = $(DESTDIR)/html/stocker
-BASE_DIR   = $(DESTDIR)/stocker
-BIN_DIR    = $(BASE_DIR)/bin
-LIBS_DIR   = $(BASE_DIR)/lib
-CONF_DIR   = $(BASE_DIR)/conf
-CACHE_DIR  = $(BASE_DIR)/cache
-TRASH_DIR  = $(BASE_DIR)/trash
+include ../directory_defs.mk
 
 LIB_FILES  =
 DOC_FILES  = music_player.js
@@ -64,7 +54,7 @@ install-cgi:
 	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
 
 install-bin:
-	make -C taginfo install DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
+	make -C taginfo install $(INSTALL_PARAM)
 
 install: libcheck make-directory install-config install-htdocs install-cgi install-bin
 

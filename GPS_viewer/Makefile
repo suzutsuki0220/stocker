@@ -1,17 +1,6 @@
 .PHONY: all clean install
 
-HTDOCS_ROOT = /stocker
-CGI_ROOT    = /cgi-bin/stocker
-
-DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
-BASE_DIR   = $(DESTDIR)/stocker
-BIN_DIR    = $(BASE_DIR)/bin
-LIBS_DIR   = $(BASE_DIR)/lib
-CONF_DIR   = $(BASE_DIR)/conf
-CACHE_DIR  = $(BASE_DIR)/cache
-TRASH_DIR  = $(BASE_DIR)/trash
+include ../directory_defs.mk
 
 LIB_FILES  = GPS_GPX.pm GPS_KML.pm GPS_NMEA.pm
 DOC_FILES  = $(wildcard htdocs/*)

@@ -1,24 +1,11 @@
 .PHONY: all clean install
 
-HTDOCS_ROOT = /stocker
-CGI_ROOT    = /cgi-bin/stocker
-
-DESTDIR    = /var/www
-CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
-DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
-BASE_DIR   = $(DESTDIR)/stocker
-BIN_DIR    = $(BASE_DIR)/bin
-LIBS_DIR   = $(BASE_DIR)/lib
-CONF_DIR   = $(BASE_DIR)/conf
-CACHE_DIR  = $(BASE_DIR)/cache
-TRASH_DIR  = $(BASE_DIR)/trash
+include directory_defs.mk
 
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
 DOC_FILES  = $(wildcard htdocs/*)
 CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi text_viewer.cgi
 CONF_FILES = basedirs.conf SupportTypes.pl stocker.conf
-
-INSTALL_PARAM = DESTDIR=$(DESTDIR) CGI_DIR=$(CGI_DIR) DOCS_DIR=$(DOCS_DIR) BASE_DIR=$(BASE_DIR) HTDOCS_ROOT=$(HTDOCS_ROOT) CONF_DIR=$(CONF_DIR)
 
 all:
 	make -C GPS_viewer/

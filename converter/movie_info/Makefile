@@ -11,9 +11,7 @@ CFLAGS += -Wall -O2 -g
 CFLAGS := $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(FFMPEG_LIBS)) $(LDLIBS)
 
-DESTDIR   = /var/www
-BASE_DIR  = $(DESTDIR)/stocker
-BIN_DIR   = $(BASE_DIR)/bin
+include ../../directory_defs.mk
 
 TARGET = movie_info
 
