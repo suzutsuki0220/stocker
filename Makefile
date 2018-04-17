@@ -72,7 +72,6 @@ install-modules:
 	make -C music_player/ install $(INSTALL_PARAM)
 	make -C picture_viewer/ install $(INSTALL_PARAM)
 	make -C status/ install $(INSTALL_PARAM)
-	make -C music_player/ install $(INSTALL_PARAM)
 	make -C thumbnail/ install $(INSTALL_PARAM)
 
 install: make-directory install-config install-libs install-htdocs install-cgi install-modules
