@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use utf8;
 use Encode;
 use CGI;
 
@@ -63,7 +64,7 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-print <<EOF;
+my $html = <<EOF;
 <body onload="drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}')">
 <div style="height: 5%">
 <span style="float: left">
@@ -84,4 +85,6 @@ print <<EOF;
 </body>
 </html>
 EOF
+
+print(encode('utf-8', $html));
 
