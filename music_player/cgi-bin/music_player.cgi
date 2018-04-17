@@ -229,10 +229,12 @@ function getMusicFiles(data) {
   const properties = data.getElementsByTagName('properties');
   if (properties != null) {
     const name_elem = properties.item(0).getElementsByTagName('name');
-    if (name_elem != null) {
-      document.title = name_elem.item(0).firstChild.data;
-      document.getElementById('directory_name_area').innerHTML = name_elem.item(0).firstChild.data;
+    var name_string = "";
+    if (name_elem != null && name_elem.item(0).firstChild != null) {
+      name_string = name_elem.item(0).firstChild.data;
     }
+    document.title = name_string;
+    document.getElementById('directory_name_area').innerHTML = name_string;
   }
 
   const contents = data.getElementsByTagName('contents').item(0);
