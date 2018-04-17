@@ -45,4 +45,4 @@ clean:
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -o $(CGI_DIR)/$(TARGET) $(OBJECTS) taginfo.cpp $(COMMON_MODULE) $(LIBPARAM)
+	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) taginfo.cpp $(COMMON_MODULE) $(LIBPARAM)

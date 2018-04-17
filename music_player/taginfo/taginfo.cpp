@@ -108,7 +108,7 @@ outputAudioTags(cgi_util *cgi, TagLib::FileRef &f)
         ss << "  <bitrate>"     << properties->bitrate()    << "</bitrate>"     << endl;
         ss << "  <sample_rate>" << properties->sampleRate() << "</sample_rate>" << endl;
         ss << "  <channels>"    << properties->channels()   << "</channels>"    << endl;
-	ss << "  <duration>" << properties->lengthInMilliseconds() << "</duration>"    << endl;
+        ss << "  <duration>" << properties->length() << "</duration>"    << endl;
         ss << "  <time>" << minutes << ":" << setfill('0') << setw(2) << seconds << "</time>" << endl;
     }
 
@@ -174,7 +174,10 @@ outputPicture(TagLib::FileRef &f)
     } else if (dynamic_cast<TagLib::MP4::File*>(f.file())) {
         TagLib::MP4::File *file = dynamic_cast<TagLib::MP4::File*>(f.file());
         if (file->tag()) {
-            TagLib::MP4::Item item = file->tag()->item("covr");
+            //TagLib::MP4::Item item = file->tag()->item("covr");
+            std::string key = "covr";
+            TagLib::MP4::ItemListMap itemList = file->tag()->itemListMap();
+            TagLib::MP4::Item item = itemList[key];
             if (item.isValid()) {
                 TagLib::MP4::CoverArt coverart = item.toCoverArtList().front();
                 switch (coverart.format()) {
@@ -225,7 +228,7 @@ main(int argc, char *argv[])
             return -1;
         }
 
-	urlpath = new UrlPath(CONFDIR);
+        urlpath = new UrlPath(CONFDIR);
 
         std::string filepath;
         std::string f_dir  = cgi->get_value("dir");

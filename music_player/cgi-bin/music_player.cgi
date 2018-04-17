@@ -247,6 +247,7 @@ function getMusicFiles(data) {
     return;
   }
 
+  var music_pattern = /\\.(mp3|m4a|wma|wav|flac)\$/;  // 拡張子判定
   for (var i=0; i<elements.length; i++) {
     var name_elem = elements.item(i).getElementsByTagName('name');
     var path_elem = elements.item(i).getElementsByTagName('path');
@@ -256,7 +257,6 @@ function getMusicFiles(data) {
       var path = path_elem.item(0).firstChild.data;
       var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
-      var music_pattern = /\\.(mp3|wma|wav|flac)\$/;  // 拡張子判定
       if (music_pattern.test(name.toLowerCase())) {
         getMusicProperties("${TAGINFO_CGI}", "${base_name}", name, num, path, addToMusicList)
       }

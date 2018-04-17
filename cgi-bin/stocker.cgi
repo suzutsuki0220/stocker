@@ -145,7 +145,7 @@ reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 function directoryList(data) {
   // 拡張子判定
   var movie_pattern = /\\.(avi|flv|mov|mpg|mpeg|mpe|m2p|ts|mts|m2ts|mp4|m4v|mpg4|asf|wmv)\$/;
-  var music_pattern = /\\.(mp3|wma|wav|flac)\$/;
+  var music_pattern = /\\.(mp3|m4a|wma|wav|flac)\$/;
   var photo_pattern = /\\.(jpg|jpeg)\$/;
   var gps_pattern = /\\.(kml|kmz|gpx|nmea)\$/;
   var txt_pattern = /\\.(txt|log)\$/;
