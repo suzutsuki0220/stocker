@@ -1,12 +1,32 @@
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
+#include <sstream>
+#include <stdexcept>
 #include <sys/stat.h>    // to get filesize
 //#include <inttypes.h>  // For int64_t print
+
+#include "htmlutil.h"
+#include "cgi_util.h"
+#include "UrlPath.h"
+#include "Config.h"
+
+#ifndef CONFDIR
+#define CONFDIR "/var/www/stocker/conf"
+#endif
+
+#if __cplusplus
+extern "C" {
+#endif
 
 // FFMpeg API
 #include <libavformat/avformat.h>
 #include <libavutil/rational.h>
 #include <libavutil/dict.h>
 #include <libavutil/common.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 int get_ratio(int a, int b)
 {
@@ -29,6 +49,28 @@ int get_ratio(int a, int b)
     }
   }
   return a;
+}
+
+const char *avcodec_get_name(enum AVCodecID id)
+{
+    const AVCodecDescriptor *cd;
+    AVCodec *codec;
+
+    if (id == AV_CODEC_ID_NONE)
+         return "none";
+    cd = avcodec_descriptor_get(id);
+    if (cd)
+         //return cd->name;
+         return cd->long_name;
+    codec = avcodec_find_decoder(id);
+    if (codec)
+        //return codec->name;
+        return codec->long_name;
+    codec = avcodec_find_encoder(id);
+    if (codec)
+        //return codec->name;
+        return codec->long_name;
+    return "unknown_codec";
 }
 
 static void print_video_tag(AVStream *vst, const int stream_no)
@@ -90,53 +132,69 @@ const size_t get_filesize(const char *filename)
   return size;
 }
 
-const char *avcodec_get_name(enum AVCodecID id)
-{
-    const AVCodecDescriptor *cd;
-    AVCodec *codec;
- 
-    if (id == AV_CODEC_ID_NONE)
-         return "none";
-    cd = avcodec_descriptor_get(id);
-    if (cd)
-         //return cd->name;
-         return cd->long_name;
-    codec = avcodec_find_decoder(id);
-    if (codec)
-        //return codec->name;
-        return codec->long_name;
-    codec = avcodec_find_encoder(id);
-    if (codec)
-        //return codec->name;
-        return codec->long_name;
-    return "unknown_codec";
-}
-
 int main (int argc, char **argv)
 {
+    int ret = -1;
+    cgi_util *cgi = NULL;
+    UrlPath  *urlpath = NULL;
+    FileUtil *fileutil = NULL;
+    std::string filepath;
+    std::stringstream ss;
+
     AVFormatContext *fmt_ctx = NULL;
     AVDictionaryEntry *tag = NULL;
-    int ret;
 
-    if (argc != 2) {
-        printf("usage: %s <input_file>\n"
-               "show informations of the movie file.\n"
-               "\n", argv[0]);
-        return 1;
+    try {
+        char linebuf[256];
+
+        cgi = new cgi_util();
+        if (cgi->parse_param() != 0) {
+            print_400_header(cgi->get_err_message().c_str());
+            return -1;
+        }
+
+        urlpath = new UrlPath(CONFDIR);
+
+        std::string f_dir  = cgi->get_value("dir");
+        std::string f_file = cgi->get_value("file");
+
+        f_dir = cgi->decodeFormURL(f_dir);
+
+        if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
+            print_400_header("failed to determine filepath");
+            return -1;
+        }
+
+      ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+      ss << "<movie_info>" << std::endl;
+
+        fileutil = new FileUtil();
+        std::string basename;
+        fileutil->getBasename(basename, filepath);
+        ss << "<filename>" << basename << "</filename>" << std::endl;
+        snprintf(linebuf, sizeof(linebuf), "<filesize>%zd</filesize>", fileutil->getFilesize(filepath));
+        ss << linebuf << std::endl;
+    } catch (std::bad_alloc ex) {
+        fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
+        goto END;
+    } catch (std::invalid_argument e) {
+        std::stringstream ss;
+        ss << "Exception: " << e.what();
+        print_400_header(ss.str().c_str());
+        goto END;
     }
 
     av_register_all();
-    if ((ret = avformat_open_input(&fmt_ctx, argv[1], NULL, NULL)))
-        return ret;
+    if ((ret = avformat_open_input(&fmt_ctx, filepath.c_str(), NULL, NULL))) {
+        print_400_header("failed to open mediafile");
+        goto END;
+    }
 
+    printf("%s", ss.str().c_str());
     avformat_find_stream_info(fmt_ctx, NULL);
 
     //printf("Streams: %d\n", fmt_ctx->nb_streams);
-    int i = 0;
 
-    printf("<movie_info>\n");
-    printf("<filename>%s</filename>\n", fmt_ctx->filename);
-    printf("<filesize>%zd</filesize>\n", get_filesize(fmt_ctx->filename));
     printf("<format>%s</format>\n", fmt_ctx->iformat->long_name);
     if (fmt_ctx->duration != AV_NOPTS_VALUE) {
       int hours, mins, secs, us;
@@ -148,12 +206,12 @@ int main (int argc, char **argv)
       hours = mins / 60;
       mins %= 60;
       printf("<duration>%02d:%02d:%02d.%02d</duration>\n",
-		  hours, mins, secs, (100*us)/AV_TIME_BASE);
+                  hours, mins, secs, (100*us)/AV_TIME_BASE);
 //      printf("Duration: %" PRId64 " (%02d:%02d:%02d.%02d)\n",
-//		  fmt_ctx->duration, hours, mins, secs, (100*us)/AV_TIME_BASE);
+//                  fmt_ctx->duration, hours, mins, secs, (100*us)/AV_TIME_BASE);
     }
 
-    for(i=0; i<fmt_ctx->nb_streams; i++) {
+    for(int i=0; i<fmt_ctx->nb_streams; i++) {
         AVStream *s = fmt_ctx->streams[i];
         if( s->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             print_video_tag(s, i);
@@ -169,6 +227,9 @@ int main (int argc, char **argv)
 
     printf("</movie_info>\n");
     avformat_close_input(&fmt_ctx);
-    return 0;
+    ret = 0;
+
+END:
+    return ret;
 }
 
