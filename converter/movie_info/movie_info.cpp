@@ -2,7 +2,6 @@
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
-#include <sys/stat.h>    // to get filesize
 //#include <inttypes.h>  // For int64_t print
 
 #include "htmlutil.h"
@@ -73,18 +72,17 @@ const char *avcodec_get_name(enum AVCodecID id)
     return "unknown_codec";
 }
 
-static void print_video_tag(AVStream *vst, const int stream_no)
+static void print_video_tag(std::stringstream &ss, AVStream *vst, const int stream_no)
 {
-  printf("<video>\n");
-  printf("  <no>%d</no>\n", stream_no);
-  printf("  <bitrate>%ld</bitrate>\n", vst->codec->bit_rate);
-  //printf("  <codec_name>%s</codec_name>\n", vst->codec->codec_name); // ffmpeg-1.0
-  printf("  <codec>%s</codec>\n", avcodec_get_name(vst->codec->codec_id));
-  printf("  <fps>%f</fps>\n", (double)vst->r_frame_rate.num / (double)vst->r_frame_rate.den);
-  printf("  <fps_average>%f</fps_average>\n", (double)vst->avg_frame_rate.num / (double)vst->avg_frame_rate.den);
-
-  printf("  <width>%d</width>\n", vst->codec->width);
-  printf("  <height>%d</height>\n", vst->codec->height);
+  ss << "<video>" << std::endl;
+  ss << "  <no>" << stream_no << "</no>" << std::endl;
+  ss << "  <bitrate>" << vst->codec->bit_rate << "</bitrate>" << std::endl;
+  //ss << "  <codec_name>" << vst->codec->codec_name << " </codec_name> << std::endl; // ffmpeg-1.0
+  ss << "  <codec>" << avcodec_get_name(vst->codec->codec_id) << "</codec>" << std::endl;
+  ss << "  <fps>" << (double)vst->r_frame_rate.num / (double)vst->r_frame_rate.den << "</fps>" << std::endl;
+  ss << "  <fps_average>" << (double)vst->avg_frame_rate.num / (double)vst->avg_frame_rate.den << "</fps_average>" << std::endl;
+  ss << "  <width>" << vst->codec->width << "</width>" << std::endl;
+  ss << "  <height>" << vst->codec->height << "</height>" << std::endl;
 
   int disp_width  = vst->codec->width;
   int disp_height = vst->codec->height;
@@ -100,36 +98,28 @@ static void print_video_tag(AVStream *vst, const int stream_no)
     aspect_y = disp_height / aspect_ratio;
   }
 
-  printf("  <disp_width>%d</disp_width>\n", disp_width);
-  printf("  <disp_height>%d</disp_height>\n", disp_height);
-  printf("  <disp_aspect>%d:%d</disp_aspect>\n", aspect_x, aspect_y);
-  printf("  <sar>%d:%d</sar>\n", vst->codec->sample_aspect_ratio.num, vst->codec->sample_aspect_ratio.den);
-  printf("</video>\n");
+  ss << "  <disp_width>" << disp_width << "</disp_width>" << std::endl;
+  ss << "  <disp_height>" << disp_height << "</disp_height>" << std::endl;
+  ss << "  <disp_aspect>" << aspect_x << ":" << aspect_y << "</disp_aspect>" << std::endl;
+  ss << "  <sar>" << vst->codec->sample_aspect_ratio.num << ":" << vst->codec->sample_aspect_ratio.den << "</sar>" << std::endl;
+  ss << "</video>" << std::endl;
+
 }
 
-static void print_audio_tag(AVStream *ast, const int stream_no)
+static void print_audio_tag(std::stringstream &ss, AVStream *ast, const int stream_no)
 {
-  printf("<audio>\n");
-  printf("  <no>%d</no>\n", stream_no);
-  printf("  <sample_rate>%d</sample_rate>\n", ast->codec->sample_rate);
-  printf("  <channel>%d</channel>\n", ast->codec->channels);
-  printf("  <bitrate>%ld</bitrate>\n", ast->codec->bit_rate);
+  ss << "<audio>" << std::endl;
+  ss << "  <no>" << stream_no << "</no>" << std::endl;
+  ss << "  <sample_rate>" << ast->codec->sample_rate << "</sample_rate>" << std::endl;
+  ss << "  <channel>" << ast->codec->channels << "</channel>" << std::endl;
+  ss << "  <bitrate>" << ast->codec->bit_rate << "</bitrate>" << std::endl;
+
   const char *s = av_get_sample_fmt_name(ast->codec->sample_fmt);
-  if (s) printf("  <sample_fmt>%s</sample_fmt>\n", s);
-  else   printf("  <sample_fmt>Unknown</sample_fmt>\n");
-//    printf("  <codec_name>%s</codec_name>\n", ast->codec->codec->long_name);
-  printf("  <codec>%s</codec>\n", avcodec_get_name(ast->codec->codec_id));
-  printf("</audio>\n");
-}
+  ss << "  <sample_fmt>" <<  (s ? s : "Unknown") << "</sample_fmt>" << std::endl;
+//    ss << "  <codec_name>%s</codec_name>\n", ast->codec->codec->long_name); << std::endl;
+  ss << "  <codec>" << avcodec_get_name(ast->codec->codec_id) << "</codec>" << std::endl;
+  ss << "</audio>" << std::endl;
 
-const size_t get_filesize(const char *filename)
-{
-  struct stat status;
-  size_t size = -1;
-  if (stat(filename, &status) == 0) {
-    size = status.st_size;
-  }
-  return size;
 }
 
 int main (int argc, char **argv)
@@ -144,9 +134,10 @@ int main (int argc, char **argv)
     AVFormatContext *fmt_ctx = NULL;
     AVDictionaryEntry *tag = NULL;
 
-    try {
-        char linebuf[256];
+    ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+    ss << "<movie_info>" << std::endl;
 
+    try {
         cgi = new cgi_util();
         if (cgi->parse_param() != 0) {
             print_400_header(cgi->get_err_message().c_str());
@@ -165,15 +156,11 @@ int main (int argc, char **argv)
             return -1;
         }
 
-      ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
-      ss << "<movie_info>" << std::endl;
-
         fileutil = new FileUtil();
         std::string basename;
         fileutil->getBasename(basename, filepath);
         ss << "<filename>" << basename << "</filename>" << std::endl;
-        snprintf(linebuf, sizeof(linebuf), "<filesize>%zd</filesize>", fileutil->getFilesize(filepath));
-        ss << linebuf << std::endl;
+        ss << "<filesize>" << fileutil->getFilesize(filepath) << "</filesize>" << std::endl;
     } catch (std::bad_alloc ex) {
         fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
         goto END;
@@ -190,13 +177,13 @@ int main (int argc, char **argv)
         goto END;
     }
 
-    printf("%s", ss.str().c_str());
     avformat_find_stream_info(fmt_ctx, NULL);
 
     //printf("Streams: %d\n", fmt_ctx->nb_streams);
 
-    printf("<format>%s</format>\n", fmt_ctx->iformat->long_name);
+    ss << "<format>" << fmt_ctx->iformat->long_name << "</format>" << std::endl;
     if (fmt_ctx->duration != AV_NOPTS_VALUE) {
+      char line_buf[256];
       int hours, mins, secs, us;
       int64_t duration = fmt_ctx->duration + 5000;
       secs = duration / AV_TIME_BASE;
@@ -205,28 +192,32 @@ int main (int argc, char **argv)
       secs %= 60;
       hours = mins / 60;
       mins %= 60;
-      printf("<duration>%02d:%02d:%02d.%02d</duration>\n",
+      snprintf(line_buf, sizeof(line_buf), "<duration>%02d:%02d:%02d.%02d</duration>",
                   hours, mins, secs, (100*us)/AV_TIME_BASE);
-//      printf("Duration: %" PRId64 " (%02d:%02d:%02d.%02d)\n",
+//      ss << "Duration: %" PRId64 " (%02d:%02d:%02d.%02d)\n",
 //                  fmt_ctx->duration, hours, mins, secs, (100*us)/AV_TIME_BASE);
+      ss << line_buf << std::endl;
     }
 
     for(int i=0; i<fmt_ctx->nb_streams; i++) {
         AVStream *s = fmt_ctx->streams[i];
         if( s->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-            print_video_tag(s, i);
+            print_video_tag(ss, s, i);
         } else if( s->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-            print_audio_tag(s, i);
+            print_audio_tag(ss, s, i);
         }
     }
 
-    printf("<media_tags>\n");
+    ss << "<media_tags>" << std::endl;
     while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
-        printf("  <%s>%s</%s>\n", tag->key, tag->value, tag->key);
-    printf("</media_tags>\n");
+        ss << "  <" << tag->key << ">" << tag->value << "</" << tag->key << ">" << std::endl;
+    ss << "</media_tags>" << std::endl;
 
-    printf("</movie_info>\n");
+    ss << "</movie_info>" << std::endl;
     avformat_close_input(&fmt_ctx);
+
+    print_200_header("application/xml", ss.str().length(), false);
+    fwrite(ss.str().c_str(), ss.str().length(), sizeof(char), stdout);
     ret = 0;
 
 END:
