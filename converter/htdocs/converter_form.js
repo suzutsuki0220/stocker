@@ -517,7 +517,7 @@ function makeVideoTable(video_elem) {
     }
 
     return `
-<tr><td rowspan="6"><input type="radio" name="v_map" value="${vid_no}" onClick="doVideoStreamSelected()">${vid_no}</td>
+<tr><td rowspan="6"><input type="radio" name="v_map" value="${vid_no}" onClick="doVideoStreamSelected(${vid_no})">${vid_no}</td>
 <th>幅 x 高さ</th><td id="size_${vid_no}">${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>
 <tr><th>表示上のサイズ</th><td id="disp_${vid_no}">${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>
 <tr><th>ビットレート</th><td id="bps_${vid_no}">${vid_bitrate}</td></tr>
@@ -545,22 +545,37 @@ function makeAudioTable(audio_elem) {
 `;
 }
 
-function doVideoStreamSelected() {
+function doVideoStreamSelected(vid_no) {
     var width, height, disp_width, disp_height, fps;
-    const vid_no = document.getElementsByName('v_map')[0].value;
 
+    var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/
+    var fps_pattern = /^(\d+).*$/
     var size_str = document.getElementById("size_" + vid_no).innerHTML;
     var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
     var fps_str  = document.getElementById("fps_" + vid_no).innerHTML;
     var bps  = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
 
+    var wxh_result = wxh_pattern.exec(size_str);
+    width  = parseInt(wxh_result[1]);
+    height = parseInt(wxh_result[2]);
+
+    var disp_wxh_result = wxh_pattern.exec(disp_str);
+    disp_width  = parseInt(disp_wxh_result[1]);
+    disp_height = parseInt(disp_wxh_result[2]);
+
+    var fps_result = fps_pattern.exec(fps_str);
+    fps = parseFloat(fps_result[1]);
+
     if (bps === 0) {
-        bps = Math.floor($vid_width * $vid_height * $vid_fps * 0.125);
+        bps = Math.floor(width * height * fps * 0.125);
     }
 
-    document.enc_setting.s_w.value = width;
-    document.enc_setting.s_h.value = height;
-// TODO: set SAR or DAR
+    document.enc_setting.s_w.value = disp_width - (disp_width % 8);
+    document.enc_setting.s_h.value = disp_height - (disp_height % 8);
     document.enc_setting.r.value = Math.floor(fps * 100) / 100;  // 少数点第2位以下は捨てる
     document.enc_setting.b.value = Math.floor(bps / 1000);
+
+    var vimg_height = Math.floor(640 / disp_width * height);
+    document.getElementsByName('vimg')[0].style.width  = "640px";
+    document.getElementsByName('vimg')[0].style.height = vimg_height + "px";
 }

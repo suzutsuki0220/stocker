@@ -250,18 +250,14 @@ EOF
 
   my $movie_info_xml = "";
 
-  my $i = 0;
   my $vid_width  = 0;
   my $vid_height = 0;
   my $vid_fps    = 0;
   my $x_ratio = 1;
   my $y_ratio = 1;
-  my $disp_width = 0;
-  my $init_set_width = 0;
   my $has_video_stream = undef;
   my $default_bps  = 0;
   my $round_fps    = 0;
-  my $vimg_height  = 0;
 
   my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
   my $movie_info;
@@ -269,20 +265,15 @@ EOF
     $movie_info = $xml->XMLin($movie_info_xml);
   };
   if ($@) {
-    print "情報取得失敗 $@";
+    # print "情報取得失敗 $@";
   } else {
     $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
 
     if ($has_video_stream) {
       $vid_width  = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_width'}[0];
       $vid_height = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_height'}[0];
-      $vid_fps    = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'fps'}[0];
 
       ($x_ratio, $y_ratio) = split(/:/, $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_aspect'}[0]);
-      $disp_width = $vid_width;
-      $init_set_width = $disp_width - ($disp_width % 8);  # エンコードする時に8の倍数にする
-
-      $vimg_height = $vid_height ? int(640 / $disp_width * $vid_height) : 1;
     }
   }
 
@@ -307,13 +298,6 @@ EOF
 EOD
   print encode('utf-8', $mes);
  
-  if ($has_video_stream) {
-    print <<EOD;
-  document.getElementsByName('vimg')[0].style.width  = "640px";
-  document.getElementsByName('vimg')[0].style.height = "${vimg_height}px";
-EOD
-  }
-
   print <<EOD;
   function get_preview_url(ss, width) {
     var url = "${MOVIEIMG_CGI}?dir=${dir}&file={$encoded_path}&size=" + width;
