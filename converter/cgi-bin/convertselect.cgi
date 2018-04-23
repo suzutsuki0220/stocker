@@ -12,8 +12,8 @@ use ParamPath;
 use HTML_Elem;
 
 our $MOVIEIMG_CGI   = "";
+our $MOVIE_INFO_CGI = "";
 our $BASE_DIR_CONF  = "";
-our $MOVIE_INFO_CMD = "";
 require '%conf_dir%/converter.conf';
 
 my $q = eval{new CGI};
@@ -73,7 +73,10 @@ exit 0;
 
 sub frame_selector
 {
-  my @jslist = ("%htdocs_root%/converter_form.js");
+  my @jslist = (
+      "%htdocs_root%/converter_form.js",
+      "%htdocs_root%/ajax_html_request.js",
+  );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
   $html->header('timer selector');
@@ -218,6 +221,7 @@ EOF
   exit(0);
 }
 
+### TODO: refuctor
 sub get_video_duration
 {
   my ($filename) = @_;
@@ -244,6 +248,7 @@ sub get_video_duration
 
   return $duration;
 }
+##
 
 sub print_script
 {

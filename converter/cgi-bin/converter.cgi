@@ -17,11 +17,9 @@ our $STOCKER_CGI    = "";
 our $SELECTOR_CGI   = "";
 our $MOVIEIMG_CGI   = "";
 our $GETFILE_CGI    = "";
+our $MOVIE_INFO_CGI = "";
 our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
-our $MOVIE_INFO_CMD = "";
-our $FFMPEG_CMD     = "";
-our $MOVIE_IMAGE_CACHE_DIR = "";
 our $TMP_FILE       = "";
 our $CONV_OUT_DIR   = "";
 our $ENCBATCH_LIST  = "";
@@ -59,13 +57,11 @@ my @files = $q->param('file');
 
 my $path;
 my $base;
-my $base_name;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name($dir);
   $path =decode('utf-8', $ins->urlpath_decode($files[0]));
   $base = $ins->{base};
-  $base_name = $ins->{base_name};
 };
 if ($@) {
   HTML_Elem->header();
@@ -214,6 +210,7 @@ sub print_form() {
   my @jslist = (
       "%htdocs_root%/converter_form.js",
       "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/stocker_xml.js",
   );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
@@ -238,17 +235,20 @@ EOF
     print ParamPath->urlpath_decode($_) . "<br>\n";
   }
 
-  print "<h2>情報</h2>\n";
+  $mes = <<EOF;
+<h2>情報</h2>
+<div id="information_table"></div>
+<form action="$ENV{'SCRIPT_NAME'}" name="enc_setting" method="POST" autocomplete="off">
 
-  my $cmd_movie_info = "${MOVIE_INFO_CMD} %%INPUT%%";
-  $cmd_movie_info =~ s/%%INPUT%%/"${encfile}"/;
+<script type="text/javascript">
+<!--
+  getMovieInfo('${MOVIE_INFO_CGI}', '${dir}', '$files[0]');
+-->
+</script>
+EOF
+  print encode('utf-8', $mes);
 
-  open (my $IN, encode('utf-8', ${cmd_movie_info}) . " |");  # FFMpeg APIを使って情報を読み込む
   my $movie_info_xml = "";
-  while(my $line = <$IN>) {
-    $movie_info_xml .= $line;
-  }
-  close ($IN);
 
   my $i = 0;
   my $vid_width  = 0;
@@ -259,10 +259,6 @@ EOF
   my $disp_width = 0;
   my $init_set_width = 0;
   my $has_video_stream = undef;
-  my $has_audio_stream = undef;
-  my $mov_duration = 0;
-  my $mov_filesize = 0;
-  my $mov_format   = "";
   my $default_bps  = 0;
   my $round_fps    = 0;
   my $vimg_height  = 0;
@@ -276,11 +272,6 @@ EOF
     print "情報取得失敗 $@";
   } else {
     $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
-    $has_audio_stream = $movie_info->{'movie_info'}[0]->{'audio'}[0]->{'no'};
-
-    $mov_duration = $movie_info->{'movie_info'}[0]->{'duration'}[0];
-    $mov_filesize = $movie_info->{'movie_info'}[0]->{'filesize'}[0];
-    $mov_format   = $movie_info->{'movie_info'}[0]->{'format'}[0];
 
     if ($has_video_stream) {
       $vid_width  = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_width'}[0];
@@ -291,38 +282,9 @@ EOF
       $disp_width = $vid_width;
       $init_set_width = $disp_width - ($disp_width % 8);  # エンコードする時に8の倍数にする
 
-      $default_bps = int($vid_width * $vid_height * $vid_fps * 0.125 / 1000);
-      $round_fps = sprintf("%.2f", ${vid_fps});
       $vimg_height = $vid_height ? int(640 / $disp_width * $vid_height) : 1;
     }
-
-    1 while $mov_filesize =~ s/(\d)(\d\d\d)(?!\d)/$1,$2/g;  # This code from "http://perldoc.perl.org/perlop.html"
   }
-
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"enc_setting\" method=\"POST\" autocomplete=\"off\">";
-
-  print "<table border=\"3\">\n";
-  print "<tr><th colspan=\"3\">全般</th></tr>\n";
-  print "<tr><th colspan=\"2\">時間</th><td>$mov_duration</td></tr>\n";
-  print "<tr><th colspan=\"2\">ファイルサイズ</th><td>$mov_filesize Byte</td></tr>\n";
-  print "<tr><th colspan=\"2\">フォーマット</th><td>$mov_format</td></tr>\n";
-  if ($has_video_stream) {
-    print "<tr><th colspan=\"3\">映像ストリーム</th></tr>\n";
-
-    my $best_st = &get_best_video_stream_id(\@{$movie_info->{'movie_info'}[0]->{'video'}});
-    for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'video'}}; $i++) {
-      &print_table_video(\$movie_info->{'movie_info'}[0]->{'video'}[${i}], $best_st);
-    }
-  }
-  if ($has_audio_stream) {
-    print "<tr><th colspan=\"3\">音声ストリーム</th></tr>\n";
-
-    my $best_st = &get_best_audio_stream_id(\@{$movie_info->{'movie_info'}[0]->{'audio'}});
-    for ($i=0; $i<@{$movie_info->{'movie_info'}[0]->{'audio'}}; $i++) {
-      &print_table_audio(\$movie_info->{'movie_info'}[0]->{'audio'}[${i}], $best_st);
-    }
-  }
-  print "</table>\n";
 
   print "<h2>変換の設定</h2>\n";
   if (@files.length() > 1) {
@@ -338,22 +300,10 @@ EOF
   }
 
   $mes = <<EOD;
-ソースの場所: 
+ソースの場所: <span id="source_location"></span>
 <script type="text/javascript">
 <!--
-  var path = "${path}";
-  if( path.charAt(0) == "/" ) {
-    path = path.substr(1,path.length);
-  }
-  var pathArray = path.split("/");
-  for( i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
-    document.write("/ <a href=\\"javascript:fillFolderName('" + pathArray[i] + "')\\">" + pathArray[i] + "</a>&nbsp;");
-  }
-
-  function fillFolderName(pathText) {
-    document.enc_setting.out_dir.value = pathText;
-  }
-
+  writeSourceLocation("${path}");
 EOD
   print encode('utf-8', $mes);
  
@@ -503,7 +453,7 @@ EOD
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 640;
       document.enc_setting.s_h.value = 480;
-      document.enc_setting.r.value = ${round_fps};
+      //document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 1024;
       //document.enc_setting.deinterlace.checked = false;
       document.enc_setting.a_copy.checked = false;
@@ -515,7 +465,7 @@ EOD
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 640;
       document.enc_setting.s_h.value = 480;
-      document.enc_setting.r.value = ${round_fps};
+      //document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 1024;
       //document.enc_setting.deinterlace.checked = false;
       document.enc_setting.a_copy.checked = false;
@@ -525,10 +475,10 @@ EOD
     } else if ( checked_format == 'wmv' ) {
       document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = true;
-      document.enc_setting.s_w.value = ${vid_width};
-      document.enc_setting.s_h.value = ${vid_height};
-      document.enc_setting.r.value = ${round_fps};
-      document.enc_setting.b.value = ${default_bps};
+      //document.enc_setting.s_w.value = ${vid_width};
+      //document.enc_setting.s_h.value = ${vid_height};
+      //document.enc_setting.r.value = ${round_fps};
+      //document.enc_setting.b.value = ${default_bps};
       //document.enc_setting.deinterlace.checked = false;
       document.enc_setting.a_copy.checked = false;
       document.enc_setting.ar.options[0].selected = true;  // Original
@@ -539,7 +489,7 @@ EOD
       document.enc_setting.save_aspect.checked = false;
       document.enc_setting.s_w.value = 320;
       document.enc_setting.s_h.value = 160;
-      document.enc_setting.r.value = ${round_fps};
+      //document.enc_setting.r.value = ${round_fps};
       document.enc_setting.b.value = 512;
       //document.enc_setting.deinterlace.checked = false;
       document.enc_setting.a_copy.checked = false;
@@ -549,10 +499,10 @@ EOD
     } else if ( checked_format == 'I-Frame' || checked_format == 'HighLight' ) {
       document.enc_setting.v_copy.checked = false;
       document.enc_setting.save_aspect.checked = ture;
-      document.enc_setting.s_w.value = ${vid_width};
-      document.enc_setting.s_h.value = ${vid_height};
-      document.enc_setting.r.value = ${round_fps};
-      document.enc_setting.b.value = ${default_bps};
+      //document.enc_setting.s_w.value = ${vid_width};
+      //document.enc_setting.s_h.value = ${vid_height};
+      //document.enc_setting.r.value = ${round_fps};
+      //document.enc_setting.b.value = ${default_bps};
       //document.enc_setting.deinterlace.checked = false;
       //document.enc_setting.ar.options[0].selected = true;  // Original
       //document.enc_setting.ab.options[0].selected = true;  // 192kbps
@@ -785,12 +735,12 @@ EOF
 ※オリジナルサイズより大きい値を指定してください
 </span>
 <br>
-解像度 <input type="text" name="s_w" size="5" value="${init_set_width}" onChange="fixHeight()">x<input type="text" name="s_h" size="5" value="${vid_height}" onChange="fixWidth()">
+解像度 <input type="text" name="s_w" size="5" onChange="fixHeight()">x<input type="text" name="s_h" size="5" onChange="fixWidth()">
 (比率 <span id="s_aspect">-----</span>)
 <input type="checkbox" name="save_aspect" value="1" checked>比率を保持する<br>
 縦横比 <select name="aspect_set"><option value="none">設定しない</option><option value="setsar">SAR</option><option value="setdar">DAR</option></select> 比率<input type="text" name="aspect_numerator" size="4">/<input type="text" name="aspect_denominator" size="4"><br>
-フレームレート <input type="text" name="r" value="${round_fps}"><br>
-動画ビットレート <input type="text" name="b" value="${default_bps}" size="30">kbps&nbsp;&nbsp;&nbsp;&nbsp;
+フレームレート <input type="text" name="r"><br>
+動画ビットレート <input type="text" name="b" size="30">kbps&nbsp;&nbsp;&nbsp;&nbsp;
 (ビットレートの目安: <span id="aimed_bitrate">---- kbps</span>
 &nbsp;&nbsp;動作:
 <input type="radio" name="move_freq" value="high">高度
@@ -888,65 +838,6 @@ weight
 EOF
 
   HTML_Elem->tail();
-}
-
-sub print_table_video
-{
-  my ($vid_info, $checked_st) = @_;
-
-  my $checked = "";
-  if ($checked_st == $$vid_info->{'no'}[0]) {
-    $checked = " checked";
-  }
-
-  my $vid_no       = $$vid_info->{'no'}[0];
-  my $vid_bitrate  = $$vid_info->{'bitrate'}[0];
-  my $vid_codec    = $$vid_info->{'codec'}[0];
-  my $vid_fps      = $$vid_info->{'fps'}[0];
-  my $vid_fps_ave  = $$vid_info->{'fps_average'}[0];
-  my $vid_width    = $$vid_info->{'width'}[0];
-  my $vid_height   = $$vid_info->{'height'}[0];
-  my $disp_width   = $$vid_info->{'disp_width'}[0];
-  my $disp_height  = $$vid_info->{'disp_height'}[0];
-  my $vid_sar      = $$vid_info->{'sar'}[0];
-  my $disp_aspect  = $$vid_info->{'disp_aspect'}[0];
-  my $vid_gop_size = $$vid_info->{'gop_size'}[0];
-
-  print "<tr><td rowspan=\"6\"><input type=\"radio\" name=\"v_map\" value=\"${vid_no}\"${checked}>${vid_no}</td>";
-  print "<th>幅 x 高さ</th><td>${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>\n";
-  print "<tr><th>表示上のサイズ</th><td>${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>\n";
-  print "<tr><th>ビットレート</th><td>$vid_bitrate</td></tr>\n";
-  print "<tr><th>コーデック</th><td>$vid_codec</td></tr>\n";
-  if($vid_fps_ave =~ /^[+-]?[\d\.]+$/) {  # if fps_ave is number
-    print "<tr><th>フレームレート</th><td>$vid_fps (平均 $vid_fps_ave)</td></tr>\n";
-  } else {
-    print "<tr><th>フレームレート</th><td>$vid_fps</td></tr>\n";
-  }
-  print "<tr><th>GOP</th><td>$vid_gop_size</td></tr>\n";
-}
-
-sub print_table_audio
-{
-  my ($aud_info, $checked_st) = @_;
-
-  my $checked = "";
-  if ($checked_st == $$aud_info->{'no'}[0]) {
-    $checked = " checked";
-  }
-
-  my $aud_no          = $$aud_info->{'no'}[0];
-  my $aud_sample_rate = $$aud_info->{'sample_rate'}[0];
-  my $aud_channel     = $$aud_info->{'channel'}[0];
-  my $aud_bitrate     = $$aud_info->{'bitrate'}[0];
-  my $aud_bits        = $$aud_info->{'sample_fmt'}[0];
-  my $aud_codec       = $$aud_info->{'codec'}[0];
-
-  print "<tr><td rowspan=\"5\"><input type=\"radio\" name=\"a_map\" value=\"${aud_no}\"${checked}>${aud_no}</td>";
-  print "<th>サンプリングレート</th><td>$aud_sample_rate</td></tr>\n";
-  print "<tr><th>チャンネル</th><td>$aud_channel</td></tr>\n";
-  print "<tr><th>ビットレート</th><td>$aud_bitrate</td></tr>\n";
-  print "<tr><th>ビット数</th><td>$aud_bits</td></tr>\n";
-  print "<tr><th>コーデック</th><td>$aud_codec</td></tr>\n";
 }
 
 sub get_best_video_stream_id

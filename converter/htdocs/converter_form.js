@@ -409,3 +409,158 @@ function getEncTimeString(length) {
 
     return len_hour + ":" + len_min + ":" + len_sec + "." + len_mili;
 }
+
+function writeSourceLocation(path)
+{
+    var html = "";
+
+    if( path.charAt(0) == "/" ) {
+        path = path.substr(1,path.length);
+    }
+    var pathArray = path.split("/");
+    for( i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
+        html += "/ <a href=\"javascript:fillFolderName('" + pathArray[i] + "')\">" + pathArray[i] + "</a>&nbsp;";
+    }
+
+    document.getElementById("source_location").innerHTML = html;
+}
+
+function fillFolderName(pathText) {
+    document.enc_setting.out_dir.value = pathText;
+}
+
+function getMovieInfo(movie_info_url, base_name, path) {
+    var httpRequest = ajax_init();
+    if (httpRequest) {
+        var query = "dir=" + base_name + "&file=" + path;
+        ajax_set_instance(httpRequest, function() { showInfoTable(httpRequest) });
+        ajax_post(httpRequest, movie_info_url, query);
+        document.getElementById('information_table').innerHTML = "読み込み中";
+    } else {
+        document.getElementById('information_table').innerHTML = "動画ファイルの情報取得に失敗しました";
+    }
+}
+
+function showInfoTable(httpRequest) {
+    var content;
+
+    if (httpRequest.readyState == 4) {
+        if (httpRequest.status == 200) {
+            var data = httpRequest.responseXML;
+            var video_table = "";
+            var audio_table = "";
+            var width, height;
+
+            var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
+            if (movie_info_elem !== null) {
+                var duration = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
+                var filename = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filename');
+                var filesize = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filesize');
+                var format = getXmlFirstFindTagData(movie_info_elem.childNodes, 'format');
+
+                var videos = movie_info_elem.getElementsByTagName('video');
+                var audios = movie_info_elem.getElementsByTagName('audio');
+
+                for (var i=0; i<videos.length; i++) {
+                    if (i === 0) {
+                        video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
+                    }
+                    video_table += makeVideoTable(videos[i].childNodes);
+                }
+                // TODO: sub get_best_video_stream_id
+
+                for (var i=0; i<audios.length; i++) {
+                    if (i === 0) {
+                        audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
+                    }
+                    audio_table += makeAudioTable(audios[i].childNodes);
+                }
+                // TODO: sub get_best_audio_stream_id
+
+                content = `
+<table border="3">
+<tr><th colspan="3">全般</th></tr>
+<tr><th colspan="2">ファイル名</th><td>${filename}</td></tr>
+<tr><th colspan="2">ファイルサイズ</th><td>${filesize} Byte</td></tr>
+<tr><th colspan="2">時間</th><td>${duration}</td></tr>
+<tr><th colspan="2">フォーマット</th><td>${format}</td></tr>
+${video_table}
+${audio_table}
+</table>`;
+            } else {
+                content = "予期しないデータを受け取りました";
+            }
+        } else {
+            content = "動画情報のパースに失敗しました";
+        }
+        document.getElementById('information_table').innerHTML = content;
+    }
+}
+
+function makeVideoTable(video_elem) {
+    const vid_no       = getXmlFirstFindTagData(video_elem, 'no');
+    const vid_bitrate  = getXmlFirstFindTagData(video_elem, 'bitrate');
+    const vid_codec    = getXmlFirstFindTagData(video_elem, 'codec');
+    const vid_fps      = getXmlFirstFindTagData(video_elem, 'fps');
+    const vid_fps_ave  = getXmlFirstFindTagData(video_elem, 'fps_average');
+    const vid_width    = getXmlFirstFindTagData(video_elem, 'width');
+    const vid_height   = getXmlFirstFindTagData(video_elem, 'height');
+    const disp_width   = getXmlFirstFindTagData(video_elem, 'disp_width');
+    const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
+    const vid_sar      = getXmlFirstFindTagData(video_elem, 'sar');
+    const disp_aspect  = getXmlFirstFindTagData(video_elem, 'disp_aspect');
+    const vid_gop_size = getXmlFirstFindTagData(video_elem, 'gop_size');
+
+    var print_average = "";
+    if (isNaN(vid_fps_ave) === false) {
+        print_average = "(平均 " + vid_fps_ave + ")";
+    }
+
+    return `
+<tr><td rowspan="6"><input type="radio" name="v_map" value="${vid_no}" onClick="doVideoStreamSelected()">${vid_no}</td>
+<th>幅 x 高さ</th><td id="size_${vid_no}">${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>
+<tr><th>表示上のサイズ</th><td id="disp_${vid_no}">${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>
+<tr><th>ビットレート</th><td id="bps_${vid_no}">${vid_bitrate}</td></tr>
+<tr><th>コーデック</th><td>${vid_codec}</td></tr>
+<tr><th>フレームレート</th><td id="fps_${vid_no}">${vid_fps} ${print_average}</td></tr>
+<tr><th>GOP</th><td>${vid_gop_size}</td></tr>
+`;
+}
+
+function makeAudioTable(audio_elem) {
+    const aud_no          = getXmlFirstFindTagData(audio_elem, 'no');
+    const aud_sample_rate = getXmlFirstFindTagData(audio_elem, 'sample_rate');
+    const aud_channel     = getXmlFirstFindTagData(audio_elem, 'channel');
+    const aud_bitrate     = getXmlFirstFindTagData(audio_elem, 'bitrate');
+    const aud_bits        = getXmlFirstFindTagData(audio_elem, 'sample_fmt');
+    const aud_codec       = getXmlFirstFindTagData(audio_elem, 'codec');
+
+    return `
+<tr><td rowspan="5"><input type="radio" name="a_map" value="${aud_no}">${aud_no}</td>
+<th>サンプリングレート</th><td>${aud_sample_rate}</td></tr>
+<tr><th>チャンネル</th><td>${aud_channel}</td></tr>
+<tr><th>ビットレート</th><td>${aud_bitrate}</td></tr>
+<tr><th>ビット数</th><td>${aud_bits}</td></tr>
+<tr><th>コーデック</th><td>${aud_codec}</td></tr>
+`;
+}
+
+function doVideoStreamSelected() {
+    var width, height, disp_width, disp_height, fps;
+    const vid_no = document.getElementsByName('v_map')[0].value;
+
+    var size_str = document.getElementById("size_" + vid_no).innerHTML;
+    var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
+    var fps_str  = document.getElementById("fps_" + vid_no).innerHTML;
+    var bps  = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
+
+    if (bps === 0) {
+        bps = Math.floor($vid_width * $vid_height * $vid_fps * 0.125);
+    }
+
+    document.enc_setting.s_w.value = width;
+    document.enc_setting.s_h.value = height;
+// TODO: set SAR or DAR
+    document.enc_setting.r.value = Math.floor(fps * 100) / 100;  // 少数点第2位以下は捨てる
+    document.enc_setting.b.value = Math.floor(bps / 1000);
+}
