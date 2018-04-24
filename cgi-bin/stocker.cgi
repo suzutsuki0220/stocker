@@ -129,9 +129,6 @@ my @un_visible_list = ();
 my @visible_list = ();
 my $content_cnt = 0;
 my $cont_from = 0;
-if(length(${in_from}) > 0 && ${in_from} > 0) {
-  $cont_from = ${in_from};
-}
 
 my $cont_to = $#dir_list;
 if(length(${in_to}) > 0 && ${in_to} > 0) {

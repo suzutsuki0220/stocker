@@ -12,6 +12,7 @@ var lat_min, lng_min, lat_max, lng_max;
 
 const stroke_color = "#0000ff";
 var nmea_pattern = /\.(nmea)$/;
+var accel_csv_pattern = /\.(accel.csv)$/;
 
 function drawMap(get_file_cgi, base_name, url_path, name) {
   map_init();
@@ -155,6 +156,8 @@ function map_route(data, name) {
     if (nmea_pattern.test(name.toLowerCase())) {
       // nmeaデータ
       position = getPositionEmea(data);
+    } else if (accel_csv_pattern.test(name.toLowerCase())) {
+      position = getPositionAccelCsv(data);
     } else {
       // KML and GPX
       position = getPositionXml(data);
@@ -262,7 +265,7 @@ function getPositionDataResult(httpRequest, name) {
             //document.getElementById('sStatus').innerHTML = "読み込み中...";
         } else if (httpRequest.readyState == 4) {
             if (httpRequest.status == 200) {
-                if (nmea_pattern.test(name.toLowerCase())) {
+                if (nmea_pattern.test(name.toLowerCase()) || accel_csv_pattern.test(name.toLowerCase())) {
                     var text = httpRequest.responseText;
                     map_route(text, name);
                 } else {
