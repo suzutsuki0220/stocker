@@ -28,8 +28,6 @@ function getImageFiles(data) {
     return;
   }
 
-  const image_pattern = /\.(jpg|jpeg)$/;  // 拡張子判定
-
   for (var i=0; i<elements.length; i++) {
     var name_elem = elements.item(i).getElementsByTagName('name');
     var path_elem = elements.item(i).getElementsByTagName('path');
