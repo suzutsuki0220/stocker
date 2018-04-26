@@ -3,7 +3,7 @@
 include ../directory_defs.mk
 
 LIB_FILES  = ConverterJob.pm
-DOC_FILES  = converter_form.js
+DOC_FILES  = $(wildcard htdocs/*)
 CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi convertselect.cgi
 CONF_FILES = converter.conf ConvertParams.pl
 
@@ -41,8 +41,8 @@ install-libs:
 	cp -r $(addprefix lib/,$(LIB_FILES)) $(LIBS_DIR)
 
 install-htdocs:
-	cp -r $(addprefix htdocs/,$(DOC_FILES)) $(DOCS_DIR)
-	chmod 644 $(addprefix $(DOCS_DIR)/,$(DOC_FILES))
+	cp -r $(DOC_FILES) $(DOCS_DIR)
+	chmod 644 $(addprefix $(DOCS_DIR)/,$(DOC_FILES:htdocs/%=%))
 
 install-cgi:
 	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)

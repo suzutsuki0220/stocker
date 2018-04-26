@@ -7,7 +7,6 @@ my @librarys = (
 ,"CGI"
 ,"File::Copy"
 ,"File::Path"
-,"XML::Simple"
 ,"MIME::Base64"
 ,"Encode"
 ,"Encode::Guess"

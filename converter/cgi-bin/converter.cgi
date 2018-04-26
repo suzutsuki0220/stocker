@@ -237,8 +237,8 @@ EOF
 
   $mes = <<EOF;
 <h2>情報</h2>
-<div id="information_table"></div>
 <form action="$ENV{'SCRIPT_NAME'}" name="enc_setting" method="POST" autocomplete="off">
+<div id="information_table"></div>
 
 <script type="text/javascript">
 <!--

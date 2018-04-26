@@ -548,8 +548,8 @@ function makeAudioTable(audio_elem) {
 function doVideoStreamSelected(vid_no) {
     var width, height, disp_width, disp_height, fps;
 
-    var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/
-    var fps_pattern = /^(\d+).*$/
+    var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/;
+    var fps_pattern = /^(\d+).*$/;
     var size_str = document.getElementById("size_" + vid_no).innerHTML;
     var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
     var fps_str  = document.getElementById("fps_" + vid_no).innerHTML;
