@@ -17,12 +17,24 @@ our $BOX_WIDTH;
 our $BOX_HEIGHT;
 our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
+our $SUPPORT_TYPES;
 our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
 our ($ICON_UNKNOWN, $ICON_DIRECTORY);
 require '%conf_dir%/stocker.conf';
+
+our @support_video_types;
+our @support_audio_types;
+our @support_image_types;
+our @support_gps_types;
+our @support_txt_types;
+our @support_doc_types;
+our @support_excel_types;
+our @support_ppt_types;
+our @support_pdf_types;
+require $SUPPORT_TYPES;
 
 my $form = eval{new CGI};
 my $in_dir    = (scalar $form->param('dir'));
@@ -117,9 +129,6 @@ my @un_visible_list = ();
 my @visible_list = ();
 my $content_cnt = 0;
 my $cont_from = 0;
-if(length(${in_from}) > 0 && ${in_from} > 0) {
-  $cont_from = ${in_from};
-}
 
 my $cont_to = $#dir_list;
 if(length(${in_to}) > 0 && ${in_to} > 0) {
@@ -130,6 +139,16 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   &show_pagelink(@dir_list);
   &show_prev_pagelink(@dir_list);
 }
+
+my $movie_pattern = makePatternString(\@support_video_types);
+my $music_pattern = makePatternString(\@support_audio_types);
+my $photo_pattern = makePatternString(\@support_image_types);
+my $gps_pattern = makePatternString(\@support_gps_types);
+my $txt_pattern = makePatternString(\@support_txt_types);
+my $doc_pattern = makePatternString(\@support_doc_types);
+my $excel_pattern = makePatternString(\@support_excel_types);
+my $ppt_pattern = makePatternString(\@support_ppt_types);
+my $pdf_pattern = makePatternString(\@support_pdf_types);
 
 ### ディレクトリ内のentry表示
 print <<EOD;
@@ -144,15 +163,15 @@ reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
 function directoryList(data) {
   // 拡張子判定
-  var movie_pattern = /\\.(avi|flv|mov|mpg|mpeg|mpe|m2p|ts|mts|m2ts|mp4|m4v|mpg4|asf|wmv)\$/;
-  var music_pattern = /\\.(mp3|m4a|wma|wav|flac)\$/;
-  var photo_pattern = /\\.(jpg|jpeg)\$/;
-  var gps_pattern = /\\.(kml|kmz|gpx|nmea)\$/;
-  var txt_pattern = /\\.(txt|log)\$/;
-  var doc_pattern = /\\.(doc|dot|docx)\$/;
-  var excel_pattern = /\\.(xls|xlsx)\$/;
-  var ppt_pattern = /\\.(ppt|pptx)\$/;
-  var pdf_pattern = /\\.(pdf)\$/;
+  var movie_pattern = /\\.(${movie_pattern})\$/;
+  var music_pattern = /\\.(${music_pattern})\$/;
+  var photo_pattern = /\\.(${photo_pattern})\$/;
+  var gps_pattern = /\\.(${gps_pattern})\$/;
+  var txt_pattern = /\\.(${txt_pattern})\$/;
+  var doc_pattern = /\\.(${doc_pattern})\$/;
+  var excel_pattern = /\\.(${excel_pattern})\$/;
+  var ppt_pattern = /\\.(${ppt_pattern})\$/;
+  var pdf_pattern = /\\.(${pdf_pattern})\$/;
 
 //  try {
     encoded_dir = document.file_check.fm_dir.value;
@@ -507,3 +526,17 @@ sub getMimeType
   return MimeTypes->content_type($extention);
 }
 
+sub makePatternString
+{
+  my ($array_ref) = @_;
+  my $ret = "";
+
+  foreach my $type (@$array_ref) {
+    if (length($ret) != 0) {
+      $ret .= "|";
+    }
+    $ret .= $type;
+  }
+
+  return $ret;
+}

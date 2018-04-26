@@ -13,8 +13,12 @@ use HTML_Elem;
 our $STOCKER_CGI   = "";
 our $GET_MEDIA_CGI = "";
 our $BASE_DIR_CONF = "";
+our $SUPPORT_TYPES = "";
 our $TAGINFO_CGI   = "taginfo";
 require '%conf_dir%/music_player.conf';
+
+our @support_audio_types;
+require $SUPPORT_TYPES;
 
 my $form = eval{new CGI};
 
@@ -60,6 +64,8 @@ if ($@) {
   HTML_Elem->header();
   HTML_Elem->error($@);
 }
+
+my $music_pattern = makePatternString(\@support_audio_types);
 
 print <<EOF;
 <script type="text/javascript">
@@ -249,7 +255,7 @@ function getMusicFiles(data) {
     return;
   }
 
-  var music_pattern = /\\.(mp3|m4a|wma|wav|flac)\$/;  // 拡張子判定
+  const music_pattern = /\\.(${music_pattern})\$/;  // 拡張子判定
   for (var i=0; i<elements.length; i++) {
     var name_elem = elements.item(i).getElementsByTagName('name');
     var path_elem = elements.item(i).getElementsByTagName('path');
@@ -274,3 +280,19 @@ HTML_Elem->tail();
 
 exit(0);
 
+#####
+
+sub makePatternString
+{
+  my ($array_ref) = @_;
+  my $ret = "";
+
+  foreach my $type (@$array_ref) {
+    if (length($ret) != 0) {
+      $ret .= "|";
+    }
+    $ret .= $type;
+  }
+
+  return $ret;
+}

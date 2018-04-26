@@ -6,8 +6,6 @@ use utf8;
 use Encode;
 use CGI;
 
-use XML::Simple;
-
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
@@ -17,7 +15,11 @@ our $GET_PICTURE_CGI = "";
 our $GET_THUMBNAIL_CGI = "";
 our $EXIF_INFO_CGI = "";
 our $STOCKER_CGI = "";
+our $SUPPORT_TYPES = "";
 require '%conf_dir%/picture_viewer.conf';
+
+our @support_image_types;
+require $SUPPORT_TYPES;
 
 my $script_name = $ENV{'SCRIPT_NAME'};
 my $img_idx = 0;
@@ -70,6 +72,8 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
+my $photo_pattern = makePatternString(\@support_image_types);
+
 print <<EOF;
 <div id="image_list"></div>
 <div style="clear: both; position: relative;">
@@ -91,6 +95,8 @@ print <<EOF;
 
 <script type="text/javascript">
 <!--
+    const image_pattern = /\\.(${photo_pattern})\$/;  // 拡張子判定
+
     document.title = "${file_name}";
     setFileName("${file_name}");
     getImageList("${encoded_dir}", "${encoded_uppath}");
@@ -153,4 +159,19 @@ sub show_dir_imglist {  # TODO: remove
     }
     print "</p>\n";
   }
+}
+
+sub makePatternString
+{
+  my ($array_ref) = @_;
+  my $ret = "";
+
+  foreach my $type (@$array_ref) {
+    if (length($ret) != 0) {
+      $ret .= "|";
+    }
+    $ret .= $type;
+  }
+
+  return $ret;
 }

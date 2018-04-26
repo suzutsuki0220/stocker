@@ -10,32 +10,48 @@ function getPositionEmea(data) {
     sp = 0;
     while((ep = data.indexOf("\n", sp)) != -1) {
         var line = data.substring(sp, ep);
-        var p = parseEmeaLine(line);
+        var p = parseNmeaLine(line);
         if (p != null) {
-          position.push(p);
+            position.push(p);
         }
         sp = ep + 1;
     }
     if (sp < data.length) {  // 最後の行(改行で終わっていない)
         var line = data.substring(sp);
-        var p = parseEmeaLine(line);
+        var p = parseNmeaLine(line);
         if (p != null) {
-          position.push(p);
+            position.push(p);
         }
     }
 
     return position;
 }
 
-function parseEmeaLine(nmea) {
+function parseNmeaLine(nmea) {
+    var status = false;
+
     if (re_rmc.test(nmea)) {
       var col = nmea.split(",");
       if (col) {
-        var position = new Object();
-        position.latitude  = col[3] ? getDegree(col[3]) : 0;
-        position.longitude = col[5] ? getDegree(col[5]) : 0;
+          var position = new Object();
+          if (col[2] === "A") {
+              status = true;
+          }
 
-        return position;
+          position.latitude  = col[3] ? getDegree(col[3]) : 0;
+          if (col[4] === "S") {
+              position.latitude = position.latitude * -1.0;
+          }
+          position.longitude = col[5] ? getDegree(col[5]) : 0;
+          if (col[6] === "W") {
+              position.longitude = position.longitude * -1.0;
+          }
+
+          if (status === true) {
+              return position;
+          } else {
+              return null;
+          }
       }
     }
 

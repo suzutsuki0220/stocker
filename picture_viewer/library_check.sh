@@ -8,7 +8,6 @@ my @librarys = (
  ,"File::Copy"
  ,"utf8"
  ,"Encode"
- ,"XML::Simple"
 );
 
 #####
