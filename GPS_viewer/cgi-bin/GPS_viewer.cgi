@@ -74,8 +74,8 @@ my $html = <<EOF;
 <b>${file_name}</b><br>
 </span>
 <span style="float: right">
-<a href="${back_link}">戻る</a>
-<a href="javascript:showGraph(position)">グラフ</a>
+<a href="${back_link}" class="white">戻る</a>
+<a href="javascript:showGraph(position)" class="white">グラフ</a>
 </span>
 </div>
 <div id="map_canvas"></div>

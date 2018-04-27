@@ -10,6 +10,10 @@ body {
     background-color: #333333;
 }
 
+a.white {
+    background-color: #efefef;
+}
+
 #graph_field {
     float: right;
     height: 95%;
