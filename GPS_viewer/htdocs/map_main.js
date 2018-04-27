@@ -3,7 +3,9 @@ var geocoder;
 var panorama;
 var startMarker = null;
 var endMarker = null;
+var eventMarkers = new Array();
 var poly = null;
+var position;
 
 var pre_lat;
 var pre_lng;
@@ -24,6 +26,7 @@ function map_init() {
   var mapOptions = {
     zoom: 10,
     center: central,
+    scaleControl: true,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
@@ -147,8 +150,6 @@ function map_route(data, name) {
 
   resetLatLngMinMax();
   try {
-    var position;
-
     distance = 0;
     pre_lat = 0;
     pre_lng = 0;
@@ -168,6 +169,9 @@ function map_route(data, name) {
       latlng = get_latlng(p.latitude, p.longitude);
       if (latlng != null) {
         route.push(latlng);
+        if (p.behavior && p.behavior !== 0) {
+            createEventMarker(p.latitude, p.longitude, p.behavior);
+        }
       } else {
         invalid_count++;
       }
@@ -218,6 +222,38 @@ function map_route(data, name) {
   }
   poly = new google.maps.Polyline(polyOptions);
   poly.setMap(map);
+}
+
+function createEventMarker(latitude, longitude, event) {
+  var title, label;
+  switch (event) {
+    case 1:
+      title = "Braking";
+      label = "B";
+      break;
+    case 2:
+      title = "Throttle";
+      label = "T";
+      break;
+    case 4:
+      title = "Cornering(left)";
+      label = "L";
+      break;
+    case 8:
+      title = "Cornering(right)";
+      label = "R";
+      break;
+  }
+
+  var markerOptions = {
+    position: new google.maps.LatLng(latitude, longitude),
+    map: map,
+    title: title,
+    label: label,
+    animation: google.maps.Animation.DROP,
+  };
+
+  eventMarkers.push(new google.maps.Marker(markerOptions));
 }
 
 function putStartGeoCode(results, status) {

@@ -43,9 +43,11 @@ my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8
 
 eval {
   my @jslist = (
+      "%htdocs_root%/ccchart-min.js",
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
+      "%htdocs_root%/map_graph.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
       "%htdocs_root%/GPS_accel_csv.js",
@@ -73,19 +75,30 @@ my $html = <<EOF;
 </span>
 <span style="float: right">
 <a href="${back_link}">戻る</a>
+<a href="javascript:showGraph(position)">グラフ</a>
 </span>
 </div>
 <div id="map_canvas"></div>
-<div id="panorama_canvas"></div>
+<div id="graph_field">
+  <canvas id="graph_accelXY"></canvas>
+  <canvas id="graph_accelZ"></canvas>
+  <canvas id="graph_gyro"></canvas>
+  <canvas id="graph_event"></canvas>
+  <canvas id="graph_speed"></canvas>
+</div>
+<div id="bottom_field">
+<div id="panorama_canvas"></div><canvas id="gforce_accelXY"></canvas>
+</div>
 <div id="info_field">
 距離: <span id="distance_text">-- km</span><br>
 サンプル数: 有効=<span id="sample_count">0</span>, 無効=<span id="invalid_sample_count">0</span><br>
 開始位置住所: <span id="start_address"></span><br>
 終了位置住所: <span id="end_address"></span>
 </div>
-</body>
-</html>
 EOF
 
 print(encode('utf-8', $html));
 
+HTML_Elem->tail();
+
+exit 0;

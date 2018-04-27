@@ -6,17 +6,32 @@ body {
     margin: 0;
     line-height: 160%;
     font-family: arial,sans-serif;
+    color: #e0e0e0;
+    background-color: #333333;
+}
+
+#graph_field {
+    float: right;
+    height: 95%;
+    display: none;
 }
 
 #map_canvas {
+    float: left;
     width: 100%;
     height: 55%;
 }
 
-#panorama_canvas {
+#bottom_field {
     float: left;
     width: 45%;
     height: 40%;
+}
+
+#panorama_canvas {
+    float: left;
+    width: 100%;
+    height: 100%;
 }
 
 #info_field {
@@ -26,13 +41,18 @@ body {
 //    text-align: center;
 }
 
-textarea.latlng {
-    width: 400px;
-    height: 45px;
-    font-size: 9pt;
-    resize:none;
-  }
-
 @media screen and (max-width: 720px) {
     width: 50%;
+}
+
+#graph_accelXY, #graph_accelZ, #graph_gyro, #graph_speed, #graph_event {
+    width: 100%;
+    height: 20%;
+}
+
+#gforce_accelXY {
+    float: right;
+    display: none;
+    width: 50%;
+    height: 100%;
 }
