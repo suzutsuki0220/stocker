@@ -69,7 +69,7 @@ if (&judgeMakeCache($size) == 1) {
   }
 }
 
-if (&make_imgcache($cache, $lastmodified, $size) != 0)
+if (&make_movie_image($cache, $lastmodified, $size) != 0)
 {
   &error("failed to make image cache");
 }
@@ -81,6 +81,12 @@ exit(0);
 sub judgeMakeCache()
 {
   my ($size) = @_;
+
+  my $f_v_map = scalar($form->param('v_map'));
+  if (length($f_v_map) != 0 && $f_v_map ne '0' && $f_v_map ne '1') {
+    return 0;
+  }
+
   if ($size == 640 && ! $form->param('enable_adjust') && ! $form->param('enable_crop') && ! $form->param('enable_pad')) {
     if (!$form->param('set_position') || $form->param('ss') eq '00:00:00.000') {
       return 1;
@@ -114,7 +120,7 @@ sub img_fromcache()
   return -1;
 }
 
-sub make_imgcache()
+sub make_movie_image()
 {
   my ($cache, $lastmodified, $size) = @_;
   my $option = "";
@@ -146,8 +152,12 @@ sub make_imgcache()
     push(@vf_option, "scale=". $form->param('size') . ":-1");  #  width
   }
 
+  if (length($form->param('v_map')) != 0) {
+    $option .= " -map 0:".$form->param('v_map');
+  }
+
   if ($#vf_option >= 0) {
-    $option .= "-vf \"";
+    $option .= " -vf \"";
     foreach (@vf_option) {
       $option .= $_ . ",";
     }

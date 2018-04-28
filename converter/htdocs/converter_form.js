@@ -92,18 +92,15 @@ function select_existdir() {
     fillFolderName(document.enc_setting.exist_dir.value);
 }
 
-function preview_img(ss) {
-    var url = get_preview_url(ss, 640);
+function openPreviewWindow() {
+    var url = getPreviewUrl(640);
     window.open(url, 'preview', 'width=640, height=500, menubar=no, scrollbar=yes');
 }
-
 
 /*** 画質調整 ***/
 
 function adjust_preview() {
-    var ss = document.enc_setting.ss0.value;
-    var url = get_preview_url(ss, 320);
-    document.adjpreview.src = url;
+    document.adjpreview.src = getPreviewUrl(320);
 }
 
 function adj_brightness(gain) {
@@ -575,7 +572,17 @@ function doVideoStreamSelected(vid_no) {
     document.enc_setting.r.value = Math.floor(fps * 100) / 100;  // 少数点第2位以下は捨てる
     document.enc_setting.b.value = Math.floor(bps / 1000);
 
-    var vimg_height = Math.floor(640 / disp_width * height);
-    document.getElementsByName('vimg')[0].style.width  = "640px";
-    document.getElementsByName('vimg')[0].style.height = vimg_height + "px";
+    document.getElementsByName('vimg')[0].src = getPreviewUrl(640);
+    setPreviewSize(document.getElementsByName('vimg')[0], disp_width, disp_height);
 }
+
+function setPreviewSize(element, disp_width, disp_height) {
+    const preview_width  = 640;
+    const preview_height = Math.floor(preview_width / disp_width * disp_height);
+
+    if (preview_width > 0 && preview_height > 0) {
+        element.style.width  = String(preview_width)  + "px";
+        element.style.height = String(preview_height) + "px";
+    }
+}
+

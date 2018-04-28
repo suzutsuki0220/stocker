@@ -299,8 +299,11 @@ EOD
   print encode('utf-8', $mes);
  
   print <<EOD;
-  function get_preview_url(ss, width) {
-    var url = "${MOVIEIMG_CGI}?dir=${dir}&file={$encoded_path}&size=" + width;
+  function getPreviewUrl(width) {
+    var url = "${MOVIEIMG_CGI}?dir=${dir}&file=${encoded_path}&size=" + width;
+    if (document.enc_setting.v_map.value.length !== 0) {
+      url += "&v_map=" + document.enc_setting.v_map.value;
+    }
     if (document.enc_setting.set_position.checked == true) {
       url += "&set_position=1";
       url += "&ss=" + ss;
@@ -706,7 +709,7 @@ EOF
 サイズ <input type="text" name="crop_w" onChange="print_aspect('crop')" size="5">x<input type="text" name="crop_h" onChange="print_aspect('crop')" size="5">
 (比率 <span id="crop_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="crop_x" size="5">x<input type="text" name="crop_y" size="5">
-<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview">
+<input type="button" onClick="openPreviewWindow()" value="preview">
 </span>
 <br>
 <input type="checkbox" name="enable_pad" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp; 
@@ -715,7 +718,7 @@ EOF
 (比率 <span id="padding_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="pad_x" size="5">x<input type="text" name="pad_y" size="5">
 &nbsp;&nbsp;色 <select name="pad_color" size="1"><option selected>black</option><option>white</option><option>gray</option></select>
-<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview">
+<input type="button" onClick="openPreviewWindow()" value="preview">
 ※オリジナルサイズより大きい値を指定してください
 </span>
 <br>
@@ -794,7 +797,7 @@ weight
 <input type="button" name="weight_plus" value="&gt;" onClick="adj_weight(0.03)">
 <input type="button" name="weight_default" value="default:1.0" onClick="set_weight(1.0)">
 (0〜1)<br>
-<input type="button" onClick="preview_img(document.enc_setting.ss0.value)" value="preview"><br>
+<input type="button" onClick="openPreviewWindow()" value="preview"><br>
 </div>
 </fieldset>
 <input type="checkbox" name="deinterlace" checked> インタレース解除<br>

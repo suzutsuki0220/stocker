@@ -125,9 +125,9 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
 <!--
 
   function getImageURL() {
-    var vno = window.opener.document.enc_setting.v_map.value;
-    var ss = window.opener.document.enc_setting.${start_f}.value;
-    var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&vno=" + vno + "&size=640&set_position=1&ss=" + ss;
+    var vmap = window.opener.document.enc_setting.v_map.value;
+    var ss   = document.f1.selectedTime.value;
+    var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&v_map=" + vmap + "&size=640&set_position=1&ss=" + ss;
 
     return imgurl;
   }
