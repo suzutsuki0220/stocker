@@ -1,4 +1,4 @@
-var duration = 0;
+var duration = 0; // 動画の長さ(秒)
 var loading = false;  // previewの更新多発を抑止するフラグ
 var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
 
@@ -30,12 +30,12 @@ function reloadImage() {
 
     if (document.preview.addEventListener) {
       document.preview.addEventListener("load", unsetLoading, false);
-      document.preview.addEventListener("error", unsetLoading, false);
-      document.preview.addEventListener("abort", unsetLoading, false);
+      document.preview.addEventListener("error", showGrayPad, false);
+      document.preview.addEventListener("abort", showGrayPad, false);
     } else if (document.preview.attachEvent) {
       document.preview.attachEvent("onload", unsetLoading);
-      document.preview.attachEvent("onerror", unsetLoading);
-      document.preview.attachEvent("onabort", unsetLoading);
+      document.preview.attachEvent("onerror", showGrayPad);
+      document.preview.attachEvent("onabort", showGrayPad);
     }
 
     loading = true;
@@ -55,15 +55,20 @@ function selectSkipDown(cnt) {
     document.f1.skip.options[idx].selected = true;
 }
 
+function showGrayPad() {
+    document.getElementById("preview").src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+    unsetLoading();
+}
+
 function unsetLoading() {
     if (document.preview.removeEventListener) {
       document.preview.removeEventListener("load", unsetLoading, false);
-      document.preview.removeEventListener("error", unsetLoading, false);
-      document.preview.removeEventListener("abort", unsetLoading, false);
+      document.preview.removeEventListener("error", showGrayPad, false);
+      document.preview.removeEventListener("abort", showGrayPad, false);
     } else if (document.preview.detachEvent) {
       document.preview.detachEvent("onload", unsetLoading);
-      document.preview.detachEvent("onerror", unsetLoading);
-      document.preview.detachEvent("onabort", unsetLoading);
+      document.preview.detachEvent("onerror", showGrayPad);
+      document.preview.detachEvent("onabort", showGrayPad);
     }
 
     document.getElementById("PreviewReloading").style.display = "none";
@@ -127,48 +132,45 @@ function keyDownWork(e) {
 }
 
 function addTime(num) {
-    var t = parseTimeStr(document.f1.selectedTime.value);
+    const minRange = 0;
+    const maxRange = duration * 1000;
+    var time_str = document.f1.selectedTime.value;
 
-    if (t) {
-      var hour = t[0];
-      var min  = t[1];
-      var sec  = t[2];
-      var mili = t[3];
+    if (isValidFormatTime(time_str) === false) {
+        window.alert("時間の書式が不正です");
+        return;
+    }
 
-      var tm = parseInt(hour * 3600000 + min * 60000 + sec * 1000 + mili);
-      tm += parseInt(num);
+    var miliTime = getSecondFromFormatTime(time_str) * 1000;
+    var preTm = miliTime;
 
-      if (tm < 0) {
-        tm = 0;
-      }
+    miliTime += parseInt(num);
+    if (miliTime < minRange) {
+        miliTime = minRange;
+    }
+    if (miliTime > maxRange) {
+        miliTime = maxRange;
+    }
 
-      document.f1.selectedTime.value = getFormatTimeFromSecond(tm);
-      moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
-      reloadImage();
+    if (preTm !== miliTime) {
+        document.f1.selectedTime.value = getFormatTimeFromSecond(miliTime);
+        moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
+        reloadImage();
     }
 }
 
-function parseTimeStr(time_str) {
-    var col = new Array();
-
-    hhmmss = time_str.split(":");
+function isValidFormatTime(time_str) {
+    var hhmmss = time_str.split(":");
     if (hhmmss.length != 3) {
-      window.alert("書式が不正です");
-      return;
+      return false;
     }
 
-    sss = hhmmss[2].split(".");
+    var sss = hhmmss[2].split(".");
     if (sss.length != 2) {
-      window.alert("書式が不正です");
-      return;
+      return false;
     }
 
-    col.push(parseInt(hhmmss[0]));
-    col.push(parseInt(hhmmss[1]));
-    col.push(parseInt(sss[0]));
-    col.push(parseInt(sss[1]));
-
-    return col;
+    return true;
 }
 
 function formatTime(hour, min, sec, mili) {
