@@ -586,3 +586,67 @@ function setPreviewSize(element, disp_width, disp_height) {
     }
 }
 
+var timeSelNum = 0;
+function addTimeSel() {
+    var elm = document.getElementById("TimeSelAddtion");
+    var newValue = document.getElementsByName("tend"+timeSelNum)[0].value;  // 一つ上の範囲の終了時間を次の開始時間にする
+    timeSelNum++;
+
+    var selectArea = document.createElement("div");
+    selectArea.setAttribute("id", "sarea"+timeSelNum);
+    var textElem = document.createTextNode("開始位置 ");
+    selectArea.appendChild(textElem);
+    var ssArea = document.createElement("input");
+    ssArea.setAttribute("type", "text");
+    ssArea.setAttribute("name", "ss"+timeSelNum);
+    ssArea.setAttribute("value", newValue);
+    ssArea.setAttribute("onClick", "openTimerSelector('ss"+timeSelNum+"', document.getElementsByName('ss"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    selectArea.appendChild(ssArea);
+    textElem = document.createTextNode(" (時:分:秒.ミリ秒) ～ ");
+    selectArea.appendChild(textElem);
+    var tendArea = document.createElement("input");
+    tendArea.setAttribute("type", "text");
+    tendArea.setAttribute("name", "tend"+timeSelNum);
+    tendArea.setAttribute("value", newValue);
+    tendArea.setAttribute("onClick", "openTimerSelector('tend"+timeSelNum+"', document.getElementsByName('tend"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    selectArea.appendChild(tendArea);
+    textElem = document.createTextNode(" (時:分:秒.ミリ秒) 長さ ");
+    selectArea.appendChild(textElem);
+    var tArea = document.createElement("input");
+    tArea.setAttribute("type", "text");
+    tArea.setAttribute("name", "t"+timeSelNum);
+    tArea.setAttribute("value", "00:00:00.000");
+    tArea.setAttribute("readonly", "true");
+    selectArea.appendChild(tArea);
+    var delArea = document.createElement("input");
+    delArea.setAttribute("type", "button");
+    delArea.setAttribute("name", "btnDel"+timeSelNum);
+    delArea.setAttribute("value", "削除");
+    delArea.setAttribute("onClick", "deleteTimeSel("+timeSelNum+")");
+    selectArea.appendChild(delArea);
+    elm.appendChild(selectArea);
+}
+
+function deleteTimeSel(idx) {
+    if (idx <= timeSelNum) {
+        var elm = document.getElementById("TimeSelAddtion");
+        var i = idx;
+
+        // 間に空いた部分を詰める
+        while (i < timeSelNum) {
+            var nextIdx = i + 1;
+            var nextSs = document.getElementsByName('ss'+nextIdx)[0].value;
+            var nextTend = document.getElementsByName('tend'+nextIdx)[0].value;
+            var nextT = document.getElementsByName('t'+nextIdx)[0].value;
+            document.getElementsByName('ss'+i)[0].value = nextSs;
+            document.getElementsByName('tend'+i)[0].value = nextTend;
+            document.getElementsByName('t'+i)[0].value = nextT;
+            i++;
+        }
+
+        // 最後を消す
+        var selectArea = document.getElementById("sarea"+timeSelNum);
+        elm.removeChild(selectArea);
+        timeSelNum--;
+    }
+}

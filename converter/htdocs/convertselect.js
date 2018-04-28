@@ -142,13 +142,8 @@ function addTime(num) {
         tm = 0;
       }
 
-      hour = Math.floor(tm / 3600000);
-      min  = Math.floor((tm - hour * 3600000) / 60000);
-      sec  = Math.floor(((tm - hour * 3600000) - (min * 60000)) / 1000);
-      mili = tm - hour * 3600000 - min * 60000 - sec * 1000;
-
-      document.f1.selectedTime.value = formatTime(hour, min, sec, mili);
-
+      document.f1.selectedTime.value = getFormatTimeFromSecond(tm);
+      moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
       reloadImage();
     }
 }
@@ -185,6 +180,15 @@ function formatTime(hour, min, sec, mili) {
     return hour + ":" + min + ":" + sec + "." + mili;
 }
 
+function getFormatTimeFromSecond(milisec) {
+    var hour = Math.floor(milisec / 3600000);
+    var min  = Math.floor((milisec - hour * 3600000) / 60000);
+    var sec  = Math.floor(((milisec - hour * 3600000) - (min * 60000)) / 1000);
+    var mili = milisec - hour * 3600000 - min * 60000 - sec * 1000;
+
+    return formatTime(hour, min, sec, mili);
+}
+
 function getSecondFromFormatTime(format_time) {
     const hhmmssxxx_pattern =  /([0-9][0-9]):([0-9][0-9]):([0-9][0-9].[0-9]{1,})/;
     var hhmmssxxx = hhmmssxxx_pattern.exec(format_time);
@@ -194,7 +198,6 @@ function getSecondFromFormatTime(format_time) {
     var ss = parseFloat(hhmmssxxx[3]);
 
     return 3600 * hh + 60 * mm + ss;
-
 }
 
 function getMovieDuration(movie_info_url, base_name, path) {
@@ -220,6 +223,7 @@ function getMovieDurationResult(httpRequest) {
             if (movie_info_elem !== null) {
                 var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
                 duration = getSecondFromFormatTime(hhmmssxxx);
+                moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
 
                 var videos = movie_info_elem.getElementsByTagName('video');
                 for (var i=0; i<videos.length; i++) {
@@ -236,5 +240,18 @@ function getMovieDurationResult(httpRequest) {
             }
         }
     }
+}
+
+// シークバーの位置が変更された時に実行される処理
+function changeTime(elemTimeSec, elemSeekBar) {
+    var seekPoint = duration * elemSeekBar.value; // 本来ならばmaxで割った後にミリ秒にする為に1000を掛けるが、maxは1000のため省略
+    elemTimeSec.value = getFormatTimeFromSecond(seekPoint);
+    reloadImage();
+}
+
+// 時間の値が変更された時にシークバーを動かす処理
+function moveSeekPosition(elemSeekBar, elemTimeSec) {
+    var seekPoint = getSecondFromFormatTime(elemTimeSec.value) / duration * 1000;
+    elemSeekBar.value = seekPoint;
 }
 

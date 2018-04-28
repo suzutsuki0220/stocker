@@ -79,16 +79,18 @@ if (!$target || !$start_f || !$end_f || !$duration_f) {
     HTML_Elem->error("parameter is not enough");
 }
 
+my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+
 print <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 <div style="position: relative; width: 640px;">
-  <img src="${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&size=640&set_position=1&ss=${pos}" id="preview" name="preview">
+  <img src="${GRAY_PAD}" id="preview" name="preview">
   <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
     Reloading...
   </div>
 </div>
 <div style="text-align: center">
-<input type="range" name="seekbar" style="width: 100%" min="0" max="1000" step="1" value="0">
+<input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" onChange="changeTime(document.f1.selectedTime, this)">
 <br>
 ＜&nbsp;
 <input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
@@ -123,7 +125,6 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
 
 <script type="text/javascript">
 <!--
-
   function getImageURL() {
     var vmap = window.opener.document.enc_setting.v_map.value;
     var ss   = document.f1.selectedTime.value;
@@ -156,6 +157,7 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
     }
   }
 
+  reloadImage();
   getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}");
 -->
 </script>
