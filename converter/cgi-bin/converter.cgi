@@ -6,7 +6,6 @@ use utf8;
 use Encode;
 use CGI;
 use File::Path;
-use XML::Simple;
 
 use lib '%libs_dir%';
 use ParamPath;
@@ -208,6 +207,7 @@ sub print_form() {
   my $mes;
 
   my @jslist = (
+      "%htdocs_root%/converter_common.js",
       "%htdocs_root%/converter_form.js",
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/stocker_xml.js",
@@ -248,8 +248,6 @@ EOF
 EOF
   print encode('utf-8', $mes);
 
-  my $movie_info_xml = "";
-
   my $vid_width  = 0;
   my $vid_height = 0;
   my $vid_fps    = 0;
@@ -258,24 +256,6 @@ EOF
   my $has_video_stream = undef;
   my $default_bps  = 0;
   my $round_fps    = 0;
-
-  my $xml = XML::Simple->new(KeepRoot=>1, ForceArray=>1);
-  my $movie_info;
-  eval {
-    $movie_info = $xml->XMLin($movie_info_xml);
-  };
-  if ($@) {
-    # print "情報取得失敗 $@";
-  } else {
-    $has_video_stream = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'no'};
-
-    if ($has_video_stream) {
-      $vid_width  = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_width'}[0];
-      $vid_height = $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_height'}[0];
-
-      ($x_ratio, $y_ratio) = split(/:/, $movie_info->{'movie_info'}[0]->{'video'}[0]->{'disp_aspect'}[0]);
-    }
-  }
 
   print "<h2>変換の設定</h2>\n";
   if (@files.length() > 1) {
@@ -760,108 +740,6 @@ weight
 EOF
 
   HTML_Elem->tail();
-}
-
-sub get_best_video_stream_id
-{
-  my ($vid_info) = @_;
-  my $id = 0;
-
-  my @array_max_pixel_idx = ();
-  my @array_max_fps_idx = ();
-  my $max_pixel = 0;
-  my $max_fps = 0;
-  my $max_bitrate = 0;
-
-  for (my $i = 0; $i < @$vid_info; $i++) {
-    my $pixel = $$vid_info[$i]->{'width'}[0] * $$vid_info[$i]->{'height'}[0];
-    if ($pixel > $max_pixel) {
-      $max_pixel = $pixel;
-    }
-  }
-
-  for (my $i = 0; $i < @$vid_info; $i++) {
-    my $pixel = $$vid_info[$i]->{'width'}[0] * $$vid_info[$i]->{'height'}[0];
-    if ($max_pixel == $pixel) {
-      my $fps = $$vid_info[$i]->{'fps'}[0];
-      if ($fps > $max_fps) {
-        $max_fps = $fps;
-      }
-      push(@array_max_pixel_idx, $i);
-    }
-  }
-
-  foreach my $i (@array_max_pixel_idx) {
-    my $fps = $$vid_info[$i]->{'fps'}[0];
-    if ($fps == $max_fps) {
-      my $bitrate = $$vid_info[$i]->{'bitrate'}[0];
-      if ($bitrate > $max_bitrate) {
-        $max_bitrate = $bitrate;
-      }
-      push(@array_max_fps_idx, $i);
-    }
-  }
-
-  foreach my $i (@array_max_fps_idx) {
-    my $bitrate = $$vid_info[$i]->{'bitrate'}[0];
-    if ($bitrate == $max_bitrate) {
-      $id = $$vid_info[$i]->{'no'}[0];
-      last;
-    }
-  }
-
-  return $id;
-}
-
-sub get_best_audio_stream_id
-{
-  my ($aud_info) = @_;
-  my $id = 0;
-
-  my @array_max_channel_idx = ();
-  my @array_max_sample_rate_idx = ();
-  my $max_channel = 0;
-  my $max_sample_rate = 0;
-  my $max_bitrate = 0;
-
-  for (my $i = 0; $i < @$aud_info; $i++) {
-    my $channel = $$aud_info[$i]->{'channel'}[0];
-    if ($channel > $max_channel) {
-      $max_channel = $channel;
-    }
-  }
-
-  for (my $i = 0; $i < @$aud_info; $i++) {
-    my $channel = $$aud_info[$i]->{'channel'}[0];
-    if ($max_channel == $channel) {
-      my $sample_rate = $$aud_info[$i]->{'sample_rate'}[0];
-      if ($sample_rate > $max_sample_rate) {
-        $max_sample_rate = $sample_rate;
-      }
-      push(@array_max_channel_idx, $i);
-    }
-  }
-
-  foreach my $i (@array_max_channel_idx) {
-    my $sample_rate = $$aud_info[$i]->{'sample_rate'}[0];
-    if ($max_sample_rate == $sample_rate) {
-      my $bitrate = $$aud_info[$i]->{'bitrate'}[0];
-      if ($bitrate > $max_bitrate) {
-        $max_bitrate = $bitrate;
-      }
-      push(@array_max_sample_rate_idx, $i);
-    }
-  }
-
-  foreach my $i (@array_max_sample_rate_idx) {
-    my $bitrate = $$aud_info[$i]->{'bitrate'}[0];
-    if ($bitrate == $max_bitrate) {
-      $id = $$aud_info[$i]->{'no'}[0];
-      last;
-    }
-  }
-
-  return $id;
 }
 
 sub get_date_string

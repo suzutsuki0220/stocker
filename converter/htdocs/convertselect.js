@@ -159,49 +159,6 @@ function addTime(num) {
     }
 }
 
-function isValidFormatTime(time_str) {
-    var hhmmss = time_str.split(":");
-    if (hhmmss.length != 3) {
-      return false;
-    }
-
-    var sss = hhmmss[2].split(".");
-    if (sss.length != 2) {
-      return false;
-    }
-
-    return true;
-}
-
-function formatTime(hour, min, sec, mili) {
-    hour = ("0" + hour).substr(-2);
-    min  = ("0" + min).substr(-2);
-    sec  = ("0" + sec).substr(-2);
-    mili = ("00" + mili).substr(-3);
-
-    return hour + ":" + min + ":" + sec + "." + mili;
-}
-
-function getFormatTimeFromSecond(milisec) {
-    var hour = Math.floor(milisec / 3600000);
-    var min  = Math.floor((milisec - hour * 3600000) / 60000);
-    var sec  = Math.floor(((milisec - hour * 3600000) - (min * 60000)) / 1000);
-    var mili = milisec - hour * 3600000 - min * 60000 - sec * 1000;
-
-    return formatTime(hour, min, sec, mili);
-}
-
-function getSecondFromFormatTime(format_time) {
-    const hhmmssxxx_pattern =  /([0-9][0-9]):([0-9][0-9]):([0-9][0-9].[0-9]{1,})/;
-    var hhmmssxxx = hhmmssxxx_pattern.exec(format_time);
-
-    var hh = parseFloat(hhmmssxxx[1]);
-    var mm = parseFloat(hhmmssxxx[2]);
-    var ss = parseFloat(hhmmssxxx[3]);
-
-    return 3600 * hh + 60 * mm + ss;
-}
-
 function getMovieDuration(movie_info_url, base_name, path) {
     var httpRequest = ajax_init();
     if (httpRequest) {

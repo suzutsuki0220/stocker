@@ -358,55 +358,6 @@ function vaildate_adjustment() {
     return true;
 }
 
-// 開始時と長さを足して終了時を求める
-function add_ss_and_t() {
-    var array_ss = document.enc_setting.ss.value.split(":", 3);
-    var array_t  = document.enc_setting.t.value.split(":", 3);
-
-    var ss_total = parseFloat((array_ss[0]*3600) + (array_ss[1]*60)) + parseFloat(array_ss[2]);
-    var t_total  = parseFloat((array_t[0]*3600)  + (array_t[1]*60))  + parseFloat(array_t[2]);
-
-    var total = ((parseFloat(ss_total)*1000) + (parseFloat(t_total)*1000)) / 1000;
-
-    var total_hour = Math.floor(total / 3600);
-    var total_min  = Math.floor((total - (total_hour*3600)) / 60);
-    var total_sec  = total - (total_hour*3600) - (total_min*60);
-
-    if (total_hour < 10) { total_hour = "0" + total_hour; }
-    if (total_min  < 10) { total_min  = "0" + total_min; }
-    if (total_sec  < 10) { total_sec  = "0" + total_sec; }
-
-    return total_hour + ":" + total_min + ":" + total_sec;
-}
-
-// 開始時と終了時から長さを求める
-function getEncTimeDuration(ss, te) {
-    var array_ss = ss.split(":", 3);
-    var array_te = te.split(":", 3);
-
-    var ss_total = (array_ss[0]*3600000) + (array_ss[1]*60000) + (array_ss[2]*1000);
-    var te_total = (array_te[0]*3600000) + (array_te[1]*60000) + (array_te[2]*1000);
-
-    return te_total - ss_total;
-}
-
-function getEncTimeString(length) {
-    var len_hour = Math.floor(length / 3600000);
-    var len_min  = Math.floor((length - (len_hour*3600000)) / 60000);
-    var len_sec  = (length - (len_hour*3600000) - (len_min*60000));
-    var len_mili = len_sec % 1000;
-
-    len_sec = (len_sec - len_mili) / 1000;
-
-    if (len_hour < 10) { len_hour = "0" + len_hour; }
-    if (len_min  < 10) { len_min  = "0" + len_min; }
-    if (len_sec  < 10) { len_sec  = "0" + len_sec; }
-    if (len_mili < 10) { len_mili = "00" + len_mili; }
-    else if (len_mili < 100) { len_mili = "0" + len_mili; }
-
-    return len_hour + ":" + len_min + ":" + len_sec + "." + len_mili;
-}
-
 function writeSourceLocation(path)
 {
     var html = "";
@@ -440,6 +391,10 @@ function getMovieInfo(movie_info_url, base_name, path) {
 
 function showInfoTable(httpRequest) {
     var content;
+    var best_video_index = NaN;
+    var best_video_width  = 640;
+    var best_video_height = 480;
+    var best_audio_index = NaN;
 
     if (httpRequest.readyState == 4) {
         if (httpRequest.status == 200) {
@@ -464,7 +419,9 @@ function showInfoTable(httpRequest) {
                     }
                     video_table += makeVideoTable(videos[i].childNodes);
                 }
-                // TODO: sub get_best_video_stream_id
+                best_video_index = getBestVideoStream(videos);
+                best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
+                best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
 
                 for (var i=0; i<audios.length; i++) {
                     if (i === 0) {
@@ -472,7 +429,7 @@ function showInfoTable(httpRequest) {
                     }
                     audio_table += makeAudioTable(audios[i].childNodes);
                 }
-                // TODO: sub get_best_audio_stream_id
+                best_audio_index = isNaN(best_video_index) ? getBestAudioStream(audios) : getNearestAudioStream(audios, videos, best_video_index);
 
                 content = `
 <table border="3">
@@ -491,6 +448,15 @@ ${audio_table}
             content = "動画情報のパースに失敗しました";
         }
         document.getElementById('information_table').innerHTML = content;
+
+        // check radio button
+        if (isNaN(best_video_index) === false) {
+            document.getElementsByName('v_map')[best_video_index].checked = true;
+            setPreviewSize(document.getElementsByName('vimg')[0], best_video_width, best_video_height);
+        }
+        if (isNaN(best_audio_index) === false) {
+            document.getElementsByName('a_map')[best_audio_index].checked = true;
+        }
     }
 }
 
@@ -542,6 +508,156 @@ function makeAudioTable(audio_elem) {
 `;
 }
 
+function getBestVideoStream(videos) {
+    var ret_index = 0;
+    var max_pixel_dimension = 0;
+    var max_fps = NaN;
+    var max_bitrate = NaN;
+    var max_pixel_streams = new Array();
+
+    // 最も大きい解像度のストリームを探す
+    for (var i=0; i<videos.length; i++) {
+        const video_elem = videos[i].childNodes;
+        const vid_width  = parseInt(getXmlFirstFindTagData(video_elem, 'width'));
+        const vid_height = parseInt(getXmlFirstFindTagData(video_elem, 'height'));
+        const pixel_dimension = vid_width * vid_height;
+
+        if (max_pixel_dimension < pixel_dimension) {
+            max_pixel_dimension = pixel_dimension;
+        }
+    }
+
+    // 最大解像度と同じストリームが複数ある場合を想定してインデックスを保持する
+    for (var i=0; i<videos.length; i++) {
+        const video_elem = videos[i].childNodes;
+        const vid_width   = parseInt(getXmlFirstFindTagData(video_elem, 'width'));
+        const vid_height  = parseInt(getXmlFirstFindTagData(video_elem, 'height'));
+        const pixel_dimension = vid_width * vid_height;
+
+        if (max_pixel_dimension === pixel_dimension) {
+            max_pixel_streams.push(i);
+        }
+    }
+
+    // 最も大きい解像度のストリームの中から最もfpsが高いストリームを探す
+    for (var i=0; i< max_pixel_streams.length; i++) {
+        const video_elem = videos[max_pixel_streams[i]].childNodes;
+        const vid_fps = parseInt(getXmlFirstFindTagData(video_elem, 'fps'));
+        if (isNaN(vid_fps) === false) {
+            if (isNaN(max_fps) === true) {
+                max_fps = vid_fps;
+            } else {
+                if (max_fps < vid_fps) {
+                    max_fps = vid_fps;
+                }
+            }
+        }
+    }
+
+    // 更にビットレートで比較
+    for (var i=0; i< max_pixel_streams.length; i++) {
+        const video_elem  = videos[max_pixel_streams[i]].childNodes;
+        const vid_fps     = parseInt(getXmlFirstFindTagData(video_elem, 'fps'));
+        const vid_bitrate = parseInt(getXmlFirstFindTagData(video_elem, 'bitrate'));
+
+        if (isNaN(max_fps) === true || vid_fps === max_fps) {
+            if (isNaN(vid_bitrate) === false && vid_bitrate !== 0) {
+                if (isNaN(max_bitrate) === true) {
+                    max_bitrate = vid_bitrate;
+                    ret_index = max_pixel_streams[i];
+                } else {
+                    if (max_bitrate < vid_bitrate) {
+                        max_bitrate = vid_bitrate;
+                        ret_index = max_pixel_streams[i];
+                    }
+                }
+            } else {
+                ret_index = max_pixel_streams[i];
+            }
+        }
+    }
+
+    return ret_index;
+}
+
+function getNearestAudioStream(audios, videos, best_video_index) {
+    var best_video_no = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'no'));
+
+    for (var i=0; i<audios.length; i++) {
+        const audio_elem = audios[i].childNodes;
+        const aud_no = parseInt(getXmlFirstFindTagData(audio_elem, 'no'));
+        if ((best_video_no > 0 && best_video_no -1 === aud_no) || best_video_no + 1 === aud_no) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+function getBestAudioStream(audios) {
+    var ret_index = 0;
+    var max_channel = 0;
+    var max_sample_rate = NaN;
+    var max_bitrate = NaN;
+    var max_channel_streams = new Array();
+
+    for (var i=0; i<audios.length; i++) {
+        const audio_elem = audios[i].childNodes;
+        const aud_channel = parseInt(getXmlFirstFindTagData(audio_elem, 'channel'));
+        if (max_channel < aud_channel) {
+            max_channel = aud_channel;
+        }
+    }
+
+    for (var i=0; i<audios.length; i++) {
+        const audio_elem = audios[i].childNodes;
+        const aud_channel = parseInt(getXmlFirstFindTagData(audio_elem, 'channel'));
+
+        if (max_channel === aud_channel) {
+            max_channel_streams.push(i);
+        }
+    }
+
+    for (var i=0; i<max_channel_streams.length; i++) {
+        const audio_elem = audios[max_channel_streams[i]].childNodes;
+        const aud_sample_rate = parseInt(getXmlFirstFindTagData(audio_elem, 'sample_rate'));
+
+        if (isNaN(aud_sample_rate) === false) {
+            if (isNaN(max_sample_rate) === true) {
+                max_sample_rate = aud_sample_rate;
+            } else {
+                if (max_sample_rate < aud_sample_rate) {
+                    max_sample_rate = aud_sample_rate;
+                }
+            }
+        }
+    }
+
+    for (var i=0; i<max_channel_streams.length; i++) {
+        const audio_elem = audios[max_channel_streams[i]].childNodes;
+        const aud_sample_rate = parseInt(getXmlFirstFindTagData(audio_elem, 'sample_rate'));
+        const aud_bitrate     = parseInt(getXmlFirstFindTagData(audio_elem, 'bitrate'));
+
+        if (isNaN(max_sample_rate) === true || max_sample_rate === aud_sample_rate) {
+            if (isNaN(aud_bitrate) === false && aud_bitrate !== 0) {
+                if (isNaN(max_bitrate) === true) {
+                    max_bitrate = aud_bitrate;
+                    ret_index = max_channel_streams[i];
+                } else {
+                    if (max_bitrate < aud_bitrate) {
+                        max_bitrate = aud_bitrate;
+                        ret_index = max_channel_streams[i];
+                    }
+                }
+            } else {
+                ret_index = max_channel_streams[i];
+            }
+        }
+    }
+
+    return ret_index;
+}
+
 function doVideoStreamSelected(vid_no) {
     var width, height, disp_width, disp_height, fps;
 
@@ -574,16 +690,6 @@ function doVideoStreamSelected(vid_no) {
 
     document.getElementsByName('vimg')[0].src = getPreviewUrl(640);
     setPreviewSize(document.getElementsByName('vimg')[0], disp_width, disp_height);
-}
-
-function setPreviewSize(element, disp_width, disp_height) {
-    const preview_width  = 640;
-    const preview_height = Math.floor(preview_width / disp_width * disp_height);
-
-    if (preview_width > 0 && preview_height > 0) {
-        element.style.width  = String(preview_width)  + "px";
-        element.style.height = String(preview_height) + "px";
-    }
 }
 
 var timeSelNum = 0;

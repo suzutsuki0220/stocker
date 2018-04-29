@@ -60,7 +60,7 @@ my @skip_options = (
 );
 
 my @jslist = (
-      "%htdocs_root%/converter_form.js",
+      "%htdocs_root%/converter_common.js",
       "%htdocs_root%/convertselect.js",
       "%htdocs_root%/stocker_xml.js",
       "%htdocs_root%/ajax_html_request.js",
@@ -147,10 +147,10 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
       var te = window.opener.document.enc_setting.${end_f}.value;
       var duration = getEncTimeDuration(ss, te);
       if (duration > 0) {
-        window.opener.document.enc_setting.${duration_f}.value = getEncTimeString(duration);
+        window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(duration);
       } else {
         window.opener.document.enc_setting.${end_f}.value = ss;
-        window.opener.document.enc_setting.${duration_f}.value = getEncTimeString(0);
+        window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(0);
       }
     } else {
       alert("Timeが選択されていません");
