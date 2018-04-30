@@ -1,6 +1,7 @@
 var duration = 0; // 動画の長さ(秒)
 var loading = false;  // previewの更新多発を抑止するフラグ
 var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
+var sceneList = new Array();
 
 // キーボードのキー入力イベント
 if (document.addEventListener) {
@@ -14,6 +15,10 @@ window.onload = function() {
 }
 
 function apply() {
+    if (document.f1.btnApply.disabled === true) {
+        return;
+    }
+
     setTime();
     closeWindow();
 }
@@ -83,13 +88,19 @@ function unsetLoading() {
 function keyDownWork(e) {
     var key_code = e.keyCode;
 
-    switch(key_code) {
-      case 13: // enter
+    if (key_code === 13) {  // enter
         apply();
-        break;
-      case 27: // escape
+        return;
+    } else if (key_code === 27) { // escape
         closeWindow();
-        break;
+        return;
+    }
+
+    if (document.getElementsByName('selectedTime')[0] === document.activeElement) {
+        return;
+    }
+
+    switch(key_code) {
       case 37: // left
       case 71:
         addTime(document.f1.skip.value * (-1));
@@ -138,8 +149,10 @@ function addTime(num) {
 
     if (isValidFormatTime(time_str) === false) {
         window.alert("時間の書式が不正です");
+        document.f1.btnApply.disabled = true;
         return;
     }
+    document.f1.btnApply.disabled = false;
 
     var miliTime = getSecondFromFormatTime(time_str) * 1000;
     var preTm = miliTime;
@@ -201,6 +214,59 @@ function getMovieDurationResult(httpRequest) {
     }
 }
 
+function getSceneData(getfile_cgi, base_name, scene_path) {
+    var httpRequest = ajax_init();
+    if (httpRequest) {
+        var query = "dir=" + base_name + "&file=" + scene_path + "&mime=text/plain";
+        ajax_set_instance(httpRequest, function() { getSceneDataResult(httpRequest) });
+        ajax_post(httpRequest, getfile_cgi, query);
+    }
+}
+
+function getSceneDataResult(httpRequest) {
+    if (httpRequest.readyState == 4) {
+        if (httpRequest.status == 200) {
+            var sp, ep;
+            var data = httpRequest.responseText;
+            var html;
+
+            sp = 0;
+            while((ep = data.indexOf("\n", sp)) != -1) {
+                var line = data.substring(sp, ep);
+                pushScene(line);
+                sp = ep + 1;
+            }
+            if (sp < data.length) {
+                var line = data.substring(sp);
+                pushScene(line);
+            }
+
+            if (sceneList.length > 0) {
+                html  = "<br>シーン: ";
+                html += "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], -1)\" value=\"＜\">&nbsp;";
+                html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], 1)\" value=\"＞\">";
+                document.getElementById('sceneSelectArea').innerHTML = html;
+            }
+        }
+    }
+}
+
+function pushScene(scene_data_line) {
+    var delim_pos = scene_data_line.indexOf(" ", 0);
+    var hhmmssxxx = scene_data_line.substring(0, delim_pos);
+
+    if (isValidFormatTime(hhmmssxxx) === true) {
+        sceneList.push(hhmmssxxx);
+    }
+}
+
+function getNextScene(elem, next_step) {
+    var time_str = elem.value;
+
+    elem.value = "12:34:56.78";
+    changeSelectedTime(elem);
+}
+
 // シークバーの位置が変更された時に実行される処理
 function changeTime(elemTimeSec, elemSeekBar) {
     var seekPoint = duration * elemSeekBar.value; // 本来ならばmaxで割った後にミリ秒にする為に1000を掛けるが、maxは1000のため省略
@@ -214,3 +280,16 @@ function moveSeekPosition(elemSeekBar, elemTimeSec) {
     elemSeekBar.value = seekPoint;
 }
 
+// 入力欄の時間が変更された時の処理
+function changeSelectedTime(elem) {
+    var val = elem.value;
+    if (isValidFormatTime(val) === false) {
+        document.getElementById('messageArea').style.color = "#ff0000";
+        document.getElementById('messageArea').innerHTML = "Timeの書式が不正です<br>";
+        document.f1.btnApply.disabled = true;
+    } else {
+        document.getElementById('messageArea').innerHTML = "<br>";
+        reloadImage();
+        document.f1.btnApply.disabled = false;
+    }
+}

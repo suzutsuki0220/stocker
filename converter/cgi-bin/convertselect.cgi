@@ -13,22 +13,21 @@ use HTML_Elem;
 our $MOVIEIMG_CGI   = "";
 our $MOVIE_INFO_CGI = "";
 our $BASE_DIR_CONF  = "";
+our $GETFILE_CGI    = "";
 require '%conf_dir%/converter.conf';
 
 my $q = eval{new CGI};
-
-my $encoded_dir = HTML_Elem->url_encode(scalar($q->param('dir')));
+my $output;
 
 my @files = ();
 my $path;
-my $base;
 my $base_name = scalar($q->param('dir'));
+my $encoded_dir = HTML_Elem->url_encode(${base_name});
 my $encoded_path = scalar($q->param('file'));
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
   $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
-  $base = $ins->{base};
 };
 if ($@) {
   HTML_Elem->header();
@@ -81,7 +80,10 @@ if (!$target || !$start_f || !$end_f || !$duration_f) {
 
 my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-print <<EOF;
+$path =~ /(.+?)\.(.*)$/;
+my $encoded_scene_path = ParamPath->urlpath_encode(encode('utf-8', $1 . ".vdr"));
+
+$output = <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 <div style="position: relative; width: 640px;">
   <img src="${GRAY_PAD}" id="preview" name="preview">
@@ -100,14 +102,15 @@ print <<EOF;
 <input type="button" name="btnDown" value="-" onClick="addTime(document.f1.skip.value * (-1))">&nbsp;
 <select name="skip" onChange="document.f1.skip.blur()">
 EOF
+print encode('utf-8', $output);
 
 foreach my $so (@skip_options) {
   my $selected = "";
   if (@{$so}[0] eq "3") { $selected = " selected"; }
-  print "<option value=\"" . @{$so}[0] * 1000 . "\"". $selected .">" . @{$so}[1] . "</option>\n";
+  print "<option value=\"" . @{$so}[0] * 1000 . "\"". $selected .">" . encode('utf-8', @{$so}[1]) . "</option>\n";
 }
 
-print <<EOF;
+$output = <<EOF;
 </select>&nbsp;
 <input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)">&nbsp;&nbsp;
 <input type="button" name="btnUp1" value=".5" onClick="addTime(500)">
@@ -115,9 +118,9 @@ print <<EOF;
 <input type="button" name="btnUp3" value="15" onClick="addTime(15000)">
 <input type="button" name="btnUp4" value="60" onClick="addTime(60000)">
 &nbsp;＞
-<br>
-Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
-<br>
+<div id="sceneSelectArea"></div><br>
+Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="changeSelectedTime(this)"><br>
+<div id="messageArea"><br></div>
 <input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
 <input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
 </div>
@@ -159,9 +162,11 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}"><br>
 
   reloadImage();
   getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}");
+  getSceneData("${GETFILE_CGI}", "${encoded_dir}", "${encoded_scene_path}");
 -->
 </script>
 EOF
+print encode('utf-8', $output);
 
 HTML_Elem->tail();
 exit(0);
