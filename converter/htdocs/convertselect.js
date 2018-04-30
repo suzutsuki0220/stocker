@@ -233,17 +233,16 @@ function getSceneDataResult(httpRequest) {
             sp = 0;
             while((ep = data.indexOf("\n", sp)) != -1) {
                 var line = data.substring(sp, ep);
-                pushScene(line);
+                pushSceneList(line);
                 sp = ep + 1;
             }
             if (sp < data.length) {
                 var line = data.substring(sp);
-                pushScene(line);
+                pushSceneList(line);
             }
 
             if (sceneList.length > 0) {
-                html  = "<br>シーン: ";
-                html += "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], -1)\" value=\"＜\">&nbsp;";
+                html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], -1)\" value=\"＜\">&nbsp;シーン&nbsp;";
                 html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], 1)\" value=\"＞\">";
                 document.getElementById('sceneSelectArea').innerHTML = html;
             }
@@ -251,19 +250,36 @@ function getSceneDataResult(httpRequest) {
     }
 }
 
-function pushScene(scene_data_line) {
+function pushSceneList(scene_data_line) {
     var delim_pos = scene_data_line.indexOf(" ", 0);
     var hhmmssxxx = scene_data_line.substring(0, delim_pos);
 
     if (isValidFormatTime(hhmmssxxx) === true) {
-        sceneList.push(hhmmssxxx);
+        var milisec = getSecondFromFormatTime(hhmmssxxx) * 1000;
+        sceneList.push(milisec);
     }
 }
 
 function getNextScene(elem, next_step) {
-    var time_str = elem.value;
+    var milisec = getSecondFromFormatTime(elem.value) * 1000;
+    var base_index, next_index;
 
-    elem.value = "12:34:56.78";
+    for (var base_index=0; base_index<sceneList.length; base_index++) {
+        if (milisec <= sceneList[base_index]) {
+            break;
+        }
+    }
+
+    next_index = base_index + next_step;
+
+    if (next_index < 0) {
+        elem.value = "00:00:00.000";
+    } else if (next_index >= sceneList.length) {
+        elem.value = getFormatTimeFromSecond(duration * 1000);
+    } else {
+        elem.value = getFormatTimeFromSecond(sceneList[next_index]);
+    }
+
     changeSelectedTime(elem);
 }
 
@@ -285,10 +301,11 @@ function changeSelectedTime(elem) {
     var val = elem.value;
     if (isValidFormatTime(val) === false) {
         document.getElementById('messageArea').style.color = "#ff0000";
-        document.getElementById('messageArea').innerHTML = "Timeの書式が不正です<br>";
+        document.getElementById('messageArea').innerHTML = "Timeの書式が不正です";
         document.f1.btnApply.disabled = true;
     } else {
-        document.getElementById('messageArea').innerHTML = "<br>";
+        document.getElementById('messageArea').innerHTML = "";
+        moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
         reloadImage();
         document.f1.btnApply.disabled = false;
     }

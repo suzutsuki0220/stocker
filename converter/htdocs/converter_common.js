@@ -41,12 +41,17 @@ function getFormatTimeFromSecond(milisec) {
 }
 
 function getSecondFromFormatTime(format_time) {
-    const hhmmssxxx_pattern =  /([0-9][0-9]):([0-9][0-9]):([0-9][0-9].[0-9]{1,})/;
+    const hhmmssxxx_pattern =  /([0-9]+):([0-9][0-9]):([0-9][0-9].[0-9]+)/;
     var hhmmssxxx = hhmmssxxx_pattern.exec(format_time);
+    var hh = 0;
+    var mm = 0;
+    var ss = 0;
 
-    var hh = parseFloat(hhmmssxxx[1]);
-    var mm = parseFloat(hhmmssxxx[2]);
-    var ss = parseFloat(hhmmssxxx[3]);
+    if (hhmmssxxx !== null) {
+        hh = parseFloat(hhmmssxxx[1]);
+        mm = parseFloat(hhmmssxxx[2]);
+        ss = parseFloat(hhmmssxxx[3]);
+    }
 
     return 3600 * hh + 60 * mm + ss;
 }

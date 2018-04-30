@@ -118,9 +118,9 @@ $output = <<EOF;
 <input type="button" name="btnUp3" value="15" onClick="addTime(15000)">
 <input type="button" name="btnUp4" value="60" onClick="addTime(60000)">
 &nbsp;＞
-<div id="sceneSelectArea"></div><br>
-Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="changeSelectedTime(this)"><br>
-<div id="messageArea"><br></div>
+<div id="sceneSelectArea"></div>
+Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="changeSelectedTime(this)">
+<div id="messageArea"></div>
 <input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
 <input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
 </div>
