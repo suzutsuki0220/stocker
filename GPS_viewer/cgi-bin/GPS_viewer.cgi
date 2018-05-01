@@ -69,13 +69,15 @@ if ($@) {
 
 my $html = <<EOF;
 <body onload="drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}')">
-<div style="height: 5%">
+<div id="top_field">
 <span style="float: left">
 <b>${file_name}</b><br>
 </span>
 <span style="float: right">
-<a href="${back_link}" class="white">戻る</a>
-<a href="javascript:showGraph(position)" class="white">グラフ</a>
+<form name="f_link" action="#" method="GET">
+<input type="button" name="btn_back" onClick="location.href='${back_link}'" value="戻る">
+<input type="button" name="btn_graph" onClick="showGraph(position)" value="グラフ">
+</form>
 </span>
 </div>
 <div id="map_canvas"></div>

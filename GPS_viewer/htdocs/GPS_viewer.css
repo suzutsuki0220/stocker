@@ -26,6 +26,11 @@ a.white {
     height: 55%;
 }
 
+#top_field {
+    height: 5%;
+    vertical-align: middle;
+}
+
 #bottom_field {
     float: left;
     width: 45%;
