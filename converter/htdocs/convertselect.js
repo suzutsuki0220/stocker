@@ -257,6 +257,7 @@ function pushSceneList(scene_data_line) {
     if (isValidFormatTime(hhmmssxxx) === true) {
         var milisec = getSecondFromFormatTime(hhmmssxxx) * 1000;
         sceneList.push(milisec);
+        addTickMark(document.getElementById('sceneListMarks'), milisec / (duration * 1000) * 1000);
     }
 }
 
@@ -309,4 +310,11 @@ function changeSelectedTime(elem) {
         reloadImage();
         document.f1.btnApply.disabled = false;
     }
+}
+
+function addTickMark(elem, value) {
+    var option = document.createElement('option');
+    option.setAttribute('value', value);
+    //option.setAttribute('label', "1"); // not support
+    elem.appendChild(option);
 }

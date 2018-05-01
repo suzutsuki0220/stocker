@@ -92,7 +92,8 @@ $output = <<EOF;
   </div>
 </div>
 <div style="text-align: center">
-<input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" onChange="changeTime(document.f1.selectedTime, this)">
+<input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" list="sceneListMarks" onChange="changeTime(document.f1.selectedTime, this)">
+<datalist id="sceneListMarks"></datalist>
 <br>
 ＜&nbsp;
 <input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
