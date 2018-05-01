@@ -153,18 +153,26 @@ function showGraph(position) {
 }
 
 function plotAcceleration(position) {
-    for (var i=0; i<position.length; i++) {
+    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
+    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
+    var start = Math.floor(position.length * range_start / 1000);
+    var end   = Math.floor(position.length * range_end / 1000);
+
+    clearAccelerationGraphData();
+    var data_index = 1;
+    for (var i=start; i<end; i++) {
         var p = position[i];
-        accelerationXY_graph_property["data"][1][i+1] = p.est_x;
-        accelerationXY_graph_property["data"][2][i+1] = p.est_y;
-        accelerationZ_graph_property["data"][1][i+1] = p.est_z;
-        accelerationXY_gforce_property["data"][1][i+1] = p.est_y * -1.0;
-        accelerationXY_gforce_property["data"][2][i+1] = p.est_x;
-        gyro_graph_property["data"][1][i+1] = p.gyro_x;
-        gyro_graph_property["data"][2][i+1] = p.gyro_y;
-        gyro_graph_property["data"][3][i+1] = p.gyro_z;
-        speed_graph_property["data"][1][i+1] = p.speed;
-        event_graph_property["data"][1][i+1] = p.behavior;
+        accelerationXY_graph_property["data"][1][data_index] = p.est_x;
+        accelerationXY_graph_property["data"][2][data_index] = p.est_y;
+        accelerationZ_graph_property["data"][1][data_index] = p.est_z;
+        accelerationXY_gforce_property["data"][1][data_index] = p.est_y * -1.0;
+        accelerationXY_gforce_property["data"][2][data_index] = p.est_x;
+        gyro_graph_property["data"][1][data_index] = p.gyro_x;
+        gyro_graph_property["data"][2][data_index] = p.gyro_y;
+        gyro_graph_property["data"][3][data_index] = p.gyro_z;
+        speed_graph_property["data"][1][data_index] = p.speed;
+        event_graph_property["data"][1][data_index] = p.behavior;
+        data_index++;
     }
 
     ccchart.init('graph_accelXY', accelerationXY_graph_property);
@@ -175,3 +183,15 @@ function plotAcceleration(position) {
     ccchart.init('gforce_accelXY', accelerationXY_gforce_property);
 }
 
+function clearAccelerationGraphData() {
+    accelerationXY_graph_property["data"][1].splice(1, accelerationXY_graph_property["data"][1].length - 1);
+    accelerationXY_graph_property["data"][2].splice(1, accelerationXY_graph_property["data"][2].length - 1);
+    accelerationZ_graph_property["data"][1].splice(1, accelerationZ_graph_property["data"][1].length - 1);
+    accelerationXY_gforce_property["data"][1].splice(1, accelerationXY_gforce_property["data"][1].length - 1);
+    accelerationXY_gforce_property["data"][2].splice(1, accelerationXY_gforce_property["data"][2].length - 1);
+    gyro_graph_property["data"][1].splice(1, gyro_graph_property["data"][1].length - 1);
+    gyro_graph_property["data"][2].splice(1, gyro_graph_property["data"][2].length - 1);
+    gyro_graph_property["data"][3].splice(1, gyro_graph_property["data"][3].length - 1);
+    speed_graph_property["data"][1].splice(1, speed_graph_property["data"][1].length - 1);
+    event_graph_property["data"][1].splice(1, event_graph_property["data"][1].length - 1);
+}

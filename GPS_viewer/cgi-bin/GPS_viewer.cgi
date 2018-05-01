@@ -90,10 +90,27 @@ my $html = <<EOF;
 <div id="panorama_canvas"></div><canvas id="gforce_accelXY"></canvas>
 </div>
 <div id="info_field">
-距離: <span id="distance_text">-- km</span><br>
+<form name="f1" action="#" method="GET">
+距離: <span id="distance_text">-- km</span>&nbsp;&nbsp;
 サンプル数: 有効=<span id="sample_count">0</span>, 無効=<span id="invalid_sample_count">0</span><br>
-開始位置住所: <span id="start_address"></span><br>
-終了位置住所: <span id="end_address"></span>
+<ul>
+開始位置<br>
+<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" style="width: 97%" list="tickmarks">
+<li>時刻: <span id="start_datetime"></span></li>
+<li>住所: <span id="start_address"></span></li>
+</ul>
+<ul>
+終了位置<br>
+<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged(this)" style="width: 97%" list="tickmarks">
+<li>時刻: <span id="end_datetime"></span></li>
+<li>住所: <span id="end_address"></span></li>
+</ul>
+<datalist id="tickmarks">
+  <option value="0" label="0%">
+  <option value="500" label="50%">
+  <option value="1000" label="100%">
+</datalist>
+</form>
 </div>
 EOF
 

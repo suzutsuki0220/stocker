@@ -144,16 +144,8 @@ function get_latlng(lat, lng) {
 }
 
 function map_route(data, name) {
-  var route = [];
-  var latlng;
-  var invalid_count = 0;
-
   resetLatLngMinMax();
   try {
-    distance = 0;
-    pre_lat = 0;
-    pre_lng = 0;
-
     if (nmea_pattern.test(name.toLowerCase())) {
       // nmeaデータ
       position = getPositionEmea(data);
@@ -163,10 +155,27 @@ function map_route(data, name) {
       // KML and GPX
       position = getPositionXml(data);
     }
+  } catch(e) {
+    alert("map_route error: " + e.message);
+    return;
+  }
 
-    for (var i=0; i<position.length; i++) {
+  // 経路描画
+  reloadMap(0, position.length);
+  centeringMap();
+}
+
+function reloadMap(start_range, end_range) {
+  var route = [];
+  var invalid_count = 0;
+
+  distance = 0;
+  pre_lat = 0;
+  pre_lng = 0;
+  clearEventMarker();
+  for (var i=start_range; i<end_range; i++) {
       var p = position[i];
-      latlng = get_latlng(p.latitude, p.longitude);
+      var latlng = get_latlng(p.latitude, p.longitude);
       if (latlng != null) {
         route.push(latlng);
         if (p.behavior && p.behavior !== 0) {
@@ -175,25 +184,28 @@ function map_route(data, name) {
       } else {
         invalid_count++;
       }
-    }
-  } catch(e) {
-    alert(e.message);
-    return;
   }
 
-  // 経路描画
+  var start_index = 0;
+  var end_index = route.length - 1;
 
+  if (route.length === 0) {
+    alert('有効な位置を示すサンプルがありません');
+    return;
+  }
   map_clear();
 
   document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
   document.getElementById("sample_count").innerHTML  = route.length;
   document.getElementById("invalid_sample_count").innerHTML  = invalid_count;
 
-  geocoder.geocode({'location': route[0]}, putStartGeoCode);
-  geocoder.geocode({'location': route[route.length-1]}, putEndGeoCode);
+  geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
+  geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
+  document.getElementById('start_datetime').innerHTML = position[start_range].datetime ? position[start_range].datetime : "不明";
+  document.getElementById('end_datetime').innerHTML = position[end_range - 1].datetime ? position[end_range - 1].datetime : "不明";
 
   var StartMarkerOptions = {
-    position: route[0],
+    position: route[start_index],
     icon: '%htdocs_root%/car.png',
     map: map,
     title: "Start Point"
@@ -201,18 +213,15 @@ function map_route(data, name) {
   startMarker = new google.maps.Marker(StartMarkerOptions);
 
   var EndPointOptions = {
-    position: route[route.length - 1],
+    position: route[end_index],
     icon: '%htdocs_root%/goal.png',
     map: map,
     title: "End Point"
   };
   endMarker = new google.maps.Marker(EndPointOptions);
 
-  // マップの中央を奇跡が全て見える位置に合わせる
-  map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
-  map.setZoom(parseInt(getMapScale()));
 
-  panorama.setPosition(route[0]);  // street viewは開始位置にする
+  panorama.setPosition(route[start_index]);  // street viewは開始位置にする
 
   var polyOptions = {
     path: route,
@@ -222,6 +231,12 @@ function map_route(data, name) {
   }
   poly = new google.maps.Polyline(polyOptions);
   poly.setMap(map);
+}
+
+// マップの中央を奇跡が全て見える位置に合わせる
+function centeringMap() {
+  map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
+  map.setZoom(parseInt(getMapScale()));
 }
 
 function createEventMarker(latitude, longitude, event) {
@@ -254,6 +269,16 @@ function createEventMarker(latitude, longitude, event) {
   };
 
   eventMarkers.push(new google.maps.Marker(markerOptions));
+}
+
+function clearEventMarker() {
+  while(eventMarkers.length !== 0) {
+    var poped = eventMarkers.pop();
+    if (poped) {
+      poped.setMap(null);
+      poped = null;
+    }
+  }
 }
 
 function putStartGeoCode(results, status) {
@@ -313,7 +338,28 @@ function getPositionDataResult(httpRequest, name) {
             }
         }
     } catch(e) {
-        alert("ERROR: " + e.description);
+        alert("get position ERROR: " + e.description);
     }
+}
+
+function rangeChanged(elem) {
+    console.log(elem.value);
+
+    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
+    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
+
+    if (range_end < range_start) {
+        document.getElementsByName('range_end')[0].value = range_start;
+        range_end = range_start;
+    }
+    if (range_start > range_end) {
+        document.getElementsByName('range_start')[0].value = range_end;
+        range_start = range_end;
+    }
+
+    var start = Math.floor(position.length * range_start / 1000);
+    var end   = Math.floor(position.length * range_end / 1000);
+
+    reloadMap(start, end);
 }
 
