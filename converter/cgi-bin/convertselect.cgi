@@ -161,9 +161,13 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="c
     }
   }
 
+  // durationが取得出来た時にシーンのデータを取得する
+  function callGetSceneData() {
+    getSceneData("${GETFILE_CGI}", "${encoded_dir}", "${encoded_scene_path}");
+  }
+
   reloadImage();
   getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}");
-  getSceneData("${GETFILE_CGI}", "${encoded_dir}", "${encoded_scene_path}");
 -->
 </script>
 EOF

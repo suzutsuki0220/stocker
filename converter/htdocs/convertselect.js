@@ -196,6 +196,7 @@ function getMovieDurationResult(httpRequest) {
                 var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
                 duration = getSecondFromFormatTime(hhmmssxxx);
                 moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
+                callGetSceneData();
 
                 var videos = movie_info_elem.getElementsByTagName('video');
                 for (var i=0; i<videos.length; i++) {
@@ -257,7 +258,7 @@ function pushSceneList(scene_data_line) {
     if (isValidFormatTime(hhmmssxxx) === true) {
         var milisec = getSecondFromFormatTime(hhmmssxxx) * 1000;
         sceneList.push(milisec);
-        addTickMark(document.getElementById('sceneListMarks'), milisec / (duration * 1000) * 1000);
+        addTickMark(document.getElementById('sceneListMarks'), Math.floor(milisec / (duration * 1000) * 1000));
     }
 }
 
