@@ -267,7 +267,12 @@ function getNextScene(elem, next_step) {
     var base_index, next_index;
 
     for (var base_index=0; base_index<sceneList.length; base_index++) {
-        if (milisec <= sceneList[base_index]) {
+        if (milisec < sceneList[base_index]) {
+            if (next_step > 0) {
+                next_step--;
+            }
+            break;
+        } else if (milisec == sceneList[base_index]) {
             break;
         }
     }
