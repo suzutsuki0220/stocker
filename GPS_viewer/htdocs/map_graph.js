@@ -14,7 +14,7 @@ ccchart.base({config: {
 var accelerationXY_graph_property = {
   "config": {
     "type": "line",
-    "title": "補正加速度 XY",
+    "title": "加速度 XY",
     "titleFont": "400 20px 'Arial'",
     "titleY": 30,
     "width": 1000,
@@ -69,7 +69,7 @@ var speed_graph_property = {
 var accelerationZ_graph_property = {
   "config": {
     "type": "line",
-    "title": "補正加速度 Z",
+    "title": "加速度 Z",
     "titleFont": "400 20px 'Arial'",
     "titleY": 30,
     "width": 1000,
@@ -106,7 +106,7 @@ var accelerationXY_gforce_property = {
     "type": "scatter",
     "axisYWidth": 2,
     "axisYLen": 10,
-    "title": "補正加速度 XY分布",
+    "title": "加速度 XY分布",
     "titleFont": "400 20px 'Arial'",
     "titleY": 30,
     "paddingTop": 50,
