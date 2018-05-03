@@ -51,24 +51,24 @@ a.button:active {
 
 input[type="button"], input[type="submit"] {
     -webkit-appearance: none;
+    font-size: 0.75em;
+    font-weight: bold;
+    border-radius: 3px;
+    margin: 2px; 
+    box-shadow: 1px 1px #1a6ea0;
+    /*text-shadow: 0 -1px #1a6ea0;*/
 }
 
 input[type="button"] {
-    font-size: 100%;
-    /*font-weight: bold;*/
-    background-color: #ffffff;
+    background-color: #f0f0f0;
     color: #000000;
     border: 1px solid #ff9966;
-    margin: 0px;
-    padding: 5px 15px 5px 15px;
+    padding: 3px 15px 3px 15px;
 }
 
 input[type="submit"], input.submit_button {
-    font-size: 100%;
-    /*font-weight: bold;*/
     background-color: #4169e1;
     color: #ffffff;
     border: 1px solid #ff9966;
-    margin: 0px;
     padding: 3px 25px 3px 25px;
 }

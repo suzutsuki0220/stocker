@@ -46,7 +46,7 @@ EOF
     }
   }
 
-  print encode('utf-8', "<title>${title}</title>");
+  print encode('utf-8', "<title>${title}</title>\n");
   print <<EOF;
 </head>
 <body>

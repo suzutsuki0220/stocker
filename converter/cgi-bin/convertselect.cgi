@@ -63,9 +63,14 @@ my @jslist = (
       "%htdocs_root%/convertselect.js",
       "%htdocs_root%/stocker_xml.js",
       "%htdocs_root%/ajax_html_request.js",
-  );
+);
+my @csslist = (
+      "%htdocs_root%/stocker.css",
+      "%htdocs_root%/convertselect.css",
+);
 my $html = HTML_Elem->new();
 $html->{'javascript'} = \@jslist;
+$html->{'css'} = \@csslist;
 $html->header('timer selector');
 
 my $pos        = $q->param('pos');
@@ -85,21 +90,15 @@ my $encoded_scene_path = ParamPath->urlpath_encode(encode('utf-8', $1 . ".vdr"))
 
 $output = <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
-<div style="position: relative; width: 640px;">
+<div id="startPreviewArea">
   <img src="${GRAY_PAD}" id="preview" name="preview">
-  <div style="position: absolute; top: 50%; left: 50%; display: none; background-color: white; color: #121212" id="PreviewReloading">
-    Reloading...
-  </div>
+  <div id="PreviewReloading">Reloading...</div>
 </div>
 <div style="text-align: center">
 <input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" list="sceneListMarks" onChange="changeTime(document.f1.selectedTime, this)">
 <datalist id="sceneListMarks"></datalist>
 <br>
-＜&nbsp;
-<input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
-<input type="button" name="btnDown3" value="15" onClick="addTime(-15000)">
-<input type="button" name="btnDown2" value="1" onClick="addTime(-1000)">
-<input type="button" name="btnDown1" value=".5" onClick="addTime(-500)">&nbsp;&nbsp;
+<div id="sceneSelectArea"></div>
 <input type="button" name="btnDown" value="-" onClick="addTime(document.f1.skip.value * (-1))">&nbsp;
 <select name="skip" onChange="document.f1.skip.blur()">
 EOF
@@ -112,17 +111,27 @@ foreach my $so (@skip_options) {
 }
 
 $output = <<EOF;
-</select>&nbsp;
-<input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)">&nbsp;&nbsp;
+</select>
+<input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)"><br>
+＜&nbsp;
+<input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
+<input type="button" name="btnDown3" value="15" onClick="addTime(-15000)">
+<input type="button" name="btnDown2" value="1" onClick="addTime(-1000)">
+<input type="button" name="btnDown1" value=".5" onClick="addTime(-500)">
+&nbsp;|&nbsp;
 <input type="button" name="btnUp1" value=".5" onClick="addTime(500)">
 <input type="button" name="btnUp2" value="1" onClick="addTime(1000)">
 <input type="button" name="btnUp3" value="15" onClick="addTime(15000)">
 <input type="button" name="btnUp4" value="60" onClick="addTime(60000)">
 &nbsp;＞
-<div id="sceneSelectArea"></div>
+<br>
+EOF
+print encode('utf-8', $output);
+
+$output = <<EOF;
 Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="changeSelectedTime(this)">
 <div id="messageArea"></div>
-<input type="button" onClick="apply()" name="btnApply" value="適用">&nbsp;
+<input type="button" onClick="apply()" class="submit_button" name="btnApply" value="適用">&nbsp;
 <input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
 </div>
 </form>

@@ -1,0 +1,35 @@
+html, body {
+    /*margin: 0;*/
+    height: 100%;
+    font-size: 14pt;
+    font-family: arial,sans-serif;
+}
+
+img#preview {
+    width: 100%;
+    height: 100%
+}
+
+div#startPreviewArea {
+    position: relative;
+    width: 640px; 
+}
+
+div#PreviewReloading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: none;
+    background-color: white;
+    color: #121212;
+    -ms-transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+}
+
+@media screen and (max-width: 640px) {
+    div#startPreviewArea {
+        position: relative;
+        width: 100%; 
+    }
+}

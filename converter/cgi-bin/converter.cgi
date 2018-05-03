@@ -212,8 +212,12 @@ sub print_form() {
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/stocker_xml.js",
   );
+  my @csslist = (
+      "%htdocs_root%/stocker.css",
+  );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
+  $html->{'css'} = \@csslist;
   $html->header();
 
   $mes = <<EOF;
