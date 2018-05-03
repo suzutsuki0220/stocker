@@ -69,7 +69,11 @@ if ($@) {
 }
 
 my $html = <<EOF;
-<body onload="drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}')">
+<script type="text/javascript">
+    window.onload = function() {
+        drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
+    }
+</script>
 <div id="top_field">
 <span style="float: left">
 <b>${file_name}</b><br>
