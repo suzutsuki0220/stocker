@@ -130,7 +130,7 @@ var accelerationXY_gforce_property = {
   ]
 };
 
-function showGraph(position) {
+function showGraph(positions) {
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         document.getElementById('info_field').style.display = "none";
         document.getElementById('graph_field').style.display = "inline";
@@ -139,7 +139,7 @@ function showGraph(position) {
         document.getElementById('map_canvas').style.width = "45%";
         document.getElementById('panorama_canvas').style.width = "50%";
         document.getElementById('gforce_accelXY').style.display = "inline";
-        plotAcceleration(position);
+        plotAcceleration(positions);
     } else {
         document.getElementById('graph_field').style.display = "none";
         document.getElementById('info_field').style.display = "inline";
@@ -152,16 +152,16 @@ function showGraph(position) {
     map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
 }
 
-function plotAcceleration(position) {
+function plotAcceleration(positions) {
     var range_start = parseInt(document.getElementsByName('range_start')[0].value);
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
-    var start = Math.floor(position.length * range_start / 1000);
-    var end   = Math.floor(position.length * range_end / 1000);
+    var start = Math.floor(positions.length * range_start / 1000);
+    var end   = Math.floor(positions.length * range_end / 1000);
 
     clearAccelerationGraphData();
     var data_index = 1;
     for (var i=start; i<end; i++) {
-        var p = position[i];
+        var p = positions[i];
         accelerationXY_graph_property["data"][1][data_index] = p.est_x;
         accelerationXY_graph_property["data"][2][data_index] = p.est_y;
         accelerationZ_graph_property["data"][1][data_index] = p.est_z;

@@ -1,17 +1,32 @@
+body {
+    font-family: Arial;
+}
+
 a.button {
+    color: #000000;
+    background: #e0e0e0;
     font-size: 0.75em;
-    display: block;
-    width: 75px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    display: inline-block;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 15px;
+    padding-right: 15px;
     text-align: center;
+    text-decoration: none;
     border: 2px solid;
     border-color: #aaaaaa #444444 #444444 #aaaaaa;
-    background: #cccccc;
 }
 
 a.button:hover {
     background: #ffffff;
+}
+
+a.button:active {
+    -ms-transform: translateY(4px);
+    -webkit-transform: translateY(4px);
+    transform: translateY(4px);
+    border-bottom: none;
+    background: #777777;
 }
 
 .maruButton {
@@ -32,4 +47,28 @@ a.button:hover {
 /* 円と文字の色 */
   color: #9e9e9e;
   border: 1.5px solid #607d8b;
+}
+
+input[type="button"], input[type="submit"] {
+    -webkit-appearance: none;
+}
+
+input[type="button"] {
+    font-size: 100%;
+    /*font-weight: bold;*/
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ff9966;
+    margin: 0px;
+    padding: 5px 15px 5px 15px;
+}
+
+input[type="submit"], input.submit_button {
+    font-size: 100%;
+    /*font-weight: bold;*/
+    background-color: #4169e1;
+    color: #ffffff;
+    border: 1px solid #ff9966;
+    margin: 0px;
+    padding: 3px 25px 3px 25px;
 }

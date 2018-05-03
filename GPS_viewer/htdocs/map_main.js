@@ -5,7 +5,7 @@ var startMarker = null;
 var endMarker = null;
 var eventMarkers = new Array();
 var poly = null;
-var position;
+var positions;
 
 var pre_lat;
 var pre_lng;
@@ -148,12 +148,12 @@ function map_route(data, name) {
   try {
     if (nmea_pattern.test(name.toLowerCase())) {
       // nmeaデータ
-      position = getPositionEmea(data);
+      positions = getPositionEmea(data);
     } else if (accel_csv_pattern.test(name.toLowerCase())) {
-      position = getPositionAccelCsv(data);
+      positions = getPositionAccelCsv(data);
     } else {
       // KML and GPX
-      position = getPositionXml(data);
+      positions = getPositionXml(data);
     }
   } catch(e) {
     alert("map_route error: " + e.message);
@@ -161,7 +161,7 @@ function map_route(data, name) {
   }
 
   // 経路描画
-  reloadMap(0, position.length);
+  reloadMap(0, positions.length);
   centeringMap();
 }
 
@@ -174,7 +174,7 @@ function reloadMap(start_range, end_range) {
   pre_lng = 0;
   clearEventMarker();
   for (var i=start_range; i<end_range; i++) {
-      var p = position[i];
+      var p = positions[i];
       var latlng = get_latlng(p.latitude, p.longitude);
       if (latlng != null) {
         route.push(latlng);
@@ -201,8 +201,8 @@ function reloadMap(start_range, end_range) {
 
   geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
   geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
-  document.getElementById('start_datetime').innerHTML = position[start_range].datetime ? position[start_range].datetime : "不明";
-  document.getElementById('end_datetime').innerHTML = position[end_range - 1].datetime ? position[end_range - 1].datetime : "不明";
+  document.getElementById('start_datetime').innerHTML = positions[start_range].datetime ? positions[start_range].datetime : "不明";
+  document.getElementById('end_datetime').innerHTML = positions[end_range - 1].datetime ? positions[end_range - 1].datetime : "不明";
 
   var StartMarkerOptions = {
     position: route[start_index],
@@ -343,8 +343,6 @@ function getPositionDataResult(httpRequest, name) {
 }
 
 function rangeChanged(elem) {
-    console.log(elem.value);
-
     var range_start = parseInt(document.getElementsByName('range_start')[0].value);
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
 
@@ -357,8 +355,8 @@ function rangeChanged(elem) {
         range_start = range_end;
     }
 
-    var start = Math.floor(position.length * range_start / 1000);
-    var end   = Math.floor(position.length * range_end / 1000);
+    var start = Math.floor(positions.length * range_start / 1000);
+    var end   = Math.floor(positions.length * range_end / 1000);
 
     reloadMap(start, end);
 }

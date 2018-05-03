@@ -54,6 +54,7 @@ eval {
       "//maps.google.com/maps/api/js?v=3&key=${GOOGLE_API_KEY}",
   );
   my @csslist = (
+      "%htdocs_root%/stocker.css",
       "%htdocs_root%/GPS_viewer.css",
   );
   my $html = HTML_Elem->new(
@@ -74,10 +75,8 @@ my $html = <<EOF;
 <b>${file_name}</b><br>
 </span>
 <span style="float: right">
-<form name="f_link" action="#" method="GET">
-<input type="button" name="btn_back" onClick="location.href='${back_link}'" value="戻る">
-<input type="button" name="btn_graph" onClick="showGraph(position)" value="グラフ">
-</form>
+<a href="${back_link}" class="button">戻る</a>
+<a href="javascript:showGraph(positions)" class="button">グラフ</a>
 </span>
 </div>
 <div id="map_canvas"></div>
