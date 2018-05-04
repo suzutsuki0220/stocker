@@ -1,3 +1,15 @@
+function getRadioButtonValue(elem) {
+    var ret = "";
+
+    for (var i=0; i<elem.length; i++) {
+        if (elem[i].checked) {
+            ret = elem[i].value;
+        }
+    }
+
+    return ret;
+}
+
 function setPreviewSize(element, disp_width, disp_height) {
     const preview_width  = element.clientWidth;
     const preview_height = Math.floor(preview_width / disp_width * disp_height);

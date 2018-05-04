@@ -257,7 +257,6 @@ EOF
   my $vid_fps    = 0;
   my $x_ratio = 1;
   my $y_ratio = 1;
-  my $has_video_stream = undef;
   my $default_bps  = 0;
   my $round_fps    = 0;
 
@@ -265,9 +264,9 @@ EOF
   if (@files.length() > 1) {
     print "<p><b>複数のファイルが指定されています</b><br>\n";
     print "変換方法: ";
-    print "<input type=\"radio\" name=\"multi_editmode\" value=\"sameenc\" checked> 同じ設定でエンコード";
+    print "<input type=\"radio\" name=\"multi_editmode\" value=\"combine\" checked> 複数の動画を結合してエンコード";
     print "&nbsp;&nbsp;";
-    print "<input type=\"radio\" name=\"multi_editmode\" value=\"combine\"> 複数の動画を結合してエンコード";
+    print "<input type=\"radio\" name=\"multi_editmode\" value=\"sameenc\"> 同じ設定でエンコード";
     print "<br></p>\n";
   }
   foreach (@files) {
@@ -285,8 +284,8 @@ EOD
   print <<EOD;
   function getPreviewUrl(width) {
     var url = "${MOVIEIMG_CGI}?dir=${dir}&file=${encoded_path}&size=" + width;
-    if (document.enc_setting.v_map.value.length !== 0) {
-      url += "&v_map=" + document.enc_setting.v_map.value;
+    if (document.enc_setting.v_map.length !== 0) {
+      url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
     }
     if (document.enc_setting.set_position.checked == true) {
       url += "&set_position=1";
@@ -522,14 +521,22 @@ EOD
     document.enc_setting.cutoff.value = 18000;
   }
 
-  function openTimerSelector(target, pos, sf, ef, df) {
+  function openTimerSelector(elem, sf, ef, df) {
     var size_w = 670;
-    var size_h = 660;
-    var pos_l = (screen.width - size_w) / 2;
-    var pos_t = (screen.height - size_h) / 2;
+    var size_h = 680;
+    var pos_l = Math.floor((screen.width - size_w) / 2);
+    var pos_t = Math.floor((screen.height - size_h) / 2);
 
-    window.open("${SELECTOR_CGI}?file=${encoded_path}&dir=${dir}&target=" + target + "&pos=" + pos + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df,
-                "timersel",
+    const ss = document.getElementsByName(sf)[0].value;
+    const tend = document.getElementsByName(ef)[0].value;
+    const vno  = getRadioButtonValue(document.enc_setting.v_map);
+    const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
+    const url = "${SELECTOR_CGI}?file=${encoded_path}&dir=${dir}"
+              + "&clicked=" + clicked + "&vno=" + vno
+              + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df
+              + "&ss=" + ss + "&tend=" + tend;
+
+    var child = window.open(url, "範囲指定",
                 'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
                );
   }
@@ -591,8 +598,8 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-開始位置 <input type="text" name="ss0" value="00:00:00.000" onClick="openTimerSelector('ss0', document.enc_setting.ss0.value, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
- ～ <input type="text" name="tend0" value="00:00:00.000" onClick="openTimerSelector('tend0', document.enc_setting.tend0.value, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
+開始位置 <input type="text" name="ss0" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
+ ～ <input type="text" name="tend0" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
  長さ <input type="text" name="t0" value="00:00:00.000" readonly>
 <div id="TimeSelAddtion"></div>
 <input type="button" name="add_time_sel" onClick="addTimeSel()" value="追加">

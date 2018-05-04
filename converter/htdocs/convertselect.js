@@ -10,10 +10,6 @@ if (document.addEventListener) {
     document.attachEvent("onkeydown", keyDownWork);
 }
 
-window.onload = function() {
-    document.f1.btnApply.focus();
-}
-
 function apply() {
     if (document.f1.btnApply.disabled === true) {
         return;
@@ -33,19 +29,52 @@ function reloadImage() {
       return;
     }
 
-    if (document.preview.addEventListener) {
-      document.preview.addEventListener("load", unsetLoading, false);
-      document.preview.addEventListener("error", showGrayPad, false);
-      document.preview.addEventListener("abort", showGrayPad, false);
-    } else if (document.preview.attachEvent) {
-      document.preview.attachEvent("onload", unsetLoading);
-      document.preview.attachEvent("onerror", showGrayPad);
-      document.preview.attachEvent("onabort", showGrayPad);
+    var elem, reloading_elem;
+    if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
+      elem = document.f1.previewStart;
+      reloading_elem = document.getElementById("reloadingStart");
+    } else {
+      elem = document.f1.previewEnd;
+      reloading_elem = document.getElementById("reloadingEnd");
+    }
+
+    setLoading(elem, reloading_elem);
+}
+
+function setLoading(preview_elem, reloading_elem) {
+    if (preview_elem.addEventListener) {
+      preview_elem.addEventListener("load", function() { unsetLoading(preview_elem, reloading_elem); }, false);
+      preview_elem.addEventListener("error", function() { showGrayPad(preview_elem, reloading_elem); }, false);
+      preview_elem.addEventListener("abort", function() { showGrayPad(preview_elem, reloading_elem); }, false);
+    } else if (preview_elem.attachEvent) {
+      preview_elem.attachEvent("onload", function() { unsetLoading(preview_elem, reloading_elem); });
+      preview_elem.attachEvent("onerror", function() { showGrayPad(preview_elem, reloading_elem); });
+      preview_elem.attachEvent("onabort", function() { showGrayPad(preview_elem, reloading_elem); });
     }
 
     loading = true;
-    document.getElementById("preview").src = getImageURL();
-    document.getElementById("PreviewReloading").style.display = "block";
+    preview_elem.src = getImageURL();
+    reloading_elem.style.display = "block";
+}
+
+function unsetLoading(preview_elem, reloading_elem) {
+    if (preview_elem.removeEventListener) {
+      preview_elem.removeEventListener("load", function() { unsetLoading(preview_elem); }, false);
+      preview_elem.removeEventListener("error", function() { showGrayPad(preview_elem); }, false);
+      preview_elem.removeEventListener("abort", function() { showGrayPad(preview_elem); }, false);
+    } else if (preview_elem.detachEvent) {
+      preview_elem.detachEvent("onload", function() { unsetLoading(preview_elem); });
+      preview_elem.detachEvent("onerror", function() { showGrayPad(preview_elem); });
+      preview_elem.detachEvent("onabort", function() { showGrayPad(preview_elem); });
+    }
+
+    reloading_elem.style.display = "none";
+    loading = false;
+
+    if (load_again) {
+      load_again = false;
+      reloadImage();
+    }
 }
 
 function selectSkipDown(cnt) {
@@ -60,29 +89,9 @@ function selectSkipDown(cnt) {
     document.f1.skip.options[idx].selected = true;
 }
 
-function showGrayPad() {
-    document.getElementById("preview").src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-    unsetLoading();
-}
-
-function unsetLoading() {
-    if (document.preview.removeEventListener) {
-      document.preview.removeEventListener("load", unsetLoading, false);
-      document.preview.removeEventListener("error", showGrayPad, false);
-      document.preview.removeEventListener("abort", showGrayPad, false);
-    } else if (document.preview.detachEvent) {
-      document.preview.detachEvent("onload", unsetLoading);
-      document.preview.detachEvent("onerror", showGrayPad);
-      document.preview.detachEvent("onabort", showGrayPad);
-    }
-
-    document.getElementById("PreviewReloading").style.display = "none";
-    loading = false;
-
-    if (load_again) {
-      load_again = false;
-      reloadImage();
-    }
+function showGrayPad(preview_elem, reloading_elem) {
+    preview_elem.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+    unsetLoading(preview_elem, reloading_elem);
 }
 
 function keyDownWork(e) {
@@ -96,7 +105,9 @@ function keyDownWork(e) {
         return;
     }
 
-    if (document.getElementsByName('selectedTime')[0] === document.activeElement) {
+    if (document.getElementsByName('selectedTimeStart')[0] === document.activeElement ||
+        document.getElementsByName('selectedTimeEnd')[0] === document.activeElement
+    ) {
         return;
     }
 
@@ -142,10 +153,43 @@ function keyDownWork(e) {
     }
 }
 
+function getSelectedTimeElem() {
+    var elem;
+    if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
+        elem = document.f1.selectedTimeStart;
+    } else {
+        elem = document.f1.selectedTimeEnd;
+    }
+
+    return elem;
+}
+
+function adjustStartAndEndTime() {
+    var start = document.f1.selectedTimeStart;
+    var end = document.f1.selectedTimeEnd;
+
+    var start_time = getSecondFromFormatTime(start.value);
+    var end_time   = getSecondFromFormatTime(end.value);
+
+    if (start_time > end_time) {
+        if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
+            end_time = start_time;
+            end.value = getFormatTimeFromSecond(end_time * 1000);
+            setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"));
+        } else {
+            start_time = end_time;
+            start.value = getFormatTimeFromSecond(start_time * 1000);
+            setLoading(document.f1.previewStart, document.getElementById("reloadingStart"));
+        }
+    }
+}
+
 function addTime(num) {
     const minRange = 0;
     const maxRange = duration * 1000;
-    var time_str = document.f1.selectedTime.value;
+
+    var elem = getSelectedTimeElem();
+    var time_str = elem.value;
 
     if (isValidFormatTime(time_str) === false) {
         window.alert("時間の書式が不正です");
@@ -166,36 +210,34 @@ function addTime(num) {
     }
 
     if (preTm !== miliTime) {
-        document.f1.selectedTime.value = getFormatTimeFromSecond(miliTime);
-        moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
+        elem.value = getFormatTimeFromSecond(miliTime);
+        moveSeekPosition(document.f1.seekFrom, elem);
         reloadImage();
+        adjustStartAndEndTime();
     }
 }
 
-function getMovieDuration(movie_info_url, base_name, path) {
+function getMovieDuration(movie_info_url, base_name, path, vno) {
     var httpRequest = ajax_init();
     if (httpRequest) {
         var query = "dir=" + base_name + "&file=" + path;
-        ajax_set_instance(httpRequest, function() { getMovieDurationResult(httpRequest) });
+        ajax_set_instance(httpRequest, function() { getMovieDurationResult(httpRequest, vno) });
         ajax_post(httpRequest, movie_info_url, query);
     } else {
         alert("動画ファイルの情報取得に失敗しました");
     }
 }
 
-function getMovieDurationResult(httpRequest) {
+function getMovieDurationResult(httpRequest, vno) {
     if (httpRequest.readyState == 4) {
         if (httpRequest.status == 200) {
             var data = httpRequest.responseXML;
             var width, height;
-
-            const vno = window.opener.document.enc_setting.v_map.value;
-
             var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
             if (movie_info_elem !== null) {
                 var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
                 duration = getSecondFromFormatTime(hhmmssxxx);
-                moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
+                moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
                 callGetSceneData();
 
                 var videos = movie_info_elem.getElementsByTagName('video');
@@ -243,8 +285,8 @@ function getSceneDataResult(httpRequest) {
             }
 
             if (sceneList.length > 0) {
-                html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], -1)\" value=\"＜\">&nbsp;シーン&nbsp;";
-                html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(document.getElementsByName('selectedTime')[0], 1)\" value=\"＞\">";
+                html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
+                html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
                 document.getElementById('sceneSelectArea').innerHTML = html;
             }
         }
@@ -262,7 +304,8 @@ function pushSceneList(scene_data_line) {
     }
 }
 
-function getNextScene(elem, next_step) {
+function getNextScene(next_step) {
+    var elem = getSelectedTimeElem();
     var milisec = getSecondFromFormatTime(elem.value) * 1000;
     var base_index, next_index;
 
@@ -291,10 +334,12 @@ function getNextScene(elem, next_step) {
 }
 
 // シークバーの位置が変更された時に実行される処理
-function changeTime(elemTimeSec, elemSeekBar) {
+function changeTime(elemSeekBar) {
+    var elemTimeSec = getSelectedTimeElem();
     var seekPoint = duration * elemSeekBar.value; // 本来ならばmaxで割った後にミリ秒にする為に1000を掛けるが、maxは1000のため省略
     elemTimeSec.value = getFormatTimeFromSecond(seekPoint);
     reloadImage();
+    adjustStartAndEndTime();
 }
 
 // 時間の値が変更された時にシークバーを動かす処理
@@ -312,8 +357,9 @@ function changeSelectedTime(elem) {
         document.f1.btnApply.disabled = true;
     } else {
         document.getElementById('messageArea').innerHTML = "";
-        moveSeekPosition(document.f1.seekFrom, document.f1.selectedTime);
+        moveSeekPosition(document.f1.seekFrom, elem);
         reloadImage();
+        adjustStartAndEndTime();
         document.f1.btnApply.disabled = false;
     }
 }
@@ -323,4 +369,9 @@ function addTickMark(elem, value) {
     option.setAttribute('value', value);
     //option.setAttribute('label', "1"); // not support
     elem.appendChild(option);
+}
+
+function doControlTimeSwitched() {
+    var elemTimeSec = getSelectedTimeElem();
+    moveSeekPosition(document.f1.seekFrom, elemTimeSec);
 }

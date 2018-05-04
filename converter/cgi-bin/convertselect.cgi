@@ -73,13 +73,17 @@ $html->{'javascript'} = \@jslist;
 $html->{'css'} = \@csslist;
 $html->header('timer selector');
 
-my $pos        = $q->param('pos');
-my $target     = $q->param('target');
+my $start_pos  = $q->param('start_pos');
+my $end_pos    = $q->param('end_pos');
+my $clicked    = $q->param('clicked');
 my $start_f    = $q->param('start_f');
 my $end_f      = $q->param('end_f');
 my $duration_f = $q->param('duration_f');
+my $ss         = $q->param('ss');
+my $tend       = $q->param('tend');
+my $vno        = $q->param('vno');
 
-if (!$target || !$start_f || !$end_f || !$duration_f) {
+if (!$clicked || !$start_f || !$end_f || !$duration_f) {
     HTML_Elem->error("parameter is not enough");
 }
 
@@ -90,12 +94,28 @@ my $encoded_scene_path = ParamPath->urlpath_encode(encode('utf-8', $1 . ".vdr"))
 
 $output = <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
-<div id="startPreviewArea">
-  <img src="${GRAY_PAD}" id="preview" name="preview">
-  <div id="PreviewReloading">Reloading...</div>
+<div class="imageAndTimeArea">
+  <div id="startPreviewArea">
+    <img src="${GRAY_PAD}" id="previewStart" class="preview">
+    <div class="PreviewReloading" id="reloadingStart">Reloading...</div>
+  </div>
+  <div class="timeArea">
+    <input type="radio" name="controlTimeSwitch" value="start" onClick="doControlTimeSwitched()" checked>開始位置<br>
+    時間: <input type="text" name="selectedTimeStart" size="30" value="${ss}" onInput="changeSelectedTime(this)">
+  </div>
+</div>
+<div class="imageAndTimeArea">
+  <div id="endPreviewArea">
+    <img src="${GRAY_PAD}" id="previewEnd" class="preview">
+    <div class="PreviewReloading" id="reloadingEnd">Reloading...</div>
+  </div>
+  <div class="timeArea">
+    <input type="radio" name="controlTimeSwitch" value="end" onClick="doControlTimeSwitched()">終了位置<br>
+    時間: <input type="text" name="selectedTimeEnd" size="30" value="${tend}" onInput="changeSelectedTime(this)">
+  </div>
 </div>
 <div style="text-align: center">
-<input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" list="sceneListMarks" onChange="changeTime(document.f1.selectedTime, this)">
+<input type="range" name="seekFrom" style="width: 100%" min="0" max="1000" step="1" value="0" list="sceneListMarks" onChange="changeTime(this)">
 <datalist id="sceneListMarks"></datalist>
 <br>
 <div id="sceneSelectArea"></div>
@@ -112,7 +132,8 @@ foreach my $so (@skip_options) {
 
 $output = <<EOF;
 </select>
-<input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)"><br>
+<input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)">
+<p id="controlButtonArea">
 ＜&nbsp;
 <input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
 <input type="button" name="btnDown3" value="15" onClick="addTime(-15000)">
@@ -124,24 +145,23 @@ $output = <<EOF;
 <input type="button" name="btnUp3" value="15" onClick="addTime(15000)">
 <input type="button" name="btnUp4" value="60" onClick="addTime(60000)">
 &nbsp;＞
-<br>
+</p>
 EOF
 print encode('utf-8', $output);
 
 $output = <<EOF;
-Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="changeSelectedTime(this)">
 <div id="messageArea"></div>
 <input type="button" onClick="apply()" class="submit_button" name="btnApply" value="適用">&nbsp;
-<input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル">
+<input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル"><br>
 </div>
 </form>
 
 <script type="text/javascript">
 <!--
   function getImageURL() {
-    var vmap = window.opener.document.enc_setting.v_map.value;
-    var ss   = document.f1.selectedTime.value;
-    var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&v_map=" + vmap + "&size=640&set_position=1&ss=" + ss;
+    var elem = getSelectedTimeElem();
+    var ss = elem.value;
+    var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&v_map=" + ${vno} + "&size=640&set_position=1&ss=" + ss;
 
     return imgurl;
   }
@@ -152,21 +172,16 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="c
       return;
     }
 
-    var selected_time = document.f1.selectedTime.value;
-    if (selected_time) {
-      window.opener.document.enc_setting.${target}.value = selected_time;
-
-      var ss = window.opener.document.enc_setting.${start_f}.value;
-      var te = window.opener.document.enc_setting.${end_f}.value;
-      var duration = getEncTimeDuration(ss, te);
-      if (duration > 0) {
-        window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(duration);
-      } else {
-        window.opener.document.enc_setting.${end_f}.value = ss;
-        window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(0);
-      }
+    var ss = document.getElementsByName('selectedTimeStart')[0].value;
+    var te = document.getElementsByName('selectedTimeEnd')[0].value;
+    window.opener.document.enc_setting.${start_f}.value = ss;
+    window.opener.document.enc_setting.${end_f}.value = te;
+    var duration = getEncTimeDuration(ss, te);
+    if (duration > 0) {
+      window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(duration);
     } else {
-      alert("Timeが選択されていません");
+      window.opener.document.enc_setting.${end_f}.value = ss;
+      window.opener.document.enc_setting.${duration_f}.value = getFormatTimeFromSecond(0);
     }
   }
 
@@ -175,8 +190,17 @@ Time: <input type="text" name="selectedTime" size="30" value="${pos}" onInput="c
     getSceneData("${GETFILE_CGI}", "${encoded_dir}", "${encoded_scene_path}");
   }
 
-  reloadImage();
-  getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}");
+  window.onload = function() {
+    if ("${clicked}" === "start") {
+        document.f1.controlTimeSwitch[0].checked = true;
+    } else {
+        document.f1.controlTimeSwitch[1].checked = true;
+    }
+    setLoading(document.f1.previewStart, document.getElementById("reloadingStart"));
+    setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"));
+    getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}", "${vno}");
+    document.f1.btnApply.focus();
+  }
 -->
 </script>
 EOF

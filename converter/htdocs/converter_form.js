@@ -706,7 +706,7 @@ function addTimeSel() {
     ssArea.setAttribute("type", "text");
     ssArea.setAttribute("name", "ss"+timeSelNum);
     ssArea.setAttribute("value", newValue);
-    ssArea.setAttribute("onClick", "openTimerSelector('ss"+timeSelNum+"', document.getElementsByName('ss"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    ssArea.setAttribute("onClick", "openTimerSelector(this, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
     selectArea.appendChild(ssArea);
     textElem = document.createTextNode(" (時:分:秒.ミリ秒) ～ ");
     selectArea.appendChild(textElem);
@@ -714,7 +714,7 @@ function addTimeSel() {
     tendArea.setAttribute("type", "text");
     tendArea.setAttribute("name", "tend"+timeSelNum);
     tendArea.setAttribute("value", newValue);
-    tendArea.setAttribute("onClick", "openTimerSelector('tend"+timeSelNum+"', document.getElementsByName('tend"+timeSelNum+"')[0].value, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
+    tendArea.setAttribute("onClick", "openTimerSelector(this, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
     selectArea.appendChild(tendArea);
     textElem = document.createTextNode(" (時:分:秒.ミリ秒) 長さ ");
     selectArea.appendChild(textElem);
