@@ -1,4 +1,37 @@
+# 動作環境
+
+* Linux (動作確認は CentOS Linux release 7.4.1708 で行ってます)
+
 # インストール
+
+## 準備
+
+C/C++のコンパイルを行う為、開発環境とライブラリのインストールを行います
+
+```
+# yum install gcc
+# yum install gcc-c++
+# yum install libexif-devel
+# yum install taglib-devel
+```
+
+画像変換のImageMagickと動画変換のffmpegをインストールします
+
+### ImageMagick
+
+```
+# yum install ImageMagick ImageMagick-devel
+```
+
+### ffmpeg
+
+```
+# yum -y install epel-release
+# rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+# yum install ffmpeg ffmpeg-devel
+```
+
+## インストール
 
 `make` と `make install` を実行してください
 
@@ -53,3 +86,8 @@ stockerで扱うディレクトリとcacheディレクトリに httpd_sys_rw_con
 * /var/www/html/stocker  (DOCS_DIRに指定したディレクトリ)
 * /var/www/cgi-bin/stocker  (CGI_DIRに指定したディレクトリ)
 
+# 使用ライブラリ
+
+* [ccchart](https://github.com/toshirot/ccchart)
+* [Font Awesome](https://fontawesome.com/)
+* [Oxygen-icons](http://www.oxygen-icons.org)
