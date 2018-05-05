@@ -1,10 +1,16 @@
 function getRadioButtonValue(elem) {
     var ret = "";
 
-    for (var i=0; i<elem.length; i++) {
-        if (elem[i].checked) {
-            ret = elem[i].value;
+    if (elem.length) {
+        for (var i=0; i<elem.length; i++) {
+            if (elem[i].checked) {
+                ret = elem[i].value;
+            }
         }
+    } else {
+      if (elem.checked) {
+          ret = elem.value;
+      }
     }
 
     return ret;

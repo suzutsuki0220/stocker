@@ -96,7 +96,9 @@ $output = <<EOF;
 <form action="$ENV{'SCRIPT_NAME'}" method="GET" name="f1" autocomplete="off">
 <div class="imageAndTimeArea">
   <div id="startPreviewArea">
+    <a href="javascript:switchTimeControl(0)">
     <img src="${GRAY_PAD}" id="previewStart" class="preview">
+    </a>
     <div class="PreviewReloading" id="reloadingStart">Reloading...</div>
   </div>
   <div class="timeArea">
@@ -106,7 +108,9 @@ $output = <<EOF;
 </div>
 <div class="imageAndTimeArea">
   <div id="endPreviewArea">
+    <a href="javascript:switchTimeControl(1)">
     <img src="${GRAY_PAD}" id="previewEnd" class="preview">
+    </a>
     <div class="PreviewReloading" id="reloadingEnd">Reloading...</div>
   </div>
   <div class="timeArea">
@@ -152,7 +156,7 @@ print encode('utf-8', $output);
 $output = <<EOF;
 <div id="messageArea"></div>
 <input type="button" onClick="apply()" class="submit_button" name="btnApply" value="適用">&nbsp;
-<input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル"><br>
+<input type="button" onClick="closeWindow()" name="btnClose" value="キャンセル"><br><br>
 </div>
 </form>
 

@@ -375,3 +375,7 @@ function doControlTimeSwitched() {
     var elemTimeSec = getSelectedTimeElem();
     moveSeekPosition(document.f1.seekFrom, elemTimeSec);
 }
+
+function switchTimeControl(index) {
+    document.f1.controlTimeSwitch[index].checked = true;
+}

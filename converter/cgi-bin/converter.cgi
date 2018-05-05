@@ -485,7 +485,7 @@ EOD
     document.enc_setting.s_w.value = 640;
     document.enc_setting.s_h.value = 480;
     document.enc_setting.r.value = 29.97;
-    document.enc_setting.b.value = 1024;
+    document.enc_setting.b.value = 1500;
     //document.enc_setting.deinterlace.checked = false;
   }
 
@@ -494,7 +494,7 @@ EOD
     document.enc_setting.s_w.value = 640;
     document.enc_setting.s_h.value = 360;
     document.enc_setting.r.value = 29.97;
-    document.enc_setting.b.value = 1024;
+    document.enc_setting.b.value = 1500;
     //document.enc_setting.deinterlace.checked = false;
   }
 
@@ -554,11 +554,11 @@ EOD
   function getAddJobResult(httpRequest) {
     try {
       if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-        document.getElementById('sStatus').innerHTML = "読み込み中...";
+        document.getElementById('sStatus').innerHTML = "登録中...";
       } else if (httpRequest.readyState == 4) {
         if (httpRequest.status == 200) {
-          //document.getElementById('sStatus').innerHTML = "";
-          document.getElementById('sValue').innerHTML = httpRequest.responseText;
+          document.getElementById('sStatus').innerHTML = "完了";
+          //document.getElementById('sValue').innerHTML = httpRequest.responseText;
         } else {
           document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
         }
@@ -746,7 +746,7 @@ weight
 
 <div id="sStatus"></div>
 <!-- <input type="button" value="変換する" onClick="addJob()"> -->
-<input type="submit" value="変換する">
+<input type="submit" value="変換する"><br>
 </form>
 EOF
 
