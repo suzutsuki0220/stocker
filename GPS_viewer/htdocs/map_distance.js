@@ -80,4 +80,3 @@ function getDistHubeny(lat1, lng1, lat2, lng2, type) {
         return calcDistHubeny(lat1, lng1, lat2, lng2, GRS80_A, GRS80_E2, GRS80_MNUM);
     }
 }
-

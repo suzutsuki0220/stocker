@@ -64,4 +64,3 @@ function parseCoordinateLine(line) {
 
     return null;
 }
-

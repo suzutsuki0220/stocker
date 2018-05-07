@@ -158,13 +158,15 @@ function plotAcceleration(positions) {
     var start = Math.floor(positions.length * range_start / 1000);
     var end   = Math.floor(positions.length * range_end / 1000);
 
+    var fix_central_z = checkCentralZ(positions);
+
     clearAccelerationGraphData();
     var data_index = 1;
     for (var i=start; i<end; i++) {
         var p = positions[i];
         accelerationXY_graph_property["data"][1][data_index] = p.est_x;
         accelerationXY_graph_property["data"][2][data_index] = p.est_y;
-        accelerationZ_graph_property["data"][1][data_index] = p.est_z;
+        accelerationZ_graph_property["data"][1][data_index] = fix_central_z === true ? p.est_z - 1.0 : p.est_z;
         accelerationXY_gforce_property["data"][1][data_index] = p.est_y * -1.0;
         accelerationXY_gforce_property["data"][2][data_index] = p.est_x;
         gyro_graph_property["data"][1][data_index] = p.gyro_x;
@@ -194,4 +196,21 @@ function clearAccelerationGraphData() {
     gyro_graph_property["data"][3].splice(1, gyro_graph_property["data"][3].length - 1);
     speed_graph_property["data"][1].splice(1, speed_graph_property["data"][1].length - 1);
     event_graph_property["data"][1].splice(1, event_graph_property["data"][1].length - 1);
+}
+
+function checkCentralZ(positions) {
+    var ret = false;
+    var total = 0;
+    var ave;
+
+    for (var i=0; i<positions.length; i++) {
+        total += positions[i].est_z;
+    }
+
+    ave = total / positions.length;
+    if (ave > -0.5 && ave < 0.5) {
+        ret = true;
+    }
+
+    return ret;
 }
