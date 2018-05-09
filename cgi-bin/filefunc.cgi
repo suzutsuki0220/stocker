@@ -397,7 +397,8 @@ sub delete_work {
   my $delete_path = encode('utf-8', "${base}${entry}");
 
   if (-f "${delete_path}") {
-    my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${entry});
+    my $entry_dir = ParamPath->get_up_path($entry);
+    my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${entry_dir});
     if(! -d "$save_path") {
       eval {
         mkpath("$save_path");
@@ -414,7 +415,7 @@ sub delete_work {
     opendir(my $dh, $delete_path) || die "Can't opendir ${delete_path}: $!";
     while (readdir $dh) {
       next if /^\.{1,2}$/;  # '.'と'..'をスキップ
-      &delete_work($delete_path . "/" . $_);
+      &delete_work($entry . "/" . decode('utf-8', $_));
     }
     closedir $dh;
 
