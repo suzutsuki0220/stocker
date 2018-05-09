@@ -70,12 +70,13 @@ webブラウザから `/cgi-bin/stocker/stocker.cgi` を開いてください
 
 ## SELinuxが有効の場合
 
-stockerで扱うディレクトリとcacheディレクトリに httpd_sys_rw_content_t コンテキストを設定してください
+stockerで扱うディレクトリとcacheディレクトリ、trashディレクトリに httpd_sys_rw_content_t コンテキストを設定してください
 
 例: /var/www/stocker/cache に httpd_sys_rw_content_t コンテキストを設定する
 
 ```
 # chcon -R system_u:object_r:httpd_sys_rw_content_t:s0 /var/www/stocker/cache
+# chcon -R system_u:object_r:httpd_sys_rw_content_t:s0 /var/www/stocker/trash
 ```
 
 # アンインストール

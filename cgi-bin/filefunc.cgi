@@ -378,37 +378,52 @@ sub do_delete() {
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
   }
-  my $path = "";
-
-  my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${path});
-  if(! -d "$save_path") {
-    eval {
-      mkpath("$save_path");
-    };
-    if ($@) {
-      HTML_Elem->error("待避先の書込み権限がないため、削除を中止しました - $@");
-    }
-  }
 
   foreach my $file (@files) {
-    my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
-    my $delete_path = encode('utf-8', "${base}${entry}");
-    if (-f "${delete_path}") {
-      if(! move("${delete_path}", "$save_path")) {
-        my $reason = $!;
-        HTML_Elem->error("削除に失敗しました($reason)。");
-      }
-    } elsif (-d "${delete_path}") {
-      if (! rmdir("${delete_path}")) {  # 空ディレクトリのみ削除可　TODO: ファイルを退避->rmtree
-        my $reason = $!;
-        HTML_Elem->error("ディレクトリの削除に失敗しました($reason)");
-      }
-    } else {
-      HTML_Elem->error("ディレクトリの削除に失敗しました(存在しないファイルが指定されていました)");
+    eval {
+      my $entry = decode('utf-8', ParamPath->urlpath_decode($file));
+      &delete_work($entry);
+    };
+    if ($@) {
+      HTML_Elem->error("削除に失敗しました($@)。");
     }
   }
 
   &redirect_to_stocker("削除しました", "削除したファイルはTRASHフォルダに移動されます。誤って削除した場合はそこから復元できます。");
+}
+
+sub delete_work {
+  my ($entry) = @_;
+  my $delete_path = encode('utf-8', "${base}${entry}");
+
+  if (-f "${delete_path}") {
+    my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${entry});
+    if(! -d "$save_path") {
+      eval {
+        mkpath("$save_path");
+      };
+      if ($@) {
+        die "待避先の書込み権限がないため、削除を中止しました - $@";
+      }
+    }
+
+    if(! move("${delete_path}", "$save_path")) {
+      die $!;
+    }
+  } elsif (-d "${delete_path}") {
+    opendir(my $dh, $delete_path) || die "Can't opendir ${delete_path}: $!";
+    while (readdir $dh) {
+      next if /^\.{1,2}$/;  # '.'と'..'をスキップ
+      &delete_work($delete_path . "/" . $_);
+    }
+    closedir $dh;
+
+    if (! rmdir("${delete_path}")) {
+      die $!;
+    }
+  } else {
+    die "存在しないパスが指定されていました";
+  }
 }
 
 ### 処理完了後のリダイレクト ###
