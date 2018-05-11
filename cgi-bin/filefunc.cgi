@@ -21,6 +21,8 @@ use FileOperator;
 our $BASE_DIR_CONF;
 our $STOCKER_CGI;
 our $TRASH_PATH;
+our $TRASH_IGNORE_PATTERN;
+our $TRASH_IGNORE_SIZE;
 our $TMP_FILE;
 require '%conf_dir%/stocker.conf';
 
@@ -389,7 +391,29 @@ sub do_delete() {
     }
   }
 
-  &redirect_to_stocker("削除しました", "削除したファイルはTRASHフォルダに移動されます。誤って削除した場合はそこから復元できます。");
+  &redirect_to_stocker("削除しました", "");
+}
+
+sub judgeMoveTrash {
+  my ($path) = @_;
+  my $decoded_path = decode('utf-8', $path);
+  my $filesize = -s "${path}";
+
+  if (${TRASH_IGNORE_SIZE} && ${TRASH_IGNORE_SIZE} > 0 && ${filesize} > $TRASH_IGNORE_SIZE) {
+    return 0;
+  }
+
+  if ($decoded_path =~ /^${TRASH_PATH}/) {
+    return 0;
+  }
+
+  if (${TRASH_IGNORE_PATTERN} && length(${TRASH_IGNORE_PATTERN}) > 0) {
+    if ($decoded_path =~ /${TRASH_IGNORE_PATTERN}/) {
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 sub delete_work {
@@ -397,19 +421,30 @@ sub delete_work {
   my $delete_path = encode('utf-8', "${base}${entry}");
 
   if (-f "${delete_path}") {
-    my $entry_dir = ParamPath->get_up_path($entry);
-    my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${entry_dir});
-    if(! -d "$save_path") {
+    if (judgeMoveTrash("${delete_path}") == 1) {
+      # trash に移動する
+      my $entry_dir = ParamPath->get_up_path($entry);
+      my $save_path = encode('utf-8', ${TRASH_PATH} . "/" . ${base_name} . "/" . ${entry_dir});
+      if(! -d "$save_path") {
+        eval {
+          mkpath("$save_path");
+        };
+        if ($@) {
+          die "待避先の書込み権限がないため、削除を中止しました - $@";
+        }
+      }
+
+      if(! move("${delete_path}", "$save_path")) {
+        die $!;
+      }
+    } else {
+      # trash に移動しないで直接削除する
       eval {
-        mkpath("$save_path");
+        unlink("${delete_path}");
       };
       if ($@) {
-        die "待避先の書込み権限がないため、削除を中止しました - $@";
+        die "$@";
       }
-    }
-
-    if(! move("${delete_path}", "$save_path")) {
-      die $!;
     }
   } elsif (-d "${delete_path}") {
     opendir(my $dh, $delete_path) || die "Can't opendir ${delete_path}: $!";
