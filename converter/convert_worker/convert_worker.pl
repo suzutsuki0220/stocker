@@ -28,10 +28,10 @@ while(1) {
     if ($job) {
       my @list = $job->list();
       if ($#list < 0) {
-	unlink("$ENCBATCH_LIST");
+        unlink("$ENCBATCH_LIST");
       } else {
         &worker(\$job, $list[0]);
-	next;
+        next;
       }
     } else {
       print STDERR "failed to make ConvertJob instance\n";
@@ -48,7 +48,6 @@ exit 0;
 sub worker
 {
   my ($job, $job_num) = @_;
-  my $out_file = "";
   my @ss_list = ();
   my @t_list  = ();
 
@@ -80,82 +79,11 @@ sub worker
     if($$job->{'pass2'} eq "true") {
       # 2pass 有効
       mkpath("${TMP_PATH}");
-
-      my $ret;
-      my $cmd = &make_cmd($job, 1, \$out_file);
-      if (length($cmd) == 0) {
-        #error;
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
-        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
-          close($fd);
-        }
-        return
-      }
-      if (open(my $fd, ">> $log_file")) {
-        print $fd "=== pass 1 ===\n". $cmd ."\n=====\n";
-        close($fd);
-      }
-      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-      if ($ret != 0) {
-        #error
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 1));
-        rename($out_file, $error_name);
-        return
-      }
-
-      unlink($out_file);
-
-      $cmd = &make_cmd($job, 2, \$out_file);
-      if (length($cmd) == 0) {
-        #error;
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
-        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
-          close($fd);
-        }
-        return
-      }
-      if (open(my $fd, ">> $log_file")) {
-        print $fd "=== pass 2 ===\n". $cmd ."\n=====\n";
-        close($fd);
-      }
-      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-      if ($ret != 0) {
-        #error
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 2));
-        rename($out_file, $error_name);
-        return
-      }
-
-      rename($out_file, &rev_temporary_name($out_file, 2));
-
+      &run_converter($job, 1, $log_file) and &run_converter($job, 2, $log_file);
       rmtree("${TMP_PATH}");
     } else {
       # 2pass 無効
-      my $cmd = &make_cmd($job, 0, \$out_file);
-      if (length($cmd) == 0) {
-        #error;
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
-        if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
-          close($fd);
-        }
-        return
-      }
-
-      if (open(my $fd, ">> $log_file")) {
-        print $fd "=====\n". $cmd ."\n=====\n";
-        close($fd);
-      }
-
-      my $ret;
-      $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
-      if ($ret != 0) {
-        #error
-        my $error_name = &get_error_name(&rev_temporary_name($out_file, 0));
-        rename($out_file, $error_name);
-        return
-      }
-
-      rename($out_file, &rev_temporary_name($out_file, 0));
+      &run_converter($job, 0, $log_file);
     }
 
     if ($$job->{'set_position'} eq "true" && $#ss_list >= 0) {
@@ -307,6 +235,45 @@ sub is_lossless
     return 1;
   }
   return 0;
+}
+
+sub run_converter()
+{
+  my ($job, $pass, $log_file) = @_;
+  my $out_file = "";
+  my $pass_string = $pass == 0 ? "" : " pass ". $pass . " ";
+  my $ret;
+
+  my $cmd = &make_cmd($job, $pass, \$out_file);
+  if (length($cmd) == 0) {
+    #error;
+    my $error_name = &get_error_name(&rev_temporary_name($out_file, $pass));
+    if (open(my $fd, ">> $error_name")) {  # ここでエラーになるとファイルが出来ないので、空ファイルを作る
+      close($fd);
+    }
+    return 0; # FALSE
+  }
+
+  if (open(my $fd, ">> $log_file")) {
+    print $fd "===${pass_string}===\n". $cmd ."\n=====\n";
+    close($fd);
+  }
+
+  $ret = system($cmd ." 2>>\"". $log_file."\" >/dev/null </dev/null");
+  if ($ret != 0) {
+    #error
+    my $error_name = &get_error_name(&rev_temporary_name($out_file, $pass));
+    rename($out_file, $error_name);
+    return 0; # FALSE
+  }
+
+  if ($pass == 1) {
+    unlink($out_file);
+  } else {
+    rename($out_file, &rev_temporary_name($out_file, $pass));
+  }
+
+  return 1; # TRUE
 }
 
 sub make_cmd()
