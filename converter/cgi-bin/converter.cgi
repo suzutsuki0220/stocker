@@ -75,9 +75,12 @@ my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
 
 if (@files.length == 0) {
   HTML_Elem->header();
-  HTML_Elem->error("指定されたファイルが存在しません。");
+  HTML_Elem->error("ファイルが選択されていません");
 }
 
+for (my $i=0; $i<@files.length; $i++) {
+  $files[$i] = decode('utf-8', ParamPath->urlpath_decode($files[$i]));
+}
 @files = sort {$a cmp $b} @files;
 
 my $encfile = $base . decode('utf-8', ParamPath->urlpath_decode($encoded_path));
@@ -112,12 +115,12 @@ sub perform_encode() {
 
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
-      &add_encodejob("${base}" . decode('utf-8', ParamPath->urlpath_decode($_)));
+      &add_encodejob("${base}" . $_);
     }
   } elsif ($q->param('multi_editmode') eq "combine") {
     my $concat = "concat:";
     foreach (@files) {
-      $concat .= "${base}" . decode('utf-8', ParamPath->urlpath_decode($_)) . "|";
+      $concat .= "${base}" . $_ . "|";
     }
     &add_encodejob("$concat");
   } else {
@@ -236,7 +239,7 @@ EOF
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
-    print ParamPath->urlpath_decode($_) . "<br>\n";
+    print encode('utf-8', $_) . "<br>\n";
   }
 
   $mes = <<EOF;
@@ -246,7 +249,7 @@ EOF
 
 <script type="text/javascript">
 <!--
-  getMovieInfo('${MOVIE_INFO_CGI}', '${dir}', '$files[0]');
+  getMovieInfo('${MOVIE_INFO_CGI}', '${dir}', '${encoded_path}');
 -->
 </script>
 EOF
@@ -270,7 +273,8 @@ EOF
     print "<br></p>\n";
   }
   foreach (@files) {
-    print "<input type=\"hidden\" name=\"file\" value=\"$_\">\n";
+    my $e = ParamPath->urlpath_encode(encode('utf-8', $_));
+    print "<input type=\"hidden\" name=\"file\" value=\"${e}\">\n";
   }
 
   $mes = <<EOD;
