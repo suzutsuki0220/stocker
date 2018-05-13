@@ -527,7 +527,7 @@ EOD
 
   function openTimerSelector(elem, sf, ef, df) {
     var size_w = 670;
-    var size_h = 680;
+    var size_h = 700;
     var pos_l = Math.floor((screen.width - size_w) / 2);
     var pos_t = Math.floor((screen.height - size_h) / 2);
 

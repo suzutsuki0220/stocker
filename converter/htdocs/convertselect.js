@@ -249,6 +249,7 @@ function getMovieDurationResult(httpRequest, vno) {
                         const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
                         if (disp_width.length !== 0 && disp_height !== 0) {
                             setPreviewSize(document.getElementById('startPreviewArea'), parseInt(disp_width), parseInt(disp_height));
+                            setPreviewSize(document.getElementById('endPreviewArea'), parseInt(disp_width), parseInt(disp_height));
                         }
                     }
                 }
