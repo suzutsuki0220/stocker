@@ -166,13 +166,17 @@ EOF
 }
 
 sub do_upload() {
-  &save_upfile('file1');
-  &save_upfile('file2');
-  &save_upfile('file3');
-  &save_upfile('file4');
-  &save_upfile('file5');
-
-  &redirect_to_stocker("アップロード完了", "アップロードが完了しました");
+  eval {
+    &save_upfile('file1');
+    &save_upfile('file2');
+    &save_upfile('file3');
+    &save_upfile('file4');
+    &save_upfile('file5');
+    &redirect_to_stocker("アップロード完了", "アップロードが完了しました");
+  };
+  if ($@) {
+    HTML_Elem->error("アップロードに失敗しました - $@");
+  }
 }
 
 sub save_upfile
@@ -182,11 +186,16 @@ sub save_upfile
 
   if ($form->param($formname)) {
     my $fname = basename(decode('utf-8', scalar($form->param($formname))));
-    if ($fname && length($fname) > 0) {
+    if ($fname && FileOperator->isFilename($fname)) {
       my $fh = $form->upload($formname);
       my $newfile = encode('utf-8', "${base}${path}/" . $fname);
-      copy ($fh, "${newfile}");
-      undef $fname;
+      if (-e "${newfile}") {
+        die "[" . HTML_Elem->escape_html($fname) . "]は既に存在します";
+      } else {
+        copy ($fh, "${newfile}");
+      }
+    } else {
+      die "[" . HTML_Elem->escape_html($fname) . "]は不正なファイル名です";
     }
   }
 }
