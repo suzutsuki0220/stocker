@@ -56,13 +56,15 @@ open(my $media, "${base}${path}") or die("text file open error");
 while(my $data = <$media>) {
   $guess = guess_encoding($data, qw/7bit-jis cp932 utf-8/);
   if(ref($guess)) {
-    $buffer .= decode($guess->name, $data);
+    $buffer = decode($guess->name, $data);
   } else {
-    $buffer .= decode('utf-8', $data);
+    $buffer = decode('utf-8', $data);
   }
+  $buffer =~ s/(\r\n)|\r/\n/g;
+  $buffer = HTML_Elem->escape_html($buffer);
+  print encode('utf-8', $buffer);
 }
 close $media;
-print encode('utf-8', HTML_Elem->escape_html($buffer));
 
 print "</pre>\n";
 print "</form>\n";
