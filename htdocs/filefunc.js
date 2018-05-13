@@ -6,8 +6,15 @@ function jump(url) {
     location.href = url;
 }
 
+function disableActionButton() {
+    document.f1.b_submit.value = "処理中...";
+    document.f1.b_submit.disabled = true;
+    document.f1.b_cancel.disabled = true;
+}
+
 function confirm_act(action) {
     if (confirm(action + "をします。よろしいですか？")) {
+        disableActionButton();
         return true;
     } else {
         return false;
@@ -19,6 +26,7 @@ function do_rename(rename_count) {
         return;
     }
 
+    disableActionButton();
     for (var i=0; i<rename_count; i++) {
         var file = document.getElementsByName("file" + i)[0].value;
         var newname = encodeURIComponent(document.getElementsByName("newname" + i)[0].value);

@@ -94,7 +94,7 @@ sub form_newfolder() {
 
   print <<EOF;
 <h1>新規フォルダーの作成</h1>
-<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST">
+<form action="$ENV{'SCRIPT_NAME'}" name="f1" onSubmit="return confirm_act('フォルダーの作成')" method="POST">
 <input type="hidden" name="mode" value="do_newfolder">
 <input type="hidden" name="target" value="${target}">
 <input type="hidden" name="dir" value="${encoded_dir}">
@@ -102,8 +102,8 @@ sub form_newfolder() {
 作成先: $path<br>
 フォルダー名: <input type="text" name="foldername" value=""><br>
 <br>
-<input type="submit" value="実行">
-<input type="button" value="キャンセル" onClick="jump('${back_link}')">
+<input type="submit" name="b_submit" value="実行">
+<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
 </p>
 </form>
 EOF
@@ -141,24 +141,26 @@ sub do_newfolder() {
 sub form_upload() {
   my $path = decode('utf-8', ParamPath->urlpath_decode($target));
 
-  print "<h1>ファイルのアップロード</h1>\n";
+  my $html = <<EOF;
+<h1>ファイルのアップロード</h1>
+作成先: $path<br>
+<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST" onSubmit="return confirm_act('アップロード')" enctype="multipart/form-data">
+ファイル1: <input type="file" name="file1"><br>
+ファイル2: <input type="file" name="file2"><br>
+ファイル3: <input type="file" name="file3"><br>
+ファイル4: <input type="file" name="file4"><br>
+ファイル5: <input type="file" name="file5"><br>
 
-  print encode('utf-8', "作成先: $path<br>\n");
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" enctype=\"multipart/form-data\">\n";
-  print "ファイル1: <input type=\"file\" name=\"file1\"><br>\n";
-  print "ファイル2: <input type=\"file\" name=\"file2\"><br>\n";
-  print "ファイル3: <input type=\"file\" name=\"file3\"><br>\n";
-  print "ファイル4: <input type=\"file\" name=\"file4\"><br>\n";
-  print "ファイル5: <input type=\"file\" name=\"file5\"><br>\n";
+<input type="hidden" name="mode" value="do_upload">
+<input type="hidden" name="target" value="${target}">
+<input type="hidden" name="dir" value="${encoded_dir}">
 
-  print "<input type=\"hidden\" name=\"mode\" value=\"do_upload\">\n";
-  print "<input type=\"hidden\" name=\"target\" value=\"${target}\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
-
-  print "<br>\n";
-  print "<input type=\"submit\" value=\"実行\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
-  print "</form>\n";
+<br>
+<input type="submit" name="b_submit" value="実行">
+<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
+</form>
+EOF
+  print encode('utf-8', $html);
 
   HTML_Elem->tail();
 }
@@ -213,8 +215,8 @@ sub form_rename() {
   print "<br><br>\n";
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
   print "<input type=\"hidden\" name=\"back\" value=\"${back_link}\">\n";
-  print "<input type=\"button\" value=\"実行\" onClick=\"do_rename(${i})\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
+  print "<input type=\"button\" value=\"実行\" name=\"b_submit\" onClick=\"do_rename(${i})\">\n";
+  print "<input type=\"button\" value=\"キャンセル\" name=\"b_cancel\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
   HTML_Elem->tail();
@@ -299,8 +301,8 @@ eval {
 <input type="hidden" name="dest" value="">
 
 <br>
-<input type="submit" value="実行">
-<input type="button" value="キャンセル" onClick="jump('${back_link}')">
+<input type="submit" name="b_submit" value="実行">
+<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
 </form>
 <script type="text/javascript">
 <!--
@@ -369,8 +371,8 @@ sub form_delete() {
   print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
   print "<br>\n";
-  print "<input type=\"submit\" value=\"実行\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
+  print "<input type=\"submit\" name=\"b_submit\" value=\"実行\">\n";
+  print "<input type=\"button\" name=\"b_cancel\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
   print "</form>\n";
 
   HTML_Elem->tail();
