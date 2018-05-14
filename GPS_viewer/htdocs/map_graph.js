@@ -157,12 +157,13 @@ function plotAcceleration(positions) {
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
     var start = Math.floor(positions.length * range_start / 1000);
     var end   = Math.floor(positions.length * range_end / 1000);
+    var skip  = Math.floor((end - start)/5000) + 1;
 
     var fix_central_z = checkCentralZ(positions);
 
     clearAccelerationGraphData();
     var data_index = 1;
-    for (var i=start; i<end; i++) {
+    for (var i=start; i<end; i+=skip) {
         var p = positions[i];
         accelerationXY_graph_property["data"][1][data_index] = p.est_x;
         accelerationXY_graph_property["data"][2][data_index] = p.est_y;

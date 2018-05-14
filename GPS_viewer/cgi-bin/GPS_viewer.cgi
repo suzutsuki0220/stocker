@@ -97,7 +97,7 @@ my $html = <<EOF;
 <div id="info_field">
 <form name="f1" action="#" method="GET">
 距離: <span id="distance_text">-- km</span>&nbsp;&nbsp;
-サンプル数: 有効=<span id="sample_count">0</span>, 無効=<span id="invalid_sample_count">0</span><br>
+サンプル数: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
 <ul>
 開始位置<br>
 <input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" style="width: 97%" list="tickmarks">
