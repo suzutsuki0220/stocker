@@ -1,0 +1,54 @@
+html, body {
+    font-size: 12pt;
+    font-family: arial,sans-serif;
+}
+
+table {
+    border: 1px solid #666666;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+table td {
+    margin-top: 3px;
+    margin-bottom: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    padding 0px 3px;
+}
+
+input[type="submit"] {
+    width: 150px;
+    margin: auto;
+}
+
+input.hhmmssxxx {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+@media screen and (max-width: 640px) {
+    html, body {
+        margin: 2px;
+        width: 99%;
+        font-size: 9pt;
+    }
+
+    input[type="submit"] {
+        font-size: 12pt;
+        padding: 10px 25px 10px 25px;
+    }
+
+    img#vimg, video#vimg {
+        width: 100%;
+    }
+
+    input.fit_width {
+        width: 100%;
+    }
+
+    input.hhmmssxxx {
+        width: 7em;
+        font-size: 6pt;
+    }
+}

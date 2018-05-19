@@ -452,7 +452,7 @@ ${audio_table}
         // check radio button
         if (isNaN(best_video_index) === false) {
             document.getElementsByName('v_map')[best_video_index].checked = true;
-            setPreviewSize(document.getElementsByName('vimg')[0], best_video_width, best_video_height);
+            setPreviewSize(document.getElementById('vimg'), best_video_width, best_video_height);
         }
         if (isNaN(best_audio_index) === false) {
             document.getElementsByName('a_map')[best_audio_index].checked = true;
@@ -688,8 +688,8 @@ function doVideoStreamSelected(vid_no) {
     document.enc_setting.r.value = Math.floor(fps * 100) / 100;  // 少数点第2位以下は捨てる
     document.enc_setting.b.value = Math.floor(bps / 1000);
 
-    document.getElementsByName('vimg')[0].src = getPreviewUrl(640);
-    setPreviewSize(document.getElementsByName('vimg')[0], disp_width, disp_height);
+    document.getElementById('vimg').src = getPreviewUrl(640);
+    setPreviewSize(document.getElementById('vimg'), disp_width, disp_height);
 }
 
 var timeSelNum = 0;
@@ -700,27 +700,30 @@ function addTimeSel() {
 
     var selectArea = document.createElement("div");
     selectArea.setAttribute("id", "sarea"+timeSelNum);
-    var textElem = document.createTextNode("開始位置 ");
+    var textElem = document.createTextNode(String(timeSelNum + 1) + ".位置 ");
     selectArea.appendChild(textElem);
     var ssArea = document.createElement("input");
     ssArea.setAttribute("type", "text");
     ssArea.setAttribute("name", "ss"+timeSelNum);
+    ssArea.setAttribute("class", "hhmmssxxx");
     ssArea.setAttribute("value", newValue);
     ssArea.setAttribute("onClick", "openTimerSelector(this, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
     selectArea.appendChild(ssArea);
-    textElem = document.createTextNode(" (時:分:秒.ミリ秒) ～ ");
+    textElem = document.createTextNode(" ～ ");
     selectArea.appendChild(textElem);
     var tendArea = document.createElement("input");
     tendArea.setAttribute("type", "text");
     tendArea.setAttribute("name", "tend"+timeSelNum);
+    tendArea.setAttribute("class", "hhmmssxxx");
     tendArea.setAttribute("value", newValue);
     tendArea.setAttribute("onClick", "openTimerSelector(this, 'ss"+timeSelNum+"', 'tend"+timeSelNum+"', 't"+timeSelNum+"')");
     selectArea.appendChild(tendArea);
-    textElem = document.createTextNode(" (時:分:秒.ミリ秒) 長さ ");
+    textElem = document.createTextNode(" 長さ");
     selectArea.appendChild(textElem);
     var tArea = document.createElement("input");
     tArea.setAttribute("type", "text");
     tArea.setAttribute("name", "t"+timeSelNum);
+    tArea.setAttribute("class", "hhmmssxxx");
     tArea.setAttribute("value", "00:00:00.000");
     tArea.setAttribute("readonly", "true");
     selectArea.appendChild(tArea);

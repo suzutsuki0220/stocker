@@ -217,6 +217,7 @@ sub print_form() {
   );
   my @csslist = (
       "%htdocs_root%/stocker.css",
+      "%htdocs_root%/converter_form.css",
   );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
@@ -231,9 +232,9 @@ EOF
 
   if ($mtype eq "video") {
     if (lc($path) =~ /\.mp4$/ || lc($path) =~ /\.m4v$/ || lc($path) =~ /\.mpg4$/) {
-      print "<video src=\"$mp4_url\" name=\"vimg\" id=\"player\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
+      print "<video src=\"$mp4_url\" id=\"vimg\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
     } else {
-      print "<img src=\"$thm_url\" name=\"vimg\" width=\"640\">\n";
+      print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
     }
   }
   print "<h2>変換元ファイル</h2>\n";
@@ -579,10 +580,10 @@ EOD
   print <<EOF;
 <br>
 <div id="dirlist"></div>
-出力先: <input type="text" name="out_dir" value="${date_string}" size="50"><br>
+出力先: <input type="text" class="fit_width" name="out_dir" value="${date_string}" size="50"><br>
 EOF
   if(opendir(DIR, $CONV_OUT_DIR)) {
-    print "<select name=\"exist_dir\" size=\"5\" onChange=\"select_existdir()\">\n";
+    print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
     while(my $entry = decode('utf-8', readdir(DIR))) {
       if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' &&
           -d "$CONV_OUT_DIR/$entry" )
@@ -602,9 +603,9 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-開始位置 <input type="text" name="ss0" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
- ～ <input type="text" name="tend0" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')"> (時:分:秒.ミリ秒)
- 長さ <input type="text" name="t0" value="00:00:00.000" readonly>
+1.位置 <input type="text" name="ss0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')">
+ ～ <input type="text" name="tend0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')">
+ 長さ<input type="text" name="t0" class="hhmmssxxx" value="00:00:00.000" readonly>
 <div id="TimeSelAddtion"></div>
 <input type="button" name="add_time_sel" onClick="addTimeSel()" value="追加">
 </div>
@@ -749,8 +750,10 @@ weight
 <br>
 
 <div id="sStatus"></div>
+<p style="text-align: center">
 <!-- <input type="button" value="変換する" onClick="addJob()"> -->
-<input type="submit" value="変換する"><br>
+<input type="submit" value="変換する">
+</p>
 </form>
 EOF
 
