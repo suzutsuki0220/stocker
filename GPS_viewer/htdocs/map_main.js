@@ -168,12 +168,13 @@ function map_route(data, name) {
 function reloadMap(start_range, end_range) {
   var route = [];
   var invalid_count = 0;
+  var skip_idx = Math.floor((end_range - start_range)/10000) + 1;
 
   distance = 0;
   pre_lat = 0;
   pre_lng = 0;
   clearEventMarker();
-  for (var i=start_range; i<end_range; i++) {
+  for (var i=start_range; i<end_range; i+=skip_idx) {
       var p = positions[i];
       var latlng = get_latlng(p.latitude, p.longitude);
       if (latlng != null) {
@@ -196,8 +197,10 @@ function reloadMap(start_range, end_range) {
   map_clear();
 
   document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
-  document.getElementById("sample_count").innerHTML  = route.length;
-  document.getElementById("invalid_sample_count").innerHTML  = invalid_count;
+  document.getElementById("sample_count").innerHTML  = String(end_range - start_range);
+  document.getElementById("point_count").innerHTML  = String(route.length);
+  document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
+  document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
 
   geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
   geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
