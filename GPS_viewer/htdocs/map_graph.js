@@ -131,6 +131,11 @@ var accelerationXY_gforce_property = {
 };
 
 function showGraph(positions) {
+    if (!positions) {
+        alert("グラフに表示可能なデータがありません");
+        return;
+    }
+
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         document.getElementById('info_field').style.display = "none";
         document.getElementById('graph_field').style.display = "inline";
