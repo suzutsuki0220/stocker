@@ -47,12 +47,12 @@ function parseAccelCsvLine(line) {
                 position.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
                 position.level = col[i+6] ? parseInt(col[i+6].trim()) : 0;
                 i += 6;
-            } else if (col[i] === "GPS") {
+            } else if (col[i] === "GPS" || col[i] === "Location") {
                 position.latitude  = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
                 position.longitude = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
                 i += 2;
-            } else if (col[i] === "m/s") {
-                position.speed = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+            } else if (col[i] === "m/s" || col[i] === "Speed") {
+                position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
                 i += 1;
             }
         }
