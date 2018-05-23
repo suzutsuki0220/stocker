@@ -289,8 +289,10 @@ sub make_cmd()
   $orig_ext =~ s/\|//g;  # for "concat mode"
 
   my $position = "";
-  if ($$job->{'set_position'} eq "true" && $$job->{'ss'} ne '00:00:00.000') {
-    $position = " -ss ".$$job->{'ss'};
+  if ($$job->{'set_position'} eq "true") {
+    if ($$job->{'ss'} ne '00:00:00.000') {
+      $position = " -ss ".$$job->{'ss'};
+    }
 
     my $ss_sec = $$job->{'ss'};
     $ss_sec =~ s/[:\.]//g;
