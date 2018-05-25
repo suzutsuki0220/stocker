@@ -100,13 +100,19 @@ my $html = <<EOF;
 サンプル数: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
 <ul>
 開始位置<br>
-<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" style="width: 97%" list="tickmarks">
+<div style="position: relative">
+<canvas id="range_start_background"></canvas>
+<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
+</div><br>
 <li>時刻: <span id="start_datetime"></span></li>
 <li>住所: <span id="start_address"></span></li>
 </ul>
 <ul>
 終了位置<br>
-<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged(this)" style="width: 97%" list="tickmarks">
+<div style="position: relative">
+<canvas id="range_end_background"></canvas>
+<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
+</div><br>
 <li>時刻: <span id="end_datetime"></span></li>
 <li>住所: <span id="end_address"></span></li>
 </ul>

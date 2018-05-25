@@ -196,6 +196,9 @@ function reloadMap(start_range, end_range) {
   }
   map_clear();
 
+  paintTimeRangeBgSpeed(document.getElementById('range_start_background'));
+  paintTimeRangeBgSpeed(document.getElementById('range_end_background'));
+
   document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
   document.getElementById("sample_count").innerHTML  = String(end_range - start_range);
   document.getElementById("point_count").innerHTML  = String(route.length);
@@ -364,3 +367,30 @@ function rangeChanged(elem) {
     reloadMap(start, end);
 }
 
+function paintTimeRangeBgSpeed(canvas) {
+    const ctx = canvas.getContext("2d");
+    const step = 5;
+
+    ctx.beginPath();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([0]);
+
+    for (var i=0; i<canvas.width; i+=step) {
+        var get_pos = Math.floor(positions.length * ((i + step / 2) / canvas.width));
+        var p = positions[get_pos];
+        var color = "#0000b1";
+        if (p.speed > 80) {
+            color = "#cf0000";
+        } else if (p.speed > 60) {
+            color = "#cfcf00";
+        } else if (p.speed > 40) {
+            color = "#00cf00";
+        }
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.fillRect(i, 0, step, canvas.height);
+        ctx.stroke();
+    }
+
+    ctx.closePath();
+}
