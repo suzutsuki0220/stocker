@@ -11,6 +11,7 @@ var pre_lat;
 var pre_lng;
 var distance;
 var lat_min, lng_min, lat_max, lng_max;
+var lastDelayReloadTimerID = NaN;
 
 const stroke_color = "#0000ff";
 var nmea_pattern = /\.(nmea)$/;
@@ -205,10 +206,22 @@ function reloadMap(start_range, end_range) {
   document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
   document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
 
-  geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
-  geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
   document.getElementById('start_datetime').innerHTML = positions[start_range].datetime ? positions[start_range].datetime : "不明";
   document.getElementById('end_datetime').innerHTML = positions[end_range - 1].datetime ? positions[end_range - 1].datetime : "不明";
+
+  var delayReloadFunc = function() {
+    geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
+    geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
+    panorama.setPosition(route[start_index]);  // street viewは開始位置にする
+    lastDelayReloadTimerID = NaN;
+  }
+  if (isNaN(lastDelayReloadTimerID) === false) {
+    clearTimeout(lastDelayReloadTimerID);
+    lastDelayReloadTimerID = NaN;
+  }
+  lastDelayReloadTimerID = setTimeout(delayReloadFunc, 2000);
+  document.getElementById("start_address").innerHTML = "取得中";
+  document.getElementById("end_address").innerHTML = "取得中";
 
   var StartMarkerOptions = {
     position: route[start_index],
@@ -225,9 +238,6 @@ function reloadMap(start_range, end_range) {
     title: "End Point"
   };
   endMarker = new google.maps.Marker(EndPointOptions);
-
-
-  panorama.setPosition(route[start_index]);  // street viewは開始位置にする
 
   var polyOptions = {
     path: route,
