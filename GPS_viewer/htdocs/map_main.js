@@ -181,7 +181,7 @@ function reloadMap(start_range, end_range) {
       if (latlng != null) {
         route.push(latlng);
         if (p.behavior && p.behavior !== 0) {
-            createEventMarker(p.latitude, p.longitude, p.behavior);
+            createEventMarker(p);
         }
       } else {
         invalid_count++;
@@ -255,9 +255,9 @@ function centeringMap() {
   map.setZoom(parseInt(getMapScale()));
 }
 
-function createEventMarker(latitude, longitude, event) {
+function createEventMarker(p) {
   var title, label;
-  switch (event) {
+  switch (p.behavior) {
     case 1:
       title = "Braking";
       label = "B";
@@ -277,14 +277,53 @@ function createEventMarker(latitude, longitude, event) {
   }
 
   var markerOptions = {
-    position: new google.maps.LatLng(latitude, longitude),
+    position: new google.maps.LatLng(p.latitude, p.longitude),
     map: map,
     title: title,
     label: label,
     animation: google.maps.Animation.DROP,
   };
 
-  eventMarkers.push(new google.maps.Marker(markerOptions));
+  var marker = new google.maps.Marker(markerOptions);
+  addMarkerInfo(marker, makeEventInfoContents(p));
+  eventMarkers.push(marker);
+}
+
+function makeEventInfoContents(p) {
+  var title = "--";
+  switch (p.behavior) {
+    case 1:
+      title = "Braking";
+      break;
+    case 2:
+      title = "Throttle";
+      break;
+    case 4:
+      title = "Cornering(left)";
+      break;
+    case 8:
+      title = "Cornering(right)";
+      break;
+  }
+
+  var contents;
+  contents  = '<div style="color: #202020">';
+  contents += title + "<br>";
+  contents += "発生時刻: " + p.datetime + "<br>";
+  contents += "速度: " + String(Math.floor(p.speed * 100) / 100) + " km/h";
+  contents += '</div>';
+
+  return contents;
+}
+
+function addMarkerInfo(marker, contentData) {
+  var showInfoWindow = function(event) {
+    var windowOptions = {
+      content: contentData,
+    };
+    new google.maps.InfoWindow(windowOptions).open(marker.getMap(), marker);
+  };
+  google.maps.event.addListener(marker, 'click', showInfoWindow);
 }
 
 function clearEventMarker() {
