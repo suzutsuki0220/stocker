@@ -369,26 +369,29 @@ function rangeChanged(elem) {
 
 function paintTimeRangeBgSpeed(canvas) {
     const ctx = canvas.getContext("2d");
-    const step = 5;
+    const step = 3;
+    const graphY_offset = 20;
 
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.setLineDash([0]);
 
     for (var i=0; i<canvas.width; i+=step) {
-        var get_pos = Math.floor(positions.length * ((i + step / 2) / canvas.width));
-        var p = positions[get_pos];
+        const get_pos = Math.floor(positions.length * ((i + step / 2) / canvas.width));
+        const p = positions[get_pos];
+        var graphY = (canvas.height - graphY_offset) - (p.speed / 100 * canvas.height);
         var color = "#0000b1";
-        if (p.speed > 80) {
+        if (p.speed > 100) {
             color = "#cf0000";
+            graphY = 0;
         } else if (p.speed > 60) {
             color = "#cfcf00";
-        } else if (p.speed > 40) {
+        } else if (p.speed > 10) {
             color = "#00cf00";
         }
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
-        ctx.fillRect(i, 0, step, canvas.height);
+        ctx.fillRect(i, graphY, step, canvas.height - graphY);
         ctx.stroke();
     }
 

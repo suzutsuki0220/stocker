@@ -16,7 +16,7 @@ a.white {
 
 input.time_range {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     width: 97%;
 }
@@ -25,6 +25,8 @@ input.time_range {
     width: 97%;
     height: 1em;
     position: absolute;
+    top: 0;
+    left: 0;
     background-color: #000000;
 }
 
