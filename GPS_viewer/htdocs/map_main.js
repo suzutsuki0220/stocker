@@ -4,7 +4,7 @@ var panorama;
 var startMarker = null;
 var endMarker = null;
 var eventMarkers = new Array();
-var poly = null;
+var poly = new Array();
 var positions;
 
 var pre_lat;
@@ -13,7 +13,7 @@ var distance;
 var lat_min, lng_min, lat_max, lng_max;
 var lastDelayReloadTimerID = NaN;
 
-const stroke_color = "#0000ff";
+const stroke_color = ["#000000", "#0000ff", "#00af00", "#afaf00", "#ff0030"];
 var nmea_pattern = /\.(nmea)$/;
 var accel_csv_pattern = /\.(accel.csv)$/;
 
@@ -104,9 +104,8 @@ function getMapScale() {
 }
 
 function map_clear() {
-  if (poly != null) {
-    poly.setMap(null);
-    poly = null;
+  while ((polyline = poly.pop()) !== undefined) {
+    polyline.setMap(null);
   }
   if (startMarker != null) {
     startMarker.setMap(null);
@@ -168,41 +167,58 @@ function map_route(data, name) {
 
 function reloadMap(start_range, end_range) {
   var route = [];
+  var start_route = null;
+  var end_route = null;
+  var route_length = 0;
   var invalid_count = 0;
   var skip_idx = Math.floor((end_range - start_range)/10000) + 1;
+  var colorIndex, lastColorIndex;
 
   distance = 0;
   pre_lat = 0;
   pre_lng = 0;
   clearEventMarker();
   for (var i=start_range; i<end_range; i+=skip_idx) {
-      var p = positions[i];
-      var latlng = get_latlng(p.latitude, p.longitude);
-      if (latlng != null) {
-        route.push(latlng);
-        if (p.behavior && p.behavior !== 0) {
-            createEventMarker(p);
-        }
-      } else {
-        invalid_count++;
+    var p = positions[i];
+    var latlng = get_latlng(p.latitude, p.longitude);
+    if (latlng != null) {
+      colorIndex = judgePolyLineColor(p);
+      route.push(latlng);
+      if (start_route === null) {
+        map_clear();  // ここに来れば有効なサンプルは存在してるはず
+        start_route = latlng;
+        lastColorIndex = colorIndex;
       }
+      end_route = latlng;
+      route_length++;
+      if (p.behavior && p.behavior !== 0) {
+        createEventMarker(p);
+      }
+
+      if (lastColorIndex !== colorIndex) {
+        plotMapPolyLine(route, stroke_color[colorIndex]);
+        route = [];
+      }
+      lastColorIndex = colorIndex;
+    } else {
+      invalid_count++;
+    }
+  }
+  if (start_route !== null && end_route !== null) {
+    plotMapPolyLine(route, stroke_color[colorIndex]);
   }
 
-  var start_index = 0;
-  var end_index = route.length - 1;
-
-  if (route.length === 0) {
+  if (route_length === 0) {
     alert('有効な位置を示すサンプルがありません');
     return;
   }
-  map_clear();
 
   paintTimeRangeBgSpeed(document.getElementById('range_start_background'));
   paintTimeRangeBgSpeed(document.getElementById('range_end_background'));
 
   document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
   document.getElementById("sample_count").innerHTML  = String(end_range - start_range);
-  document.getElementById("point_count").innerHTML  = String(route.length);
+  document.getElementById("point_count").innerHTML  = String(route_length);
   document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
   document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
 
@@ -210,9 +226,9 @@ function reloadMap(start_range, end_range) {
   document.getElementById('end_datetime').innerHTML = positions[end_range - 1].datetime ? positions[end_range - 1].datetime : "不明";
 
   var delayReloadFunc = function() {
-    geocoder.geocode({'location': route[start_index]}, putStartGeoCode);
-    geocoder.geocode({'location': route[end_index]}, putEndGeoCode);
-    panorama.setPosition(route[start_index]);  // street viewは開始位置にする
+    geocoder.geocode({'location': start_route}, putStartGeoCode);
+    geocoder.geocode({'location': end_route}, putEndGeoCode);
+    panorama.setPosition(start_route);  // street viewは開始位置にする
     lastDelayReloadTimerID = NaN;
   }
   if (isNaN(lastDelayReloadTimerID) === false) {
@@ -224,7 +240,7 @@ function reloadMap(start_range, end_range) {
   document.getElementById("end_address").innerHTML = "取得中";
 
   var StartMarkerOptions = {
-    position: route[start_index],
+    position: start_route,
     icon: '%htdocs_root%/car.png',
     map: map,
     title: "Start Point"
@@ -232,21 +248,24 @@ function reloadMap(start_range, end_range) {
   startMarker = new google.maps.Marker(StartMarkerOptions);
 
   var EndPointOptions = {
-    position: route[end_index],
+    position: end_route,
     icon: '%htdocs_root%/goal.png',
     map: map,
     title: "End Point"
   };
   endMarker = new google.maps.Marker(EndPointOptions);
+}
 
+function plotMapPolyLine(route, color) {
   var polyOptions = {
     path: route,
-    strokeColor: stroke_color,
-    strokeOpacity: 0.5,
+    strokeColor: color,
+    strokeOpacity: 0.75,
     strokeWeight: 5
   }
-  poly = new google.maps.Polyline(polyOptions);
-  poly.setMap(map);
+  var polyline = new google.maps.Polyline(polyOptions);
+  polyline.setMap(map);
+  poly.push(polyline);
 }
 
 // マップの中央を奇跡が全て見える位置に合わせる

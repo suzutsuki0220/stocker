@@ -73,6 +73,22 @@ my $html = <<EOF;
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
     }
+
+    function judgePolyLineColor(p) {
+      var index = 0;
+
+      if (p.speed > 100) {
+        index = 4;
+      } else if (p.speed > 80) {
+        index = 3;
+      } else if (p.speed > 40) {
+        index = 2;
+      } else if (p.speed > 10) {
+        index = 1;
+      }
+
+      return index;
+    }
 </script>
 <div id="top_field">
 <span style="float: left">
