@@ -154,7 +154,7 @@ function showGraph(positions) {
         document.getElementById('panorama_canvas').style.width = "100%";
         document.getElementById('gforce_accelXY').style.display = "none";
     }
-    map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
+    //map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));  // 本来の位置とズレるので放置
 }
 
 function plotAcceleration(positions) {

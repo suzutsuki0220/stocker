@@ -182,8 +182,6 @@ function reloadMap(start_range, end_range) {
     var p = positions[i];
     var latlng = get_latlng(p.latitude, p.longitude);
     if (latlng != null) {
-      colorIndex = judgePolyLineColor(p);
-      route.push(latlng);
       if (start_route === null) {
         map_clear();  // ここに来れば有効なサンプルは存在してるはず
         start_route = latlng;
@@ -195,10 +193,13 @@ function reloadMap(start_range, end_range) {
         createEventMarker(p);
       }
 
+      colorIndex = judgePolyLineColor(p);
       if (lastColorIndex !== colorIndex) {
-        plotMapPolyLine(route, stroke_color[colorIndex]);
+        route.push(latlng);
+        plotMapPolyLine(route, stroke_color[lastColorIndex]);
         route = [];
       }
+      route.push(latlng);
       lastColorIndex = colorIndex;
     } else {
       invalid_count++;
