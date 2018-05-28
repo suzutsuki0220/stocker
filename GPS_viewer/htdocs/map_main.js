@@ -116,6 +116,9 @@ function map_clear() {
     endMarker = null;
   }
 
+  clearTimeRangeBgSpeed(document.getElementById('range_start_background'));
+  clearTimeRangeBgSpeed(document.getElementById('range_end_background'));
+
   document.getElementById("distance_text").innerHTML = "--  km"; 
   document.getElementById("sample_count").innerHTML = "0";
   document.getElementById("invalid_sample_count").innerHTML = "0";
@@ -465,4 +468,9 @@ function paintTimeRangeBgSpeed(canvas) {
     }
 
     ctx.closePath();
+}
+
+function clearTimeRangeBgSpeed(canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
