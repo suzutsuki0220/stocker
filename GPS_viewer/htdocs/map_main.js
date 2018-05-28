@@ -242,19 +242,19 @@ function reloadMap(start_range, end_range) {
 
   var StartMarkerOptions = {
     position: start_route,
-    icon: '%htdocs_root%/car.png',
+    icon: START_MARKER_ICON,
     map: map,
     title: "Start Point"
   };
   startMarker = new google.maps.Marker(StartMarkerOptions);
 
-  var EndPointOptions = {
+  var EndMarkerOptions = {
     position: end_route,
-    icon: '%htdocs_root%/goal.png',
+    icon: END_MARKER_ICON,
     map: map,
     title: "End Point"
   };
-  endMarker = new google.maps.Marker(EndPointOptions);
+  endMarker = new google.maps.Marker(EndMarkerOptions);
 }
 
 function plotMapPolyLine(route, color) {

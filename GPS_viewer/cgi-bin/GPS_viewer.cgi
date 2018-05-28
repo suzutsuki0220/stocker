@@ -48,6 +48,7 @@ eval {
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
       "%htdocs_root%/map_graph.js",
+      "%htdocs_root%/map_graph_XYacceleration.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
       "%htdocs_root%/GPS_accel_csv.js",
@@ -70,6 +71,9 @@ if ($@) {
 
 my $html = <<EOF;
 <script type="text/javascript">
+    const START_MARKER_ICON = '%htdocs_root%/car.png';
+    const END_MARKER_ICON   = '%htdocs_root%/goal.png';
+
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
     }
