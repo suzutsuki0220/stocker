@@ -13,7 +13,7 @@ var distance;
 var lat_min, lng_min, lat_max, lng_max;
 var lastDelayReloadTimerID = NaN;
 
-const stroke_color = ["#000000", "#0000ff", "#00af00", "#afaf00", "#ff0030"];
+const stroke_color = ["#000000", "#0000ff", "#008c10", "#afaf00", "#ff0030", "#505050"];
 var nmea_pattern = /\.(nmea)$/;
 var accel_csv_pattern = /\.(accel.csv)$/;
 
