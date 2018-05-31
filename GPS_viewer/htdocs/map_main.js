@@ -13,9 +13,33 @@ var distance;
 var lat_min, lng_min, lat_max, lng_max;
 var lastDelayReloadTimerID = NaN;
 
-const stroke_color = ["#000000", "#0000ff", "#008c10", "#afaf00", "#ff0030", "#505050"];
-var nmea_pattern = /\.(nmea)$/;
-var accel_csv_pattern = /\.(accel.csv)$/;
+const nmea_pattern = /\.(nmea)$/;
+const accel_csv_pattern = /\.(accel.csv)$/;
+const datetime_pattern = /(\d{4})[-\/](\d\d)[-\/](\d\d) (\d\d):(\d\d):([\d\.]+)/;
+
+function getDateFromDatetimeString(datetime) {
+    var d;
+    var dt_match = datetime.match(datetime_pattern);
+
+    if (dt_match === null) {
+        return NaN;
+    }
+
+    d = new Date(dt_match[1], dt_match[2], dt_match[3], dt_match[4], dt_match[5], dt_match[6]);
+
+    return d.getTime();
+}
+
+function getDuration(start, end) {
+    var s = getDateFromDatetimeString(start);
+    var e = getDateFromDatetimeString(end);
+
+    if (isNaN(s) || isNaN(e)) {
+        return NaN;
+    }
+
+    return (e - s) / 1000;
+}
 
 function drawMap(get_file_cgi, base_name, url_path, name) {
   map_init();
@@ -120,6 +144,7 @@ function map_clear() {
   clearTimeRangeBgSpeed(document.getElementById('range_end_background'));
 
   document.getElementById("distance_text").innerHTML = "--  km"; 
+  document.getElementById("duration_text").innerHTML = "---- 秒"; 
   document.getElementById("sample_count").innerHTML = "0";
   document.getElementById("invalid_sample_count").innerHTML = "0";
   document.getElementById("start_address").innerHTML = "";
@@ -172,10 +197,12 @@ function reloadMap(start_range, end_range) {
   var route = [];
   var start_route = null;
   var end_route = null;
+  var duration = 0;
   var route_length = 0;
   var invalid_count = 0;
   var skip_idx = Math.floor((end_range - start_range)/10000) + 1;
-  var colorIndex, lastColorIndex;
+  var line_color = "";
+  var last_line_color = "";
 
   distance = 0;
   pre_lat = 0;
@@ -188,7 +215,7 @@ function reloadMap(start_range, end_range) {
       if (start_route === null) {
         map_clear();  // ここに来れば有効なサンプルは存在してるはず
         start_route = latlng;
-        lastColorIndex = colorIndex;
+        last_line_color = judgePolyLineColor(p);
       }
       end_route = latlng;
       route_length++;
@@ -196,20 +223,20 @@ function reloadMap(start_range, end_range) {
         createEventMarker(p);
       }
 
-      colorIndex = judgePolyLineColor(p);
-      if (lastColorIndex !== colorIndex) {
+      line_color = judgePolyLineColor(p);
+      if (last_line_color !== line_color) {
         route.push(latlng);
-        plotMapPolyLine(route, stroke_color[lastColorIndex]);
+        plotMapPolyLine(route, last_line_color);
         route = [];
       }
       route.push(latlng);
-      lastColorIndex = colorIndex;
+      last_line_color = line_color;
     } else {
       invalid_count++;
     }
   }
   if (start_route !== null && end_route !== null) {
-    plotMapPolyLine(route, stroke_color[colorIndex]);
+    plotMapPolyLine(route, line_color);
   }
 
   if (route_length === 0) {
@@ -226,6 +253,10 @@ function reloadMap(start_range, end_range) {
   document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
   document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
 
+  duration = getDuration(positions[start_range].datetime, positions[end_range - 1].datetime);
+  if (!isNaN(duration)) {
+      document.getElementById("duration_text").innerHTML = duration.toFixed() + " 秒"; 
+  }
   document.getElementById('start_datetime').innerHTML = positions[start_range].datetime ? positions[start_range].datetime : "不明";
   document.getElementById('end_datetime').innerHTML = positions[end_range - 1].datetime ? positions[end_range - 1].datetime : "不明";
 

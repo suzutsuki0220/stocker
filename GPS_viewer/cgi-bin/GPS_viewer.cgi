@@ -73,6 +73,7 @@ my $html = <<EOF;
 <script type="text/javascript">
     const START_MARKER_ICON = '%htdocs_root%/car.png';
     const END_MARKER_ICON   = '%htdocs_root%/goal.png';
+    const stroke_color = ["#000000", "#0000ff", "#008c10", "#afaf00", "#ff0030", "#505050"];
 
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
@@ -91,7 +92,7 @@ my $html = <<EOF;
         index = 1;
       }
 
-      return index;
+      return stroke_color[index];
     }
 </script>
 <div id="top_field">
@@ -117,7 +118,8 @@ my $html = <<EOF;
 <div id="info_field">
 <form name="f1" action="#" method="GET">
 距離: <span id="distance_text">-- km</span>&nbsp;&nbsp;
-サンプル数: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
+時間: <span id="duration_text">---- 秒</span>&nbsp;&nbsp;
+位置情報: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
 <ul>
 開始位置<br>
 <div style="position: relative; height: 2em;">
