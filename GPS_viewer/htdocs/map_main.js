@@ -189,8 +189,9 @@ function map_route(data, name) {
   }
 
   // 経路描画
-  reloadMap(0, positions.length);
-  centeringMap();
+  if (reloadMap(0, positions.length) === true) {
+    centeringMap();
+  }
 }
 
 function reloadMap(start_range, end_range) {
@@ -240,8 +241,8 @@ function reloadMap(start_range, end_range) {
   }
 
   if (route_length === 0) {
-    alert('有効な位置を示すサンプルがありません');
-    return;
+    alert('有効な位置情報がありません');
+    return false;
   }
 
   paintTimeRangeBgSpeed(document.getElementById('range_start_background'));
@@ -289,6 +290,8 @@ function reloadMap(start_range, end_range) {
     title: "End Point"
   };
   endMarker = new google.maps.Marker(EndMarkerOptions);
+
+  return true;
 }
 
 function plotMapPolyLine(route, color) {
