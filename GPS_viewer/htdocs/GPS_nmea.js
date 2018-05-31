@@ -2,6 +2,7 @@
 var re_degree = /(\d+)(\d\d\.\d+)/;
 var re_rmc = /^\$G[PN]RMC/;  // essential gps pvt (position, velocity, time) data
 var re_gga = /^\$G[PN]GGA/;  // essential fix data
+var re_gsa = /^\$G[PN]GSA/;  // accuracy
 var re_vtg = /^\$G[PN]VTG/;  // Track made good, speed
 var re_gsensor = /^\$GSENSOR/;  // G-sensor (DriveRecorder proprietary format)
 
@@ -9,6 +10,8 @@ var _speed = NaN;
 var _accelX = NaN;
 var _accelY = NaN;
 var _accelZ = NaN;
+var _h_accuracy = NaN;
+var _v_accuracy = NaN;
 
 function getPositionEmea(data) {
     var position = [];
@@ -37,10 +40,19 @@ function getPositionEmea(data) {
 }
 
 function parseNmeaLine(nmea) {
+    var checksum = "";
+    var checksum_pos = nmea.indexOf('*');
+    if (checksum_pos > 0) {
+        checksum = nmea.substring(checksum_pos + 1);
+        nmea = nmea.substring(0, checksum_pos);
+    }
+
     if (re_rmc.test(nmea)) {
         return getRMC(nmea);
     } else if (re_vtg.test(nmea)) {
         getVTG(nmea);
+    } else if (re_gsa.test(nmea)) {
+        getGSA(nmea);
     } else if (re_gsensor.test(nmea)) {
         getGSENSOR(nmea);
     }
@@ -89,6 +101,15 @@ function getVTG(sentence)
     }
 }
 
+function getGSA(sentence)
+{
+    var col = sentence.split(",");
+    if (col && col.length > 6) {
+        _h_accuracy = parseFloat(col[col.length - 2]);
+        _v_accuracy = parseFloat(col[col.length - 1]);
+    }
+}
+
 function getGSENSOR(sentence)
 {
     var col = sentence.split(",");
@@ -116,6 +137,14 @@ function addHoldData(obj) {
         obj.est_z = _accelZ;
     } 
 
+    if (isNaN(_h_accuracy) === false) {
+        obj.horizontal_accuracy = _h_accuracy;
+    }
+
+    if (isNaN(_v_accuracy) === false) {
+        obj.vertical_accuracy = _v_accuracy;
+    }
+
     clearHoldData();
 }
 
@@ -124,6 +153,8 @@ function clearHoldData() {
     _accelX = NaN;
     _accelY = NaN;
     _accelZ = NaN;
+    _h_accuracy = NaN;
+    _v_accuracy = NaN;
 }
 
 function getDegree(fraction) {

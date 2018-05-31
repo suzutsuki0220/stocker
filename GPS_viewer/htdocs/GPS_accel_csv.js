@@ -54,6 +54,9 @@ function parseAccelCsvLine(line) {
             } else if (col[i] === "m/s" || col[i] === "Speed") {
                 position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
                 i += 1;
+            } else if (col[i] === "Accuracy") {
+                position.horizontal_accuracy = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+                i += 1;
             }
         }
 
