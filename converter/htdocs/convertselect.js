@@ -29,19 +29,21 @@ function reloadImage() {
       return;
     }
 
-    var elem, reloading_elem;
+    var elem, reloading_elem, selected_time_elem;
     if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
       elem = document.f1.previewStart;
       reloading_elem = document.getElementById("reloadingStart");
+      selected_time_elem = document.f1.selectedTimeStart;
     } else {
       elem = document.f1.previewEnd;
       reloading_elem = document.getElementById("reloadingEnd");
+      selected_time_elem = document.f1.selectedTimeEnd;
     }
 
-    setLoading(elem, reloading_elem);
+    setLoading(elem, reloading_elem, selected_time_elem);
 }
 
-function setLoading(preview_elem, reloading_elem) {
+function setLoading(preview_elem, reloading_elem, selected_time_elem) {
     if (preview_elem.addEventListener) {
       preview_elem.addEventListener("load", function() { unsetLoading(preview_elem, reloading_elem); }, false);
       preview_elem.addEventListener("error", function() { showGrayPad(preview_elem, reloading_elem); }, false);
@@ -53,7 +55,7 @@ function setLoading(preview_elem, reloading_elem) {
     }
 
     loading = true;
-    preview_elem.src = getImageURL();
+    preview_elem.src = getImageURL(selected_time_elem);
     reloading_elem.style.display = "block";
 }
 
@@ -175,11 +177,11 @@ function adjustStartAndEndTime() {
         if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
             end_time = start_time;
             end.value = getFormatTimeFromSecond(end_time * 1000);
-            setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"));
+            setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"), getSelectedTimeElem());
         } else {
             start_time = end_time;
             start.value = getFormatTimeFromSecond(start_time * 1000);
-            setLoading(document.f1.previewStart, document.getElementById("reloadingStart"));
+            setLoading(document.f1.previewStart, document.getElementById("reloadingStart"), getSelectedTimeElem());
         }
     }
 }
@@ -379,4 +381,5 @@ function doControlTimeSwitched() {
 
 function switchTimeControl(index) {
     document.f1.controlTimeSwitch[index].checked = true;
+    doControlTimeSwitched();
 }
