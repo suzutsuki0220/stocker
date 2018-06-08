@@ -162,8 +162,7 @@ $output = <<EOF;
 
 <script type="text/javascript">
 <!--
-  function getImageURL() {
-    var elem = getSelectedTimeElem();
+  function getImageURL(elem) {
     var ss = elem.value;
     var imgurl = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${encoded_dir}&v_map=" + ${vno} + "&size=640&set_position=1&ss=" + ss;
 
@@ -200,8 +199,8 @@ $output = <<EOF;
     } else {
         document.f1.controlTimeSwitch[1].checked = true;
     }
-    setLoading(document.f1.previewStart, document.getElementById("reloadingStart"));
-    setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"));
+    setLoading(document.f1.previewStart, document.getElementById("reloadingStart"), document.f1.selectedTimeStart);
+    setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"), document.f1.selectedTimeEnd);
     getMovieDuration("${MOVIE_INFO_CGI}", "${encoded_dir}", "${encoded_path}", "${vno}");
     document.f1.btnApply.focus();
   }

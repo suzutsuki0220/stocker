@@ -4,7 +4,7 @@ include directory_defs.mk
 
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
 DOC_FILES  = $(wildcard htdocs/*)
-CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi text_viewer.cgi
+CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi summary.cgi text_viewer.cgi
 CONF_FILES = basedirs.conf SupportTypes.pl stocker.conf
 
 all:
@@ -52,7 +52,7 @@ install-libs:
 install-htdocs:
 	cp -r $(DOC_FILES) $(DOCS_DIR)
 	sed -i -e 's|%cgi_root%|$(CGI_ROOT)|g' \
-	       $(DOCS_DIR)/*.js # $(DOCS_DIR)/*.html
+	       $(DOCS_DIR)/*.js $(DOCS_DIR)/*.html
 	find $(DOCS_DIR) -type f -exec chmod 644 {} \;
 
 install-cgi:

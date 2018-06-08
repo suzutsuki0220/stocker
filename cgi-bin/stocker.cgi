@@ -324,9 +324,7 @@ print "];\n";
 print "-->\n";
 print "</script>\n";
 
-#&print_disk_space("$base");
 HTML_Elem->tail();
-
 exit(0);
 
 ######
@@ -391,19 +389,6 @@ sub show_next_pagelink {
     print "<a href=\"javascript:jump_to($next_from, $next_to)\">次ページ</a>";
   }
   print "</p>\n";
-}
-
-## ディスク容量表示
-sub print_disk_space
-{
-  my ($dir) = @_;
-  my ($size, $use, $remain, $rate) = FileOperator->getDiskSpace($dir);
-  print <<EOF;
-<hr>
-<div style="text-align: right; font-size: 9pt">
-容量: ${size} [使用: ${use}(${rate}) / 残り: ${remain}]<br>
-</div>
-EOF
 }
 
 ## 操作

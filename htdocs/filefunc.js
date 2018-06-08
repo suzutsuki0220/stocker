@@ -94,6 +94,7 @@ function getMoveDestination(data) {
     }
 
     removeOptions(document.f1.f_dest);
+    document.f1.f_contents.value = "";
 
     // 上位パスのリンク
     if (dest_path.length != 0) {
@@ -131,6 +132,8 @@ function getMoveDestination(data) {
             document.f1.f_dest.length += 1;
             document.f1.f_dest[document.f1.f_dest.length - 1].value = path_elem.item(0).firstChild.data;
             document.f1.f_dest[document.f1.f_dest.length - 1].text  = name_elem.item(0).firstChild.data;
+        } else if (type_elem.item(0).firstChild.data === "FILE") {
+            document.f1.f_contents.value += name_elem.item(0).firstChild.data + "\n";
         }
     }
 }

@@ -41,8 +41,13 @@ eval {
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/get_directory_list.js",
   );
-  my $html = HTML_Elem->new();
-  $html->{'javascript'} = \@jslist;
+  my @csslist = (
+      "%htdocs_root%/stocker.css",
+  );
+  my $html = HTML_Elem->new(
+      javascript => \@jslist,
+      css => \@csslist
+  );
   $html->header();
 };
 if ($@) {
@@ -100,7 +105,7 @@ sub form_newfolder() {
 <input type="hidden" name="dir" value="${encoded_dir}">
 <p>
 作成先: $path<br>
-フォルダー名: <input type="text" name="foldername" value=""><br>
+フォルダー名: <input type="text" name="foldername" class="fitWidth" value=""><br>
 <br>
 <input type="submit" name="b_submit" value="実行">
 <input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
@@ -207,26 +212,36 @@ sub form_rename() {
   if (@files.length == 0) {
     HTML_Elem->error("チェックが一つも選択されていません");
   }
+
   @files = sort {$a cmp $b} @files;
+  my $file_count = @files.length;
 
-  print "<h1>名前の変更</h1>\n";
-  print "<p>選択: ", @files.length, "ファイル</p>\n";
+  my $mes = <<EOF;
+<h1>名前の変更</h1>
+<p>選択: ${file_count} ファイル/フォルダ</p>
+<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST">
+<ol>
+EOF
+  print encode('utf-8', $mes);
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\">\n";
   my $i = 0;
   foreach my $file (@files) {
     my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
-    print "<input type=\"hidden\" name=\"file${i}\" value=\"${file}\">\n";
-    print encode('utf-8', $filename . " → ");
-    print "<input type=\"text\" name=\"newname${i}\" value=\"" . encode('utf-8', ${filename}) . "\"><br>\n";
+    print "<li style=\"margin-bottom: 0.7em\"><input type=\"hidden\" name=\"file${i}\" value=\"${file}\">";
+    print encode('utf-8', $filename . "<br>");
+    print "<input type=\"text\" name=\"newname${i}\" class=\"fitWidth\" value=\"" . encode('utf-8', ${filename}) . "\"></li>\n";
     $i++;
   }
-  print "<br><br>\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
-  print "<input type=\"hidden\" name=\"back\" value=\"${back_link}\">\n";
-  print "<input type=\"button\" value=\"実行\" name=\"b_submit\" onClick=\"do_rename(${i})\">\n";
-  print "<input type=\"button\" value=\"キャンセル\" name=\"b_cancel\" onClick=\"jump('${back_link}')\">";
-  print "</form>\n";
+
+  my $mes = <<EOF;
+</ol><br>
+<input type="hidden" name="dir" value="${encoded_dir}">
+<input type="hidden" name="back" value="${back_link}">
+<input type="button" value="実行" name="b_submit" class="submit_button" onClick="do_rename(${i})">
+<input type="button" value="キャンセル" name="b_cancel" onClick="jump('${back_link}')">
+</form>
+EOF
+  print encode('utf-8', $mes);
 
   HTML_Elem->tail();
 }
@@ -302,13 +317,15 @@ eval {
   print <<EOF;
 </select><br>
 パス [<span id="dest_path"></span>]<br>
-<select name="f_dest" size="10" onChange="refreshMoveDestination(document.f1.dest_dir.value, document.f1.f_dest.value)">
-</select></fieldset>
+<select name="f_dest" size="10" class="fitWidth" onChange="refreshMoveDestination(document.f1.dest_dir.value, document.f1.f_dest.value)">
+</select>
+中身<br>
+<textarea rows="6" name="f_contents" class="fitWidth" style="resize: vertical" readonly></textarea>
+</fieldset>
 <br>
 <input type="hidden" name="mode" value="do_move">
 <input type="hidden" name="dir" value="${encoded_dir}">
 <input type="hidden" name="dest" value="">
-
 <br>
 <input type="submit" name="b_submit" value="実行">
 <input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
@@ -370,19 +387,27 @@ sub form_delete() {
     return;
   }
 
-  print "<h1>ファイルの削除</h1>\n";
-  print "<p>選択: ", @files.length, "ファイル</p>\n";
+  my $file_count = @files.length;
 
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act('削除');\">\n";
+  my $mes = <<EOF;
+<h1>削除</h1>
+<p>選択: ${file_count} ファイル/フォルダ</p>
+<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST" onSubmit="return confirm_act('削除');">
+EOF
+  print encode('utf-8', $mes);
+
   &printFilesAndHiddenForm();
-  print "<br>\n";
-  print "<input type=\"hidden\" name=\"mode\" value=\"do_delete\">\n";
-  print "<input type=\"hidden\" name=\"dir\" value=\"${encoded_dir}\">\n";
 
-  print "<br>\n";
-  print "<input type=\"submit\" name=\"b_submit\" value=\"実行\">\n";
-  print "<input type=\"button\" name=\"b_cancel\" value=\"キャンセル\" onClick=\"jump('${back_link}')\">";
-  print "</form>\n";
+  my $mes = <<EOF;
+<br>
+<input type="hidden" name="mode" value="do_delete">
+<input type="hidden" name="dir" value="${encoded_dir}">
+<br>
+<input type="submit" name="b_submit" value="実行">
+<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
+</form>
+EOF
+  print encode('utf-8', $mes);
 
   HTML_Elem->tail();
 }
