@@ -44,6 +44,7 @@ my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8
 eval {
   my @jslist = (
       "%htdocs_root%/ccchart-min.js",
+      "%htdocs_root%/fontawesome-all.min.js",
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
@@ -95,6 +96,7 @@ my $html = <<EOF;
       return stroke_color[index];
     }
 </script>
+<div id="map_warningText"></div>
 <div id="top_field">
 <span style="float: left">
 <b>${file_name}</b><br>
@@ -117,27 +119,29 @@ my $html = <<EOF;
 </div>
 <div id="info_field">
 <form name="f1" action="#" method="GET">
+<div style="margin: 3px 0 3px 0.5em;">
 距離: <span id="distance_text">-- km</span>&nbsp;&nbsp;
 時間: <span id="duration_text">---- 秒</span>&nbsp;&nbsp;
 位置情報: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
-<ul>
+</div>
+<div style="margin-left: 2em;">
 開始位置<br>
-<div style="position: relative; height: 2em;">
+<div style="position: relative; height: 2em; margin-bottom: 0.5em;">
 <canvas id="range_start_background"></canvas>
 <input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
 </div>
-<li>時刻: <span id="start_datetime"></span></li>
-<li>住所: <span id="start_address"></span></li>
-</ul>
-<ul>
+<i class="far fa-clock"></i> <span id="start_datetime"></span><br>
+<i class="far fa-map"></i> <span id="start_address"></span><br>
+</div><br>
+<div style="margin-left: 2em;">
 終了位置<br>
-<div style="position: relative; height: 2em;">
+<div style="position: relative; height: 2em; margin-bottom: 0.5em;">
 <canvas id="range_end_background"></canvas>
 <input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
 </div>
-<li>時刻: <span id="end_datetime"></span></li>
-<li>住所: <span id="end_address"></span></li>
-</ul>
+<i class="far fa-clock"></i> <span id="end_datetime"></span><br>
+<i class="far fa-map"></i> <span id="end_address"></span><br>
+</div>
 <datalist id="tickmarks">
   <option value="0" label="0%">
   <option value="500" label="50%">

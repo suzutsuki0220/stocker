@@ -79,6 +79,14 @@ stockerで扱うディレクトリとcacheディレクトリ、trashディレク
 # chcon -R system_u:object_r:httpd_sys_rw_content_t:s0 /var/www/stocker/trash
 ```
 
+# Backend
+
+動画変換用のバックエンドを Webサーバーと同じユーザーで動作させてください
+
+```
+# sudo -u apache /var/www/media/bin/convert_worker.pl &
+```
+
 # アンインストール
 
 以下のディレクトリを削除してください
