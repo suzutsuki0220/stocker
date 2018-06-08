@@ -320,7 +320,7 @@ eval {
 <select name="f_dest" size="10" class="fitWidth" onChange="refreshMoveDestination(document.f1.dest_dir.value, document.f1.f_dest.value)">
 </select>
 中身<br>
-<textarea rows="6" name="f_contents" class="fitWidth" style="resize: vertical" readonly></textarea>
+<textarea rows="6" name="f_contents" class="fitWidth" style="resize: vertical" readonly disabled="disabled"></textarea>
 </fieldset>
 <br>
 <input type="hidden" name="mode" value="do_move">
