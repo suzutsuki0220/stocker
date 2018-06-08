@@ -27,7 +27,7 @@ function getDateFromDatetimeString(datetime) {
 
     d = new Date(dt_match[1], dt_match[2], dt_match[3], dt_match[4], dt_match[5], dt_match[6]);
 
-    return d.getTime();
+    return d.getTime();  // ミリ秒
 }
 
 function getDuration(start, end) {
@@ -60,8 +60,8 @@ function map_init() {
   var panoramaOptions = {
     position: central,
     pov: {
-      heading: 34,
-      pitch: 10
+      heading: 180,
+      pitch: -5
     },
     motionTracking: false
   };
@@ -204,6 +204,7 @@ function reloadMap(start_range, end_range) {
   var skip_idx = Math.floor((end_range - start_range)/10000) + 1;
   var line_color = "";
   var last_line_color = "";
+  var beforeMarkerDatetime = 0;
 
   distance = 0;
   pre_lat = 0;
@@ -221,7 +222,11 @@ function reloadMap(start_range, end_range) {
       end_route = latlng;
       route_length++;
       if (p.behavior && p.behavior !== 0) {
-        createEventMarker(p);
+        var dt = getDateFromDatetimeString(p.datetime);
+        if (dt && dt - beforeMarkerDatetime > 3000) {
+          createEventMarker(p);
+          beforeMarkerDatetime = dt;
+        }
       }
 
       line_color = judgePolyLineColor(p);
@@ -241,9 +246,15 @@ function reloadMap(start_range, end_range) {
   }
 
   if (route_length === 0) {
-    alert('有効な位置情報がありません');
+    if (start_range !== end_range) {
+      alert('有効な位置情報がありません');
+      showMapWarning('有効な位置情報がありません');
+    } else {
+      showMapWarning('開始位置-終了位置の指定が不適切なため、走行データを表示できません');
+    }
     return false;
   }
+  document.getElementById('map_warningText').style.display = "none";
 
   paintTimeRangeBgSpeed(document.getElementById('range_start_background'));
   paintTimeRangeBgSpeed(document.getElementById('range_end_background'));
@@ -507,4 +518,9 @@ function paintTimeRangeBgSpeed(canvas) {
 function clearTimeRangeBgSpeed(canvas) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function showMapWarning(message) {
+    document.getElementById('map_warningText').innerHTML = "<i class=\"fas fa-exclamation-triangle\"></i> " + message;
+    document.getElementById('map_warningText').style.display = "inline";
 }

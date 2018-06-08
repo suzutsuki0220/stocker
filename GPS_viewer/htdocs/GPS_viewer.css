@@ -6,6 +6,7 @@ body {
     margin: 0;
     line-height: 160%;
     font-family: arial,sans-serif;
+    font-size: 12pt;
     color: #e0e0e0;
     background-color: #333333;
 }
@@ -16,17 +17,40 @@ a.white {
 
 input.time_range {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     width: 97%;
 }
 
 #range_start_background, #range_end_background {
     width: 97%;
-    height: 1em;
+    height: 1.5em;
+    position: absolute;
+    background-color: #000000;
+}
+
+#mapLoading {
+    text-align: center;
+    font-size: 0.75em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: none;
+    color: #ffffff;
+    -ms-transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+}
+
+#mapLoadingBackground {
+    z-index: 10;
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    opacity: 0.75;
     background-color: #000000;
 }
 
@@ -42,8 +66,25 @@ input.time_range {
     height: 55%;
 }
 
+#map_warningText {
+    top: 8%;
+    left: 50%;
+    display: none;
+    opacity: 0.9;
+    position: absolute;
+    padding-left: 1em;
+    padding-right: 1em;
+    color: #ff0000;
+    background-color: #ffffff;
+    z-index: 9;
+    -ms-transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+}
+
 #top_field {
     height: 5%;
+    width: 100%;
     vertical-align: middle;
 }
 
@@ -60,10 +101,11 @@ input.time_range {
 }
 
 #info_field {
+    font-size: 9pt;
+    line-height: 1.5em;
     float: right;
     width: 55%;
     height: 40%;
-//    text-align: center;
 }
 
 @media screen and (max-width: 720px) {
@@ -80,4 +122,6 @@ input.time_range {
     display: none;
     width: 50%;
     height: 100%;
+    position: relative;
+    background-color: #455054;
 }

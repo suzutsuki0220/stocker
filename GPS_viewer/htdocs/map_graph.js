@@ -58,7 +58,7 @@ var speed_graph_property = {
     "width": 1000,
     "height": 280,
     "minY": 0,
-    //"maxY": 200,
+    "maxY": 120,
     "colorSet": ["#1056E0","#C328FF","#FF34C0"],
   },
   "data": [
