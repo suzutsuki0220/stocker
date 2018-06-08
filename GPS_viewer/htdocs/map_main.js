@@ -127,6 +127,30 @@ function getMapScale() {
   }
 }
 
+function setPanoramaPosition(gm_latlng) {
+  var get_callback = function(panoramaData, status) {
+    switch (status) {
+    case google.maps.StreetViewStatus.OK:
+        panorama.setPosition(panoramaData.location.latLng);
+        break;
+    case google.maps.StreetViewStatus.UNKNOWN_ERROR:
+        alert("StreetViewのデータ取得に失敗しました");
+        break;
+    case google.maps.StreetViewStatus.ZERO_RESULTS:
+        showMapWarning("道路以外の場所からルートが始まっている可能性があります");
+        break;
+    }
+  };
+
+  var svs = new google.maps.StreetViewService;
+  svs.getPanorama({
+    location: gm_latlng,
+    preference: google.maps.StreetViewPreference.NEAREST,
+    radius: 100,  // メートル
+    source: google.maps.StreetViewSource.OUTDOOR
+  }, get_callback);
+}
+
 function map_clear() {
   while ((polyline = poly.pop()) !== undefined) {
     polyline.setMap(null);
@@ -275,7 +299,7 @@ function reloadMap(start_range, end_range) {
   var delayReloadFunc = function() {
     geocoder.geocode({'location': start_route}, putStartGeoCode);
     geocoder.geocode({'location': end_route}, putEndGeoCode);
-    panorama.setPosition(start_route);  // street viewは開始位置にする
+    setPanoramaPosition(start_route);  // street viewは開始位置にする
     lastDelayReloadTimerID = NaN;
   }
   if (isNaN(lastDelayReloadTimerID) === false) {
