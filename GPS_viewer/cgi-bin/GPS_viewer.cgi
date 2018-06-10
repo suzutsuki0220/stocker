@@ -49,6 +49,7 @@ eval {
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
       "%htdocs_root%/map_graph.js",
+      "%htdocs_root%/map_graph_behavior.js",
       "%htdocs_root%/map_graph_XYacceleration.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
@@ -111,7 +112,7 @@ my $html = <<EOF;
   <canvas id="graph_accelXY"></canvas>
   <canvas id="graph_accelZ"></canvas>
   <canvas id="graph_gyro"></canvas>
-  <canvas id="graph_event"></canvas>
+  <canvas id="graph_behavior"></canvas>
   <canvas id="graph_altitude"></canvas>
   <canvas id="graph_speed"></canvas>
 </div>

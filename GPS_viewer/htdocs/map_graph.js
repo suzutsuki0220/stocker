@@ -176,6 +176,8 @@ function plotAcceleration(positions) {
       }
     };
 
+    var graph_behavior = new graphBehavior();
+
     var range_start = parseInt(document.getElementsByName('range_start')[0].value);
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
     var start = Math.floor(positions.length * range_start / 1000);
@@ -194,6 +196,7 @@ function plotAcceleration(positions) {
         gyro_graph_property["data"][1][data_index] = p.gyro_x;
         gyro_graph_property["data"][2][data_index] = p.gyro_y;
         gyro_graph_property["data"][3][data_index] = p.gyro_z;
+        graph_behavior.push(p.event);
         pushSpeedData(data_index, p);
         pushAltitudeData(data_index, p);
         pushXYaccelerationData(data_index, p);
