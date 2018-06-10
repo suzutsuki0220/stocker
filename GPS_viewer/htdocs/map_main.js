@@ -248,7 +248,7 @@ function reloadMap(start_range, end_range) {
       if (p.behavior && p.behavior !== 0) {
         var dt = getDateFromDatetimeString(p.datetime);
         if (dt && dt - beforeMarkerDatetime > 3000) {
-          createEventMarker(p);
+          createEventMarker(positions, i);
           beforeMarkerDatetime = dt;
         }
       }
@@ -306,7 +306,7 @@ function reloadMap(start_range, end_range) {
     clearTimeout(lastDelayReloadTimerID);
     lastDelayReloadTimerID = NaN;
   }
-  lastDelayReloadTimerID = setTimeout(delayReloadFunc, 2000);
+  lastDelayReloadTimerID = setTimeout(delayReloadFunc, 3000);
   document.getElementById("start_address").innerHTML = "取得中";
   document.getElementById("end_address").innerHTML = "取得中";
 
@@ -347,8 +347,9 @@ function centeringMap() {
   map.setZoom(parseInt(getMapScale()));
 }
 
-function createEventMarker(p) {
+function createEventMarker(positions, index) {
   var title, label;
+  var p = positions[index];
   switch (p.behavior) {
     case 1:
       title = "Braking";
@@ -375,14 +376,23 @@ function createEventMarker(p) {
     label: label,
     animation: google.maps.Animation.DROP,
   };
-
   var marker = new google.maps.Marker(markerOptions);
-  addMarkerInfo(marker, makeEventInfoContents(p));
+
+  var addMarkerInfo = function(marker, positions, index) {
+    var showInfoWindow = function(event) {
+      var windowOptions = new Object;
+      windowOptions.content = makeEventInfoContents(positions, index);
+      new google.maps.InfoWindow(windowOptions).open(marker.getMap(), marker);
+    };
+    google.maps.event.addListener(marker, 'click', showInfoWindow);
+  };
+  addMarkerInfo(marker, positions, index);
   eventMarkers.push(marker);
 }
 
-function makeEventInfoContents(p) {
+function makeEventInfoContents(positions, index) {
   var title = "--";
+  var p = positions[index];
   switch (p.behavior) {
     case 1:
       title = "Braking";
@@ -406,16 +416,6 @@ function makeEventInfoContents(p) {
   contents += '</div>';
 
   return contents;
-}
-
-function addMarkerInfo(marker, contentData) {
-  var showInfoWindow = function(event) {
-    var windowOptions = {
-      content: contentData,
-    };
-    new google.maps.InfoWindow(windowOptions).open(marker.getMap(), marker);
-  };
-  google.maps.event.addListener(marker, 'click', showInfoWindow);
 }
 
 function clearEventMarker() {
@@ -458,6 +458,28 @@ function putGeoCode(elem, results, status) {
 }
 
 function getPositionData(get_file_cgi, base_name, url_path, name) {
+    var getPositionDataResult = function(httpRequest, name) {
+        try {
+            if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
+                //document.getElementById('sStatus').innerHTML = "読み込み中...";
+            } else if (httpRequest.readyState == 4) {
+                if (httpRequest.status == 200) {
+                    if (nmea_pattern.test(name.toLowerCase()) || accel_csv_pattern.test(name.toLowerCase())) {
+                        var text = httpRequest.responseText;
+                        map_route(text, name);
+                    } else {
+                        var data = httpRequest.responseXML;
+                        map_route(data, name);
+                    }
+                } else {
+                    alert("ERROR: " + httpRequest.status);
+                }
+            }
+        } catch(e) {
+            alert("get position ERROR: " + e.description);
+        }
+    };
+
     var httpRequest = ajax_init();
     if (!httpRequest) {
         alert('情報取得プロセスの起動に失敗しました');
@@ -465,28 +487,6 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
     }
     ajax_set_instance(httpRequest, function() { getPositionDataResult(httpRequest, name); });
     ajax_post(httpRequest, get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
-}
-
-function getPositionDataResult(httpRequest, name) {
-    try {
-        if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-            //document.getElementById('sStatus').innerHTML = "読み込み中...";
-        } else if (httpRequest.readyState == 4) {
-            if (httpRequest.status == 200) {
-                if (nmea_pattern.test(name.toLowerCase()) || accel_csv_pattern.test(name.toLowerCase())) {
-                    var text = httpRequest.responseText;
-                    map_route(text, name);
-                } else {
-                    var data = httpRequest.responseXML;
-                    map_route(data, name);
-                }
-            } else {
-                alert("ERROR: " + httpRequest.status);
-            }
-        }
-    } catch(e) {
-        alert("get position ERROR: " + e.description);
-    }
 }
 
 function rangeChanged(elem) {

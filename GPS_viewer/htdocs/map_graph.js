@@ -59,7 +59,7 @@ var speed_graph_property = {
     "height": 280,
     "minY": 0,
     "maxY": 120,
-    "colorSet": ["#1056E0","#C328FF","#FF34C0"],
+    "colorSet": ["#2066F0","#C328FF","#FF34C0"],
   },
   "data": [
     ["時間"], ["speed"]
@@ -83,21 +83,21 @@ var accelerationZ_graph_property = {
   ]
 };
 
-var event_graph_property = {
+var altitude_graph_property = {
   "config": {
     "type": "line",
-    "title": "Behavior",
+    "title": "高度",
     "titleFont": "400 20px 'Arial'",
     "titleY": 30,
     "axisXLen": 8,
     "width": 1000,
     "height": 280,
     "minY": 0,
-    "maxY": 8,
-    "colorSet": ["#3CB000", "#0036C0","#C328FF","#FF34C0"],
+    "maxY": 100,
+    "colorSet": ["#93B028","#1056E0","#FF34C0"],
   },
   "data": [
-    ["時間"], ["event"]
+    ["時間"], ["m"]
   ]
 };
 
@@ -133,6 +133,49 @@ function hideGraph() {
 }
 
 function plotAcceleration(positions) {
+    var checkCentralZ = function(positions) {
+      var ret = false;
+      var total = 0;
+      var ave;
+
+      for (var i=0; i<positions.length; i++) {
+        total += positions[i].est_z;
+      }
+      ave = total / positions.length;
+      if (ave > -0.5 && ave < 0.5) {
+        ret = true;
+      }
+
+      return ret;
+    };
+
+    var pushSpeedData = function(data_index, p) {
+      if (!isNaN(p.speed)) {
+        speed_graph_property["data"][1][data_index] = p.speed;
+      } else {
+        if (data_index === 0) {
+          speed_graph_property["data"][1][data_index] = 0;
+        } else {
+          speed_graph_property["data"][1][data_index] = speed_graph_property["data"][1][data_index - 1];
+        }
+      }
+    };
+
+    var pushAltitudeData = function(data_index, p) {
+      if (!isNaN(p.altitude)) {
+        altitude_graph_property["data"][1][data_index] = p.altitude;
+        if (p.altitude > altitude_graph_property["config"]["maxY"]) {
+          altitude_graph_property["config"]["maxY"] = p.altitude;
+        }
+      } else {
+        if (data_index === 0) {
+          altitude_graph_property["data"][1][data_index] = 0;
+        } else {
+          altitude_graph_property["data"][1][data_index] = altitude_graph_property["data"][1][data_index - 1];
+        }
+      }
+    };
+
     var range_start = parseInt(document.getElementsByName('range_start')[0].value);
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
     var start = Math.floor(positions.length * range_start / 1000);
@@ -151,8 +194,8 @@ function plotAcceleration(positions) {
         gyro_graph_property["data"][1][data_index] = p.gyro_x;
         gyro_graph_property["data"][2][data_index] = p.gyro_y;
         gyro_graph_property["data"][3][data_index] = p.gyro_z;
-        speed_graph_property["data"][1][data_index] = p.speed;
-        event_graph_property["data"][1][data_index] = p.behavior;
+        pushSpeedData(data_index, p);
+        pushAltitudeData(data_index, p);
         pushXYaccelerationData(data_index, p);
         data_index++;
     }
@@ -160,7 +203,7 @@ function plotAcceleration(positions) {
     ccchart.init('graph_accelXY', accelerationXY_graph_property);
     ccchart.init('graph_accelZ', accelerationZ_graph_property);
     ccchart.init('graph_gyro', gyro_graph_property);
-    ccchart.init('graph_event', event_graph_property);
+    ccchart.init('graph_altitude', altitude_graph_property);
     ccchart.init('graph_speed', speed_graph_property);
     plotXYacceleration();
 }
@@ -173,23 +216,7 @@ function clearAccelerationGraphData() {
     gyro_graph_property["data"][2].splice(1, gyro_graph_property["data"][2].length - 1);
     gyro_graph_property["data"][3].splice(1, gyro_graph_property["data"][3].length - 1);
     speed_graph_property["data"][1].splice(1, speed_graph_property["data"][1].length - 1);
-    event_graph_property["data"][1].splice(1, event_graph_property["data"][1].length - 1);
+    altitude_graph_property["config"]["maxY"] = 100;
+    altitude_graph_property["data"][1].splice(1, altitude_graph_property["data"][1].length - 1);
     clearXYaccelerationData();
-}
-
-function checkCentralZ(positions) {
-    var ret = false;
-    var total = 0;
-    var ave;
-
-    for (var i=0; i<positions.length; i++) {
-        total += positions[i].est_z;
-    }
-
-    ave = total / positions.length;
-    if (ave > -0.5 && ave < 0.5) {
-        ret = true;
-    }
-
-    return ret;
 }

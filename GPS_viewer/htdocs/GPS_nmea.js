@@ -10,6 +10,7 @@ var _speed = NaN;
 var _accelX = NaN;
 var _accelY = NaN;
 var _accelZ = NaN;
+var _altitude = NaN;
 var _h_accuracy = NaN;
 var _v_accuracy = NaN;
 
@@ -53,6 +54,8 @@ function parseNmeaLine(nmea) {
         getVTG(nmea);
     } else if (re_gsa.test(nmea)) {
         getGSA(nmea);
+    } else if (re_gga.test(nmea)) {
+        getGGA(nmea);
     } else if (re_gsensor.test(nmea)) {
         getGSENSOR(nmea);
     }
@@ -110,6 +113,16 @@ function getGSA(sentence)
     }
 }
 
+function getGGA(sentence)
+{
+    var col = sentence.split(",");
+    if (col && col.length > 9) {
+        if (col[10] === 'M') {
+          _altitude = parseFloat(col[9]);
+        }
+    }
+}
+
 function getGSENSOR(sentence)
 {
     var col = sentence.split(",");
@@ -123,6 +136,10 @@ function getGSENSOR(sentence)
 function addHoldData(obj) {
     if (isNaN(_speed) === false) {
         obj.speed = _speed;
+    }
+
+    if (isNaN(_altitude) === false) {
+        obj.altitude = _altitude;
     }
 
     if (isNaN(_accelX) === false) {
@@ -150,6 +167,7 @@ function addHoldData(obj) {
 
 function clearHoldData() {
     _speed = NaN;
+    _altitude = NaN;
     _accelX = NaN;
     _accelY = NaN;
     _accelZ = NaN;

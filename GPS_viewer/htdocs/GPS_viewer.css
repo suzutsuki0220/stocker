@@ -112,9 +112,19 @@ input.time_range {
     width: 50%;
 }
 
-#graph_accelXY, #graph_accelZ, #graph_gyro, #graph_speed, #graph_event {
+#graph_accelXY, #graph_accelZ, #graph_gyro, #graph_speed {
     width: 100%;
     height: 20%;
+}
+
+#graph_event {
+    width: 100%;
+    height:  5%;
+}
+
+#graph_altitude {
+    width: 100%;
+    height: 15%;
 }
 
 #gforce_accelXY {

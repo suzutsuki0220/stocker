@@ -112,6 +112,7 @@ my $html = <<EOF;
   <canvas id="graph_accelZ"></canvas>
   <canvas id="graph_gyro"></canvas>
   <canvas id="graph_event"></canvas>
+  <canvas id="graph_altitude"></canvas>
   <canvas id="graph_speed"></canvas>
 </div>
 <div id="bottom_field">

@@ -50,6 +50,7 @@ function parseAccelCsvLine(line) {
             } else if (col[i] === "GPS" || col[i] === "Location") {
                 position.latitude  = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
                 position.longitude = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
+                position.altitude  = col[i+2] ? parseFloat(col[i+3].trim()) : 0;
                 i += 2;
             } else if (col[i] === "m/s" || col[i] === "Speed") {
                 position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
