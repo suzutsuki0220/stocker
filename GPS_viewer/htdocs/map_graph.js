@@ -52,17 +52,18 @@ var gyro_graph_property = {
 var speed_graph_property = {
   "config": {
     "type": "line",
-    "title": "Speed",
+    "title": "速度",
     "titleFont": "400 20px 'Arial'",
     "titleY": 30,
+    "axisXLen": 8,
     "width": 1000,
-    "height": 280,
+    "height": 220,
     "minY": 0,
     "maxY": 120,
     "colorSet": ["#2066F0","#C328FF","#FF34C0"],
   },
   "data": [
-    ["時間"], ["speed"]
+    ["時間"], ["km/h"]
   ]
 };
 
