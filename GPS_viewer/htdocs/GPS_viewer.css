@@ -115,17 +115,26 @@ input.time_range {
 #graph_accelXY, #graph_accelZ, #graph_gyro, #graph_speed {
     width: 100%;
     height: 20%;
+    margin: 0;
+    padding: 0;
+    display: block;
 }
 
 #graph_behavior {
     width: 100%;
     height:  5%;
+    margin: 0;
+    padding: 0;
+    display: block;
     background-color: #455054;
 }
 
 #graph_altitude {
     width: 100%;
     height: 15%;
+    margin: 0;
+    padding: 0;
+    display: block;
 }
 
 #gforce_accelXY {

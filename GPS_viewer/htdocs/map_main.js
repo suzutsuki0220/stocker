@@ -408,9 +408,11 @@ function makeEventInfoContents(positions, index) {
       break;
   }
 
+  var level = p.level ? " (level: " + p.level + ")" : "--";
+
   var contents;
   contents  = '<div style="color: #202020">';
-  contents += title + "<br>";
+  contents += title + level + "<br>";
   contents += "発生時刻: " + p.datetime + "<br>";
   contents += "速度: " + String(Math.floor(p.speed * 100) / 100) + " km/h";
   contents += '</div>';

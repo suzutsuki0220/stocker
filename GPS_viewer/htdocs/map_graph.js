@@ -91,7 +91,7 @@ var altitude_graph_property = {
     "titleY": 30,
     "axisXLen": 8,
     "width": 1000,
-    "height": 280,
+    "height": 220,
     "minY": 0,
     "maxY": 100,
     "colorSet": ["#93B028","#1056E0","#FF34C0"],
@@ -167,6 +167,9 @@ function plotAcceleration(positions) {
         if (p.altitude > altitude_graph_property["config"]["maxY"]) {
           altitude_graph_property["config"]["maxY"] = p.altitude;
         }
+        if (p.altitude < altitude_graph_property["config"]["minY"]) {
+          altitude_graph_property["config"]["minY"] = p.altitude;
+        }
       } else {
         if (data_index === 0) {
           altitude_graph_property["data"][1][data_index] = 0;
@@ -196,7 +199,7 @@ function plotAcceleration(positions) {
         gyro_graph_property["data"][1][data_index] = p.gyro_x;
         gyro_graph_property["data"][2][data_index] = p.gyro_y;
         gyro_graph_property["data"][3][data_index] = p.gyro_z;
-        graph_behavior.push(p.event);
+        graph_behavior.push(p);
         pushSpeedData(data_index, p);
         pushAltitudeData(data_index, p);
         pushXYaccelerationData(data_index, p);
@@ -208,6 +211,7 @@ function plotAcceleration(positions) {
     ccchart.init('graph_gyro', gyro_graph_property);
     ccchart.init('graph_altitude', altitude_graph_property);
     ccchart.init('graph_speed', speed_graph_property);
+    graph_behavior.plot();
     plotXYacceleration();
 }
 
