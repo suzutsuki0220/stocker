@@ -105,8 +105,12 @@ graphBehavior.prototype.plot = function() {
         var level = 0;
 
         for (var i=start; i<end; i++) {
-            if (graph_data[i].scene === "stop") {
+            if (graph_data[i].scene === "slight") {
                 level = 99;  // else level
+                break;
+            } else if (graph_data[i].scene === "stop") {
+                level = 1;
+                break;
             }
         }
 
