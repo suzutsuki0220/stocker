@@ -19,8 +19,12 @@ const datetime_pattern = /(\d{4})[-\/](\d\d)[-\/](\d\d) (\d\d):(\d\d):([\d\.]+)/
 
 function getDateFromDatetimeString(datetime) {
     var d;
-    var dt_match = datetime.match(datetime_pattern);
 
+    if (!datetime) {
+        return NaN;
+    }
+
+    var dt_match = datetime.match(datetime_pattern);
     if (dt_match === null) {
         return NaN;
     }
@@ -195,24 +199,9 @@ function get_latlng(lat, lng) {
   return new google.maps.LatLng(lat, lng);
 }
 
-function map_route(data, name) {
+// 経路描画
+function map_route() {
   resetLatLngMinMax();
-  try {
-    if (nmea_pattern.test(name.toLowerCase())) {
-      // nmeaデータ
-      positions = getPositionEmea(data);
-    } else if (accel_csv_pattern.test(name.toLowerCase())) {
-      positions = getPositionAccelCsv(data);
-    } else {
-      // KML and GPX
-      positions = getPositionXml(data);
-    }
-  } catch(e) {
-    alert("map_route error: " + e.message);
-    return;
-  }
-
-  // 経路描画
   if (reloadMap(0, positions.length) === true) {
     centeringMap();
   }
@@ -466,13 +455,19 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
                 //document.getElementById('sStatus').innerHTML = "読み込み中...";
             } else if (httpRequest.readyState == 4) {
                 if (httpRequest.status == 200) {
-                    if (nmea_pattern.test(name.toLowerCase()) || accel_csv_pattern.test(name.toLowerCase())) {
+                    if (nmea_pattern.test(name.toLowerCase())) {
+                        // nmeaデータ
                         var text = httpRequest.responseText;
-                        map_route(text, name);
+                        positions = getPositionEmea(text);
+                    } else if (accel_csv_pattern.test(name.toLowerCase())) {
+                        var text = httpRequest.responseText;
+                        positions = getPositionAccelCsv(text);
                     } else {
-                        var data = httpRequest.responseXML;
-                        map_route(data, name);
+                        // KML and GPX
+                        var xml = httpRequest.responseXML;
+                        positions = getPositionXml(xml);
                     }
+                    map_route();
                 } else {
                     alert("ERROR: " + httpRequest.status);
                 }

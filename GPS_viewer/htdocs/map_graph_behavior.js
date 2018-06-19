@@ -81,19 +81,21 @@ graphBehavior.prototype.plot = function() {
         var error_count = 0;
         var level = 0;
 
-        for (var i=start; i<end; i++) {
-            if (graph_data[i].scene === "error") {
-                error_count++;
+        if (start !== end) {
+            for (var i=start; i<end; i++) {
+                if (graph_data[i].scene === "error") {
+                    error_count++;
+                }
             }
-        }
 
-        var error_rate = error_count / (end - start);
-        if (error_rate > 0.8) {
-            level = 3;
-        } else if (error_rate > 0.4) {
-            level = 2;
-        } else if (error_rate !== 0) {
-            level = 1;
+            var error_rate = error_count / (end - start);
+            if (error_rate > 0.8) {
+                level = 3;
+            } else if (error_rate > 0.4) {
+                level = 2;
+            } else if (error_count !== 0) {
+                level = 1;
+            }
         }
 
         return level;
