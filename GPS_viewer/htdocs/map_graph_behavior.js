@@ -63,11 +63,17 @@ graphBehavior.prototype.plot = function() {
         var max_level = 0;
 
         for (var i=start; i<end; i++) {
-            if (graph_data[i].behavior === behavior) {
-                if (graph_data[i].level > max_level) {
-                    max_level = graph_data[i].level;
-                    if (max_level === 3) {
-                        break;
+            if ((graph_data[i].behavior & behavior) === behavior) {
+                if (isNaN(graph_data[i].level)) {
+                    if (max_level === 0) {
+                        max_level = 1;
+                    }
+                } else {
+                    if (graph_data[i].level > max_level) {
+                        max_level = graph_data[i].level;
+                        if (max_level === 3) {
+                            break;
+                        }
                     }
                 }
             }
