@@ -380,24 +380,23 @@ function createEventMarker(positions, index) {
 }
 
 function makeEventInfoContents(positions, index) {
-  var title = "--";
+  var title = "";
   var p = positions[index];
-  switch (p.behavior) {
-    case 1:
-      title = "Braking";
-      break;
-    case 2:
-      title = "Throttle";
-      break;
-    case 4:
-      title = "Cornering(left)";
-      break;
-    case 8:
-      title = "Cornering(right)";
-      break;
+  const titles = ["Braking", "Throttle", "Cornering(left)", "Cornering(right)"];
+  for (var i=0; i<4; i++) {
+    const case_bit = 1 << i;
+    if ((p.behavior & case_bit) === case_bit) {
+      if (title.length !== 0) {
+        title += " / ";
+      }
+      title += titles[i];
+    }
+  }
+  if (title.length === 0) {
+    title = "--";
   }
 
-  var level = p.level ? " (level: " + p.level + ")" : "--";
+  var level = p.level ? " (level: " + p.level + ")" : "";
 
   var contents;
   contents  = '<div style="color: #202020">';
