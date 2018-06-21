@@ -128,10 +128,14 @@ graphBehavior.prototype.plot = function() {
     var canvas = document.getElementById('graph_behavior');
     var ctx = canvas.getContext('2d');
 
-    const step = 2;
     const graph_Y_step = canvas.height / this.behavior_types;
     const graph_width  = canvas.width - this.graph_px_offset_start - this.graph_px_offset_end;
     const graph_height = Math.floor(graph_Y_step * 0.75);
+
+    var step = Math.floor(graph_width / this.graph_data.length);
+    if (step < 2) {  // minimum
+        step = 2;
+    }
 
     ctx.beginPath();
     ctx.lineWidth = 1;
@@ -139,16 +143,18 @@ graphBehavior.prototype.plot = function() {
 
     for (var i=0; i<graph_width; i+=step) {
         const x = this.graph_px_offset_start + i;
+        const start_pos = i / graph_width;
+        const end_pos   = (i+step) / graph_width;
 
         for (var j=0; j<this.behavior_types; j++) {
             var level;
             if (j === 0) {
-                level = hasErrorInRange(i/graph_width, (i+step)/graph_width, this.graph_data);
+                level = hasErrorInRange(start_pos, end_pos, this.graph_data);
             } else if (j === 1) {
-                level = hasStopInRange(i/graph_width, (i+step)/graph_width, this.graph_data);
+                level = hasStopInRange(start_pos, end_pos, this.graph_data);
             } else {
                 var behavior = Math.pow(2, j - 2); // j-2: error, stopを除く
-                level = getLevelInRange(i/graph_width, (i+step)/graph_width, this.graph_data, behavior);
+                level = getLevelInRange(start_pos, end_pos, this.graph_data, behavior);
             }
             if (level !== 0) {
                 const y = Math.floor(graph_Y_step * j);
