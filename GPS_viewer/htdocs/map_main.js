@@ -29,7 +29,10 @@ function getDateFromDatetimeString(datetime) {
         return NaN;
     }
 
-    d = new Date(dt_match[1], dt_match[2], dt_match[3], dt_match[4], dt_match[5], dt_match[6]);
+    const sec = Math.floor(dt_match[6]);
+    const milisec = Math.floor((dt_match[6] * 1000) - (sec * 1000));
+
+    d = new Date(dt_match[1], dt_match[2] - 1, dt_match[3], dt_match[4], dt_match[5], sec, milisec);
 
     return d.getTime();  // ミリ秒
 }
