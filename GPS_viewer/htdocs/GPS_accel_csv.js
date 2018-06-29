@@ -28,6 +28,10 @@ function parseAccelCsvLine(line) {
         var position = new Object();
 
         position.datetime = col[0];
+        if (datetime_pattern.test(position.datetime) === false) {
+            return null;
+        }
+
         for (var i=1; i<col.length; i++) {
             if (col[i] === "A") {
                 position.accel_x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
