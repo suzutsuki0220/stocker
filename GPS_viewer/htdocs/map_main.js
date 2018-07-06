@@ -3,7 +3,6 @@ var geocoder;
 var panorama;
 var startMarker = null;
 var endMarker = null;
-var eventMarkers = new Array();
 var poly = new Array();
 var positions;
 
@@ -35,6 +34,16 @@ function getDateFromDatetimeString(datetime) {
     d = new Date(dt_match[1], dt_match[2] - 1, dt_match[3], dt_match[4], dt_match[5], sec, milisec);
 
     return d.getTime();  // ミリ秒
+}
+
+function makeStreetviewImgUrl(lat, lng, heading) {
+    const url_base = "https://maps.googleapis.com/maps/api/streetview";
+    var parameters = "size=96x96&fov=90&heading=" + heading + "&pitch=10&location=" + lat + "," + lng;
+    if (config.apiKey.googlemap) {
+        parameters += "&key=" + config.apiKey.googlemap;
+    }
+
+    return url_base + "?" + parameters;
 }
 
 function getDuration(start, end) {
@@ -337,88 +346,6 @@ function plotMapPolyLine(route, color) {
 function centeringMap() {
   map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
   map.setZoom(parseInt(getMapScale()));
-}
-
-function createEventMarker(positions, index) {
-  var title, label;
-  var p = positions[index];
-  switch (p.behavior) {
-    case 1:
-      title = "Braking";
-      label = "B";
-      break;
-    case 2:
-      title = "Throttle";
-      label = "T";
-      break;
-    case 4:
-      title = "Cornering(left)";
-      label = "L";
-      break;
-    case 8:
-      title = "Cornering(right)";
-      label = "R";
-      break;
-  }
-
-  var markerOptions = {
-    position: new google.maps.LatLng(p.latitude, p.longitude),
-    map: map,
-    title: title,
-    label: label,
-    animation: google.maps.Animation.DROP,
-  };
-  var marker = new google.maps.Marker(markerOptions);
-
-  var addMarkerInfo = function(marker, positions, index) {
-    var showInfoWindow = function(event) {
-      var windowOptions = new Object;
-      windowOptions.content = makeEventInfoContents(positions, index);
-      new google.maps.InfoWindow(windowOptions).open(marker.getMap(), marker);
-    };
-    google.maps.event.addListener(marker, 'click', showInfoWindow);
-  };
-  addMarkerInfo(marker, positions, index);
-  eventMarkers.push(marker);
-}
-
-function makeEventInfoContents(positions, index) {
-  var title = "";
-  var p = positions[index];
-  const titles = ["Braking", "Throttle", "Cornering(left)", "Cornering(right)"];
-  for (var i=0; i<4; i++) {
-    const case_bit = 1 << i;
-    if ((p.behavior & case_bit) === case_bit) {
-      if (title.length !== 0) {
-        title += " / ";
-      }
-      title += titles[i];
-    }
-  }
-  if (title.length === 0) {
-    title = "--";
-  }
-
-  var level = p.level ? " (level: " + p.level + ")" : "";
-
-  var contents;
-  contents  = '<div style="color: #202020">';
-  contents += title + level + "<br>";
-  contents += "発生時刻: " + p.datetime + "<br>";
-  contents += "速度: " + String(Math.floor(p.speed * 100) / 100) + " km/h";
-  contents += '</div>';
-
-  return contents;
-}
-
-function clearEventMarker() {
-  while(eventMarkers.length !== 0) {
-    var poped = eventMarkers.pop();
-    if (poped) {
-      poped.setMap(null);
-      poped = null;
-    }
-  }
 }
 
 function putStartGeoCode(results, status) {

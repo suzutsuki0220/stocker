@@ -51,6 +51,7 @@ eval {
       "%htdocs_root%/map_graph.js",
       "%htdocs_root%/map_graph_behavior.js",
       "%htdocs_root%/map_graph_XYacceleration.js",
+      "%htdocs_root%/map_event_marker.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
       "%htdocs_root%/GPS_accel_csv.js",
@@ -76,6 +77,12 @@ my $html = <<EOF;
     const START_MARKER_ICON = '%htdocs_root%/car.png';
     const END_MARKER_ICON   = '%htdocs_root%/goal.png';
     const stroke_color = ["#000000", "#0000ff", "#008c10", "#afaf00", "#ff0030", "#505050"];
+
+    var config = {
+      apiKey: {
+        googlemap: '${GOOGLE_API_KEY}'
+      }
+    };
 
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
