@@ -2,52 +2,57 @@ var mapPlaybackRoute = function(m) {
     this.ins_map = m;  // GoogleMapインスタンス
     this.marker = null;
     this.started = false;
+    this.pos_index = 0;
+
+    this.info = null;
+    this.info_opened = false;
+};
+
+mapPlaybackRoute.prototype._showInfoWindow = function(map, latlng, message) {
+    if (this.info === null) {
+        this.info = new google.maps.InfoWindow();
+    }
+    this.info.setPosition(latlng);
+    this.info.setContent('<div style="color: #202020">' + message + '</div>');
+    if (this.info_opened === false) {
+        this.info.open(map);
+        this.info_opened = true;
+    }
+};
+
+mapPlaybackRoute.prototype._hideInfoWindow = function() {
+    if (this.info) {
+        this.info.close();
+        this.info = null;
+    }
+    this.info_opened = false;
 };
 
 mapPlaybackRoute.prototype.start = function(positions, index) {
-    var pos_index = index;
-    var info = null;
-    var info_opened = false;
-    var showInfoWindow = function(map, latlng, message) {
-        if (info === null) {
-            info = new google.maps.InfoWindow();
-        }
-        info.setPosition(latlng);
-        info.setContent('<div style="color: #202020">' + message + '</div>');
-        if (info_opened === false) {
-            info.open(map);
-            info_opened = true;
-        }
-    };
-    var hideInfoWindow = function() {
-        if (info) {
-            info.close();
-            info = null;
-        }
-        info_opened = false;
-    };
+    this.pos_index = index;
+    var self = this;
     var moveMarker = function(marker, map) {
-        var p = positions[pos_index];
+        var p = positions[self.pos_index];
         if (p) {
             var latlng = new google.maps.LatLng(p.latitude, p.longitude);
 
             marker.setPosition(latlng);
             map.panTo(latlng);
             if (p.scene && p.scene === "stop") {
-                showInfoWindow(map, latlng, "停止中");
+                self._showInfoWindow(map, latlng, "停止中");
             } else {
-                hideInfoWindow();
+                self._hideInfoWindow();
             }
 
-            pos_index++;
-            if (pos_index < positions.length) {
+            self.pos_index++;
+            if (self.pos_index < positions.length) {
                 setTimeout(function(){moveMarker(marker, map);}, 100);
             } else {
-                showInfoWindow(map, latlng, "走行終了");
-                this.started = false;
+                self._showInfoWindow(map, latlng, "走行終了");
+                self.started = false;
             }
         } else {
-            this.started = false;
+            self.started = false;
         }
     };
 
@@ -70,7 +75,8 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
 };
 
 mapPlaybackRoute.prototype.stop = function() {
-    pos_index = positions.length;
+    this.pos_index = positions.length;
+    this._hideInfoWindow();
 
     if (this.started === false) {
         return;
