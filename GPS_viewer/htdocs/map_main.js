@@ -1,6 +1,7 @@
 var map;
 var geocoder;
 var panorama;
+var playback;
 var startMarker = null;
 var endMarker = null;
 var poly = new Array();
@@ -72,6 +73,8 @@ function map_init() {
   };
   map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
   geocoder = new google.maps.Geocoder;
+
+  playback = new mapPlaybackRoute(map);
 
   var panoramaOptions = {
     position: central,
@@ -473,4 +476,8 @@ function clearTimeRangeBgSpeed(canvas) {
 function showMapWarning(message) {
     document.getElementById('map_warningText').innerHTML = "<i class=\"fas fa-exclamation-triangle\"></i> " + message;
     document.getElementById('map_warningText').style.display = "inline";
+}
+
+function playbackRoute() {
+    playback.start(positions, 0);
 }

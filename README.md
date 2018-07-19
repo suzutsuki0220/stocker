@@ -100,3 +100,9 @@ stockerで扱うディレクトリとcacheディレクトリ、trashディレク
 * [ccchart](https://github.com/toshirot/ccchart)
 * [Font Awesome](https://fontawesome.com/)
 * [Oxygen-icons](http://www.oxygen-icons.org)
+
+# ライセンス表示
+
+* Icons made by [Start](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
+* Icons made by [goal](https://www.flaticon.com/authors/prettycons) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
+* Icons made by [car](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
