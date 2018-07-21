@@ -108,6 +108,7 @@ my $html = <<EOF;
     }
 </script>
 <div id="map_warningText"></div>
+<div id="playback_status"></div>
 <div id="top_field">
 <span style="float: left">
 <b>${file_name}</b><br>

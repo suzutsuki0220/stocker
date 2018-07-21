@@ -31,23 +31,28 @@ mapPlaybackRoute.prototype._hideInfoWindow = function() {
 mapPlaybackRoute.prototype.start = function(positions, index) {
     this.pos_index = index;
     var self = this;
+
     var moveMarker = function(marker, map) {
         var p = positions[self.pos_index];
         if (p) {
-            var latlng = new google.maps.LatLng(p.latitude, p.longitude);
+            if (isValidLatLng(p.latitude, p.longitude) === true) {
+                var latlng = new google.maps.LatLng(p.latitude, p.longitude);
 
-            marker.setPosition(latlng);
-            map.panTo(latlng);
+                marker.setPosition(latlng);
+                map.panTo(latlng);
+            }
             if (p.scene && p.scene === "stop") {
                 self._showInfoWindow(map, latlng, "停止中");
             } else {
                 self._hideInfoWindow();
             }
+            self.outputPlaybackInfo(p);
 
             self.pos_index++;
             if (self.pos_index < positions.length) {
                 setTimeout(function(){moveMarker(marker, map);}, 100);
             } else {
+                self.hidePlaybackInfo();
                 self._showInfoWindow(map, latlng, "走行終了");
                 self.started = false;
             }
@@ -70,12 +75,14 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
     }
 
     moveMarker(this.marker, this.ins_map);
+    this.showPlaybackInfo();
     this.marker.setVisible(true);
     this.started = true;
 };
 
 mapPlaybackRoute.prototype.stop = function() {
     this.pos_index = positions.length;
+    this.hidePlaybackInfo();
     this._hideInfoWindow();
 
     if (this.started === false) {
@@ -85,4 +92,24 @@ mapPlaybackRoute.prototype.stop = function() {
     this.marker.setVisible(false);
     this.marker = null;
     this.started = false;
-}
+};
+
+mapPlaybackRoute.prototype.showPlaybackInfo = function() {
+    document.getElementById('playback_status').style.display = 'inline';
+};
+
+mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
+    document.getElementById('playback_status').style.display = 'none';
+};
+
+mapPlaybackRoute.prototype.outputPlaybackInfo = function(p) {
+    var content = "【再生中】<br>";
+    if (isValidLatLng(p.latitude, p.longitude) === true) {
+        var speed_str = new String(Math.floor(p.speed * 100) / 100);
+        content += p.datetime + "<br>";
+        content += "Speed: " + speed_str + "km/h";
+    } else {
+        content = "無効な位置情報のため更新されません";
+    }
+    document.getElementById('playback_status').innerHTML = content;
+};
