@@ -49,8 +49,17 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
             self.outputPlaybackInfo(p);
 
             self.pos_index++;
-            if (self.pos_index < positions.length) {
-                setTimeout(function(){moveMarker(marker, map);}, 100);
+            if (self.pos_index < positions.length - 1) {
+                var next_wait;
+                const p_next = positions[self.pos_index + 1];
+                const s = getDateFromDatetimeString(p.datetime);
+                const e = getDateFromDatetimeString(p_next.datetime);
+                if (isNaN(s) || isNaN(e)) {
+                  next_wait = 100;
+                } else {
+                  next_wait = e - s;
+                }
+                setTimeout(function(){moveMarker(marker, map);}, next_wait);
             } else {
                 self.hidePlaybackInfo();
                 self._showInfoWindow(map, latlng, "走行終了");
@@ -105,7 +114,10 @@ mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
 mapPlaybackRoute.prototype.outputPlaybackInfo = function(p) {
     var content = "【再生中】<br>";
     if (isValidLatLng(p.latitude, p.longitude) === true) {
-        var speed_str = new String(Math.floor(p.speed * 100) / 100);
+        var speed_str = "-----";
+        if (p.speed) {
+            speed_str = new String(Math.floor(p.speed * 100) / 100);
+        }
         content += p.datetime + "<br>";
         content += "Speed: " + speed_str + "km/h";
     } else {
