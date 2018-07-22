@@ -487,5 +487,10 @@ function showMapWarning(message) {
 }
 
 function playbackRoute() {
-    playback.start(positions, 0);
+    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
+    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
+    var start = Math.floor(positions.length * range_start / 1000);
+    var end   = Math.floor(positions.length * range_end / 1000);
+
+    playback.start(positions, start, end);
 }

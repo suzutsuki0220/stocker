@@ -28,8 +28,8 @@ mapPlaybackRoute.prototype._hideInfoWindow = function() {
     this.info_opened = false;
 };
 
-mapPlaybackRoute.prototype.start = function(positions, index) {
-    this.pos_index = index;
+mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
+    this.pos_index = start_index;
     var self = this;
 
     var moveMarker = function(marker, map) {
@@ -48,8 +48,14 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
             }
             self.outputPlaybackInfo(p);
 
+            var start_pos = self.pos_index - 100;
+            if (start_pos < 0) {
+                start_pos = 0;
+            }
+            plotAcceleration(positions, start_pos, self.pos_index);
+
             self.pos_index++;
-            if (self.pos_index < positions.length) {
+            if (self.pos_index < end_index) {
                 var next_wait;
                 const p_next = positions[self.pos_index];
                 const s = getDateFromDatetimeString(p.datetime);

@@ -108,6 +108,11 @@ function showGraph(positions) {
         return;
     }
 
+    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
+    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
+    var start = Math.floor(positions.length * range_start / 1000);
+    var end   = Math.floor(positions.length * range_end / 1000);
+
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         document.getElementById('info_field').style.display = "none";
         document.getElementById('graph_field').style.display = "inline";
@@ -116,7 +121,7 @@ function showGraph(positions) {
         document.getElementById('map_canvas').style.width = "45%";
         document.getElementById('panorama_canvas').style.width = "50%";
         showXYaccelerationCanvas();
-        plotAcceleration(positions);
+        plotAcceleration(positions, start, end);
     } else {
         hideGraph();
     }
@@ -133,7 +138,7 @@ function hideGraph() {
     hideXYaccelerationCanvas();
 }
 
-function plotAcceleration(positions) {
+function plotAcceleration(positions, start, end) {
     var checkCentralZ = function(positions) {
       var ret = false;
       var total = 0;
@@ -181,13 +186,7 @@ function plotAcceleration(positions) {
     };
 
     var graph_behavior = new graphBehavior();
-
-    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
-    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
-    var start = Math.floor(positions.length * range_start / 1000);
-    var end   = Math.floor(positions.length * range_end / 1000);
-    var skip  = Math.floor((end - start)/5000) + 1;
-
+    var skip = Math.floor((end - start)/5000) + 1;
     var fix_central_z = checkCentralZ(positions);
 
     clearAccelerationGraphData();
