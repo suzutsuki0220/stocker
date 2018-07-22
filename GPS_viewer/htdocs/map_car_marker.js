@@ -15,7 +15,11 @@ mapCarMarker.prototype.setPosition = function(latlng) {
 
 mapCarMarker.prototype.setVisible = function(sw) {
     if (sw === true) {
-        if (this.ins_car_mark === null && this.marker_position !== null) {
+        if (this.ins_car_mark === null) {
+            var latlng = this.marker_position;
+            if (this.marker_position === null) {
+                latlng = this.ins_map.getCenter();
+            }
             const markerImage = {
                 url: CAR_MARKER_ICON,
                 size: new google.maps.Size(48,48),  // マーカー画像サイズ
@@ -25,7 +29,7 @@ mapCarMarker.prototype.setVisible = function(sw) {
             const options = {
                 icon: markerImage,
                 map: this.ins_map,
-                position: this.marker_position,
+                position: latlng,
             };
             this.ins_car_mark = new google.maps.Marker(options);
         }

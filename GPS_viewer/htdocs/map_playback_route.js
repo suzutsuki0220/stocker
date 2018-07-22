@@ -49,9 +49,9 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
             self.outputPlaybackInfo(p);
 
             self.pos_index++;
-            if (self.pos_index < positions.length - 1) {
+            if (self.pos_index < positions.length) {
                 var next_wait;
-                const p_next = positions[self.pos_index + 1];
+                const p_next = positions[self.pos_index];
                 const s = getDateFromDatetimeString(p.datetime);
                 const e = getDateFromDatetimeString(p_next.datetime);
                 if (isNaN(s) || isNaN(e)) {
@@ -75,18 +75,20 @@ mapPlaybackRoute.prototype.start = function(positions, index) {
         return;
     }
 
-    // マップの表示を変える (好み)
-    this.ins_map.setMapTypeId('satellite');
-    this.ins_map.setZoom(17);
+    if (positions) {
+        // マップの表示を変える (好み)
+        this.ins_map.setMapTypeId('satellite');
+        this.ins_map.setZoom(17);
 
-    if (this.marker === null) {
-        this.marker = new mapCarMarker(this.ins_map);
+        if (this.marker === null) {
+            this.marker = new mapCarMarker(this.ins_map);
+        }
+
+        moveMarker(this.marker, this.ins_map);
+        this.showPlaybackInfo();
+        this.marker.setVisible(true);
+        this.started = true;
     }
-
-    moveMarker(this.marker, this.ins_map);
-    this.showPlaybackInfo();
-    this.marker.setVisible(true);
-    this.started = true;
 };
 
 mapPlaybackRoute.prototype.stop = function() {
@@ -113,15 +115,15 @@ mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
 
 mapPlaybackRoute.prototype.outputPlaybackInfo = function(p) {
     var content = "【再生中】<br>";
+    content += p.datetime + "<br>";
     if (isValidLatLng(p.latitude, p.longitude) === true) {
         var speed_str = "-----";
         if (p.speed) {
             speed_str = new String(Math.floor(p.speed * 100) / 100);
         }
-        content += p.datetime + "<br>";
         content += "Speed: " + speed_str + "km/h";
     } else {
-        content = "無効な位置情報のため更新されません";
+        content += "無効な位置情報のため更新されません";
     }
     document.getElementById('playback_status').innerHTML = content;
 };
