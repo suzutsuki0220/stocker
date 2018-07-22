@@ -24,6 +24,7 @@ function createEventMarker(positions, index) {
 
   var markerOptions = {
     position: new google.maps.LatLng(p.latitude, p.longitude),
+    icon: CAUTION_MARKER_ICON,
     map: map,
     title: title,
     label: label,

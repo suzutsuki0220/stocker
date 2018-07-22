@@ -79,6 +79,7 @@ my $html = <<EOF;
     const START_MARKER_ICON = '%htdocs_root%/start.png';
     const END_MARKER_ICON   = '%htdocs_root%/goal.png';
     const CAR_MARKER_ICON   = '%htdocs_root%/car.png';
+    const CAUTION_MARKER_ICON = '%htdocs_root%/caution.png';
     const stroke_color = ["#000000", "#0000ff", "#008c10", "#afaf00", "#ff0030", "#505050"];
 
     var config = {

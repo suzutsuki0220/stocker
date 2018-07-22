@@ -106,3 +106,4 @@ stockerで扱うディレクトリとcacheディレクトリ、trashディレク
 * Icons made by [Start](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
 * Icons made by [goal](https://www.flaticon.com/authors/prettycons) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
 * Icons made by [car](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
+* Icons made by [caution](https://www.flaticon.com/authors/vignesh-oviyan) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
