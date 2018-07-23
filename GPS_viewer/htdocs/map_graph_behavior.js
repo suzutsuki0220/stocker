@@ -57,22 +57,22 @@ graphBehavior.prototype.plot = function() {
         }
         return "#2066F0";
     };
-    var getLevelInRange = function(start_pos, end_pos, graph_data, behavior) {
-        var start = Math.floor(graph_data.length * start_pos);
-        var end   = Math.floor(graph_data.length * end_pos);
+    var getLevelInRange = function(start, end, graph_data, behavior) {
         var max_level = 0;
 
-        for (var i=start; i<end; i++) {
-            if ((graph_data[i].behavior & behavior) === behavior) {
-                if (isNaN(graph_data[i].level)) {
-                    if (max_level === 0) {
-                        max_level = 1;
-                    }
-                } else {
-                    if (graph_data[i].level > max_level) {
-                        max_level = graph_data[i].level;
-                        if (max_level === 3) {
-                            break;
+        for (var i=start; i<=end; i++) {
+            if (graph_data[i]) {
+                if ((graph_data[i].behavior & behavior) === behavior) {
+                    if (isNaN(graph_data[i].level)) {
+                        if (max_level === 0) {
+                            max_level = 1;
+                        }
+                    } else {
+                        if (graph_data[i].level > max_level) {
+                            max_level = graph_data[i].level;
+                            if (max_level === 3) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -81,49 +81,51 @@ graphBehavior.prototype.plot = function() {
 
         return max_level;
     };
-    var hasErrorInRange = function(start_pos, end_pos, graph_data) {
-        var start = Math.floor(graph_data.length * start_pos);
-        var end   = Math.floor(graph_data.length * end_pos);
+    var hasErrorInRange = function(start, end, graph_data) {
         var error_count = 0;
         var level = 0;
 
-        if (start !== end) {
-            for (var i=start; i<end; i++) {
+        for (var i=start; i<=end; i++) {
+            if (graph_data[i] && graph_data[i].scene) {
                 if (graph_data[i].scene === "error") {
                     error_count++;
                 }
             }
+        }
 
-            var error_rate = error_count / (end - start);
-            if (error_rate > 0.8) {
-                level = 3;
-            } else if (error_rate > 0.4) {
-                level = 2;
-            } else if (error_count !== 0) {
-                level = 1;
-            }
+        var error_rate = error_count / (end - start + 1);
+        if (error_rate > 0.8) {
+            level = 3;
+        } else if (error_rate > 0.4) {
+            level = 2;
+        } else if (error_count !== 0) {
+            level = 1;
         }
 
         return level;
     };
-    var hasStopInRange = function(start_pos, end_pos, graph_data) {
-        var start = Math.floor(graph_data.length * start_pos);
-        var end   = Math.floor(graph_data.length * end_pos);
+    var hasStopInRange = function(start, end, graph_data) {
         var error_count = 0;
         var level = 0;
 
-        for (var i=start; i<end; i++) {
-            if (graph_data[i].scene === "slight") {
-                level = 99;  // else level
-                break;
-            } else if (graph_data[i].scene === "stop") {
-                level = 1;
-                break;
+        for (var i=start; i<=end; i++) {
+            if (graph_data[i] && graph_data[i].scene) {
+                if (graph_data[i].scene === "slight") {
+                    level = 99;  // else level
+                    break;
+                } else if (graph_data[i].scene === "stop") {
+                    level = 1;
+                    break;
+                }
             }
         }
 
         return level;
     };
+
+    if (this.graph_data.length === 0) {
+        return;
+    }
 
     var canvas = document.getElementById('graph_behavior');
     var ctx = canvas.getContext('2d');
@@ -145,16 +147,18 @@ graphBehavior.prototype.plot = function() {
         const x = this.graph_px_offset_start + i;
         const start_pos = i / graph_width;
         const end_pos   = (i+step) / graph_width;
+        const start = Math.floor(this.graph_data.length * start_pos);
+        const end   = Math.floor(this.graph_data.length * end_pos);
 
         for (var j=0; j<this.behavior_types; j++) {
             var level;
             if (j === 0) {
-                level = hasErrorInRange(start_pos, end_pos, this.graph_data);
+                level = hasErrorInRange(start, end, this.graph_data);
             } else if (j === 1) {
-                level = hasStopInRange(start_pos, end_pos, this.graph_data);
+                level = hasStopInRange(start, end, this.graph_data);
             } else {
                 var behavior = Math.pow(2, j - 2); // j-2: error, stopを除く
-                level = getLevelInRange(start_pos, end_pos, this.graph_data, behavior);
+                level = getLevelInRange(start, end, this.graph_data, behavior);
             }
             if (level !== 0) {
                 const y = Math.floor(graph_Y_step * j);
