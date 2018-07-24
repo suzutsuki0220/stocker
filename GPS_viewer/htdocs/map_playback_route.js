@@ -9,6 +9,10 @@ var mapPlaybackRoute = function(m) {
 };
 
 mapPlaybackRoute.prototype._showInfoWindow = function(map, latlng, message) {
+    if (!latlng || !message) {
+        return;
+    }
+
     if (this.info === null) {
         this.info = new google.maps.InfoWindow();
     }
@@ -35,11 +39,13 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     var moveMarker = function(marker, map) {
         var p = positions[self.pos_index];
         if (p) {
+            var latlng;
             if (isValidLatLng(p.latitude, p.longitude) === true) {
-                var latlng = new google.maps.LatLng(p.latitude, p.longitude);
-
+                latlng = new google.maps.LatLng(p.latitude, p.longitude);
                 marker.setPosition(latlng);
                 map.panTo(latlng);
+            } else {
+                latlng = marker.getPosition();
             }
             if (p.scene && p.scene === "stop") {
                 self._showInfoWindow(map, latlng, "停止中");

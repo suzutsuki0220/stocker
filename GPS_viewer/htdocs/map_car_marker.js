@@ -13,6 +13,13 @@ mapCarMarker.prototype.setPosition = function(latlng) {
     }
 };
 
+mapCarMarker.prototype.getPosition = function() {
+    if (this.ins_car_mark === null) {
+        return null;
+    }
+    return this.ins_car_mark.getPosition();
+};
+
 mapCarMarker.prototype.setVisible = function(sw) {
     if (sw === true) {
         if (this.ins_car_mark === null) {
