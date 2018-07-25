@@ -48,7 +48,9 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 latlng = marker.getPosition();
             }
             if (p.scene && p.scene === "stop") {
-                self._showInfoWindow(map, latlng, "停止中");
+                self._showInfoWindow(map, latlng, config.title.scene.stop);
+            } else if (p.behavior && p.behavior !== 0) {
+                self._showInfoWindow(map, latlng, makeEventTitle(p.behavior));
             } else {
                 self._hideInfoWindow();
             }

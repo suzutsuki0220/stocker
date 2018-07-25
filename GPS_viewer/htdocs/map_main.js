@@ -494,3 +494,22 @@ function playbackRoute() {
 
     playback.start(positions, start, end);
 }
+
+function makeEventTitle(behavior) {
+    var title = "";
+
+    for (var i=0; i<4; i++) {
+        const case_bit = 1 << i;
+        if ((behavior & case_bit) === case_bit) {
+            if (title.length !== 0) {
+                title += " / ";
+            }
+            title += config.title.event[i];
+        }
+    }
+    if (title.length === 0) {
+        title = "--";
+    }
+
+    return title;
+}

@@ -5,19 +5,19 @@ function createEventMarker(positions, index) {
   var p = positions[index];
   switch (p.behavior) {
     case 1:
-      title = "Braking";
+      title = config.title.event[0];
       label = "B";
       break;
     case 2:
-      title = "Throttle";
+      title = config.title.event[1];
       label = "T";
       break;
     case 4:
-      title = "Cornering(left)";
+      title = config.title.event[2];
       label = "L";
       break;
     case 8:
-      title = "Cornering(right)";
+      title = config.title.event[3];
       label = "R";
       break;
   }
@@ -57,23 +57,10 @@ function clearEventMarker() {
 }
 
 function makeEventInfoContents(positions, index) {
-  var title = "";
   var p = positions[index];
-  const titles = ["Braking", "Throttle", "Cornering(left)", "Cornering(right)"];
-  for (var i=0; i<4; i++) {
-    const case_bit = 1 << i;
-    if ((p.behavior & case_bit) === case_bit) {
-      if (title.length !== 0) {
-        title += " / ";
-      }
-      title += titles[i];
-    }
-  }
-  if (title.length === 0) {
-    title = "--";
-  }
 
-  var level = p.level ? " (level: " + p.level + ")" : "";
+  const title = makeEventTitle(p.behavior);
+  const level = p.level ? " (level: " + p.level + ")" : "";
 
   var contents;
   contents  = '<div style="color: #202020">';

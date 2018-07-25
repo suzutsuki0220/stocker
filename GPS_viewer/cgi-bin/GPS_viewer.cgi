@@ -85,6 +85,14 @@ my $html = <<EOF;
     var config = {
       apiKey: {
         googlemap: '${GOOGLE_API_KEY}'
+      },
+      title: {
+        scene: {
+          stop:   'stop',
+          slight: 'slight',
+          error:  'error'
+        },
+        event: ['Braking', 'Throttle', 'Cornering(left)', 'Cornering(right)']
       }
     };
 
