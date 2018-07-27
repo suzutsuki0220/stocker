@@ -119,14 +119,23 @@ my $html = <<EOF;
 <div id="map_warningText"></div>
 <div id="playback_status"></div>
 <div id="top_field">
+<form name="f2" action="#" method="GET">
 <span style="float: left">
 <b>${file_name}</b><br>
 </span>
 <span style="float: right">
 <a href="javascript:playbackRoute()"><i class="fas fa-play-circle fa-lg" style="color: #ffffff"></i></a>
+<select name="playback_speed" id="playback_speed" size="1">
+<option value="1.0" selected>1.0</option>
+<option value="1.1">1.1</option>
+<option value="1.2">1.2</option>
+<option value="1.5">1.5</option>
+<option value="2.0">2.0</option>
+</select>x
 <a href="${back_link}" class="button">戻る</a>
 <a href="javascript:showGraph(positions)" class="button">グラフ</a>
 </span>
+</form>
 </div>
 <div id="map_canvas"></div>
 <div id="graph_field">

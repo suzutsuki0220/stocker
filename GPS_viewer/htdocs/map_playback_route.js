@@ -43,7 +43,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             if (isValidLatLng(p.latitude, p.longitude) === true) {
                 latlng = new google.maps.LatLng(p.latitude, p.longitude);
                 marker.setPosition(latlng);
-                map.panTo(latlng);
+                map.setCenter(latlng);
             } else {
                 latlng = marker.getPosition();
             }
@@ -71,7 +71,12 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 if (isNaN(s) || isNaN(e)) {
                   next_wait = 100;
                 } else {
-                  next_wait = e - s;
+                    const pb_speed_elem = document.getElementById('playback_speed');
+                    if (pb_speed_elem && pb_speed_elem.value) {
+                        next_wait = (e - s) / pb_speed_elem.value;
+                    } else {
+                        next_wait = e - s;
+                    }
                 }
                 setTimeout(function(){moveMarker(marker, map);}, next_wait);
             } else {
