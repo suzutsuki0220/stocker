@@ -48,6 +48,7 @@ eval {
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
+      "%htdocs_root%/map_latlng.js",
       "%htdocs_root%/map_graph.js",
       "%htdocs_root%/map_graph_behavior.js",
       "%htdocs_root%/map_graph_XYacceleration.js",

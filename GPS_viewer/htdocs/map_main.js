@@ -194,14 +194,6 @@ function map_clear() {
   document.getElementById("end_address").innerHTML = "";
 }
 
-function isValidLatLng(lat, lng) {
-  if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
-    return false;
-  }
-
-  return true;
-}
-
 function get_latlng(lat, lng) {
   if (isValidLatLng(lat, lng) === false) {
     return null;

@@ -1,7 +1,7 @@
 var mapPlaybackRoute = function(m) {
     this.ins_map = m;  // GoogleMapインスタンス
     this.marker = null;
-    this.started = false;
+    this.playing = false;
     this.pos_index = 0;
 
     this.info = null;
@@ -31,6 +31,10 @@ mapPlaybackRoute.prototype._hideInfoWindow = function() {
     }
     this.info_opened = false;
 };
+
+mapPlaybackRoute.prototype.isPlaying = function() {
+    return this.playing;
+}
 
 mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.pos_index = start_index;
@@ -82,14 +86,14 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             } else {
                 self.hidePlaybackInfo();
                 self._showInfoWindow(map, latlng, "走行終了");
-                self.started = false;
+                self.playing = false;
             }
         } else {
-            self.started = false;
+            self.playing = false;
         }
     };
 
-    if (this.started === true) {
+    if (this.playing === true) {
         this.stop(); // かり
         return;
     }
@@ -106,7 +110,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         moveMarker(this.marker, this.ins_map);
         this.showPlaybackInfo();
         this.marker.setVisible(true);
-        this.started = true;
+        this.playing = true;
     }
 };
 
@@ -115,13 +119,13 @@ mapPlaybackRoute.prototype.stop = function() {
     this.hidePlaybackInfo();
     this._hideInfoWindow();
 
-    if (this.started === false) {
+    if (this.playing === false) {
         return;
     }
 
     this.marker.setVisible(false);
     this.marker = null;
-    this.started = false;
+    this.playing = false;
 };
 
 mapPlaybackRoute.prototype.showPlaybackInfo = function() {
@@ -133,14 +137,18 @@ mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
 };
 
 mapPlaybackRoute.prototype.outputPlaybackInfo = function(p) {
+    var gps_status_mes = ["不明", "良好", "低下", "悪い"];
     var content = "【再生中】<br>";
     content += p.datetime + "<br>";
     if (isValidLatLng(p.latitude, p.longitude) === true) {
+        var gps_level = getPositionLevel(p);
+        content += "GPS感度: " + gps_status_mes[gps_level] + "<br>";
+
         var speed_str = "-----";
         if (p.speed) {
             speed_str = new String(Math.floor(p.speed * 100) / 100);
         }
-        content += "Speed: " + speed_str + "km/h";
+        content += "Speed: " + speed_str + "km/h<br>";
     } else {
         content += "無効な位置情報のため更新されません";
     }

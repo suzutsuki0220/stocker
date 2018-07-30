@@ -162,9 +162,10 @@ graphBehavior.prototype.plot = function() {
             }
             if (level !== 0) {
                 const y = Math.floor(graph_Y_step * j);
+                const endX = x + step <= graph_width ? step : graph_width - x;
                 ctx.strokeStyle = getStrokeColor(level);
                 ctx.fillStyle = getStrokeColor(level);
-                ctx.fillRect(x, y, step, graph_height);
+                ctx.fillRect(x, y, endX, graph_height);
                 ctx.stroke();
             }
         }
