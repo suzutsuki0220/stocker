@@ -82,18 +82,20 @@ graphBehavior.prototype.plot = function() {
         return max_level;
     };
     var hasErrorInRange = function(start, end, graph_data) {
+        var sample_count = 0;
         var error_count = 0;
         var level = 0;
 
         for (var i=start; i<=end; i++) {
             if (graph_data[i] && graph_data[i].scene) {
+                sample_count++;
                 if (graph_data[i].scene === "error") {
                     error_count++;
                 }
             }
         }
 
-        var error_rate = error_count / (end - start + 1);
+        var error_rate = sample_count !== 0 ? error_count / sample_count : 0;
         if (error_rate > 0.8) {
             level = 3;
         } else if (error_rate > 0.4) {
@@ -105,7 +107,6 @@ graphBehavior.prototype.plot = function() {
         return level;
     };
     var hasStopInRange = function(start, end, graph_data) {
-        var error_count = 0;
         var level = 0;
 
         for (var i=start; i<=end; i++) {
@@ -162,7 +163,7 @@ graphBehavior.prototype.plot = function() {
             }
             if (level !== 0) {
                 const y = Math.floor(graph_Y_step * j);
-                const endX = x + step <= graph_width ? step : graph_width - x;
+                const endX = i + step <= graph_width ? step : graph_width - i;
                 ctx.strokeStyle = getStrokeColor(level);
                 ctx.fillStyle = getStrokeColor(level);
                 ctx.fillRect(x, y, endX, graph_height);
