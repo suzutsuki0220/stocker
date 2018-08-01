@@ -146,11 +146,17 @@ function getMapScale() {
   }
 }
 
-function setPanoramaPosition(gm_latlng) {
+function setPanoramaPosition(gm_latlng, heading) {
+  var pov = {
+    pitch: 10
+  };
+  pov.heading = !isNaN(heading) ? heading : 180;
+
   var get_callback = function(panoramaData, status) {
     switch (status) {
     case google.maps.StreetViewStatus.OK:
         panorama.setPosition(panoramaData.location.latLng);
+        panorama.setPov(pov);
         break;
     case google.maps.StreetViewStatus.UNKNOWN_ERROR:
         alert("StreetViewのデータ取得に失敗しました");
@@ -233,6 +239,7 @@ function reloadMap(start_range, end_range) {
   var line_color = "";
   var last_line_color = "";
   var beforeMarkerDatetime = 0;
+  var p_diff = getPositionDifference(positions, start_range + 12, 12);  // streetviewの向き決定用
 
   distance = 0;
   pre_lat = 0;
@@ -303,7 +310,7 @@ function reloadMap(start_range, end_range) {
   var delayReloadFunc = function() {
     geocoder.geocode({'location': start_route}, putStartGeoCode);
     geocoder.geocode({'location': end_route}, putEndGeoCode);
-    setPanoramaPosition(start_route);  // street viewは開始位置にする
+    setPanoramaPosition(start_route, p_diff.azimuth);  // street viewは開始位置にする
     lastDelayReloadTimerID = NaN;
   }
   if (isNaN(lastDelayReloadTimerID) === false) {
@@ -504,4 +511,39 @@ function makeEventTitle(behavior) {
     }
 
     return title;
+}
+
+function getPositionDifference(positions, index, back_count) {
+    var position_diff = new Object();
+
+    var current_index = !isNaN(index) ? index : 0;
+    if (current_index >= positions.length) {
+        current_index = positions.length - 1;
+    }
+    while(!positions[current_index] && current_index < positions.length) {
+        current_index++;
+    }
+
+    var back_index = current_index - back_count;
+    if (back_index >= 0) {
+        while(!positions[back_index] && back_index > 0) {
+            back_index--;
+        }
+    } else {
+        back_index = 0;
+    }
+    while(!positions[back_index] && current_index > back_index) {
+        back_index++;
+    }
+
+    const p_curr = positions[current_index];
+    const p_back = positions[back_index];
+
+    const azimuth = getAzimuth(p_back.latitude, p_back.longitude, p_curr.latitude, p_curr.longitude);
+    position_diff.azimuth   = azimuth;
+    position_diff.direction = getDirectionString(azimuth);
+    position_diff.altitude  = p_curr.altitude ? p_curr.altitude - p_back.altitude : 0;
+    position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
+
+    return position_diff;
 }

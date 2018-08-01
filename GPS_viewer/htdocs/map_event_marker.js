@@ -58,18 +58,48 @@ function clearEventMarker() {
 
 function makeEventInfoContents(positions, index) {
   var p = positions[index];
+  var diff_p = getPositionDifference(positions, index + 12, 12);
 
   const title = makeEventTitle(p.behavior);
   const level = p.level ? " (level: " + p.level + ")" : "";
 
+  var altitude_diff_str = "";
+  if (isNaN(diff_p.altitude) === false) {
+    altitude_diff_str = new String(Math.floor(diff_p.altitude * 100) / 100) + "m ";
+    if (diff_p.altitude < -0.1) {
+      altitude_diff_str += "↓";
+    } else if (diff_p.altitude > 0.1) {
+      altitude_diff_str += "↑";
+    } else {
+      altitude_diff_str += "→";
+    }
+  }
+
+  var speed_str = "----- km/h";
+  if (isNaN(p.speed) === false) {
+    speed_str = String(Math.floor(p.speed * 100) / 100) + " km/h";
+
+    if (isNaN(diff_p.speed) === false) {
+      if (diff_p.speed < -1.0) {
+        speed_str += " <span style=\"color: red\">↓</span>";
+      } else if (diff_p.speed > 1.0) {
+        speed_str += " <span style=\"color: blue\">↑</span>";
+      } else {
+        speed_str += " →";
+      }
+    }
+  }
+
   var contents;
   contents  = '<div style="color: #202020">';
   contents += '<div style="float: left; width: 95px; height: 95px; margin-right: 5px">';
-  contents += '<img src="' + makeStreetviewImgUrl(p.latitude, p.longitude, 10) + '">';
+  contents += '<img src="' + makeStreetviewImgUrl(p.latitude, p.longitude, diff_p.azimuth) + '">';
   contents += '</div><div style="height: 95px">';
   contents += '<b>' + title + level + "</b><br>";
   contents += "発生時刻: " + p.datetime + "<br>";
-  contents += "速度: " + String(Math.floor(p.speed * 100) / 100) + " km/h";
+  contents += "進行方向: " + diff_p.direction + "<br>";
+  contents += "傾斜: " + altitude_diff_str + "<br>";
+  contents += "速度: " + speed_str;
   contents += '</div>';
   contents += '<canvas id="mark_event_accelXY" style="width: 100%; height: 90px"></canvas>';
   contents += '<canvas id="mark_event_speed" style="width: 100%; height: 90px"></canvas>';

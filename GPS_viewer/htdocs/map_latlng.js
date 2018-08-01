@@ -13,16 +13,16 @@ function isValidLatLng(lat, lng) {
  *
  * 0: 精度情報なし  1: 良好  2: 低下  3: 悪い
 **/
-function getPositionLevel(p) {
+function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
     var max_accuracy = NaN;
     var ret = 0;
 
-    if (isNaN(p.horizontal_accuracy) === false && p.horizontal_accuracy !== 0) {
-        max_accuracy = p.horizontal_accuracy;
+    if (isNaN(horizontal_accuracy) === false && horizontal_accuracy !== 0) {
+        max_accuracy = horizontal_accuracy;
     }
-    if (isNaN(p.vertical_accuracy) === false && p.vertical_accuracy !== 0) {
-        if (max_accuracy < p.vertical_accuracy) {
-            max_accuracy = p.vertical_accuracy;
+    if (isNaN(vertical_accuracy) === false && vertical_accuracy !== 0) {
+        if (max_accuracy < vertical_accuracy) {
+            max_accuracy = vertical_accuracy;
         }
     }
     if (isNaN(max_accuracy) === false) {
@@ -42,13 +42,58 @@ function getPositionLevel(p) {
  * 2点の緯度経度から方位角を求める
 **/
 function getAzimuth(lat1, lng1, lat2, lng2) {
-  // 北を０度で右回りの角度０～３６０度
-  var Y = Math.cos(lng2 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180 - lat1 * Math.PI / 180);
-  var X = Math.cos(lng1 * Math.PI / 180) * Math.sin(lng2 * Math.PI / 180) - Math.sin(lng1 * Math.PI / 180) * Math.cos(lng2 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180 - lat1 * Math.PI / 180);
-  var dirE0 = 180 * Math.atan2(Y, X) / Math.PI; // 東向きが０度の方向
-  if (dirE0 < 0) {
-    dirE0 = dirE0 + 360; //0～360 にする。
-  }
-  var dirN0 = (dirE0 + 90) % 360; //(dirE0+90)÷360の余りを出力 北向きが０度の方向
-  return dirN0;
+    var getRadian = function(deg) {
+        return deg * (Math.PI / 180);
+    };
+    var getDegree = function(rad) {
+        return rad * (180 / Math.PI)
+    }
+
+    var theta, azimuth;
+
+    if (Math.abs(lat2 - lat1) < 0.000001 || Math.abs(lng2 - lng1) < 0.000001) {
+        // 位置の変化が数センチ規模 (約1m未満)
+        return NaN;
+    }
+
+    var dx = getRadian(lng2) - getRadian(lng1);
+    var y1 = getRadian(lat1);
+    var y2 = getRadian(lat2);
+
+    theta = Math.atan2(Math.sin(dx), (Math.cos(y1) * Math.tan(y2) - Math.sin(y1) * Math.cos(dx)));
+    if (theta >= 0) {
+        azimuth = getDegree(theta);
+    } else {
+        azimuth = getDegree(theta + 2 * Math.PI);
+    }
+
+    return azimuth;
+}
+
+function getDirectionString(azimuth) {
+    const direction_table = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+    var direction_str = "----";
+
+    const angle_offset = 22;
+    const angle_step = 360 / direction_table.length;
+
+    if (isNaN(azimuth) === false) {
+        for (var i = 0; i < direction_table.length; i++) {
+            var angle = angle_step * i - angle_offset;
+
+            if (angle >= 0) {
+                if (azimuth >= angle && azimuth < angle + angle_step) {
+                    direction_str = direction_table[i];
+                    break;
+                }
+            } else {
+                if (azimuth < angle + angle_step || azimuth > angle + 360) {
+                    direction_str = direction_table[i]
+                    break;
+                }
+            } 
+        }
+    }
+
+    return direction_str;
 }

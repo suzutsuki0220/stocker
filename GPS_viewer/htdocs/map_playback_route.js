@@ -58,7 +58,8 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             } else {
                 self._hideInfoWindow();
             }
-            self.outputPlaybackInfo(p);
+            var diff_p = getPositionDifference(positions, self.pos_index, 10)
+            self.outputPlaybackInfo(p, diff_p);
 
             var start_pos = self.pos_index - 100;
             if (start_pos < 0) {
@@ -136,19 +137,47 @@ mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
     document.getElementById('playback_status').style.display = 'none';
 };
 
-mapPlaybackRoute.prototype.outputPlaybackInfo = function(p) {
+mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
     var gps_status_mes = ["不明", "良好", "低下", "悪い"];
     var content = "【再生中】<br>";
     content += p.datetime + "<br>";
     if (isValidLatLng(p.latitude, p.longitude) === true) {
-        var gps_level = getPositionLevel(p);
+        var gps_level = getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy);
         content += "GPS感度: " + gps_status_mes[gps_level] + "<br>";
+        content += "進行方向: " + diff_p.direction + "<br>";
 
-        var speed_str = "-----";
-        if (p.speed) {
-            speed_str = new String(Math.floor(p.speed * 100) / 100);
+        var altitude_diff_str = "";
+        if (gps_level === 0 || gps_level === 1) {
+            if (isNaN(diff_p.altitude) === false) {
+                altitude_diff_str = new String(Math.floor(diff_p.altitude * 100) / 100) + "m ";
+                if (diff_p.altitude < -0.1) {
+                    altitude_diff_str += "↓";
+                } else if (diff_p.altitude > 0.1) {
+                    altitude_diff_str += "↑";
+                } else {
+                    altitude_diff_str += "→";
+                }
+            }
+        } else {
+            altitude_diff_str = "GPS感度低下のため無効";
         }
-        content += "Speed: " + speed_str + "km/h<br>";
+        content += "傾斜: " + altitude_diff_str + "<br>";
+
+        var speed_str = "----- km/h";
+        if (isNaN(p.speed) === false) {
+            speed_str = new String(Math.floor(p.speed * 100) / 100) + "km/h";
+
+            if (isNaN(diff_p.speed) === false) {
+                if (diff_p.speed < -1.0) {
+                    speed_str += " <span style=\"color: red\">↓</span>";
+                } else if (diff_p.speed > 1.0) {
+                    speed_str += " <span style=\"color: blue\">↑</span>";
+                } else {
+                    speed_str += " →";
+                }
+            }
+        }
+        content += "速度: " + speed_str + "<br>";
     } else {
         content += "無効な位置情報のため更新されません";
     }
