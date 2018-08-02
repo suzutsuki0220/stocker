@@ -39,6 +39,7 @@ mapPlaybackRoute.prototype.isPlaying = function() {
 mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.pos_index = start_index;
     var self = this;
+    var behavior_after_samples = 0;
 
     var moveMarker = function(marker, map) {
         var p = positions[self.pos_index];
@@ -53,10 +54,17 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             }
             if (p.scene && p.scene === "stop") {
                 self._showInfoWindow(map, latlng, config.title.scene.stop);
+                behavior_after_samples = 0;
             } else if (p.behavior && p.behavior !== 0) {
                 self._showInfoWindow(map, latlng, makeEventTitle(p.behavior));
+                behavior_after_samples = 30;
             } else {
-                self._hideInfoWindow();
+                if (behavior_after_samples === 0) {
+                    self._hideInfoWindow();
+                } else {
+                    self.info.setPosition(latlng);
+                    behavior_after_samples--;
+                }
             }
             var diff_p = getPositionDifference(positions, self.pos_index, 10)
             self.outputPlaybackInfo(p, diff_p);
@@ -161,7 +169,7 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
         } else {
             altitude_diff_str = "GPS感度低下のため無効";
         }
-        content += "傾斜: " + altitude_diff_str + "<br>";
+        content += "高低差: " + altitude_diff_str + "<br>";
 
         var speed_str = "----- km/h";
         if (isNaN(p.speed) === false) {

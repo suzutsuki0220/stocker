@@ -83,6 +83,10 @@ input.time_range {
 }
 
 #playback_status {
+    font-size: 0.90em;
+    font-weight: normal;
+    line-height: 140%;
+    border: 1px solid #000000;
     top: 50px;
     right: 10px;
     display: none;

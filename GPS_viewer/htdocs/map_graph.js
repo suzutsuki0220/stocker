@@ -102,7 +102,7 @@ var altitude_graph_property = {
   ]
 };
 
-function showGraph(positions) {
+function showGraph(positions, skip_draw) {
     if (!positions) {
         alert("グラフに表示可能なデータがありません");
         return;
@@ -121,7 +121,9 @@ function showGraph(positions) {
         document.getElementById('map_canvas').style.width = "45%";
         document.getElementById('panorama_canvas').style.width = "50%";
         showXYaccelerationCanvas();
-        plotAcceleration(positions, start, end);
+        if (skip_draw === false) {
+            plotAcceleration(positions, start, end);
+        }
     } else {
         hideGraph();
     }

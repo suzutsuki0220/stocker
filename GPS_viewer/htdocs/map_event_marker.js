@@ -31,14 +31,16 @@ function createEventMarker(positions, index) {
     animation: google.maps.Animation.DROP,
   };
   var marker = new google.maps.Marker(markerOptions);
+  const canvasXY_id = uuid();
+  const canvasS_id  = uuid();
 
   var addMarkerInfo = function(marker, positions, index) {
     var showInfoWindow = function(event) {
       var windowOptions = new Object;
-      windowOptions.content = makeEventInfoContents(positions, index);
+      windowOptions.content = makeEventInfoContents(positions, index, canvasXY_id, canvasS_id);
       var infoWindow = new google.maps.InfoWindow(windowOptions);
       infoWindow.open(marker.getMap(), marker);
-      infoWindow.addListener('domready', function() {plotEventInfoGraph(positions, index)});
+      infoWindow.addListener('domready', function() {plotEventInfoGraph(positions, index, canvasXY_id, canvasS_id)});
     };
     google.maps.event.addListener(marker, 'click', showInfoWindow);
   };
@@ -56,9 +58,9 @@ function clearEventMarker() {
   }
 }
 
-function makeEventInfoContents(positions, index) {
+function makeEventInfoContents(positions, index, canvasXY_id, canvasS_id) {
   var p = positions[index];
-  var diff_p = getPositionDifference(positions, index + 12, 12);
+  var diff_p = getPositionDifference(positions, index + 12, 12);  // 位置情報は加速度より遅れるので先のサンプルで比較する
 
   const title = makeEventTitle(p.behavior);
   const level = p.level ? " (level: " + p.level + ")" : "";
@@ -77,12 +79,16 @@ function makeEventInfoContents(positions, index) {
 
   var speed_str = "----- km/h";
   if (isNaN(p.speed) === false) {
-    speed_str = String(Math.floor(p.speed * 100) / 100) + " km/h";
+    speed_str = new String(Math.floor(p.speed * 100) / 100) + " km/h";
 
     if (isNaN(diff_p.speed) === false) {
+      var speed_after = p.speed + diff_p.speed;
+
       if (diff_p.speed < -1.0) {
+        speed_str += " ⇒ " + new String(Math.floor(speed_after * 100) / 100) + "km/h";
         speed_str += " <span style=\"color: red\">↓</span>";
       } else if (diff_p.speed > 1.0) {
+        speed_str += " ⇒ " + new String(Math.floor(speed_after * 100) / 100) + "km/h";
         speed_str += " <span style=\"color: blue\">↑</span>";
       } else {
         speed_str += " →";
@@ -93,22 +99,23 @@ function makeEventInfoContents(positions, index) {
   var contents;
   contents  = '<div style="color: #202020">';
   contents += '<div style="float: left; width: 95px; height: 95px; margin-right: 5px">';
+  contents += '<a href="javascript:setPanoramaPosition(get_latlng(' + p.latitude + ',' + p.longitude + '),' + diff_p.azimuth + ')">';
   contents += '<img src="' + makeStreetviewImgUrl(p.latitude, p.longitude, diff_p.azimuth) + '">';
-  contents += '</div><div style="height: 95px">';
+  contents += '</a></div><div style="height: 95px">';
   contents += '<b>' + title + level + "</b><br>";
   contents += "発生時刻: " + p.datetime + "<br>";
   contents += "進行方向: " + diff_p.direction + "<br>";
-  contents += "傾斜: " + altitude_diff_str + "<br>";
+  contents += "高低差: " + altitude_diff_str + "<br>";
   contents += "速度: " + speed_str;
   contents += '</div>';
-  contents += '<canvas id="mark_event_accelXY" style="width: 100%; height: 90px"></canvas>';
-  contents += '<canvas id="mark_event_speed" style="width: 100%; height: 90px"></canvas>';
+  contents += '<canvas id="' + canvasXY_id + '" style="width: 100%; height: 90px"></canvas>';
+  contents += '<canvas id="' + canvasS_id + '" style="width: 100%; height: 90px"></canvas>';
   contents += '</div>';
 
   return contents;
 }
 
-function plotEventInfoGraph(positions, index) {
+function plotEventInfoGraph(positions, index, canvasXY_id, canvasS_id) {
   const LINE_COLOR = "#383838";
 
   var accel_property = {
@@ -214,6 +221,6 @@ function plotEventInfoGraph(positions, index) {
     n++;
   }
 
-  ccchart.init('mark_event_accelXY', accel_property);
-  ccchart.init('mark_event_speed', speed_property);
+  ccchart.init(canvasXY_id, accel_property);
+  ccchart.init(canvasS_id, speed_property);
 }

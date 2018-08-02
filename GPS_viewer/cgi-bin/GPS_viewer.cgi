@@ -134,7 +134,7 @@ my $html = <<EOF;
 <option value="2.0">2.0</option>
 </select>x
 <a href="${back_link}" class="button">戻る</a>
-<a href="javascript:showGraph(positions)" class="button">グラフ</a>
+<a href="javascript:showGraph(positions, playback.isPlaying())" class="button">グラフ</a>
 </span>
 </form>
 </div>
