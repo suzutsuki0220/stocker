@@ -110,7 +110,9 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     if (positions) {
         // マップの表示を変える (好み)
         this.ins_map.setMapTypeId('satellite');
-        this.ins_map.setZoom(17);
+        if (this.ins_map.getZoom() < 17) {
+            this.ins_map.setZoom(17);
+        }
 
         if (this.marker === null) {
             this.marker = new mapCarMarker(this.ins_map);
