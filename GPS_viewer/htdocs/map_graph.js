@@ -108,11 +108,6 @@ function showGraph(positions, skip_draw) {
         return;
     }
 
-    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
-    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
-    var start = Math.floor(positions.length * range_start / 1000);
-    var end   = Math.floor(positions.length * range_end / 1000);
-
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         document.getElementById('info_field').style.display = "none";
         document.getElementById('graph_field').style.display = "inline";
@@ -122,7 +117,8 @@ function showGraph(positions, skip_draw) {
         document.getElementById('panorama_canvas').style.width = "50%";
         showXYaccelerationCanvas();
         if (skip_draw === false) {
-            plotAcceleration(positions, start, end);
+            var range = getPositionStartEndFromRangeController(positions);
+            plotAcceleration(positions, range.start, range.end);
         }
     } else {
         hideGraph();

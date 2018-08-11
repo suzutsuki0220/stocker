@@ -178,6 +178,7 @@ function setPanoramaPosition(gm_latlng, heading) {
 
 function map_clear() {
   while ((polyline = poly.pop()) !== undefined) {
+    google.maps.event.clearListeners(polyline, "click");
     polyline.setMap(null);
   }
   if (startMarker != null) {
@@ -340,6 +341,14 @@ function reloadMap(start_range, end_range) {
   return true;
 }
 
+function polyLineClickEvent(e) {
+    // TODO: Click event implement
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+
+    console.log("event: " + lat + "," + lng);
+}
+
 function plotMapPolyLine(route, color) {
   var polyOptions = {
     path: route,
@@ -349,6 +358,7 @@ function plotMapPolyLine(route, color) {
   }
   var polyline = new google.maps.Polyline(polyOptions);
   polyline.setMap(map);
+  polyline.addListener("click", polyLineClickEvent);
   poly.push(polyline);
 }
 
@@ -425,7 +435,9 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
     ajax_post(httpRequest, get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
 }
 
-function rangeChanged(elem) {
+function getPositionStartEndFromRangeController(p) {
+    var ret = new Object();
+
     var range_start = parseInt(document.getElementsByName('range_start')[0].value);
     var range_end = parseInt(document.getElementsByName('range_end')[0].value);
 
@@ -438,10 +450,15 @@ function rangeChanged(elem) {
         range_start = range_end;
     }
 
-    var start = Math.floor(positions.length * range_start / 1000);
-    var end   = Math.floor(positions.length * range_end / 1000);
+    ret.start = Math.floor(p.length * range_start / 1000);
+    ret.end   = Math.floor(p.length * range_end / 1000);
 
-    reloadMap(start, end);
+    return ret;
+}
+
+function rangeChanged(elem) {
+    var range = getPositionStartEndFromRangeController(positions);
+    reloadMap(range.start, range.end);
 }
 
 function paintTimeRangeBgSpeed(canvas) {
@@ -486,12 +503,8 @@ function showMapWarning(message) {
 }
 
 function playbackRoute() {
-    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
-    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
-    var start = Math.floor(positions.length * range_start / 1000);
-    var end   = Math.floor(positions.length * range_end / 1000);
-
-    playback.start(positions, start, end);
+    var range = getPositionStartEndFromRangeController(positions);
+    playback.start(positions, range.start, range.end);
 }
 
 function makeEventTitle(behavior) {
