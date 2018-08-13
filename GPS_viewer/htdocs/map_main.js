@@ -6,6 +6,7 @@ var startMarker = null;
 var endMarker = null;
 var poly = new Array();
 var positions;
+var polyline_clicked_info = null;
 
 var pre_lat;
 var pre_lng;
@@ -341,12 +342,43 @@ function reloadMap(start_range, end_range) {
   return true;
 }
 
+function setStartEndRangeByPolylineClicked(name, lat, lng) {
+    var range_elem = document.getElementsByName(name)[0];
+    if (range_elem) {
+        const index = searchPositionIndexByLatLng(lat, lng);
+        if (index) {
+            range_elem.value = Math.floor(index / positions.length * 1000);
+            rangeChanged();
+        }
+    }
+    if (polyline_clicked_info !== null) {
+        polyline_clicked_info.close();
+        polyline_clicked_info = null;
+    }
+}
+
 function polyLineClickEvent(e) {
-    // TODO: Click event implement
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
-    console.log("event: " + lat + "," + lng);
+    // 航空写真表示では位置がずれてしまうことがあったので、地図表示で選択させたい
+    if (map.getMapTypeId() !== google.maps.MapTypeId.ROADMAP) {
+        if (window.confirm("範囲選択のために地図表示に切り替えます")) {
+            map.setMapTypeId(google.maps.MapTypeId.ROADMAP)
+        }
+        return;
+    }
+
+    const info_content = "<div style=\"color: #202020\">経路の範囲</div><br><a href=\"javascript:setStartEndRangeByPolylineClicked('range_start', " + lat + ", " + lng + ")\" class=\"button\">開始位置に指定</a>&nbsp;<a href=\"javascript:setStartEndRangeByPolylineClicked('range_end', " + lat + ", " + lng + ")\" class=\"button\">終了位置に指定</a>";
+
+    if (polyline_clicked_info === null) {
+        polyline_clicked_info = new google.maps.InfoWindow();
+    } else {
+        polyline_clicked_info.close();
+    }
+    polyline_clicked_info.setPosition(e.latLng);
+    polyline_clicked_info.setContent(info_content);
+    polyline_clicked_info.open(map);
 }
 
 function plotMapPolyLine(route, color) {
@@ -456,7 +488,7 @@ function getPositionStartEndFromRangeController(p) {
     return ret;
 }
 
-function rangeChanged(elem) {
+function rangeChanged() {
     var range = getPositionStartEndFromRangeController(positions);
     reloadMap(range.start, range.end);
 }
@@ -559,6 +591,31 @@ function getPositionDifference(positions, index, back_count) {
     position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
 
     return position_diff;
+}
+
+function searchPositionIndexByLatLng(lat, lng) {
+    // 数メートル単位で近いpositionsを探す
+    for (var i=0; i<positions.length; i++) {
+        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng)) {
+            return i;
+        }
+    }
+
+    // 1桁上げて比較
+    for (var i=0; i<positions.length; i++) {
+        if (Math.abs(lat - positions[i].latitude) < 0.00001 && Math.abs(lng - positions[i].longitude) < 0.00001) {
+            return i;
+        }
+    }
+
+    // 更に1桁
+    for (var i=0; i<positions.length; i+=5) {
+        if (Math.abs(lat - positions[i].latitude) < 0.0001 && Math.abs(lng - positions[i].longitude) < 0.0001) {
+            return i;
+        }
+    }
+
+    return NaN;
 }
 
 function uuid() {

@@ -38,6 +38,14 @@ function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
     return ret;
 }
 
+function isNearLatLng(lat1, lng1, lat2, lng2) {
+    if (Math.abs(lat2 - lat1) < 0.000001 && Math.abs(lng2 - lng1) < 0.000001) {
+        // 位置の変化が数センチ規模 (約1m未満)
+        return true;
+    }
+    return false;
+}
+
 /**
  * 2点の緯度経度から方位角を求める
 **/
@@ -51,7 +59,7 @@ function getAzimuth(lat1, lng1, lat2, lng2) {
 
     var theta, azimuth;
 
-    if (Math.abs(lat2 - lat1) < 0.000001 || Math.abs(lng2 - lng1) < 0.000001) {
+    if (isNearLatLng(lat1, lng1, lat2, lng2)) {
         // 位置の変化が数センチ規模 (約1m未満)
         return NaN;
     }

@@ -109,7 +109,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
 
     if (positions) {
         // マップの表示を変える (好み)
-        this.ins_map.setMapTypeId('satellite');
+        this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
         if (this.ins_map.getZoom() < 17) {
             this.ins_map.setZoom(17);
         }

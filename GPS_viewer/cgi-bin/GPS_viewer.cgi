@@ -161,7 +161,7 @@ my $html = <<EOF;
 開始位置<br>
 <div style="position: relative; height: 2em; margin-bottom: 0.5em;">
 <canvas id="range_start_background"></canvas>
-<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
+<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged()" class="time_range" list="tickmarks">
 </div>
 <i class="far fa-clock"></i> <span id="start_datetime"></span><br>
 <i class="far fa-map"></i> <span id="start_address"></span><br>
@@ -170,7 +170,7 @@ my $html = <<EOF;
 終了位置<br>
 <div style="position: relative; height: 2em; margin-bottom: 0.5em;">
 <canvas id="range_end_background"></canvas>
-<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged(this)" class="time_range" list="tickmarks">
+<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged()" class="time_range" list="tickmarks">
 </div>
 <i class="far fa-clock"></i> <span id="end_datetime"></span><br>
 <i class="far fa-map"></i> <span id="end_address"></span><br>

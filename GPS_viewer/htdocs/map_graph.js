@@ -183,6 +183,10 @@ function plotAcceleration(positions, start, end) {
       }
     };
 
+    if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
+        return;
+    }
+
     var graph_behavior = new graphBehavior();
     var skip = Math.floor((end - start)/5000) + 1;
     var fix_central_z = checkCentralZ(positions);
