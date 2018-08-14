@@ -454,7 +454,8 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
                 }
             }
         } catch(e) {
-            alert("get position ERROR: " + e.description);
+            const description = e.description ? e.description : "";
+            alert("get position ERROR: " + description);
         }
     };
 
@@ -584,11 +585,13 @@ function getPositionDifference(positions, index, back_count) {
     const p_curr = positions[current_index];
     const p_back = positions[back_index];
 
-    const azimuth = getAzimuth(p_back.latitude, p_back.longitude, p_curr.latitude, p_curr.longitude);
-    position_diff.azimuth   = azimuth;
-    position_diff.direction = getDirectionString(azimuth);
-    position_diff.altitude  = p_curr.altitude ? p_curr.altitude - p_back.altitude : 0;
-    position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
+    if (p_curr && p_back) {
+        const azimuth = getAzimuth(p_back.latitude, p_back.longitude, p_curr.latitude, p_curr.longitude);
+        position_diff.azimuth   = azimuth;
+        position_diff.direction = getDirectionString(azimuth);
+        position_diff.altitude  = p_curr.altitude ? p_curr.altitude - p_back.altitude : 0;
+        position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
+    }
 
     return position_diff;
 }

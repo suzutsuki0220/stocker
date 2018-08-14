@@ -40,10 +40,20 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.pos_index = start_index;
     var self = this;
     var behavior_after_samples = 0;
+    var distance_from_last_streetview = 0;
+    var last_lat = NaN;
+    var last_lng = NaN;
 
     var moveMarker = function(marker, map) {
         var p = positions[self.pos_index];
         if (p) {
+            if (isNaN(last_lat)) {
+                last_lat = p.latitude;
+            }
+            if (isNaN(last_lng)) {
+                last_lng = p.longitude;
+            }
+
             var latlng;
             if (isValidLatLng(p.latitude, p.longitude) === true) {
                 latlng = new google.maps.LatLng(p.latitude, p.longitude);
@@ -68,6 +78,16 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             }
             var diff_p = getPositionDifference(positions, self.pos_index, 10)
             self.outputPlaybackInfo(p, diff_p);
+
+            // StreetView追跡
+            distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, last_lat, last_lng, WGS84);
+            if (!isNaN(diff_p.azimuth) && (distance_from_last_streetview > 60 || (p.scene && p.scene === "stop" && distance_from_last_streetview > 10))) {
+                // 60m離れるか、停止状態になった位置で更新
+                if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) <= 1) { // GPS良好or不明
+                    setPanoramaPosition(latlng, diff_p.azimuth);
+                    distance_from_last_streetview = 0;
+                }
+            }
 
             var start_pos = self.pos_index - 100;
             if (start_pos < 0) {
@@ -97,6 +117,9 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 self._showInfoWindow(map, latlng, "走行終了");
                 self.playing = false;
             }
+
+            last_lat = p.latitude;
+            last_lng = p.longitude;
         } else {
             self.playing = false;
         }
