@@ -81,18 +81,15 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
 
             // StreetView追跡
             distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, last_lat, last_lng, WGS84);
-            if (!isNaN(diff_p.azimuth) && (distance_from_last_streetview > 60 || (p.scene && p.scene === "stop" && distance_from_last_streetview > 10))) {
-                // 60m離れるか、停止状態になった位置で更新
+            if (!isNaN(diff_p.azimuth) && (distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && distance_from_last_streetview > 10))) {
+                // 60m離れるか、速度0になった位置で更新
                 if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) <= 1) { // GPS良好or不明
                     setPanoramaPosition(latlng, diff_p.azimuth);
                     distance_from_last_streetview = 0;
                 }
             }
 
-            var start_pos = self.pos_index - 100;
-            if (start_pos < 0) {
-                start_pos = 0;
-            }
+            const start_pos = self.pos_index > 100 ? self.pos_index - 100 : 0;
             plotAcceleration(positions, start_pos, self.pos_index);
 
             self.pos_index++;
@@ -102,7 +99,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 const s = getDateFromDatetimeString(p.datetime);
                 const e = getDateFromDatetimeString(p_next.datetime);
                 if (isNaN(s) || isNaN(e)) {
-                  next_wait = 100;
+                    next_wait = 100;
                 } else {
                     const pb_speed_elem = document.getElementById('playback_speed');
                     if (pb_speed_elem && pb_speed_elem.value) {

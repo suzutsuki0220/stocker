@@ -38,8 +38,8 @@ function hideXYaccelerationCanvas() {
 }
 
 function clearXYaccelerationData() {
-    accelerationXY_gforce_property["data"][1].splice(1, accelerationXY_gforce_property["data"][1].length - 1);
-    accelerationXY_gforce_property["data"][2].splice(1, accelerationXY_gforce_property["data"][2].length - 1);
+    accelerationXY_gforce_property["data"][1] = [];
+    accelerationXY_gforce_property["data"][2] = [];
 
 }
 

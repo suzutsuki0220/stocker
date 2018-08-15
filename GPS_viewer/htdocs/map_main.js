@@ -247,6 +247,7 @@ function reloadMap(start_range, end_range) {
   pre_lat = 0;
   pre_lng = 0;
   clearEventMarker();
+  playback.stop();
   for (var i=start_range; i<end_range; i+=skip_idx) {
     var p = positions[i];
     var latlng = get_latlng(p.latitude, p.longitude);
