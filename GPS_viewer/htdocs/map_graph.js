@@ -107,6 +107,11 @@ function showGraph(positions, skip_draw) {
         alert("グラフに表示可能なデータがありません");
         return;
     }
+    var range = getPositionStartEndFromRangeController(positions);
+    if (range.length < 10) {
+        alert("開始位置と終了位置の間隔が狭すぎるためにグラフを表示できません");
+        return;
+    }
 
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         document.getElementById('info_field').style.display = "none";
@@ -117,7 +122,6 @@ function showGraph(positions, skip_draw) {
         document.getElementById('panorama_canvas').style.width = "50%";
         showXYaccelerationCanvas();
         if (skip_draw === false) {
-            var range = getPositionStartEndFromRangeController(positions);
             plotAcceleration(positions, range.start, range.end);
         }
     } else {
@@ -220,14 +224,14 @@ function plotAcceleration(positions, start, end) {
 }
 
 function clearAccelerationGraphData() {
-    accelerationXY_graph_property["data"][1] = [];
-    accelerationXY_graph_property["data"][2] = [];
-    accelerationZ_graph_property["data"][1] = [];
-    gyro_graph_property["data"][1] = [];
-    gyro_graph_property["data"][2] = [];
-    gyro_graph_property["data"][3] = [];
-    speed_graph_property["data"][1] = [];
+    accelerationXY_graph_property["data"][1].splice(1, accelerationXY_graph_property["data"][1].length - 1);
+    accelerationXY_graph_property["data"][2].splice(1, accelerationXY_graph_property["data"][2].length - 1);
+    accelerationZ_graph_property["data"][1].splice(1, accelerationZ_graph_property["data"][1].length - 1);
+    gyro_graph_property["data"][1].splice(1, gyro_graph_property["data"][1].length - 1);
+    gyro_graph_property["data"][2].splice(1, gyro_graph_property["data"][2].length - 1);
+    gyro_graph_property["data"][3].splice(1, gyro_graph_property["data"][3].length - 1);
+    speed_graph_property["data"][1].splice(1, speed_graph_property["data"][1].length - 1);
     altitude_graph_property["config"]["maxY"] = 100;
-    altitude_graph_property["data"][1] = [];
+    altitude_graph_property["data"][1].splice(1, altitude_graph_property["data"][1].length - 1);
     clearXYaccelerationData();
 }

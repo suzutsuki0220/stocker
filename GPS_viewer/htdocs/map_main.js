@@ -160,10 +160,14 @@ function setPanoramaPosition(gm_latlng, heading) {
         panorama.setPov(pov);
         break;
     case google.maps.StreetViewStatus.UNKNOWN_ERROR:
-        alert("StreetViewのデータ取得に失敗しました");
+        if (playback.isPlaying() === false) {
+            alert("StreetViewのデータ取得に失敗しました");
+        }
         break;
     case google.maps.StreetViewStatus.ZERO_RESULTS:
-        showMapWarning("道路以外の場所からルートが始まっている可能性があります");
+        if (playback.isPlaying() === false) {
+            showMapWarning("道路以外の場所からルートが始まっている可能性があります");
+        }
         break;
     }
   };
@@ -287,6 +291,7 @@ function reloadMap(start_range, end_range) {
     if (start_range !== end_range) {
       alert('有効な位置情報がありません');
       showMapWarning('有効な位置情報がありません');
+      map_clear();
     } else {
       showMapWarning('開始位置-終了位置の指定が不適切なため、走行データを表示できません');
     }
@@ -484,8 +489,15 @@ function getPositionStartEndFromRangeController(p) {
         range_start = range_end;
     }
 
-    ret.start = Math.floor(p.length * range_start / 1000);
-    ret.end   = Math.floor(p.length * range_end / 1000);
+    if (p && p.length) {
+        ret.start = Math.floor(p.length * range_start / 1000);
+        ret.end   = Math.floor(p.length * range_end / 1000);
+        ret.length = ret.end - ret.start;
+    } else {
+        ret.start = 0;
+        ret.end   = 0;
+        ret.length = 0;
+    }
 
     return ret;
 }
@@ -538,7 +550,11 @@ function showMapWarning(message) {
 
 function playbackRoute() {
     var range = getPositionStartEndFromRangeController(positions);
-    playback.start(positions, range.start, range.end);
+    if (range.length >= 100) {
+        playback.start(positions, range.start, range.end);
+    } else {
+        alert("開始位置と終了位置の間隔が狭すぎるため処理できません");
+    }
 }
 
 function makeEventTitle(behavior) {

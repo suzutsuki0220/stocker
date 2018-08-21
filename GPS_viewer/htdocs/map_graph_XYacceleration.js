@@ -29,18 +29,15 @@ var accelerationXY_gforce_property = {
 
 function showXYaccelerationCanvas() {
     document.getElementById('gforce_accelXY').style.display = "inline";
-
 }
 
 function hideXYaccelerationCanvas() {
     document.getElementById('gforce_accelXY').style.display = "none";
-
 }
 
 function clearXYaccelerationData() {
-    accelerationXY_gforce_property["data"][1] = [];
-    accelerationXY_gforce_property["data"][2] = [];
-
+    accelerationXY_gforce_property["data"][1].splice(1, accelerationXY_gforce_property["data"][1].length - 1);
+    accelerationXY_gforce_property["data"][2].splice(1, accelerationXY_gforce_property["data"][2].length - 1);
 }
 
 function pushXYaccelerationData(data_index, p) {
