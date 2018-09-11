@@ -3,6 +3,7 @@ var geocoder;
 var panorama;
 var playback;
 var maptrack;
+var maptrack_pos = 0;
 var startMarker = null;
 var endMarker = null;
 var poly = new Array();
@@ -232,9 +233,9 @@ function get_latlng(lat, lng) {
 function map_route() {
   resetLatLngMinMax();
   maptrack.clearIndex();
+  maptrack.searchTrackIndex(positions);
   if (reloadMap(0, positions.length) === true) {
     centeringMap();
-    maptrack.searchTrackIndex(positions);
   }
 }
 
@@ -640,6 +641,31 @@ function searchPositionIndexByLatLng(lat, lng) {
     }
 
     return NaN;
+}
+
+function setTimeRangeByTrack(num) {
+    const last_pos = maptrack_pos;
+
+    maptrack_pos += num;
+    if (maptrack_pos < 0) {
+        maptrack_pos = 0;
+    } else if (maptrack_pos >= maptrack.getTrackCount()) {
+        maptrack_pos = maptrack.getTrackCount();
+    }
+
+    if (last_pos !== maptrack_pos) {
+        var range = maptrack.getTrackRange(positions, maptrack_pos);
+        // シーンの切替えより少し手前の範囲を出す
+        if (range.start > 30) {
+            range.start -= 30;
+        } else {
+            range.start = 0;
+        }
+
+        document.getElementsByName('range_start')[0].value = Math.floor(range.start / positions.length * 1000);
+        document.getElementsByName('range_end')[0].value = Math.floor(range.end / positions.length * 1000);
+        reloadMap(range.start, range.end);
+    }
 }
 
 function uuid() {

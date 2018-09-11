@@ -158,6 +158,12 @@ my $html = <<EOF;
 時間: <span id="duration_text">---- 秒</span>&nbsp;&nbsp;
 位置情報: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
 </div>
+<div style="margin: 3px 0 3px 0.5em;">
+Track: 
+<input type="button" name="track_prev" value="＜" onClick="setTimeRangeByTrack(-1)">
+<span id="current_track"></span>
+<input type="button" name="track_next" value="＞" onClick="setTimeRangeByTrack(1)">
+</div>
 <div style="margin-left: 2em;">
 開始位置<br>
 <div style="position: relative; height: 2em; margin-bottom: 0.5em;">
