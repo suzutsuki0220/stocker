@@ -122,6 +122,17 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         }
     };
 
+    var getFirstPosition = function(positions, start_index, end_index) {
+        for (var i=start_index; i<end_index; i++) {
+            const p = positions[i];
+            if (isValidLatLng(p.latitude, p.longitude) === true) {
+                return new google.maps.LatLng(p.latitude, p.longitude);
+            }
+        }
+
+        return null;
+    };
+
     if (this.playing === true) {
         this.stop(); // かり
         return;
@@ -136,6 +147,11 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
 
         if (this.marker === null) {
             this.marker = new mapCarMarker(this.ins_map);
+        }
+
+        const start_latlng = getFirstPosition(positions, start_index, end_index);
+        if (start_latlng !== null) {
+            map.setCenter(start_latlng);
         }
 
         moveMarker(this.marker, this.ins_map);

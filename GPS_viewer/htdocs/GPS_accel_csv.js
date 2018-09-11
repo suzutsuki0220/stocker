@@ -1,7 +1,10 @@
+var datetime_precision;
+
 function getPositionAccelCsv(data) {
     var position = [];
     var sp, ep;
 
+    datetime_precision = 0;
     sp = 0;
     while((ep = data.indexOf("\n", sp)) != -1) {
         var line = data.substring(sp, ep);
@@ -23,6 +26,41 @@ function getPositionAccelCsv(data) {
 }
 
 function parseAccelCsvLine(line) {
+    // 小数点以下を 0 で詰めなかったデータのバグ対策
+    var cutoffDatetimeDecimals = function(datetime) {
+        var prec = 0;
+        const period_pos = datetime.lastIndexOf(".");
+        if (period_pos > 0) {
+            const decimals_length = datetime.length - period_pos - 1;
+            if (decimals_length <= 3) {
+                prec = 3;  // millisecond precision
+            } else if (decimals_length <= 6) {
+                prec = 6;  // microsecond precision
+            } else if (decimals_length <= 9) {
+                prec = 9;  // nanosecond precision
+            }
+        }
+        if (prec > datetime_precision) {
+            datetime_precision = prec;
+        }
+        if (period_pos > 0) {
+            var i, to_add;
+            var dt_str = datetime.substr(0, period_pos);
+            const decimals_length = datetime.length - period_pos - 1;
+            dt_str += ".";
+            to_add = 3;
+            i = decimals_length;
+            while(i < datetime_precision) {
+                dt_str += "0";
+                i++;
+                to_add--;
+            }
+            dt_str += datetime.substr(period_pos + 1, to_add);
+            return dt_str;
+        }
+        return datetime;
+    };
+
     var col = line.split(",");
     if (col) {
         var position = new Object();
@@ -31,6 +69,7 @@ function parseAccelCsvLine(line) {
         if (datetime_pattern.test(position.datetime) === false) {
             return null;
         }
+        position.datetime = cutoffDatetimeDecimals(position.datetime);
 
         for (var i=1; i<col.length; i++) {
             if (col[i] === "A") {
@@ -70,4 +109,3 @@ function parseAccelCsvLine(line) {
 
     return null;
 }
-
