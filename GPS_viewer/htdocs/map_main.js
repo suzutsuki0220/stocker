@@ -2,6 +2,7 @@ var map;
 var geocoder;
 var panorama;
 var playback;
+var maptrack;
 var startMarker = null;
 var endMarker = null;
 var poly = new Array();
@@ -76,6 +77,7 @@ function map_init() {
   geocoder = new google.maps.Geocoder;
 
   playback = new mapPlaybackRoute(map);
+  maptrack = new mapTrack();
 
   var panoramaOptions = {
     position: central,
@@ -229,8 +231,10 @@ function get_latlng(lat, lng) {
 // 経路描画
 function map_route() {
   resetLatLngMinMax();
+  maptrack.clearIndex();
   if (reloadMap(0, positions.length) === true) {
     centeringMap();
+    maptrack.searchTrackIndex(positions);
   }
 }
 

@@ -55,6 +55,7 @@ eval {
       "%htdocs_root%/map_car_marker.js",
       "%htdocs_root%/map_event_marker.js",
       "%htdocs_root%/map_playback_route.js",
+      "%htdocs_root%/map_track.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
       "%htdocs_root%/GPS_accel_csv.js",
