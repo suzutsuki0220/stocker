@@ -301,7 +301,7 @@ function pushSceneList(scene_data_line) {
     var hhmmssxxx = scene_data_line.substring(0, delim_pos);
 
     if (isValidFormatTime(hhmmssxxx) === true) {
-        var milisec = getSecondFromFormatTime(hhmmssxxx) * 1000;
+        var milisec = Math.floor(getSecondFromFormatTime(hhmmssxxx) * 1000);
         sceneList.push(milisec);
         addTickMark(document.getElementById('sceneListMarks'), Math.floor(milisec / (duration * 1000) * 1000));
     }
@@ -309,7 +309,7 @@ function pushSceneList(scene_data_line) {
 
 function getNextScene(next_step) {
     var elem = getSelectedTimeElem();
-    var milisec = getSecondFromFormatTime(elem.value) * 1000;
+    var milisec = Math.floor(getSecondFromFormatTime(elem.value) * 1000);
     var base_index, next_index;
 
     for (var base_index=0; base_index<sceneList.length; base_index++) {
@@ -347,7 +347,7 @@ function changeTime(elemSeekBar) {
 
 // 時間の値が変更された時にシークバーを動かす処理
 function moveSeekPosition(elemSeekBar, elemTimeSec) {
-    var seekPoint = getSecondFromFormatTime(elemTimeSec.value) / duration * 1000;
+    var seekPoint = Math.floor(getSecondFromFormatTime(elemTimeSec.value) / duration * 1000);
     elemSeekBar.value = seekPoint;
 }
 
