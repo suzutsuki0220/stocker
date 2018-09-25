@@ -9,6 +9,7 @@ var endMarker = null;
 var poly = new Array();
 var positions;
 var polyline_clicked_info = null;
+var map_range_slider;
 
 var pre_lat;
 var pre_lng;
@@ -79,6 +80,7 @@ function map_init() {
 
   playback = new mapPlaybackRoute(map);
   maptrack = new mapTrack();
+  map_range_slider = new mapRangeSlider();
 
   var panoramaOptions = {
     position: central,
@@ -198,8 +200,7 @@ function map_clear() {
     endMarker = null;
   }
 
-  clearTimeRangeBgSpeed(document.getElementById('range_start_background'));
-  clearTimeRangeBgSpeed(document.getElementById('range_end_background'));
+  map_range_slider.setStrokeData([], 0, 120); // clear stroke
 
   document.getElementById("distance_text").innerHTML = "--  km"; 
   document.getElementById("duration_text").innerHTML = "---- 秒"; 
@@ -304,8 +305,7 @@ function reloadMap(start_range, end_range) {
   }
   document.getElementById('map_warningText').style.display = "none";
 
-  paintTimeRangeBgSpeed(document.getElementById('range_start_background'));
-  paintTimeRangeBgSpeed(document.getElementById('range_end_background'));
+  plotRangeStroke();
 
   document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
   document.getElementById("sample_count").innerHTML  = String(end_range - start_range);
@@ -354,13 +354,16 @@ function reloadMap(start_range, end_range) {
 }
 
 function setStartEndRangeByPolylineClicked(name, lat, lng) {
-    var range_elem = document.getElementsByName(name)[0];
-    if (range_elem) {
-        const index = searchPositionIndexByLatLng(lat, lng);
-        if (index) {
-            range_elem.value = Math.floor(index / positions.length * 1000);
-            rangeChanged();
+    const index = searchPositionIndexByLatLng(lat, lng);
+    if (index) {
+        var value = Math.floor(index / positions.length * 1000);
+        var sr = map_range_slider.getStartEndValue();
+        if (name === "range_start_pos") {
+            map_range_slider.setRangePosition(value, sr.end);
+        } else if (name === "range_end_pos") {
+            map_range_slider.setRangePosition(sr.start, value);
         }
+        rangeChanged();
     }
     if (polyline_clicked_info !== null) {
         polyline_clicked_info.close();
@@ -380,7 +383,7 @@ function polyLineClickEvent(e) {
         return;
     }
 
-    const info_content = "<div style=\"color: #202020\">経路の範囲</div><br><a href=\"javascript:setStartEndRangeByPolylineClicked('range_start', " + lat + ", " + lng + ")\" class=\"button\">開始位置に指定</a>&nbsp;<a href=\"javascript:setStartEndRangeByPolylineClicked('range_end', " + lat + ", " + lng + ")\" class=\"button\">終了位置に指定</a>";
+    const info_content = "<div style=\"color: #202020\">経路の範囲</div><br><a href=\"javascript:setStartEndRangeByPolylineClicked('range_start_pos', " + lat + ", " + lng + ")\" class=\"button\">開始位置に指定</a>&nbsp;<a href=\"javascript:setStartEndRangeByPolylineClicked('range_end_pos', " + lat + ", " + lng + ")\" class=\"button\">終了位置に指定</a>";
 
     if (polyline_clicked_info === null) {
         polyline_clicked_info = new google.maps.InfoWindow();
@@ -482,21 +485,11 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
 function getPositionStartEndFromRangeController(p) {
     var ret = new Object();
 
-    var range_start = parseInt(document.getElementsByName('range_start')[0].value);
-    var range_end = parseInt(document.getElementsByName('range_end')[0].value);
-
-    if (range_end < range_start) {
-        document.getElementsByName('range_end')[0].value = range_start;
-        range_end = range_start;
-    }
-    if (range_start > range_end) {
-        document.getElementsByName('range_start')[0].value = range_end;
-        range_start = range_end;
-    }
+    var startEnd = map_range_slider.getStartEndValue();
 
     if (p && p.length) {
-        ret.start = Math.floor(p.length * range_start / 1000);
-        ret.end   = Math.floor(p.length * range_end / 1000);
+        ret.start = Math.floor(p.length * startEnd.start / 1000);
+        ret.end   = Math.floor(p.length * startEnd.end / 1000);
         ret.length = ret.end - ret.start;
     } else {
         ret.start = 0;
@@ -510,6 +503,17 @@ function getPositionStartEndFromRangeController(p) {
 function rangeChanged() {
     var range = getPositionStartEndFromRangeController(positions);
     reloadMap(range.start, range.end);
+}
+
+function plotRangeStroke() {
+    var data = new Array();
+    const skip_idx = Math.floor(positions.length / 1000) + 1;
+
+    for (var i=0; i<positions.length; i+=skip_idx) {
+        data.push(positions[i].speed);
+    }
+
+    map_range_slider.setStrokeData(data, 0, 120);
 }
 
 function paintTimeRangeBgSpeed(canvas) {
@@ -662,8 +666,10 @@ function setTimeRangeByTrack(num) {
             range.start = 0;
         }
 
-        document.getElementsByName('range_start')[0].value = Math.floor(range.start / positions.length * 1000);
-        document.getElementsByName('range_end')[0].value = Math.floor(range.end / positions.length * 1000);
+        const start_pos = Math.floor(range.start / positions.length * 1000);
+        const end_pos   = Math.floor(range.end / positions.length * 1000);
+        map_range_slider.setRangePosition(start_pos, end_pos);
+
         reloadMap(range.start, range.end);
     }
 }

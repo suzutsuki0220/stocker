@@ -22,13 +22,6 @@ input.time_range {
     width: 97%;
 }
 
-#range_start_background, #range_end_background {
-    width: 97%;
-    height: 1.5em;
-    position: absolute;
-    background-color: #000000;
-}
-
 #mapLoading {
     text-align: center;
     font-size: 0.75em;
@@ -63,7 +56,18 @@ input.time_range {
 #map_canvas {
     float: left;
     width: 100%;
-    height: 55%;
+    height: 50%;
+}
+
+#range_field {
+    float: left;
+    width: 100%;
+    height:  5%;
+    background-color: #c0c0c0;
+}
+
+#range_start_pos, #range_end_pos {
+    cursor: col-resize;
 }
 
 #map_warningText {

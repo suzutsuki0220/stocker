@@ -54,6 +54,7 @@ eval {
       "%htdocs_root%/map_graph_XYacceleration.js",
       "%htdocs_root%/map_car_marker.js",
       "%htdocs_root%/map_event_marker.js",
+      "%htdocs_root%/map_range_slider.js",
       "%htdocs_root%/map_playback_route.js",
       "%htdocs_root%/map_track.js",
       "%htdocs_root%/GPS_nmea.js",
@@ -98,8 +99,26 @@ my $html = <<EOF;
       }
     };
 
+    document.onmouseup = function() {
+        map_range_slider.onMouseUpWork();
+    };
+
+    document.onmousemove = function(e) {
+        map_range_slider.onMouseMoveWork(e);
+    };
+
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
+
+        map_range_slider.onLoadWork({
+            after_changed_func: rangeChanged,
+            range_start: document.getElementById('range_start_pos'),
+            range_end  : document.getElementById('range_end_pos'),
+            base_area  : document.getElementById('range_base_area'),
+            mask_before_start: document.getElementById('range_mask_before_start'),
+            mask_after_end: document.getElementById('range_mask_after_end'),
+            stroke_elem: document.getElementById('range_stroke'),
+        });
     }
 
     function judgePolyLineColor(p) {
@@ -148,6 +167,17 @@ my $html = <<EOF;
   <canvas id="graph_altitude"></canvas>
   <canvas id="graph_speed"></canvas>
 </div>
+<div id="range_field">
+<svg id="range_base_area" width="100%" height="100%">
+    <rect width="100%" height="100%" x="0" y="0" stroke="#1c1c1c" stroke-width="1" fill="none" />
+    <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#6c6c6c" stroke-width="1" fill="none" />
+    <path id="range_stroke" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <rect id="range_mask_before_start" x="0" y="0" width="0" height="100%" fill="black" fill-opacity="0.65" />
+    <rect id="range_mask_after_end" x="57" y="0" width="0" height="100%" fill="black" fill-opacity="0.65" />
+    <rect id="range_start_pos" x="10" y="0" width="5" height="100%" fill="#a9a933" />
+    <rect id="range_end_pos" x="50" y="0" width="5" height="100%" fill="#a9a933" />
+</svg>
+</div>
 <div id="bottom_field">
 <div id="panorama_canvas"></div><canvas id="gforce_accelXY"></canvas>
 </div>
@@ -166,19 +196,11 @@ Track:
 </div>
 <div style="margin-left: 2em;">
 開始位置<br>
-<div style="position: relative; height: 2em; margin-bottom: 0.5em;">
-<canvas id="range_start_background"></canvas>
-<input type="range" name="range_start" min="0" max="1000" value="0" onChange="rangeChanged()" class="time_range" list="tickmarks">
-</div>
 <i class="far fa-clock"></i> <span id="start_datetime"></span><br>
 <i class="far fa-map"></i> <span id="start_address"></span><br>
 </div><br>
 <div style="margin-left: 2em;">
 終了位置<br>
-<div style="position: relative; height: 2em; margin-bottom: 0.5em;">
-<canvas id="range_end_background"></canvas>
-<input type="range" name="range_end" min="0" max="1000" value="1000" onChange="rangeChanged()" class="time_range" list="tickmarks">
-</div>
 <i class="far fa-clock"></i> <span id="end_datetime"></span><br>
 <i class="far fa-map"></i> <span id="end_address"></span><br>
 </div>

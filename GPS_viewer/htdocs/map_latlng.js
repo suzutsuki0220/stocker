@@ -5,6 +5,10 @@ function isValidLatLng(lat, lng) {
     return false;
   }
 
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return false;
+  }
+
   return true;
 }
 

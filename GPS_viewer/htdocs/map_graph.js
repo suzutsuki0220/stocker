@@ -119,7 +119,9 @@ function showGraph(positions, skip_draw) {
         document.getElementById('graph_field').style.width = "55%";
         document.getElementById('graph_field').style.height = "95%";
         document.getElementById('map_canvas').style.width = "45%";
+        document.getElementById('range_field').style.width = "45%";
         document.getElementById('panorama_canvas').style.width = "50%";
+        map_range_slider.onResizeWork();
         showXYaccelerationCanvas();
         if (skip_draw === false) {
             plotAcceleration(positions, range.start, range.end);
@@ -136,7 +138,9 @@ function hideGraph() {
     document.getElementById('graph_field').style.width = "0px";
     document.getElementById('graph_field').style.height = "0px";
     document.getElementById('map_canvas').style.width = "100%";
+    document.getElementById('range_field').style.width = "100%";
     document.getElementById('panorama_canvas').style.width = "100%";
+    map_range_slider.onResizeWork();
     hideXYaccelerationCanvas();
 }
 
