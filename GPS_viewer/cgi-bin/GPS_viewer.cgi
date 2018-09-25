@@ -209,11 +209,6 @@ Track:
 <i class="far fa-clock"></i> <span id="end_datetime"></span><br>
 <i class="far fa-map"></i> <span id="end_address"></span><br>
 </div>
-<datalist id="tickmarks">
-  <option value="0" label="0%">
-  <option value="500" label="50%">
-  <option value="1000" label="100%">
-</datalist>
 </form>
 </div>
 EOF
