@@ -295,7 +295,6 @@ function reloadMap(start_range, end_range) {
 
   if (route_length === 0) {
     if (start_range !== end_range) {
-      alert('有効な位置情報がありません');
       showMapWarning('有効な位置情報がありません');
       map_clear();
     } else {

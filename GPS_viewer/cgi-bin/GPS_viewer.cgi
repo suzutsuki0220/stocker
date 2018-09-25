@@ -115,6 +115,7 @@ my $html = <<EOF;
             range_start: document.getElementById('range_start_pos'),
             range_end  : document.getElementById('range_end_pos'),
             base_area  : document.getElementById('range_base_area'),
+            playback_pos : document.getElementById('range_playback_pos'),
             mask_before_start: document.getElementById('range_mask_before_start'),
             mask_after_end: document.getElementById('range_mask_after_end'),
             stroke_elem: document.getElementById('range_stroke'),
@@ -176,6 +177,10 @@ my $html = <<EOF;
     <rect id="range_mask_after_end" x="57" y="0" width="0" height="100%" fill="black" fill-opacity="0.65" />
     <rect id="range_start_pos" x="10" y="0" width="5" height="100%" fill="#a9a933" />
     <rect id="range_end_pos" x="50" y="0" width="5" height="100%" fill="#a9a933" />
+    <svg id="range_playback_pos" x="50%" y="1" width="11" height="100%" display="none">
+        <line x1="6" y1="0" x2="6" y2="100%" stroke="#aa0000" stroke-width="1" fill="none" />
+        <polygon points="0,0 4,0 6,2 8,0 11,0 11,3 6,10 0,3" fill="#ff3300" />
+    </svg>
 </svg>
 </div>
 <div id="bottom_field">

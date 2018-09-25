@@ -16,7 +16,8 @@ var mapRangeSlider = function() {
     this.after_changed_func = null;  // スライダーが移動された後に動かす処理
     this.range_start = null;  // rectエレメント
     this.range_end = null;    // rectエレメント
-    this.base_area = null;
+    this.base_area = null;    // svgエレメント
+    this.playback_pos = null;    // svgエレメント
     this.mask_before_start = null;  // rectエレメント
     this.mask_after_end = null;  // rectエレメント
     this.stroke_elem = null;  // pathエレメント
@@ -42,6 +43,7 @@ mapRangeSlider.prototype.onLoadWork = function(args) {
     this.range_start        = args.range_start;
     this.range_end          = args.range_end;
     this.base_area          = args.base_area;
+    this.playback_pos       = args.playback_pos;
     this.mask_before_start  = args.mask_before_start;
     this.mask_after_end     = args.mask_after_end;
     this.stroke_elem        = args.stroke_elem;
@@ -209,3 +211,24 @@ mapRangeSlider.prototype.setStrokeData = function(data, min, max) {
         }
     }
 };
+
+mapRangeSlider.prototype.setPlaybackPositionVisible = function(flag) {
+    if (flag === true) {
+        this.playback_pos.setAttribute('display', 'inline');
+    } else {
+        this.playback_pos.setAttribute('display', 'none');
+    }
+}
+
+mapRangeSlider.prototype.setPlaybackPosition = function(position) {
+    const base_area_width  = this.base_area.clientWidth;
+    const pos_width  = parseInt(this.playback_pos.getAttribute('width'), 10);
+    const pos_x = Math.floor(position / 1000 * base_area_width);
+
+    var x = Math.floor(pos_x - (pos_width / 2) + 0.5);
+    if (x < 0) {
+        x = 0;
+    }
+
+    this.playback_pos.setAttribute('x', x);
+}

@@ -108,10 +108,12 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                         next_wait = e - s;
                     }
                 }
+                map_range_slider.setPlaybackPosition(Math.floor((self.pos_index / positions.length) * 1000));
                 setTimeout(function(){moveMarker(marker, map);}, next_wait);
             } else {
                 self.hidePlaybackInfo();
                 self._showInfoWindow(map, latlng, "走行終了");
+                map_range_slider.setPlaybackPositionVisible(false);
                 self.playing = false;
             }
 
@@ -154,6 +156,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             map.setCenter(start_latlng);
         }
 
+        map_range_slider.setPlaybackPositionVisible(true);
         moveMarker(this.marker, this.ins_map);
         this.showPlaybackInfo();
         this.marker.setVisible(true);
@@ -164,6 +167,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
 mapPlaybackRoute.prototype.stop = function() {
     this.pos_index = positions.length;
     this.hidePlaybackInfo();
+    map_range_slider.setPlaybackPositionVisible(false);
     this._hideInfoWindow();
 
     if (this.playing === false) {
