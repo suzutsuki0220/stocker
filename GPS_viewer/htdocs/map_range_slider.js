@@ -180,13 +180,17 @@ mapRangeSlider.prototype.setStrokeData = function(data, min, max) {
     const y_interval = (base_area_height - (2 * stroke_width)) / (max - min);
 
     var normalize = function(input) {
-        if (input > max) {
-            return max;
+        if (isNaN(input) === true) {
+            return 0;
+        } else {
+            if (input > max) {
+                return max;
+            }
+            if (input < min) {
+                return min;
+            }
+            return input;
         }
-        if (input < min) {
-            return min;
-        }
-        return input;
     };
 
     if (this.stroke_elem !== null) {
