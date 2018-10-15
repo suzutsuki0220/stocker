@@ -175,8 +175,8 @@ my $html = <<EOF;
     <path id="range_stroke" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
     <rect id="range_mask_before_start" x="0" y="0" width="0" height="100%" fill="black" fill-opacity="0.65" />
     <rect id="range_mask_after_end" x="57" y="0" width="0" height="100%" fill="black" fill-opacity="0.65" />
-    <rect id="range_start_pos" x="10" y="0" width="5" height="100%" fill="#a9a933" />
-    <rect id="range_end_pos" x="50" y="0" width="5" height="100%" fill="#a9a933" />
+    <rect id="range_start_pos" x="10" y="0" width="5" height="100%" fill="#6969ff" stroke="#3333ff" stroke-width="1" />
+    <rect id="range_end_pos" x="50" y="0" width="5" height="100%" fill="#6969ff" stroke="#3333ff" stroke-width="1" />
     <svg id="range_playback_pos" x="50%" y="1" width="11" height="100%" display="none">
         <line x1="6" y1="0" x2="6" y2="100%" stroke="#aa0000" stroke-width="1" fill="none" />
         <polygon points="0,0 4,0 6,2 8,0 11,0 11,3 6,10 0,3" fill="#ff3300" />
@@ -202,12 +202,12 @@ Track:
 <div style="margin-left: 2em;">
 開始位置<br>
 <i class="far fa-clock"></i> <span id="start_datetime"></span><br>
-<i class="far fa-map"></i> <span id="start_address"></span><br>
+<i class="fas fa-map-marker-alt"></i> <span id="start_address"></span><br>
 </div><br>
 <div style="margin-left: 2em;">
 終了位置<br>
 <i class="far fa-clock"></i> <span id="end_datetime"></span><br>
-<i class="far fa-map"></i> <span id="end_address"></span><br>
+<i class="fas fa-map-marker-alt"></i> <span id="end_address"></span><br>
 </div>
 </form>
 </div>
