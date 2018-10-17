@@ -354,7 +354,7 @@ function reloadMap(start_range, end_range) {
 
 function setStartEndRangeByPolylineClicked(name, lat, lng) {
     const index = searchPositionIndexByLatLng(lat, lng);
-    if (index) {
+    if (isNaN(index) === false) {
         var value = Math.floor(index / positions.length * 1000);
         var sr = map_range_slider.getStartEndValue();
         if (name === "range_start_pos") {
@@ -363,6 +363,8 @@ function setStartEndRangeByPolylineClicked(name, lat, lng) {
             map_range_slider.setRangePosition(sr.start, value);
         }
         rangeChanged();
+    } else {
+        alert("経路内で近似のサンプルが見つかりませんでした。別の場所を選択してください");
     }
     if (polyline_clicked_info !== null) {
         polyline_clicked_info.close();
@@ -633,14 +635,14 @@ function searchPositionIndexByLatLng(lat, lng) {
 
     // 1桁上げて比較
     for (var i=0; i<positions.length; i++) {
-        if (Math.abs(lat - positions[i].latitude) < 0.00001 && Math.abs(lng - positions[i].longitude) < 0.00001) {
+        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng, 0.00001)) {
             return i;
         }
     }
 
     // 更に1桁
     for (var i=0; i<positions.length; i+=5) {
-        if (Math.abs(lat - positions[i].latitude) < 0.0001 && Math.abs(lng - positions[i].longitude) < 0.0001) {
+        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng, 0.0001)) {
             return i;
         }
     }

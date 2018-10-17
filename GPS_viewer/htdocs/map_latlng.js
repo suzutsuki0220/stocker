@@ -42,8 +42,9 @@ function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
     return ret;
 }
 
-function isNearLatLng(lat1, lng1, lat2, lng2) {
-    if (Math.abs(lat2 - lat1) < 0.000001 && Math.abs(lng2 - lng1) < 0.000001) {
+function isNearLatLng(lat1, lng1, lat2, lng2, precision) {
+    var precision = typeof precision !== 'undefined' ? precision : 0.000001;
+    if (Math.abs(lat2 - lat1) < precision && Math.abs(lng2 - lng1) < precision) {
         // 位置の変化が数センチ規模 (約1m未満)
         return true;
     }
