@@ -163,32 +163,20 @@ function plotAcceleration(positions, start, end) {
       return ret;
     };
 
-    var pushSpeedData = function(data_index, p) {
-      if (!isNaN(p.speed)) {
-        speed_graph_property["data"][1][data_index] = p.speed;
-      } else {
-        if (data_index === 0) {
-          speed_graph_property["data"][1][data_index] = 0;
-        } else {
-          speed_graph_property["data"][1][data_index] = speed_graph_property["data"][1][data_index - 1];
+    var pushIntermitData = function(property, data_index, value) {
+      if (isNaN(value) === false) {
+        property["data"][1][data_index] = value;
+        if (value > property["config"]["maxY"]) {
+          property["config"]["maxY"] = value;
         }
-      }
-    };
-
-    var pushAltitudeData = function(data_index, p) {
-      if (!isNaN(p.altitude)) {
-        altitude_graph_property["data"][1][data_index] = p.altitude;
-        if (p.altitude > altitude_graph_property["config"]["maxY"]) {
-          altitude_graph_property["config"]["maxY"] = p.altitude;
-        }
-        if (p.altitude < altitude_graph_property["config"]["minY"]) {
-          altitude_graph_property["config"]["minY"] = p.altitude;
+        if (value < property["config"]["minY"]) {
+          property["config"]["minY"] = value;
         }
       } else {
         if (data_index === 0) {
-          altitude_graph_property["data"][1][data_index] = 0;
+          property["data"][1][data_index] = 0;
         } else {
-          altitude_graph_property["data"][1][data_index] = altitude_graph_property["data"][1][data_index - 1];
+          property["data"][1][data_index] = property["data"][1][data_index - 1];
         }
       }
     };
@@ -223,8 +211,8 @@ function plotAcceleration(positions, start, end) {
         gyro_graph_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
         gyro_graph_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
         graph_behavior.push(p);
-        pushSpeedData(data_index, p);
-        pushAltitudeData(data_index, p);
+        pushIntermitData(speed_graph_property, data_index, p.speed);
+        pushIntermitData(altitude_graph_property, data_index, p.altitude);
         pushXYaccelerationData(data_index, p);
         data_index++;
     }
