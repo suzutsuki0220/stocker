@@ -15,7 +15,7 @@ function ajax_init()
             try {
                 httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
             } catch(e) {
-                alert('ERROR' + e.description);
+                alert('ERROR: ' + e.description);
             }
         }
     }
