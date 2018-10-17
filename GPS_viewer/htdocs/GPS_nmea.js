@@ -14,7 +14,7 @@ var _altitude = NaN;
 var _h_accuracy = NaN;
 var _v_accuracy = NaN;
 
-function getPositionEmea(data) {
+function getPositionNmea(data) {
     var position = [];
     var sp, ep;
 
@@ -142,16 +142,8 @@ function addHoldData(obj) {
         obj.altitude = _altitude;
     }
 
-    if (isNaN(_accelX) === false) {
-        obj.est_x = _accelX;
-    } 
-
-    if (isNaN(_accelY) === false) {
-        obj.est_y = _accelY;
-    } 
-
-    if (isNaN(_accelZ) === false) {
-        obj.est_z = _accelZ;
+    if (isNaN(_accelX) === false && isNaN(_accelY) === false && isNaN(_accelZ) === false) {
+        obj.est = {x: _accelX, y: _accelY, z: _accelZ};
     } 
 
     if (isNaN(_h_accuracy) === false) {

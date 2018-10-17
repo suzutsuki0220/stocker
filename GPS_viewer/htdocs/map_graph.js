@@ -152,7 +152,7 @@ function plotAcceleration(positions, start, end) {
       var ave;
 
       for (var i=start; i<end; i+=skip) {
-        total += positions[i].est_z;
+        total += positions[i].est.z;
         count++;
       }
       ave = total / count;
@@ -193,6 +193,17 @@ function plotAcceleration(positions, start, end) {
       }
     };
 
+    var replaceNanToZero = function(value) {
+      var ret = 0;
+      if (value) {
+        ret = parseFloat(value);
+        if (isNaN(ret) === true) {
+          ret = 0;
+        }
+      }
+      return ret;
+    };
+
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         return;
     }
@@ -205,12 +216,12 @@ function plotAcceleration(positions, start, end) {
     var data_index = 1;
     for (var i=start; i<end; i+=skip) {
         var p = positions[i];
-        accelerationXY_graph_property["data"][1][data_index] = p.est_x;
-        accelerationXY_graph_property["data"][2][data_index] = p.est_y;
-        accelerationZ_graph_property["data"][1][data_index] = fix_central_z === true ? p.est_z - 1.0 : p.est_z;
-        gyro_graph_property["data"][1][data_index] = p.gyro_x;
-        gyro_graph_property["data"][2][data_index] = p.gyro_y;
-        gyro_graph_property["data"][3][data_index] = p.gyro_z;
+        accelerationXY_graph_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
+        accelerationXY_graph_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
+        accelerationZ_graph_property["data"][1][data_index] = fix_central_z === true ? p.est.z - 1.0 : p.est.z;
+        gyro_graph_property["data"][1][data_index] = p.gyro ? replaceNanToZero(p.gyro.x) : 0;
+        gyro_graph_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
+        gyro_graph_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
         graph_behavior.push(p);
         pushSpeedData(data_index, p);
         pushAltitudeData(data_index, p);

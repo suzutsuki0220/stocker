@@ -60,6 +60,14 @@ function parseAccelCsvLine(line) {
         }
         return datetime;
     };
+    var getXYZvalue = function(col, i) {
+        var ret = new Object();
+        ret.x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+        ret.y = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
+        ret.z = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+
+        return ret;
+    };
 
     var col = line.split(",");
     if (col) {
@@ -73,19 +81,13 @@ function parseAccelCsvLine(line) {
 
         for (var i=1; i<col.length; i++) {
             if (col[i] === "A") {
-                position.accel_x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-                position.accel_y = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-                position.accel_z = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+                position.accel = getXYZvalue(col, i);
                 i += 3;
             } else if (col[i] === "G") {
-                position.gyro_x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-                position.gyro_y = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-                position.gyro_z = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+                position.gyro = getXYZvalue(col, i); 
                 i += 3;
             } else if (col[i] === "F") {
-                position.est_x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-                position.est_y = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-                position.est_z = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+                position.est = getXYZvalue(col ,i);
                 position.scene = col[i+4];
                 position.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
                 position.level = col[i+6] ? parseInt(col[i+6].trim()) : 0;
@@ -93,8 +95,8 @@ function parseAccelCsvLine(line) {
             } else if (col[i] === "GPS" || col[i] === "Location") {
                 position.latitude  = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
                 position.longitude = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-                position.altitude  = col[i+2] ? parseFloat(col[i+3].trim()) : 0;
-                i += 2;
+                position.altitude  = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+                i += 3;
             } else if (col[i] === "m/s" || col[i] === "Speed") {
                 position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
                 i += 1;

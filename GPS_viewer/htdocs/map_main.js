@@ -251,7 +251,7 @@ function reloadMap(start_range, end_range) {
   var line_color = "";
   var last_line_color = "";
   var beforeMarkerDatetime = 0;
-  var p_diff = getPositionDifference(positions, start_range + 12, 12);  // streetviewの向き決定用
+  const p_diff = getPositionDifference(positions, start_range + 12, 12);  // streetviewの向き決定用
 
   distance = 0;
   pre_lat = 0;
@@ -259,8 +259,8 @@ function reloadMap(start_range, end_range) {
   clearEventMarker();
   playback.stop();
   for (var i=start_range; i<end_range; i+=skip_idx) {
-    var p = positions[i];
-    var latlng = get_latlng(p.latitude, p.longitude);
+    const p = positions[i];
+    const latlng = get_latlng(p.latitude, p.longitude);
     if (latlng != null) {
       if (start_route === null) {
         map_clear();  // ここに来れば有効なサンプルは存在してるはず
@@ -452,7 +452,7 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
                     if (nmea_pattern.test(name.toLowerCase())) {
                         // nmeaデータ
                         var text = httpRequest.responseText;
-                        positions = getPositionEmea(text);
+                        positions = getPositionNmea(text);
                     } else if (accel_csv_pattern.test(name.toLowerCase())) {
                         var text = httpRequest.responseText;
                         positions = getPositionAccelCsv(text);
@@ -500,8 +500,10 @@ function getPositionStartEndFromRangeController(p) {
 }
 
 function rangeChanged() {
-    var range = getPositionStartEndFromRangeController(positions);
-    reloadMap(range.start, range.end);
+    if (positions) {
+        const range = getPositionStartEndFromRangeController(positions);
+        reloadMap(range.start, range.end);
+    }
 }
 
 function plotRangeStroke() {

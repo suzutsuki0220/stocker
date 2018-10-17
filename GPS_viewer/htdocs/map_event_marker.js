@@ -182,41 +182,47 @@ function plotEventInfoGraph(positions, index, canvasXY_id, canvasS_id) {
     ]
   };
 
+  var compareMinMax = function(min, max, value) {
+    var ret = {min: min, max: max};
+
+    if (min > value) {
+      ret.min = value;
+    }
+    if (max < value) {
+      ret.max = value;
+    }
+
+    return ret;
+  };
+
   const EVENT_GRAPH_RANGE = 30;
   const i_start = index >= EVENT_GRAPH_RANGE ? index - EVENT_GRAPH_RANGE : 0;
   const i_end   = positions.length >= index + EVENT_GRAPH_RANGE ? index + EVENT_GRAPH_RANGE : positions.length;
 
   var n = 1;  // 0はグラフ凡例
   for (var i=i_start; i<i_end; i++) {
+    var minmax;
     var p = positions[i];
     if (!isNaN(p.speed)) {
       speed_property["data"][1][n] = p.speed;
 
-      if (speed_property["config"]["minY"] > p.speed) {
-        speed_property["config"]["minY"] = p.speed;
-      }
-      if (speed_property["config"]["maxY"] < p.speed) {
-        speed_property["config"]["maxY"] = p.speed;
-      }
+      minmax = compareMinMax(speed_property["config"]["minY"], speed_property["config"]["maxY"], p.speed);
+      speed_property["config"]["minY"] = minmax.min;
+      speed_property["config"]["maxY"] = minmax.max;
     } else {
       speed_property["data"][1][n] = i !== 0 ? speed_property["data"][1][n-1] : 0;
     }
 
-    accel_property["data"][1][n] = p.est_x;
-    accel_property["data"][2][n] = p.est_y;
+    accel_property["data"][1][n] = p.est.x;
+    accel_property["data"][2][n] = p.est.y;
 
-    if (accel_property["config"]["minY"] > p.est_x) {
-      accel_property["config"]["minY"] = p.est_x;
-    }
-    if (accel_property["config"]["minY"] > p.est_y) {
-      accel_property["config"]["minY"] = p.est_y;
-    }
-    if (accel_property["config"]["maxY"] < p.est_x) {
-      accel_property["config"]["maxY"] = p.est_x;
-    }
-    if (accel_property["config"]["maxY"] < p.est_y) {
-      accel_property["config"]["maxY"] = p.est_y;
-    }
+    minmax = compareMinMax(accel_property["config"]["minY"], accel_property["config"]["maxY"], p.est.x);
+    accel_property["config"]["minY"] = minmax.min;
+    accel_property["config"]["maxY"] = minmax.max;
+
+    minmax = compareMinMax(accel_property["config"]["minY"], accel_property["config"]["maxY"], p.est.y);
+    accel_property["config"]["minY"] = minmax.min;
+    accel_property["config"]["maxY"] = minmax.max;
 
     n++;
   }

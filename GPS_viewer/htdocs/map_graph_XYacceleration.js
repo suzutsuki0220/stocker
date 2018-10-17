@@ -41,8 +41,8 @@ function clearXYaccelerationData() {
 }
 
 function pushXYaccelerationData(data_index, p) {
-    accelerationXY_gforce_property["data"][1][data_index] = p.est_y * -1.0;
-    accelerationXY_gforce_property["data"][2][data_index] = p.est_x;
+    accelerationXY_gforce_property["data"][1][data_index] = p.est.y * -1.0;
+    accelerationXY_gforce_property["data"][2][data_index] = p.est.x;
 }
 
 function plotXYacceleration() {
