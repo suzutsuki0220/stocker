@@ -65,34 +65,13 @@ function makeEventInfoContents(positions, index, canvasXY_id, canvasS_id) {
   const title = makeEventTitle(p.behavior);
   const level = p.level ? " (level: " + p.level + ")" : "";
 
-  var altitude_diff_str = "";
-  if (isNaN(diff_p.altitude) === false) {
-    altitude_diff_str = new String(Math.floor(diff_p.altitude * 100) / 100) + "m ";
-    if (diff_p.altitude < -0.1) {
-      altitude_diff_str += "↓";
-    } else if (diff_p.altitude > 0.1) {
-      altitude_diff_str += "↑";
+  var speed_str = makeSpeedText(p.speed, NaN);
+  if (isNaN(p.speed) === false && isNaN(diff_p.speed) === false) {
+    if (Math.abs(diff_p.speed) > 1.0) {
+      const speed_after = p.speed + diff_p.speed;
+      speed_str += " ⇒ " + makeSpeedText(speed_after, diff_p.speed);
     } else {
-      altitude_diff_str += "→";
-    }
-  }
-
-  var speed_str = "----- km/h";
-  if (isNaN(p.speed) === false) {
-    speed_str = new String(Math.floor(p.speed * 100) / 100) + " km/h";
-
-    if (isNaN(diff_p.speed) === false) {
-      var speed_after = p.speed + diff_p.speed;
-
-      if (diff_p.speed < -1.0) {
-        speed_str += " ⇒ " + new String(Math.floor(speed_after * 100) / 100) + "km/h";
-        speed_str += " <span style=\"color: red\">↓</span>";
-      } else if (diff_p.speed > 1.0) {
-        speed_str += " ⇒ " + new String(Math.floor(speed_after * 100) / 100) + "km/h";
-        speed_str += " <span style=\"color: blue\">↑</span>";
-      } else {
-        speed_str += " →";
-      }
+      speed_str += " →";
     }
   }
 
@@ -105,7 +84,7 @@ function makeEventInfoContents(positions, index, canvasXY_id, canvasS_id) {
   contents += '<b>' + title + level + "</b><br>";
   contents += "発生時刻: " + p.datetime + "<br>";
   contents += "進行方向: " + diff_p.direction + "<br>";
-  contents += "高低差: " + altitude_diff_str + "<br>";
+  contents += "高低差: " + makeAltitudeDiffText(diff_p.altitude) + "<br>";
   contents += "速度: " + speed_str;
   contents += '</div>';
   contents += '<canvas id="' + canvasXY_id + '" style="width: 100%; height: 90px"></canvas>';

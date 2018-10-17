@@ -198,36 +198,13 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
 
         var altitude_diff_str = "";
         if (gps_level === 0 || gps_level === 1) {
-            if (isNaN(diff_p.altitude) === false) {
-                altitude_diff_str = new String(Math.floor(diff_p.altitude * 100) / 100) + "m ";
-                if (diff_p.altitude < -0.1) {
-                    altitude_diff_str += "↓";
-                } else if (diff_p.altitude > 0.1) {
-                    altitude_diff_str += "↑";
-                } else {
-                    altitude_diff_str += "→";
-                }
-            }
+            altitude_diff_str = makeAltitudeDiffText(diff_p.altitude);
         } else {
             altitude_diff_str = "GPS感度低下のため無効";
         }
         content += "高低差: " + altitude_diff_str + "<br>";
 
-        var speed_str = "----- km/h";
-        if (isNaN(p.speed) === false) {
-            speed_str = new String(Math.floor(p.speed * 100) / 100) + "km/h";
-
-            if (isNaN(diff_p.speed) === false) {
-                if (diff_p.speed < -1.0) {
-                    speed_str += " <span style=\"color: red\">↓</span>";
-                } else if (diff_p.speed > 1.0) {
-                    speed_str += " <span style=\"color: blue\">↑</span>";
-                } else {
-                    speed_str += " →";
-                }
-            }
-        }
-        content += "速度: " + speed_str + "<br>";
+        content += "速度: " + makeSpeedText(p.speed, diff_p.speed) + "<br>";
     } else {
         content += "無効な位置情報のため更新されません";
     }

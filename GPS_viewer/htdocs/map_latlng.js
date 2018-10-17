@@ -109,3 +109,41 @@ function getDirectionString(azimuth) {
 
     return direction_str;
 }
+
+// 高低差 mの数値と上下矢印 の文字列を返す
+function makeAltitudeDiffText(altitude_diff) {
+    var str = "";
+
+    if (isNaN(altitude_diff) === false) {
+        str = new String(Math.floor(altitude_diff * 100) / 100) + "m ";
+        if (altitude_diff < -0.1) {
+            str += "↓";
+        } else if (altitude_diff > 0.1) {
+            str += "↑";
+        } else {
+            str += "→";
+        }
+    }
+
+    return str;
+}
+
+function makeSpeedText(speed_kmh, speed_diff) {
+    var str = "----- km/h";
+
+    if (isNaN(speed_kmh) === false) {
+        str = new String(Math.floor(speed_kmh * 100) / 100) + "km/h";
+
+        if (isNaN(speed_diff) === false) {
+            if (speed_diff < -1.0) {
+                str += " <span style=\"color: red\">↓</span>";
+            } else if (speed_diff > 1.0) {
+                str += " <span style=\"color: blue\">↑</span>";
+            } else {
+                str += " →";
+            }
+        }
+    }
+
+    return str;
+}
