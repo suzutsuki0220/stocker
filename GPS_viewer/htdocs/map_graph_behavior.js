@@ -47,7 +47,7 @@ graphBehavior.prototype.__isMatchBehavior = function(data, behavior) {
     var ret = false;
 
     if (data) {
-        if (data.behavior & behavior === behavior)) {
+        if ((data.behavior & behavior) === behavior) {
             ret = true;
         }
     }
@@ -71,7 +71,7 @@ graphBehavior.prototype.plot = function() {
         var max_level = 0;
 
         for (var i=start; i<=end; i++) {
-            if (self.__isMatchBehavior(grap_data[i], behavior)) === false) {
+            if (self.__isMatchBehavior(graph_data[i], behavior) === false) {
                 continue;
             };
 
