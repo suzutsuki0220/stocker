@@ -4,6 +4,7 @@ ccchart.base({config: {
     "titleY": 30,
     "width": 1000,
     "height": 280,
+    "minY": 0,
     "useVal": "no",
     "axisXWidth": 2,
     "axisXLen": 10,
@@ -21,7 +22,7 @@ var accelerationXY_graph_property = {
     "title": "加速度 XY",
     "minY": -0.6,
     "maxY": 0.6,
-    "colorSet": ["#FF9114", "#00A8A2", "#3CB000", "#0036C0","#C328FF","#FF34C0"],
+    "colorSet": ["#FF9114", "#00A8A2", "#3CB000"],
     "xLines": [
         {"val": 0.25, "color":"#ffffff"},
         {"val": -0.25, "color":"#ffffff"},
@@ -37,7 +38,7 @@ var gyro_graph_property = {
     "title": "Gyro",
     "minY": -30.0,
     "maxY": 30.0,
-    "colorSet": ["#FF9114", "#00A8A2", "#3CB000", "#0036C0","#C328FF","#FF34C0"],
+    "colorSet": ["#FF9114", "#00A8A2", "#3CB000"],
   },
   "data": [
     ["時間"], ["X"], ["Y"], ["Z"]
@@ -49,9 +50,8 @@ var speed_graph_property = {
     "title": "速度",
     "axisXLen": 8,
     "height": 220,
-    "minY": 0,
     "maxY": 120,
-    "colorSet": ["#2066F0","#C328FF","#FF34C0"],
+    "colorSet": ["#2066F0"],
   },
   "data": [
     ["時間"], ["km/h"]
@@ -63,7 +63,7 @@ var accelerationZ_graph_property = {
     "title": "加速度 Z",
     "minY": -1.5,
     "maxY": 0,
-    "colorSet": ["#3CB000", "#0036C0","#C328FF","#FF34C0"],
+    "colorSet": ["#3CB000"],
   },
   "data": [
     ["時間"], ["Z"]
@@ -75,9 +75,8 @@ var altitude_graph_property = {
     "title": "高度",
     "axisXLen": 8,
     "height": 220,
-    "minY": 0,
     "maxY": 100,
-    "colorSet": ["#93B028","#1056E0","#FF34C0"],
+    "colorSet": ["#93B028"],
   },
   "data": [
     ["時間"], ["m"]
