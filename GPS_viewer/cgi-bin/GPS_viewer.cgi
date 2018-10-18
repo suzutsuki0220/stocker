@@ -101,11 +101,15 @@ my $html = <<EOF;
     };
 
     document.onmouseup = function() {
-        map_range_slider.onMouseUpWork();
+        if (map_range_slider) {
+            map_range_slider.onMouseUpWork();
+        }
     };
 
     document.onmousemove = function(e) {
-        map_range_slider.onMouseMoveWork(e);
+        if (map_range_slider) {
+            map_range_slider.onMouseMoveWork(e);
+        }
     };
 
     window.onload = function() {
