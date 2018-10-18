@@ -3,6 +3,7 @@ var mapPlaybackRoute = function(m) {
     this.marker = null;
     this.playing = false;
     this.pos_index = 0;
+    this.distance_from_last_streetview = 0;
 
     this.info = null;
     this.info_opened = false;
@@ -40,20 +41,29 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.pos_index = start_index;
     var self = this;
     var behavior_after_samples = 0;
-    var distance_from_last_streetview = 0;
     var last_lat = NaN;
     var last_lng = NaN;
+
+    var showEventBalloon = function(p, latlng, map) {
+        if (p.scene && p.scene === "stop") {
+            self._showInfoWindow(map, latlng, config.title.scene.stop);
+            behavior_after_samples = 0;
+        } else if (p.behavior && p.behavior !== 0) {
+            self._showInfoWindow(map, latlng, makeEventTitle(p.behavior));
+            behavior_after_samples = 30;
+        } else {
+            if (behavior_after_samples === 0) {
+                self._hideInfoWindow();
+            } else {
+                self.info.setPosition(latlng);
+                behavior_after_samples--;
+            }
+        }
+    };
 
     var moveMarker = function(marker, map) {
         var p = positions[self.pos_index];
         if (p) {
-            if (isNaN(last_lat)) {
-                last_lat = p.latitude;
-            }
-            if (isNaN(last_lng)) {
-                last_lng = p.longitude;
-            }
-
             var latlng;
             if (isValidLatLng(p.latitude, p.longitude) === true) {
                 latlng = new google.maps.LatLng(p.latitude, p.longitude);
@@ -62,52 +72,18 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
             } else {
                 latlng = marker.getPosition();
             }
-            if (p.scene && p.scene === "stop") {
-                self._showInfoWindow(map, latlng, config.title.scene.stop);
-                behavior_after_samples = 0;
-            } else if (p.behavior && p.behavior !== 0) {
-                self._showInfoWindow(map, latlng, makeEventTitle(p.behavior));
-                behavior_after_samples = 30;
-            } else {
-                if (behavior_after_samples === 0) {
-                    self._hideInfoWindow();
-                } else {
-                    self.info.setPosition(latlng);
-                    behavior_after_samples--;
-                }
-            }
+            showEventBalloon(p, latlng, map);
+
             var diff_p = getPositionDifference(positions, self.pos_index, 10)
             self.outputPlaybackInfo(p, diff_p);
+            self._followStreetview(p, diff_p, latlng, last_lat, last_lng);
 
-            // StreetView追跡
-            distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, last_lat, last_lng, WGS84);
-            if (!isNaN(diff_p.azimuth) && (distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && distance_from_last_streetview > 10))) {
-                // 60m離れるか、速度0になった位置で更新
-                if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) <= 1) { // GPS良好or不明
-                    setPanoramaPosition(latlng, diff_p.azimuth);
-                    distance_from_last_streetview = 0;
-                }
-            }
-
-            const start_pos = self.pos_index > 100 ? self.pos_index - 100 : 0;
-            plotAcceleration(positions, start_pos, self.pos_index);
+            const past_pos = self.pos_index > 100 ? self.pos_index - 100 : 0;
+            plotAcceleration(positions, past_pos, self.pos_index);
 
             self.pos_index++;
             if (self.pos_index < end_index) {
-                var next_wait;
-                const p_next = positions[self.pos_index];
-                const s = getDateFromDatetimeString(p.datetime);
-                const e = getDateFromDatetimeString(p_next.datetime);
-                if (isNaN(s) || isNaN(e)) {
-                    next_wait = 100;
-                } else {
-                    const pb_speed_elem = document.getElementById('playback_speed');
-                    if (pb_speed_elem && pb_speed_elem.value) {
-                        next_wait = (e - s) / pb_speed_elem.value;
-                    } else {
-                        next_wait = e - s;
-                    }
-                }
+                const next_wait = self._getPlaybackNextWait(p.datetime, positions[self.pos_index].datetime);
                 map_range_slider.setPlaybackPosition(Math.floor((self.pos_index / positions.length) * 1000));
                 setTimeout(function(){moveMarker(marker, map);}, next_wait);
             } else {
@@ -131,7 +107,6 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 return new google.maps.LatLng(p.latitude, p.longitude);
             }
         }
-
         return null;
     };
 
@@ -209,4 +184,36 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
         content += "無効な位置情報のため更新されません";
     }
     document.getElementById('playback_status').innerHTML = content;
+};
+
+mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng, last_lat, last_lng) {
+    if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) > 1) { // GPS低下or悪い
+        return;
+    }
+
+    this.distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, last_lat, last_lng, WGS84);
+    if (isNaN(diff_p.azimuth) === false) {
+        if (this.distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && this.distance_from_last_streetview > 10)) {
+            // 60m離れるか、速度0になった位置で更新
+            setPanoramaPosition(latlng, diff_p.azimuth);
+            this.distance_from_last_streetview = 0;
+        }
+    }
+};
+
+mapPlaybackRoute.prototype._getPlaybackNextWait = function(start_datetime, end_datetime) {
+    var next_wait = 100;
+    const s = getDateFromDatetimeString(start_datetime);
+    const e = getDateFromDatetimeString(end_datetime);
+
+    if (isNaN(s) === false && isNaN(e) === false) {
+        const pb_speed_elem = document.getElementById('playback_speed');
+        if (pb_speed_elem && pb_speed_elem.value) {
+            next_wait = (e - s) / pb_speed_elem.value;
+        } else {
+            next_wait = e - s;
+        }
+    }
+
+    return next_wait;
 };

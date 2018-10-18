@@ -71,6 +71,10 @@ function calcDistHubeny(lat1, lng1, lat2, lng2, a, e2, mnum) {
 }
 
 function getDistHubeny(lat1, lng1, lat2, lng2, type) {
+    if (!lat1 || !lng1 || !lat2 || !lng2) {
+        return 0;
+    }
+
     switch(type){
     case BESSEL:
         return calcDistHubeny(lat1, lng1, lat2, lng2, BESSEL_A, BESSEL_E2, BESSEL_MNUM);
