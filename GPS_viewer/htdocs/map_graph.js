@@ -181,24 +181,13 @@ function plotAcceleration(positions, start, end) {
       }
     };
 
-    var replaceNanToZero = function(value) {
-      var ret = 0;
-      if (value) {
-        ret = parseFloat(value);
-        if (isNaN(ret) === true) {
-          ret = 0;
-        }
-      }
-      return ret;
-    };
-
     if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
         return;
     }
 
     var graph_behavior = new graphBehavior();
     var skip = Math.floor((end - start)/5000) + 1;
-    var fix_central_z = checkCentralZ(positions, start, end, skip);
+    const z_central = checkCentralZ(positions, start, end, skip) === true ? -1.0 : 0;
 
     clearAccelerationGraphData();
     var data_index = 1;
@@ -206,7 +195,7 @@ function plotAcceleration(positions, start, end) {
         var p = positions[i];
         accelerationXY_graph_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
         accelerationXY_graph_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
-        accelerationZ_graph_property["data"][1][data_index] = fix_central_z === true ? p.est.z - 1.0 : p.est.z;
+        accelerationZ_graph_property["data"][1][data_index]  = p.est ? replaceNanToZero(p.est.z) + z_central : 0;
         gyro_graph_property["data"][1][data_index] = p.gyro ? replaceNanToZero(p.gyro.x) : 0;
         gyro_graph_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
         gyro_graph_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;

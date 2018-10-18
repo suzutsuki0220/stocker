@@ -12,6 +12,14 @@ function getPositionXml(data) {
 
         return null;
     };
+    var getFirstChildData = function(elem) {
+        var ret = "";
+        if (elem && elem.length > 0) {
+            ret = elem.item(0).firstChild.data;
+        }
+
+        return ret;
+    }
 
     const gpx_time_pattern = /(\d{4})[-\/](\d\d)[-\/](\d\d)T(\d\d):(\d\d):([\d\.]+)(.*)/;
     var convertGpxTime = function(timestr) {
@@ -70,21 +78,9 @@ function getPositionXml(data) {
                             var p = new Object();
                             p.latitude  = parseFloat(trkpt_elem.getAttribute('lat'));
                             p.longitude = parseFloat(trkpt_elem.getAttribute('lon'));
-
-                            var time_elem = trkpt_elem.getElementsByTagName("time");
-                            if (time_elem != null && time_elem.length != 0) {
-                                p.datetime = convertGpxTime(time_elem.item(0).firstChild.data);
-                            }
-
-                            var speed_elem = trkpt_elem.getElementsByTagName("speed");
-                            if (speed_elem != null && speed_elem.length != 0) {
-                                p.speed = parseFloat(speed_elem.item(0).firstChild.data) * 3.6;
-                            }
-
-                            var ele_elem = trkpt_elem.getElementsByTagName("ele");
-                            if (ele_elem != null && ele_elem.length != 0) {
-                                p.altitude = parseFloat(ele_elem.item(0).firstChild.data);
-                            }
+                            p.datetime = convertGpxTime(getFirstChildData(trkpt_elem.getElementsByTagName("time")));
+                            p.speed = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("speed"))) * 3.6;
+                            p.altitude = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("ele")));
                             position.push(p);
                         }
                     }
@@ -94,18 +90,17 @@ function getPositionXml(data) {
     }
 
     return position;
-
 }
 
 function parseCoordinateLine(line) {
     var col = line.split(",");
     if (col) {
         var position = new Object();
-        position.latitude  = col[1] ? parseFloat(col[1].trim()) : 0;
-        position.longitude = col[0] ? parseFloat(col[0].trim()) : 0;
-        position.altitude  = col[2] ? parseFloat(col[2].trim()) : 0;
+        position.latitude  = replaceNanToZero(col[1]);
+        position.longitude = replaceNanToZero(col[0]);
+        position.altitude  = replaceNanToZero(col[2]);
 
-        if (position.latitude != 0 && position.longitude != 0) {
+        if (isValidLatLng(position.latitude, position.longitude)) {
             return position;
         }
     }
