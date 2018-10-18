@@ -1,4 +1,9 @@
 ccchart.base({config: {
+    "type": "line",
+    "titleFont": "400 20px 'Arial'",
+    "titleY": 30,
+    "width": 1000,
+    "height": 280,
     "useVal": "no",
     "axisXWidth": 2,
     "axisXLen": 10,
@@ -13,12 +18,7 @@ ccchart.base({config: {
 
 var accelerationXY_graph_property = {
   "config": {
-    "type": "line",
     "title": "加速度 XY",
-    "titleFont": "400 20px 'Arial'",
-    "titleY": 30,
-    "width": 1000,
-    "height": 280,
     "minY": -0.6,
     "maxY": 0.6,
     "colorSet": ["#FF9114", "#00A8A2", "#3CB000", "#0036C0","#C328FF","#FF34C0"],
@@ -34,12 +34,7 @@ var accelerationXY_graph_property = {
 
 var gyro_graph_property = {
   "config": {
-    "type": "line",
     "title": "Gyro",
-    "titleFont": "400 20px 'Arial'",
-    "titleY": 30,
-    "width": 1000,
-    "height": 280,
     "minY": -30.0,
     "maxY": 30.0,
     "colorSet": ["#FF9114", "#00A8A2", "#3CB000", "#0036C0","#C328FF","#FF34C0"],
@@ -51,12 +46,8 @@ var gyro_graph_property = {
 
 var speed_graph_property = {
   "config": {
-    "type": "line",
     "title": "速度",
-    "titleFont": "400 20px 'Arial'",
-    "titleY": 30,
     "axisXLen": 8,
-    "width": 1000,
     "height": 220,
     "minY": 0,
     "maxY": 120,
@@ -69,12 +60,7 @@ var speed_graph_property = {
 
 var accelerationZ_graph_property = {
   "config": {
-    "type": "line",
     "title": "加速度 Z",
-    "titleFont": "400 20px 'Arial'",
-    "titleY": 30,
-    "width": 1000,
-    "height": 280,
     "minY": -1.5,
     "maxY": 0,
     "colorSet": ["#3CB000", "#0036C0","#C328FF","#FF34C0"],
@@ -86,12 +72,8 @@ var accelerationZ_graph_property = {
 
 var altitude_graph_property = {
   "config": {
-    "type": "line",
     "title": "高度",
-    "titleFont": "400 20px 'Arial'",
-    "titleY": 30,
     "axisXLen": 8,
-    "width": 1000,
     "height": 220,
     "minY": 0,
     "maxY": 100,
