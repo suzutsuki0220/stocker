@@ -43,38 +43,43 @@ graphBehavior.prototype.push = function(position) {
     this.graph_data.push(e);
 };
 
+graphBehavior.prototype.__isMatchBehavior = function(data, behavior) {
+    var ret = false;
+
+    if (data) {
+        if (data.behavior & behavior === behavior)) {
+            ret = true;
+        }
+    }
+
+    return ret;
+};
+
 graphBehavior.prototype.plot = function() {
+    var self = this;
     var getStrokeColor = function(level) {
-        if (level) {
-            switch(level) {
-            case 3:
-                return "#FF0000";
-            case 2:
-                return "#FFFF00";
-            case 1:
-                return "#3CB000";
+        const colors = ["#2066F0", "#3CB000", "#FFFF00", "#FF0000"];
+        var color_index = 0;
+        if (isNaN(level) === false) {
+            if (0 < level && level < colors.length) { // レベル1から3
+                color_index = level;
             }
         }
-        return "#2066F0";
+        return colors[color_index];
     };
     var getLevelInRange = function(start, end, graph_data, behavior) {
         var max_level = 0;
 
         for (var i=start; i<=end; i++) {
-            if (graph_data[i]) {
-                if ((graph_data[i].behavior & behavior) === behavior) {
-                    if (isNaN(graph_data[i].level)) {
-                        if (max_level === 0) {
-                            max_level = 1;
-                        }
-                    } else {
-                        if (graph_data[i].level > max_level) {
-                            max_level = graph_data[i].level;
-                            if (max_level === 3) {
-                                break;
-                            }
-                        }
-                    }
+            if (self.__isMatchBehavior(grap_data[i], behavior)) === false) {
+                continue;
+            };
+
+            const level = isNaN(graph_data[i].level) === true ? 1 : graph_data[i].level;
+            if (level > max_level) {
+                max_level = level;
+                if (max_level === 3) {
+                    break;
                 }
             }
         }
@@ -95,7 +100,7 @@ graphBehavior.prototype.plot = function() {
             }
         }
 
-        var error_rate = sample_count !== 0 ? error_count / sample_count : 0;
+        const error_rate = sample_count !== 0 ? error_count / sample_count : 0;
         if (error_rate > 0.8) {
             level = 3;
         } else if (error_rate > 0.4) {
