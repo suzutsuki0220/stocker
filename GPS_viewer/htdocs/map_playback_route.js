@@ -4,6 +4,8 @@ var mapPlaybackRoute = function(m) {
     this.playing = false;
     this.pos_index = 0;
     this.distance_from_last_streetview = 0;
+    this.last_lat = NaN;
+    this.last_lng = NaN;
 
     this.info = null;
     this.info_opened = false;
@@ -41,8 +43,8 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.pos_index = start_index;
     var self = this;
     var behavior_after_samples = 0;
-    var last_lat = NaN;
-    var last_lng = NaN;
+    this.last_lat = NaN;
+    this.last_lng = NaN;
 
     var showEventBalloon = function(p, latlng, map) {
         if (p.scene && p.scene === "stop") {
@@ -76,7 +78,7 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
 
             var diff_p = getPositionDifference(positions, self.pos_index, 10)
             self.outputPlaybackInfo(p, diff_p);
-            self._followStreetview(p, diff_p, latlng, last_lat, last_lng);
+            self._followStreetview(p, diff_p, latlng);
 
             const past_pos = self.pos_index > 100 ? self.pos_index - 100 : 0;
             plotAcceleration(positions, past_pos, self.pos_index);
@@ -93,8 +95,8 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
                 self.playing = false;
             }
 
-            last_lat = p.latitude;
-            last_lng = p.longitude;
+            self.last_lat = p.latitude;
+            self.last_lng = p.longitude;
         } else {
             self.playing = false;
         }
@@ -163,7 +165,7 @@ mapPlaybackRoute.prototype.hidePlaybackInfo = function() {
 };
 
 mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
-    var gps_status_mes = ["不明", "良好", "低下", "悪い"];
+    const gps_status_mes = ["不明", "良好", "低下", "悪い"];
     var content = "【再生中】<br>";
     content += p.datetime + "<br>";
     if (isValidLatLng(p.latitude, p.longitude) === true) {
@@ -171,13 +173,11 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
         content += "GPS感度: " + gps_status_mes[gps_level] + "<br>";
         content += "進行方向: " + diff_p.direction + "<br>";
 
-        var altitude_diff_str = "";
         if (gps_level === 0 || gps_level === 1) {
-            altitude_diff_str = makeAltitudeDiffText(diff_p.altitude);
+            content += "高低差: " + makeAltitudeDiffText(diff_p.altitude) + "<br>";
         } else {
-            altitude_diff_str = "GPS感度低下のため無効";
+            content += "高低差: GPS感度低下のため無効<br>";
         }
-        content += "高低差: " + altitude_diff_str + "<br>";
 
         content += "速度: " + makeSpeedText(p.speed, diff_p.speed) + "<br>";
     } else {
@@ -186,12 +186,12 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
     document.getElementById('playback_status').innerHTML = content;
 };
 
-mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng, last_lat, last_lng) {
+mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
     if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) > 1) { // GPS低下or悪い
         return;
     }
 
-    this.distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, last_lat, last_lng, WGS84);
+    this.distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, this.last_lat, this.last_lng, WGS84);
     if (isNaN(diff_p.azimuth) === false) {
         if (this.distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && this.distance_from_last_streetview > 10)) {
             // 60m離れるか、速度0になった位置で更新
