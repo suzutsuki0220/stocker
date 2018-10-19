@@ -182,11 +182,9 @@ mapRangeSlider.prototype.setStrokeData = function(data, min, max) {
             d += "0," + zero_point_y + "," + base_area_width + "," + point_y;
         } else {
             for (var i=0; i<data.length; i++) {
-                if (i !== 0) {
-                    d += ",";
-                }
                 const point_x = Math.floor(base_area_width / (data.length - 1) * i);
                 const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[i], min, max)));
+                d += i === 0 ? "" : ",";
                 d += point_x + "," + point_y;
             }
         }
