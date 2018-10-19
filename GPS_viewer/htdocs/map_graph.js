@@ -166,7 +166,7 @@ function plotAcceleration(positions, start, end) {
         return;
     }
 
-    var graph_behavior = new graphBehavior();
+    var graph_behavior = new graphBehavior(document.getElementById('graph_behavior'));
     var skip = Math.floor((end - start)/5000) + 1;
     const z_central = checkCentralZ(positions, start, end, skip) === true ? -1.0 : 0;
 

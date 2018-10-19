@@ -179,49 +179,34 @@ mapRangeSlider.prototype.setStrokeData = function(data, min, max) {
     const zero_point_y = parseInt(this.range_start.getAttribute('y'), 10) + base_area_height - stroke_width;
     const y_interval = (base_area_height - (2 * stroke_width)) / (max - min);
 
-    var normalize = function(input) {
-        if (isNaN(input) === true) {
-            return 0;
-        } else {
-            if (input > max) {
-                return max;
-            }
-            if (input < min) {
-                return min;
-            }
-            return input;
-        }
-    };
+    if (this.stroke_elem === null) {
+        return;
+    }
 
-    if (this.stroke_elem !== null) {
-        if (data.length === 0) {
-            this.stroke_elem.setAttribute('d', "");
+    var d = "";
+    if (data.length !== 0) {
+        d = "M";
+        if (data.length === 1) {
+            const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[0], min, max)));
+            d += "0," + zero_point_y + "," + base_area_width + "," + point_y;
         } else {
-            var d = "M";
-            if (data.length === 1) {
-                const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[0])));
-                d += "0," + zero_point_y + "," + base_area_width + "," + point_y;
-            } else {
-                for (var i=0; i<data.length; i++) {
-                    if (i !== 0) {
-                        d += ",";
-                    }
-                    const point_x = Math.floor(base_area_width / (data.length - 1) * i);
-                    const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[i])));
-                    d += point_x + "," + point_y;
+            for (var i=0; i<data.length; i++) {
+                if (i !== 0) {
+                    d += ",";
                 }
+                const point_x = Math.floor(base_area_width / (data.length - 1) * i);
+                const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[i], min, max)));
+                d += point_x + "," + point_y;
             }
-            this.stroke_elem.setAttribute('d', d);
         }
     }
+    this.stroke_elem.setAttribute('d', d);
 };
 
-mapRangeSlider.prototype.setPlaybackPositionVisible = function(flag) {
-    if (flag === true) {
-        this.playback_pos.setAttribute('display', 'inline');
-    } else {
-        this.playback_pos.setAttribute('display', 'none');
-    }
+mapRangeSlider.prototype.setPlaybackPositionVisible = function(sw) {
+    const disp = sw === true ? 'inline' : 'none';
+
+    this.playback_pos.setAttribute('display', disp);
 }
 
 mapRangeSlider.prototype.setPlaybackPosition = function(position) {
@@ -229,10 +214,7 @@ mapRangeSlider.prototype.setPlaybackPosition = function(position) {
     const pos_width  = parseInt(this.playback_pos.getAttribute('width'), 10);
     const pos_x = Math.floor(position / 1000 * base_area_width);
 
-    var x = Math.floor(pos_x - (pos_width / 2) + 0.5);
-    if (x < 0) {
-        x = 0;
-    }
+    const x = normalize(Math.floor(pos_x - (pos_width / 2) + 0.5), 0, base_area_width);
 
     this.playback_pos.setAttribute('x', x);
 }

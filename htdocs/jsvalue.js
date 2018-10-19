@@ -8,3 +8,18 @@ function replaceNanToZero(value) {
     }
     return ret;
 }
+
+// value を最小値から最大値の間に収めるように返す
+function normalize(input, min, max) {
+    if (isNaN(input) === true) {
+        return 0;
+    } else {
+        if (input > max) {
+            return max;
+        }
+        if (input < min) {
+            return min;
+        }
+        return input;
+    }
+}
