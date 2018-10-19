@@ -102,58 +102,49 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         }
     };
 
-    var getFirstPosition = function(positions, start_index, end_index) {
+    var setCenterToFirstPosition = function(positions, start_index, end_index) {
         for (var i=start_index; i<end_index; i++) {
             const p = positions[i];
             if (isValidLatLng(p.latitude, p.longitude) === true) {
-                return new google.maps.LatLng(p.latitude, p.longitude);
+                const latlng = new google.maps.LatLng(p.latitude, p.longitude);
+                self.ins_map.setCenter(latlng);
+                break;
             }
         }
-        return null;
     };
 
-    if (this.playing === true) {
+    if (!positions || this.playing === true) {
         this.stop(); // かり
         return;
     }
 
-    if (positions) {
-        // マップの表示を変える (好み)
-        this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
-        if (this.ins_map.getZoom() < 17) {
-            this.ins_map.setZoom(17);
-        }
-
-        if (this.marker === null) {
-            this.marker = new mapCarMarker(this.ins_map);
-        }
-
-        const start_latlng = getFirstPosition(positions, start_index, end_index);
-        if (start_latlng !== null) {
-            map.setCenter(start_latlng);
-        }
-
-        map_range_slider.setPlaybackPositionVisible(true);
-        moveMarker(this.marker, this.ins_map);
-        this.showPlaybackInfo();
-        this.marker.setVisible(true);
-        this.playing = true;
+    // マップの表示を変える (好み)
+    this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+    if (this.ins_map.getZoom() < 17) {
+        this.ins_map.setZoom(17);
     }
+
+    this.marker = this.marker || new mapCarMarker(this.ins_map);
+
+    setCenterToFirstPosition(positions, start_index, end_index);
+    map_range_slider.setPlaybackPositionVisible(true);
+    moveMarker(this.marker, this.ins_map);
+    this.showPlaybackInfo();
+    this.marker.setVisible(true);
+    this.playing = true;
 };
 
 mapPlaybackRoute.prototype.stop = function() {
-    this.pos_index = positions.length;
+    this.pos_index = positions.length || 0;
     this.hidePlaybackInfo();
     map_range_slider.setPlaybackPositionVisible(false);
     this._hideInfoWindow();
 
-    if (this.playing === false) {
-        return;
+    if (this.playing === true) {
+        this.marker.setVisible(false);
+        this.marker = null;
+        this.playing = false;
     }
-
-    this.marker.setVisible(false);
-    this.marker = null;
-    this.playing = false;
 };
 
 mapPlaybackRoute.prototype.showPlaybackInfo = function() {
