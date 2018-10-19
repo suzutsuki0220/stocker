@@ -16,9 +16,7 @@ mapPlaybackRoute.prototype._showInfoWindow = function(map, latlng, message) {
         return;
     }
 
-    if (this.info === null) {
-        this.info = new google.maps.InfoWindow();
-    }
+    this.info = this.info || new google.maps.InfoWindow();
     this.info.setPosition(latlng);
     this.info.setContent('<div style="color: #202020">' + message + '</div>');
     if (this.info_opened === false) {
@@ -46,12 +44,12 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
     this.last_lat = NaN;
     this.last_lng = NaN;
 
-    var showEventBalloon = function(p, latlng, map) {
+    var showEventBalloon = function(p, latlng) {
         if (p.scene && p.scene === "stop") {
-            self._showInfoWindow(map, latlng, config.title.scene.stop);
+            self._showInfoWindow(this.ins_map, latlng, config.title.scene.stop);
             behavior_after_samples = 0;
         } else if (p.behavior && p.behavior !== 0) {
-            self._showInfoWindow(map, latlng, makeEventTitle(p.behavior));
+            self._showInfoWindow(this.ins_map, latlng, makeEventTitle(p.behavior));
             behavior_after_samples = 30;
         } else {
             if (behavior_after_samples === 0) {
@@ -63,53 +61,29 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         }
     };
 
-    var moveMarker = function(marker, map) {
+    var moveMarker = function() {
         var p = positions[self.pos_index];
         if (p) {
-            var latlng;
+            var latlng = self.marker.getPosition();
             if (isValidLatLng(p.latitude, p.longitude) === true) {
                 latlng = new google.maps.LatLng(p.latitude, p.longitude);
-                marker.setPosition(latlng);
-                map.setCenter(latlng);
-            } else {
-                latlng = marker.getPosition();
+                self.marker.setPosition(latlng);
             }
-            showEventBalloon(p, latlng, map);
-
-            var diff_p = getPositionDifference(positions, self.pos_index, 10)
-            self.outputPlaybackInfo(p, diff_p);
-            self._followStreetview(p, diff_p, latlng);
-
-            const past_pos = self.pos_index > 100 ? self.pos_index - 100 : 0;
-            plotAcceleration(positions, past_pos, self.pos_index);
+            showEventBalloon(p, latlng);
+            self._refresh(positions, latlng);
 
             self.pos_index++;
             if (self.pos_index < end_index) {
                 const next_wait = self._getPlaybackNextWait(p.datetime, positions[self.pos_index].datetime);
-                map_range_slider.setPlaybackPosition(Math.floor((self.pos_index / positions.length) * 1000));
-                setTimeout(function(){moveMarker(marker, map);}, next_wait);
+                setTimeout(moveMarker, next_wait);
             } else {
                 self.hidePlaybackInfo();
                 self._showInfoWindow(map, latlng, "走行終了");
                 map_range_slider.setPlaybackPositionVisible(false);
                 self.playing = false;
             }
-
-            self.last_lat = p.latitude;
-            self.last_lng = p.longitude;
         } else {
             self.playing = false;
-        }
-    };
-
-    var setCenterToFirstPosition = function(positions, start_index, end_index) {
-        for (var i=start_index; i<end_index; i++) {
-            const p = positions[i];
-            if (isValidLatLng(p.latitude, p.longitude) === true) {
-                const latlng = new google.maps.LatLng(p.latitude, p.longitude);
-                self.ins_map.setCenter(latlng);
-                break;
-            }
         }
     };
 
@@ -117,21 +91,10 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         this.stop(); // かり
         return;
     }
-
-    // マップの表示を変える (好み)
-    this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
-    if (this.ins_map.getZoom() < 17) {
-        this.ins_map.setZoom(17);
-    }
-
-    this.marker = this.marker || new mapCarMarker(this.ins_map);
-
-    setCenterToFirstPosition(positions, start_index, end_index);
-    map_range_slider.setPlaybackPositionVisible(true);
-    moveMarker(this.marker, this.ins_map);
-    this.showPlaybackInfo();
-    this.marker.setVisible(true);
     this.playing = true;
+    this._setupView(positions, start_index, end_index);
+
+    moveMarker();
 };
 
 mapPlaybackRoute.prototype.stop = function() {
@@ -175,6 +138,50 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
         content += "無効な位置情報のため更新されません";
     }
     document.getElementById('playback_status').innerHTML = content;
+};
+
+mapPlaybackRoute.prototype._setupView = function(positions, start_index, end_index) {
+    var self = this;
+    var setCenterToFirstPosition = function(positions, start_index, end_index) {
+        for (var i=start_index; i<end_index; i++) {
+            const p = positions[i];
+            if (p && isValidLatLng(p.latitude, p.longitude) === true) {
+                const latlng = new google.maps.LatLng(p.latitude, p.longitude);
+                self.ins_map.setCenter(latlng);
+                break;
+            }
+        }
+    };
+
+    // マップの表示を変える (好み)
+    this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+    if (this.ins_map.getZoom() < 17) {
+        this.ins_map.setZoom(17);
+    }
+
+    this.marker = this.marker || new mapCarMarker(this.ins_map);
+    this.marker.setVisible(true);
+
+    setCenterToFirstPosition(positions, start_index, end_index);
+    map_range_slider.setPlaybackPositionVisible(true);
+
+    this.showPlaybackInfo();
+};
+
+mapPlaybackRoute.prototype._refresh = function(positions, latlng) {
+    const p = positions[this.pos_index];
+    const diff_p = getPositionDifference(positions, this.pos_index, 10)
+    this.outputPlaybackInfo(p, diff_p);
+    this._followStreetview(p, diff_p, latlng);
+    this.ins_map.setCenter(latlng);
+
+    const past_pos = this.pos_index > 100 ? this.pos_index - 100 : 0;
+    plotAcceleration(positions, past_pos, this.pos_index);
+
+    map_range_slider.setPlaybackPosition(Math.floor((this.pos_index / positions.length) * 1000));
+
+    this.last_lat = p.latitude;
+    this.last_lng = p.longitude;
 };
 
 mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
