@@ -72,21 +72,12 @@ mapRangeSlider.prototype.onMouseMoveWork = function(e) {
 
         const base_area_width = self.base_area.clientWidth;
         const e_line_width = parseInt(drag.target.getAttribute('width'), 10);
-        // 最小値よりはみ出しを抑止
-        if (drag.target.x.baseVal.value < 0) {
-            drag.target.x.baseVal.value = 0;
-        }
-        // 最大値よりはみ出しを抑止
-        if (drag.target.x.baseVal.value > base_area_width) {
-            drag.target.x.baseVal.value = base_area_width - e_line_width;
-        }
+        drag.target.x.baseVal.value = normalize(drag.target.x.baseVal.value, 0, base_area_width - e_line_width);
         normalizeRange();
 
         self._setStartEndValueByPosition();
         self._stretchMaskArea();
-        if (self.after_changed_func !== null) {
-            self.after_changed_func();
-        }
+        self.after_changed_func && self.after_changed_func();
     };
     var normalizeRange = function() {
         const base_area_width = self.base_area.clientWidth;
