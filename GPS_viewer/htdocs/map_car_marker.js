@@ -14,19 +14,13 @@ mapCarMarker.prototype.setPosition = function(latlng) {
 };
 
 mapCarMarker.prototype.getPosition = function() {
-    if (this.ins_car_mark === null) {
-        return null;
-    }
-    return this.ins_car_mark.getPosition();
+    return this.ins_car_mark ? this.ins_car_mark.getPosition() : null;
 };
 
 mapCarMarker.prototype.setVisible = function(sw) {
     if (sw === true) {
         if (this.ins_car_mark === null) {
-            var latlng = this.marker_position;
-            if (this.marker_position === null) {
-                latlng = this.ins_map.getCenter();
-            }
+            const latlng = this.marker_position ? this.marker_position : this.ins_map.getCenter();
             const markerImage = {
                 url: CAR_MARKER_ICON,
                 size: new google.maps.Size(48,48),  // マーカー画像サイズ
