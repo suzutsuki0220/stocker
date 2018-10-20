@@ -2,9 +2,9 @@
  * 2点間の距離を取得 (簡易算出)
  * 第五引数に設定するキー（unit）で単位別で取得できる
 **/
-function getDistance(lat1, lon1, lat2, lon2, unit) {
-    var theta = lon1 - lon2;
-    var dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) +  Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+function getDistance(latlng1, latlng2, unit) {
+    var theta = latlng1.lng - latlng2.lng;
+    var dist = Math.sin(deg2rad(laglng1.lat)) * Math.sin(deg2rad(latlng2.lat)) +  Math.cos(deg2rad(latlng1.lat)) * Math.cos(deg2rad(latlng2.lat)) * Math.cos(deg2rad(theta));
     if (dist > 1) {
         dist = Math.acos(1);
     } else if (dist < -1) {
@@ -38,49 +38,44 @@ function deg2rad(degrees) {
  * ヒュベニの公式を使った距離の算出
  * 参考: http://yamadarake.jp/trdi/report000001.html
 **/
-const BESSEL_A = 6377397.155;
-const BESSEL_E2 = 0.00667436061028297;
-const BESSEL_MNUM = 6334832.10663254;
+const A = [
+    6377397.155,  // BESSEL_A
+    6378137.000,  // GRS80_A
+    6378137.000   // WGS84_A
+];
 
-const GRS80_A = 6378137.000;
-const GRS80_E2 = 0.00669438002301188;
-const GRS80_MNUM = 6335439.32708317;
+const E2 = [
+    0.00667436061028297,  // BESSEL_E2
+    0.00669438002301188,  // GRS80_E2
+    0.00669437999019758   // WGS84_E2
+];
 
-const WGS84_A = 6378137.000;
-const WGS84_E2 = 0.00669437999019758;
-const WGS84_MNUM = 6335439.32729246;
+const MNUM = [
+    6334832.10663254,  // BESSEL_MNUM
+    6335439.32708317,  // GRS80_MNUM
+    6335439.32729246   // WGS84_MNUM
+];
 
 const BESSEL = 0;
 const GRS80  = 1;
 const WGS84  = 2;
 
-function calcDistHubeny(lat1, lng1, lat2, lng2, a, e2, mnum) {
-    var my = deg2rad((lat1 + lat2) / 2.0);
-    var dy = deg2rad(lat1 - lat2);
-    var dx = deg2rad(lng1 - lng2);
-
-    var sin = Math.sin(my);
-    var w = Math.sqrt(1.0 - e2 * sin * sin);
-    var m = mnum / (w * w * w);
-    var n = a / w;
-	
-    var dym = dy * m;
-    var dxncos = dx * n * Math.cos(my);
-
-    return Math.sqrt(dym * dym + dxncos * dxncos);
-}
-
-function getDistHubeny(lat1, lng1, lat2, lng2, type) {
-    if (!lat1 || !lng1 || !lat2 || !lng2) {
+function getDistHubeny(latlng1, latlng2, type) {
+    if (!latlng1.lat || !latlng1.lng || !latlng2.lat || !latlng2.lng) {
         return 0;
     }
 
-    switch(type){
-    case BESSEL:
-        return calcDistHubeny(lat1, lng1, lat2, lng2, BESSEL_A, BESSEL_E2, BESSEL_MNUM);
-    case WGS84:
-        return calcDistHubeny(lat1, lng1, lat2, lng2, WGS84_A, WGS84_E2, WGS84_MNUM);
-    default:
-        return calcDistHubeny(lat1, lng1, lat2, lng2, GRS80_A, GRS80_E2, GRS80_MNUM);
-    }
+    const my = deg2rad((latlng1.lat + latlng2.lat) / 2.0);
+    const dy = deg2rad(latlng1.lat - latlng2.lat);
+    const dx = deg2rad(latlng1.lng - latlng2.lng);
+
+    const sin = Math.sin(my);
+    const w = Math.sqrt(1.0 - E2[type] * sin * sin);
+    const m = MNUM[type] / (w * w * w);
+    const n = A[type] / w;
+
+    const dym = dy * m;
+    const dxncos = dx * n * Math.cos(my);
+
+    return Math.sqrt(dym * dym + dxncos * dxncos);
 }

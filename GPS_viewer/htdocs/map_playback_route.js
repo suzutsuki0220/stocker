@@ -178,7 +178,7 @@ mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
         return;
     }
 
-    this.distance_from_last_streetview += getDistHubeny(p.latitude, p.longitude, this.last_lat, this.last_lng, WGS84);
+    this.distance_from_last_streetview += getDistHubeny({lat: p.latitude, lng: p.longitude}, {lat: this.last_lat, lng: this.last_lng}, WGS84);
     if (isNaN(diff_p.azimuth) === false) {
         if (this.distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && this.distance_from_last_streetview > 10)) {
             // 60m離れるか、速度0になった位置で更新

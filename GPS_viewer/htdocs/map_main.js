@@ -216,8 +216,8 @@ function get_latlng(lat, lng) {
   }
 
   if (pre_lat !== 0 && pre_lng !== 0) {
-    //var d = getDistance(lat, lng, pre_lat, pre_lng, "K");
-    var d = getDistHubeny(lat, lng, pre_lat, pre_lng, WGS84) / 1000;
+    //var d = getDistance({lat: lat, lng: lng}, {lat: pre_lat, lng: pre_lng}, "K");
+    var d = getDistHubeny({lat: lat, lng: lng}, {lat: pre_lat, lng: pre_lng}, WGS84) / 1000;
     if (d === d) {  // is not NaN
       distance += d;
     }
