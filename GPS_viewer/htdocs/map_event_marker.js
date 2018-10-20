@@ -38,16 +38,6 @@ mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, ca
     const title = makeEventTitle(p.behavior);
     const level = p.level ? " (level: " + p.level + ")" : "";
 
-    var speed_str = makeSpeedText(p.speed, NaN);
-    if (isNaN(p.speed) === false && isNaN(diff_p.speed) === false) {
-        if (Math.abs(diff_p.speed) > 1.0) {
-            const speed_after = p.speed + diff_p.speed;
-            speed_str += " ⇒ " + makeSpeedText(speed_after, diff_p.speed);
-        } else {
-            speed_str += " →";
-        }
-    }
-
     var contents;
     contents  = '<div style="color: #202020">';
     contents += '<div style="float: left; width: 95px; height: 95px; margin-right: 5px">';
@@ -58,7 +48,7 @@ mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, ca
     contents += "発生時刻: " + p.datetime + "<br>";
     contents += "進行方向: " + diff_p.direction + "<br>";
     contents += "高低差: " + makeAltitudeDiffText(diff_p.altitude) + "<br>";
-    contents += "速度: " + speed_str;
+    contents += "速度: " + makeSpeedText(p.speed, NaN) + this._makeEventAfterSpeedText(p, diff_p) + "<br>";
     contents += '</div>';
     contents += '<canvas id="' + canvasXY_id + '" style="width: 100%; height: 90px"></canvas>';
     contents += '<canvas id="' + canvasS_id + '" style="width: 100%; height: 90px"></canvas>';
@@ -143,44 +133,19 @@ mapEventMarker.prototype.plotEventInfoGraph = function(positions, index, canvasX
         var minmax;
         var p = positions[i];
         if (!isNaN(p.speed)) {
-            speed_property["data"][1][n] = p.speed;
-
-            minmax = this.__compareMinMax(speed_property["config"]["minY"], speed_property["config"]["maxY"], p.speed);
-            speed_property["config"]["minY"] = minmax.min;
-            speed_property["config"]["maxY"] = minmax.max;
+            speed_property["data"][1][n] = normalize(p.speed, speed_property["config"]["minY"], speed_property["config"]["maxY"]);
         } else {
             speed_property["data"][1][n] = i !== 0 ? speed_property["data"][1][n-1] : 0;
         }
 
-        accel_property["data"][1][n] = p.est.x;
-        accel_property["data"][2][n] = p.est.y;
-
-        minmax = this.__compareMinMax(accel_property["config"]["minY"], accel_property["config"]["maxY"], p.est.x);
-        accel_property["config"]["minY"] = minmax.min;
-        accel_property["config"]["maxY"] = minmax.max;
-
-        minmax = this.__compareMinMax(accel_property["config"]["minY"], accel_property["config"]["maxY"], p.est.y);
-        accel_property["config"]["minY"] = minmax.min;
-        accel_property["config"]["maxY"] = minmax.max;
+        accel_property["data"][1][n] = normalize(p.est.x, accel_property["config"]["minY"], accel_property["config"]["maxY"]);
+        accel_property["data"][2][n] = normalize(p.est.y, accel_property["config"]["minY"], accel_property["config"]["maxY"]);
 
         n++;
     }
 
     ccchart.init(canvasXY_id, accel_property);
     ccchart.init(canvasS_id, speed_property);
-};
-
-mapEventMarker.prototype.__compareMinMax = function(min, max, value) {
-    var ret = {min: min, max: max};
-
-    if (min > value) {
-        ret.min = value;
-    }
-    if (max < value) {
-        ret.max = value;
-    }
-
-    return ret;
 };
 
 mapEventMarker.prototype.__addToMap = function(marker, positions, index) {
@@ -196,6 +161,21 @@ mapEventMarker.prototype.__addToMap = function(marker, positions, index) {
         infoWindow.addListener('domready', function() {self.plotEventInfoGraph(positions, index, canvasXY_id, canvasS_id)});
     };
     google.maps.event.addListener(marker, 'click', showInfoWindow);
+};
+
+mapEventMarker.prototype._makeEventAfterSpeedText = function(p, diff_p) {
+    var speed_str = "";
+
+    if (isNaN(p.speed) === false && isNaN(diff_p.speed) === false) {
+        if (Math.abs(diff_p.speed) > 1.0) {
+            const speed_after = p.speed + diff_p.speed;
+            speed_str = " ⇒ " + makeSpeedText(speed_after, diff_p.speed);
+        } else {
+            speed_str = " →";
+        }
+    }
+
+    return speed_str;
 };
 
 mapEventMarker.prototype._getMarkerLabelByBehavior = function(behavior) {
