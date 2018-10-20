@@ -4,6 +4,7 @@ var panorama;
 var playback;
 var maptrack;
 var maptrack_pos = 0;
+var eventMarker = null;
 var startMarker = null;
 var endMarker = null;
 var poly = new Array();
@@ -81,6 +82,7 @@ function map_init() {
   playback = new mapPlaybackRoute(map);
   maptrack = new mapTrack();
   map_range_slider = new mapRangeSlider();
+  eventMarker = new mapEventMarker({map: map});
 
   var panoramaOptions = {
     position: central,
@@ -256,7 +258,7 @@ function reloadMap(start_range, end_range) {
   distance = 0;
   pre_lat = 0;
   pre_lng = 0;
-  clearEventMarker();
+  eventMarker.clear();
   playback.stop();
   for (var i=start_range; i<end_range; i+=skip_idx) {
     const p = positions[i];
@@ -272,7 +274,7 @@ function reloadMap(start_range, end_range) {
       if (p.behavior && p.behavior !== 0) {
         var dt = getDateFromDatetimeString(p.datetime);
         if (dt && dt - beforeMarkerDatetime > 3000) {
-          createEventMarker(positions, i);
+          eventMarker.create(positions, i);
           beforeMarkerDatetime = dt;
         }
       }
