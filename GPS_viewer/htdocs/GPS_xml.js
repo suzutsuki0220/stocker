@@ -39,7 +39,6 @@ function getPositionXml(data) {
         return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
     };
 
-    var position = [];
     var sp, ep;
 
     const kml_elem = data.getElementsByTagName("kml");
@@ -53,7 +52,7 @@ function getPositionXml(data) {
                 var line = coordinates.substring(sp, ep);
                 var p = parseCoordinateLine(line);
                 if (p != null) {
-                    position.push(p);
+                    gpsCommon.positions.push(p);
                 }
                 sp = ep + 1;
             }
@@ -61,7 +60,7 @@ function getPositionXml(data) {
                 var line = coordinates.substring(sp);
                 var p = parseCoordinateLine(line);
                 if (p != null) {
-                    position.push(p);
+                    gpsCommon.positions.push(p);
                 }
             }
         }
@@ -81,15 +80,13 @@ function getPositionXml(data) {
                             p.datetime = convertGpxTime(getFirstChildData(trkpt_elem.getElementsByTagName("time")));
                             p.speed = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("speed"))) * 3.6;
                             p.altitude = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("ele")));
-                            position.push(p);
+                            gpsCommon.positions.push(p);
                         }
                     }
                 }
             }
         }
     }
-
-    return position;
 }
 
 function parseCoordinateLine(line) {
