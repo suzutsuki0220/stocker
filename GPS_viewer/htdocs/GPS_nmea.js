@@ -21,16 +21,11 @@ var gpsNmea = function() {
 gpsNmea.prototype.get = function(data) {
     var self = this;
     var parseNmeaLine = function(nmea) {
-        var checksum = "";
-        const checksum_pos = nmea.indexOf('*');
-        if (checksum_pos > 0) {
-            checksum = nmea.substring(checksum_pos + 1);  // TODO: checksum判定は未実装
-            nmea = nmea.substring(0, checksum_pos);
-        }
-
+        const split = self._splitPayload(nmea);
         for (var i=0; i<self.sentence_parser.length; i++) {
-            if (self.sentence_parser[i].pattern.test(nmea)) {
-                self.sentence_parser[i].func(self, nmea);
+            if (self.sentence_parser[i].pattern.test(split.payload)) {
+                self.sentence_parser[i].func(self, split.payload);
+                break;
             }
         }
     };
@@ -148,4 +143,15 @@ gpsNmea.prototype._makeNmeaDateTime = function(date_str, time_str) {
 
     // ex. 2018/04/14 03:48:29.002
     return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
+};
+
+gpsNmea.prototype._splitPayload = function(nmea) {
+    var ret = {checksum: "", payload: ""};
+    const checksum_pos = nmea.indexOf('*');
+    if (checksum_pos > 0) {
+        ret.checksum = nmea.substring(checksum_pos + 1);  // TODO: checksum判定は未実装
+        ret.payload  = nmea.substring(0, checksum_pos);
+    }
+
+    return ret;
 };
