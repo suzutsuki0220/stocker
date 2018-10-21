@@ -127,18 +127,19 @@ function hideGraph() {
 
 function plotAcceleration(positions, start, end) {
     var checkCentralZ = function(positions, start, end, skip) {
-      var ret = false;
+      var ret = 0;
       var total = 0;
       var count = 0;
-      var ave;
 
       for (var i=start; i<end; i+=skip) {
-        total += positions[i].est.z;
-        count++;
+        if (positions[i].est) {
+          total += positions[i].est.z;
+          count++;
+        }
       }
-      ave = total / count;
-      if (ave > -0.5 && ave < 0.5) {
-        ret = true;
+      const ave = count !== 0 ? total / count : 0;
+      if (Math.abs(ave) < 0.5) {
+        ret = -1.0;
       }
 
       return ret;
@@ -168,7 +169,7 @@ function plotAcceleration(positions, start, end) {
 
     var graph_behavior = new graphBehavior(document.getElementById('graph_behavior'));
     var skip = Math.floor((end - start)/5000) + 1;
-    const z_central = checkCentralZ(positions, start, end, skip) === true ? -1.0 : 0;
+    const z_central = checkCentralZ(positions, start, end, skip);
 
     clearAccelerationGraphData();
     var data_index = 1;
