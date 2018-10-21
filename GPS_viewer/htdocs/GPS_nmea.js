@@ -2,11 +2,14 @@
 var gpsNmea = function() {
     this.position = new Array();
     this.re_degree = /(\d+)(\d\d\.\d+)/;
-    this.re_rmc = /^\$G[PN]RMC/;  // essential gps pvt (position, velocity, time) data
-    this.re_gga = /^\$G[PN]GGA/;  // essential fix data
-    this.re_gsa = /^\$G[PN]GSA/;  // accuracy
-    this.re_vtg = /^\$G[PN]VTG/;  // Track made good, speed
-    this.re_gsensor = /^\$GSENSOR/;  // G-sensor (DriveRecorder proprietary format)
+
+    this.sentence_parser = [
+        {pattern: /^\$G[PN]RMC/, func: this._getRMC},  // essential gps pvt (position, velocity, time) data
+        {pattern: /^\$G[PN]GGA/, func: this._getGGA},  // essential fix data
+        {pattern: /^\$G[PN]GSA/, func: this._getGSA},  // accuracy
+        {pattern: /^\$G[PN]VTG/, func: this._getVTG},  // Track made good, speed
+        {pattern: /^\$GSENSOR/ , func: this._getGSENSOR}  // G-sensor (DriveRecorder proprietary format)
+    ];
 
     this._speed = NaN;
     this._gsensor = null;
@@ -25,23 +28,17 @@ gpsNmea.prototype.get = function(data) {
             nmea = nmea.substring(0, checksum_pos);
         }
 
-        if (self.re_rmc.test(nmea)) {
-            self._getRMC(nmea);
-        } else if (self.re_vtg.test(nmea)) {
-            self._getVTG(nmea);
-        } else if (self.re_gsa.test(nmea)) {
-            self._getGSA(nmea);
-        } else if (self.re_gga.test(nmea)) {
-            self._getGGA(nmea);
-        } else if (self.re_gsensor.test(nmea)) {
-            self._getGSENSOR(nmea);
+        for (var i=0; i<self.sentence_parser.length; i++) {
+            if (self.sentence_parser[i].pattern.test(nmea)) {
+                self.sentence_parser[i].func(self, nmea);
+            }
         }
     };
 
     gpsCommon.parseEachLines(data, parseNmeaLine);
 };
 
-gpsNmea.prototype._getRMC = function(sentence) {
+gpsNmea.prototype._getRMC = function(self, sentence) {
     var col = sentence.split(",");
     if (!col || col.length <= 10) {
         return;
@@ -52,45 +49,46 @@ gpsNmea.prototype._getRMC = function(sentence) {
 
     if (col[2] === "A") {  // sentence status OK
         var position = new Object();
-        position.datetime  = this._makeNmeaDateTime(date_str, time_str);
-        position.latitude  = this._getDegree(col[3], col[4] === "S");
-        position.longitude = this._getDegree(col[5], col[6] === "W");
-        this._addHoldData(position);
+        position.datetime  = self._makeNmeaDateTime(date_str, time_str);
+        position.latitude  = self._getDegree(col[3], col[4] === "S");
+        position.longitude = self._getDegree(col[5], col[6] === "W");
+        self._addHoldData(position);
+        self._clearHoldData();
 
         gpsCommon.positions.push(position);
     }
 };
 
-gpsNmea.prototype._getVTG = function(sentence) {
+gpsNmea.prototype._getVTG = function(self, sentence) {
     var col = sentence.split(",");
     if (col && col.length > 8) {
         if (col[8].substring(0, 1) === "K") {
-            this._speed = parseFloat(col[7]);
+            self._speed = parseFloat(col[7]);
         }
     }
 };
 
-gpsNmea.prototype._getGSA = function(sentence) {
+gpsNmea.prototype._getGSA = function(self, sentence) {
     var col = sentence.split(",");
     if (col && col.length > 6) {
-        _h_accuracy = parseFloat(col[col.length - 2]);
-        _v_accuracy = parseFloat(col[col.length - 1]);
+        self._h_accuracy = parseFloat(col[col.length - 2]);
+        self._v_accuracy = parseFloat(col[col.length - 1]);
     }
 };
 
-gpsNmea.prototype._getGGA = function(sentence) {
+gpsNmea.prototype._getGGA = function(self, sentence) {
     var col = sentence.split(",");
     if (col && col.length > 9) {
         if (col[10] === 'M') {
-          _altitude = parseFloat(col[9]);
+            self._altitude = parseFloat(col[9]);
         }
     }
 };
 
-gpsNmea.prototype._getGSENSOR = function(sentence) {
+gpsNmea.prototype._getGSENSOR = function(self, sentence) {
     var col = sentence.split(",");
     if (col && col.length === 4) {
-        this._gsensor = gpsCommon.getXYZvalue(col, 0);
+        self._gsensor = gpsCommon.getXYZvalue(col, 0);
     }
 };
 
@@ -114,8 +112,6 @@ gpsNmea.prototype._addHoldData = function(obj) {
     if (isNaN(this._v_accuracy) === false) {
         obj.vertical_accuracy = this._v_accuracy;
     }
-
-    this._clearHoldData();
 };
 
 gpsNmea.prototype._clearHoldData = function() {
