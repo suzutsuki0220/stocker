@@ -1,31 +1,13 @@
-var datetime_precision;
+var gpsAccelCsv = function() {
+    this.datetime_precision = 0;
+};
 
-function getPositionAccelCsv(data) {
-    var position = [];
-    var sp, ep;
+gpsAccelCsv.prototype.get = function(data) {
+    this.datetime_precision = 0;
+    gpsCommon.parseEachLines(data, this.parseAccelCsvLine);
+};
 
-    datetime_precision = 0;
-    sp = 0;
-    while((ep = data.indexOf("\n", sp)) != -1) {
-        var line = data.substring(sp, ep);
-        var p = parseAccelCsvLine(line);
-        if (p != null) {
-          position.push(p);
-        }
-        sp = ep + 1;
-    }
-    if (sp < data.length) {  // 最後の行(改行で終わっていない)
-        var line = data.substring(sp);
-        var p = parseAccelCsvLine(line);
-        if (p != null) {
-          position.push(p);
-        }
-    }
-
-    return position;
-}
-
-function parseAccelCsvLine(line) {
+gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
     // 小数点以下を 0 で詰めなかったデータのバグ対策
     var cutoffDatetimeDecimals = function(datetime) {
         var prec = 0;
@@ -40,8 +22,8 @@ function parseAccelCsvLine(line) {
                 prec = 9;  // nanosecond precision
             }
         }
-        if (prec > datetime_precision) {
-            datetime_precision = prec;
+        if (prec > this.datetime_precision) {
+            this.datetime_precision = prec;
         }
         if (period_pos > 0) {
             var i, to_add;
@@ -50,7 +32,7 @@ function parseAccelCsvLine(line) {
             dt_str += ".";
             to_add = 3;
             i = decimals_length;
-            while(i < datetime_precision) {
+            while(i < this.datetime_precision) {
                 dt_str += "0";
                 i++;
                 to_add--;
@@ -60,34 +42,25 @@ function parseAccelCsvLine(line) {
         }
         return datetime;
     };
-    var getXYZvalue = function(col, i) {
-        var ret = new Object();
-        ret.x = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-        ret.y = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-        ret.z = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
-
-        return ret;
-    };
 
     var col = line.split(",");
     if (col) {
         var position = new Object();
-
         position.datetime = col[0];
         if (datetime_pattern.test(position.datetime) === false) {
-            return null;
+            return;
         }
         position.datetime = cutoffDatetimeDecimals(position.datetime);
 
         for (var i=1; i<col.length; i++) {
             if (col[i] === "A") {
-                position.accel = getXYZvalue(col, i);
+                position.accel = gpsCommon.getXYZvalue(col, i);
                 i += 3;
             } else if (col[i] === "G") {
-                position.gyro = getXYZvalue(col, i); 
+                position.gyro = gpsCommon.getXYZvalue(col, i); 
                 i += 3;
             } else if (col[i] === "F") {
-                position.est = getXYZvalue(col ,i);
+                position.est = gpsCommon.getXYZvalue(col ,i);
                 position.scene = col[i+4];
                 position.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
                 position.level = col[i+6] ? parseInt(col[i+6].trim()) : 0;
@@ -105,9 +78,6 @@ function parseAccelCsvLine(line) {
                 i += 1;
             }
         }
-
-        return position;
+        gpsCommon.positions.push(position);
     }
-
-    return null;
-}
+};

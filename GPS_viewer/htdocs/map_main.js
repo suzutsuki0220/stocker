@@ -18,8 +18,6 @@ var distance;
 var lat_min, lng_min, lat_max, lng_max;
 var lastDelayReloadTimerID = NaN;
 
-const nmea_pattern = /\.(nmea)$/;
-const accel_csv_pattern = /\.(accel.csv)$/;
 const datetime_pattern = /(\d{4})[-\/](\d\d)[-\/](\d\d) (\d\d):(\d\d):([\d\.]+)/;
 
 function getDateFromDatetimeString(datetime) {
@@ -64,8 +62,8 @@ function getDuration(start, end) {
 }
 
 function drawMap(get_file_cgi, base_name, url_path, name) {
-  map_init();
-  getPositionData(get_file_cgi, base_name, url_path, name);
+    map_init();
+    getPositionData(get_file_cgi, base_name, url_path, name);
 }
 
 function map_init() {
@@ -453,18 +451,7 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
                 //document.getElementById('sStatus').innerHTML = "読み込み中...";
             } else if (httpRequest.readyState == 4) {
                 if (httpRequest.status == 200) {
-                    if (nmea_pattern.test(name.toLowerCase())) {
-                        // nmeaデータ
-                        var text = httpRequest.responseText;
-                        positions = getPositionNmea(text);
-                    } else if (accel_csv_pattern.test(name.toLowerCase())) {
-                        var text = httpRequest.responseText;
-                        positions = getPositionAccelCsv(text);
-                    } else {
-                        // KML and GPX
-                        var xml = httpRequest.responseXML;
-                        positions = getPositionXml(xml);
-                    }
+                    positions = gpsCommon.getPosition(httpRequest.responseText, name);
                     map_route();
                 } else {
                     alert("ERROR: " + httpRequest.status);

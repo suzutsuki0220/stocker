@@ -58,6 +58,7 @@ eval {
       "%htdocs_root%/map_range_slider.js",
       "%htdocs_root%/map_playback_route.js",
       "%htdocs_root%/map_track.js",
+      "%htdocs_root%/GPS_common.js",
       "%htdocs_root%/GPS_nmea.js",
       "%htdocs_root%/GPS_xml.js",
       "%htdocs_root%/GPS_accel_csv.js",

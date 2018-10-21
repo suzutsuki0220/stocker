@@ -1,180 +1,145 @@
 // 正規表現パターン
-var re_degree = /(\d+)(\d\d\.\d+)/;
-var re_rmc = /^\$G[PN]RMC/;  // essential gps pvt (position, velocity, time) data
-var re_gga = /^\$G[PN]GGA/;  // essential fix data
-var re_gsa = /^\$G[PN]GSA/;  // accuracy
-var re_vtg = /^\$G[PN]VTG/;  // Track made good, speed
-var re_gsensor = /^\$GSENSOR/;  // G-sensor (DriveRecorder proprietary format)
+var gpsNmea = function() {
+    this.position = new Array();
+    this.re_degree = /(\d+)(\d\d\.\d+)/;
+    this.re_rmc = /^\$G[PN]RMC/;  // essential gps pvt (position, velocity, time) data
+    this.re_gga = /^\$G[PN]GGA/;  // essential fix data
+    this.re_gsa = /^\$G[PN]GSA/;  // accuracy
+    this.re_vtg = /^\$G[PN]VTG/;  // Track made good, speed
+    this.re_gsensor = /^\$GSENSOR/;  // G-sensor (DriveRecorder proprietary format)
 
-var _speed = NaN;
-var _accelX = NaN;
-var _accelY = NaN;
-var _accelZ = NaN;
-var _altitude = NaN;
-var _h_accuracy = NaN;
-var _v_accuracy = NaN;
+    this._speed = NaN;
+    this._gsensor = null;
+    this._altitude = NaN;
+    this._h_accuracy = NaN;
+    this._v_accuracy = NaN;
+};
 
-function getPositionNmea(data) {
-    var position = [];
-    var sp, ep;
-
-    sp = 0;
-    while((ep = data.indexOf("\n", sp)) != -1) {
-        var line = data.substring(sp, ep);
-        var p = parseNmeaLine(line);
-        if (p != null) {
-            addHoldData(p);
-            position.push(p);
+gpsNmea.prototype.get = function(data) {
+    var self = this;
+    var parseNmeaLine = function(nmea) {
+        var checksum = "";
+        const checksum_pos = nmea.indexOf('*');
+        if (checksum_pos > 0) {
+            checksum = nmea.substring(checksum_pos + 1);  // TODO: checksum判定は未実装
+            nmea = nmea.substring(0, checksum_pos);
         }
-        sp = ep + 1;
-    }
-    if (sp < data.length) {  // 最後の行(改行で終わっていない)
-        var line = data.substring(sp);
-        var p = parseNmeaLine(line);
-        if (p != null) {
-            addHoldData(p);
-            position.push(p);
+
+        if (self.re_rmc.test(nmea)) {
+            self._getRMC(nmea);
+        } else if (self.re_vtg.test(nmea)) {
+            self._getVTG(nmea);
+        } else if (self.re_gsa.test(nmea)) {
+            self._getGSA(nmea);
+        } else if (self.re_gga.test(nmea)) {
+            self._getGGA(nmea);
+        } else if (self.re_gsensor.test(nmea)) {
+            self._getGSENSOR(nmea);
         }
-    }
+    };
 
-    return position;
-}
+    gpsCommon.parseEachLines(data, parseNmeaLine);
+};
 
-function parseNmeaLine(nmea) {
-    var checksum = "";
-    var checksum_pos = nmea.indexOf('*');
-    if (checksum_pos > 0) {
-        checksum = nmea.substring(checksum_pos + 1);
-        nmea = nmea.substring(0, checksum_pos);
-    }
-
-    if (re_rmc.test(nmea)) {
-        return getRMC(nmea);
-    } else if (re_vtg.test(nmea)) {
-        getVTG(nmea);
-    } else if (re_gsa.test(nmea)) {
-        getGSA(nmea);
-    } else if (re_gga.test(nmea)) {
-        getGGA(nmea);
-    } else if (re_gsensor.test(nmea)) {
-        getGSENSOR(nmea);
-    }
-
-    return null;
-}
-
-function getRMC(sentence)
-{
-    var status = false;
-    var date_str, time_str;
+gpsNmea.prototype._getRMC = function(sentence) {
     var col = sentence.split(",");
-    if (col && col.length > 10) {
-        var position = new Object();
-        time_str = col[1];
-        date_str = col[9];
-
-        if (col[2] === "A") {
-            status = true;
-        }
-        position.latitude  = col[3] ? getDegree(col[3]) : 0;
-        if (col[4] === "S") {
-            position.latitude = position.latitude * -1.0;
-        }
-        position.longitude = col[5] ? getDegree(col[5]) : 0;
-        if (col[6] === "W") {
-            position.longitude = position.longitude * -1.0;
-        }
-
-        if (status === true) {
-            position.datetime = makeNmeaDateTime(date_str, time_str);
-            return position;
-        } else {
-            return null;
-        }
+    if (!col || col.length <= 10) {
+        return;
     }
-}
 
-function getVTG(sentence)
-{
+    const time_str = col[1];
+    const date_str = col[9];
+
+    if (col[2] === "A") {  // sentence status OK
+        var position = new Object();
+        position.datetime  = this._makeNmeaDateTime(date_str, time_str);
+        position.latitude  = this._getDegree(col[3], col[4] === "S");
+        position.longitude = this._getDegree(col[5], col[6] === "W");
+        this._addHoldData(position);
+
+        gpsCommon.positions.push(position);
+    }
+};
+
+gpsNmea.prototype._getVTG = function(sentence) {
     var col = sentence.split(",");
     if (col && col.length > 8) {
         if (col[8].substring(0, 1) === "K") {
-            _speed = parseFloat(col[7]);
+            this._speed = parseFloat(col[7]);
         }
     }
-}
+};
 
-function getGSA(sentence)
-{
+gpsNmea.prototype._getGSA = function(sentence) {
     var col = sentence.split(",");
     if (col && col.length > 6) {
         _h_accuracy = parseFloat(col[col.length - 2]);
         _v_accuracy = parseFloat(col[col.length - 1]);
     }
-}
+};
 
-function getGGA(sentence)
-{
+gpsNmea.prototype._getGGA = function(sentence) {
     var col = sentence.split(",");
     if (col && col.length > 9) {
         if (col[10] === 'M') {
           _altitude = parseFloat(col[9]);
         }
     }
-}
+};
 
-function getGSENSOR(sentence)
-{
+gpsNmea.prototype._getGSENSOR = function(sentence) {
     var col = sentence.split(",");
     if (col && col.length === 4) {
-        _accelX = parseFloat(col[1]);
-        _accelY = parseFloat(col[2]);
-        _accelZ = parseFloat(col[3]);
+        this._gsensor = gpsCommon.getXYZvalue(col, 0);
     }
-}
+};
 
-function addHoldData(obj) {
-    if (isNaN(_speed) === false) {
-        obj.speed = _speed;
+gpsNmea.prototype._addHoldData = function(obj) {
+    if (isNaN(this._speed) === false) {
+        obj.speed = this._speed;
     }
 
-    if (isNaN(_altitude) === false) {
-        obj.altitude = _altitude;
+    if (isNaN(this._altitude) === false) {
+        obj.altitude = this._altitude;
     }
 
-    if (isNaN(_accelX) === false && isNaN(_accelY) === false && isNaN(_accelZ) === false) {
-        obj.est = {x: _accelX, y: _accelY, z: _accelZ};
+    if (this._gsensor) {
+        obj.est = this._gsensor;
     } 
 
-    if (isNaN(_h_accuracy) === false) {
-        obj.horizontal_accuracy = _h_accuracy;
+    if (isNaN(this._h_accuracy) === false) {
+        obj.horizontal_accuracy = this._h_accuracy;
     }
 
-    if (isNaN(_v_accuracy) === false) {
-        obj.vertical_accuracy = _v_accuracy;
+    if (isNaN(this._v_accuracy) === false) {
+        obj.vertical_accuracy = this._v_accuracy;
     }
 
-    clearHoldData();
-}
+    this._clearHoldData();
+};
 
-function clearHoldData() {
-    _speed = NaN;
-    _altitude = NaN;
-    _accelX = NaN;
-    _accelY = NaN;
-    _accelZ = NaN;
-    _h_accuracy = NaN;
-    _v_accuracy = NaN;
-}
+gpsNmea.prototype._clearHoldData = function() {
+    this._speed = NaN;
+    this._altitude = NaN;
+    delete this._gsensor;
+    this._gsensor = null;
+    this._h_accuracy = NaN;
+    this._v_accuracy = NaN;
+};
 
-function getDegree(fraction) {
-    var d = parseFloat(fraction.replace(re_degree, "$1"));
-    var m = parseFloat(fraction.replace(re_degree, "$2"));
+gpsNmea.prototype._getDegree = function(fraction, minus) {
+    var ret = 0;
 
-    return d + m / 60;
-}
+    if (fraction) {
+        const d = parseFloat(fraction.replace(this.re_degree, "$1"));
+        const m = parseFloat(fraction.replace(this.re_degree, "$2"));
+        ret = minus ? (d + m / 60) * -1.0 : (d + m / 60);
+    }
 
-function makeNmeaDateTime(date_str, time_str) {
+    return ret;
+};
+
+gpsNmea.prototype._makeNmeaDateTime = function(date_str, time_str) {
     var year   = "20" + date_str.substring(4, 6);
     var month  = date_str.substring(2, 4);
     var day    = date_str.substring(0, 2);
@@ -187,4 +152,4 @@ function makeNmeaDateTime(date_str, time_str) {
 
     // ex. 2018/04/14 03:48:29.002
     return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
-}
+};
