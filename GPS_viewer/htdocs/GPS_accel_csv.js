@@ -55,40 +55,42 @@ gpsAccelCsv.prototype.get = function(data) {
 
 gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
     var col = line.split(",");
-    if (col) {
-        var position = new Object();
-        position.datetime = col[0];
-        if (datetime_pattern.test(position.datetime) === false) {
-            return;
-        }
-        position.datetime = this._cutoffDatetimeDecimals(position.datetime);
-
-        for (var i=1; i<col.length; i++) {
-            if (col[i] === "A") {
-                position.accel = gpsCommon.getXYZvalue(col, i);
-                i += 3;
-            } else if (col[i] === "G") {
-                position.gyro = gpsCommon.getXYZvalue(col, i); 
-                i += 3;
-            } else if (col[i] === "F") {
-                position.est = gpsCommon.getXYZvalue(col ,i);
-                position.scene = col[i+4];
-                position.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
-                position.level = col[i+6] ? parseInt(col[i+6].trim()) : 0;
-                i += 6;
-            } else if (col[i] === "GPS" || col[i] === "Location") {
-                position.latitude  = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-                position.longitude = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
-                position.altitude  = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
-                i += 3;
-            } else if (col[i] === "m/s" || col[i] === "Speed") {
-                position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
-                i += 1;
-            } else if (col[i] === "Accuracy") {
-                position.horizontal_accuracy = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
-                i += 1;
-            }
-        }
-        gpsCommon.positions.push(position);
+    if (!col) {
+        return;
     }
+
+    if (datetime_pattern.test(col[0]) === false) {
+        return;
+    }
+
+    var position = new Object();
+    position.datetime = this._cutoffDatetimeDecimals(col[0]);
+
+    for (var i=1; i<col.length; i++) {
+        if (col[i] === "A") {
+            position.accel = gpsCommon.getXYZvalue(col, i);
+            i += 3;
+        } else if (col[i] === "G") {
+            position.gyro = gpsCommon.getXYZvalue(col, i); 
+            i += 3;
+        } else if (col[i] === "F") {
+            position.est = gpsCommon.getXYZvalue(col ,i);
+            position.scene    = col[i+4];
+            position.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
+            position.level    = col[i+6] ? parseInt(col[i+6].trim()) : 0;
+            i += 6;
+        } else if (col[i] === "GPS" || col[i] === "Location") {
+            position.latitude  = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+            position.longitude = col[i+2] ? parseFloat(col[i+2].trim()) : 0;
+            position.altitude  = col[i+3] ? parseFloat(col[i+3].trim()) : 0;
+            i += 3;
+        } else if (col[i] === "m/s" || col[i] === "Speed") {
+            position.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
+            i += 1;
+        } else if (col[i] === "Accuracy") {
+            position.horizontal_accuracy = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+            i += 1;
+        }
+    }
+    gpsCommon.positions.push(position);
 };
