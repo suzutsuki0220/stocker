@@ -1,7 +1,82 @@
 var mapEventMarker = function(opt) {
     this.eventMarkers = new Array();
     this.ins_map = opt.map;
+    this.EVENT_GRAPH_RANGE = 30;
+    this.border_color = "#383838";
+    this.graph_speed_max = 120;
+    this.graph_speed_min = 0;
+    this.graph_accel_max = 0.5;
+    this.graph_accel_min = -0.5;
+
+    this.accel_property;
+    this.speed_property;
 };
+
+mapEventMarker.prototype.setup = function() {
+    this.accel_property = {
+      "config": {
+        "useVal": "no",
+        "titleColor": this.border_color,
+        "xColor": this.border_color,
+        "yColor": this.border_color,
+        "yScaleColor": this.border_color,
+        "yScaleFont": "500 8px 'Arial'",
+        "axisXWidth": 1,
+        "axisXLen": 4,
+        "axisYWidth": 0,
+        "axisYLen": 0,
+        "paddingTop": 20,
+        "paddingBottom": 10,
+        "paddingLeft": 40,
+        "paddingRight": 5,
+        "bg": "#ffffff",
+        "type": "line",
+        "title": "加速度 XY",
+        "titleFont": "400 12px 'Arial'",
+        "titleY": 15,
+        "width": 350,
+        "height": 90,
+        "minY": this.graph_accel_min,
+        "maxY": this.graph_accel_max,
+        "colorSet": ["#FF9114", "#00A8A2"],
+      },
+      "data": [
+        ["時間"], ["X"], ["Y"]
+      ]
+    };
+
+    this.speed_property = {
+      "config": {
+        "useVal": "no",
+        "titleColor": this.border_color,
+        "xColor": this.border_color,
+        "yColor": this.border_color,
+        "yScaleColor": this.border_color,
+        "yScaleFont": "300 8px 'Arial'",
+        "axisXWidth": 1,
+        "axisXLen": 3,
+        "axisYWidth": 0,
+        "axisYLen": 0,
+        "paddingTop": 20,
+        "paddingBottom": 10,
+        "paddingLeft": 40,
+        "paddingRight": 5,
+        "bg": "#ffffff",
+        "type": "line",
+        "title": "速度 (km/h)",
+        "titleFont": "300 12px 'Arial'",
+        "titleY": 15,
+        "width": 350,
+        "height": 90,
+        "minY": this.graph_speed_min,
+        "maxY": this.graph_speed_max,
+        "colorSet": ["#2066F0"]
+      },
+      "data": [
+        ["時間"], ["km/h"]
+      ]
+    };
+}
 
 mapEventMarker.prototype.create = function(positions, index) {
     var p = positions[index];
@@ -58,94 +133,29 @@ mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, ca
 }
 
 mapEventMarker.prototype.plotEventInfoGraph = function(positions, index, canvasXY_id, canvasS_id) {
-    const LINE_COLOR = "#383838";
+    const i_start = index >= this.EVENT_GRAPH_RANGE ? index - this.EVENT_GRAPH_RANGE : 0;
+    const i_end   = positions.length >= index + this.EVENT_GRAPH_RANGE ? index + this.EVENT_GRAPH_RANGE : positions.length;
 
-    var accel_property = {
-      "config": {
-        "useVal": "no",
-        "titleColor": LINE_COLOR,
-        "xColor": LINE_COLOR,
-        "yColor": LINE_COLOR,
-        "yScaleColor": LINE_COLOR,
-        "yScaleFont": "500 8px 'Arial'",
-        "axisXWidth": 1,
-        "axisXLen": 4,
-        "axisYWidth": 0,
-        "axisYLen": 0,
-        "paddingTop": 20,
-        "paddingBottom": 10,
-        "paddingLeft": 40,
-        "paddingRight": 5,
-        "bg": "#ffffff",
-        "type": "line",
-        "title": "加速度 XY",
-        "titleFont": "400 12px 'Arial'",
-        "titleY": 15,
-        "width": 350,
-        "height": 90,
-        "minY": -0.5,
-        "maxY": 0.5,
-        "colorSet": ["#FF9114", "#00A8A2"],
-      },
-      "data": [
-        ["時間"], ["X"], ["Y"]
-      ]
-    };
-
-    var speed_property = {
-      "config": {
-        "useVal": "no",
-        "titleColor": LINE_COLOR,
-        "xColor": LINE_COLOR,
-        "yColor": LINE_COLOR,
-        "yScaleColor": LINE_COLOR,
-        "yScaleFont": "300 8px 'Arial'",
-        "axisXWidth": 1,
-        "axisXLen": 3,
-        "axisYWidth": 0,
-        "axisYLen": 0,
-        "paddingTop": 20,
-        "paddingBottom": 10,
-        "paddingLeft": 40,
-        "paddingRight": 5,
-        "bg": "#ffffff",
-        "type": "line",
-        "title": "速度 (km/h)",
-        "titleFont": "300 12px 'Arial'",
-        "titleY": 15,
-        "width": 350,
-        "height": 90,
-        "minY": 0,
-        "maxY": 120,
-        "colorSet": ["#2066F0"]
-      },
-      "data": [
-        ["時間"], ["km/h"]
-      ]
-    };
-
-    const EVENT_GRAPH_RANGE = 30;
-    const i_start = index >= EVENT_GRAPH_RANGE ? index - EVENT_GRAPH_RANGE : 0;
-    const i_end   = positions.length >= index + EVENT_GRAPH_RANGE ? index + EVENT_GRAPH_RANGE : positions.length;
+    this.setup();
 
     var n = 1;  // 0はグラフ凡例
     for (var i=i_start; i<i_end; i++) {
         var minmax;
         var p = positions[i];
         if (!isNaN(p.speed)) {
-            speed_property["data"][1][n] = normalize(p.speed, speed_property["config"]["minY"], speed_property["config"]["maxY"]);
+            this.speed_property["data"][1][n] = normalize(p.speed, this.graph_speed_min, this.graph_speed_max);
         } else {
-            speed_property["data"][1][n] = i !== 0 ? speed_property["data"][1][n-1] : 0;
+            this.speed_property["data"][1][n] = i !== 0 ? this.speed_property["data"][1][n-1] : 0;
         }
 
-        accel_property["data"][1][n] = normalize(p.est.x, accel_property["config"]["minY"], accel_property["config"]["maxY"]);
-        accel_property["data"][2][n] = normalize(p.est.y, accel_property["config"]["minY"], accel_property["config"]["maxY"]);
+        this.accel_property["data"][1][n] = normalize(p.est.x, this.graph_accel_min, this.graph_accel_max);
+        this.accel_property["data"][2][n] = normalize(p.est.y, this.graph_accel_min, this.graph_accel_max);
 
         n++;
     }
 
-    ccchart.init(canvasXY_id, accel_property);
-    ccchart.init(canvasS_id, speed_property);
+    ccchart.init(canvasXY_id, this.accel_property);
+    ccchart.init(canvasS_id, this.speed_property);
 };
 
 mapEventMarker.prototype.__addToMap = function(marker, positions, index) {
