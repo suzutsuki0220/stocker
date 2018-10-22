@@ -1,3 +1,5 @@
+var mapGraph = new Object();
+
 ccchart.base({config: {
     "type": "line",
     "titleFont": "400 20px 'Arial'",
@@ -17,7 +19,7 @@ ccchart.base({config: {
     "bg": "#455054",
 }});
 
-var accelerationXY_graph_property = {
+mapGraph.accelerationXY_property = {
   "config": {
     "title": "加速度 XY",
     "minY": -0.6,
@@ -33,7 +35,7 @@ var accelerationXY_graph_property = {
   ]
 };
 
-var gyro_graph_property = {
+mapGraph.gyro_property = {
   "config": {
     "title": "Gyro",
     "minY": -30.0,
@@ -45,7 +47,7 @@ var gyro_graph_property = {
   ]
 };
 
-var speed_graph_property = {
+mapGraph.speed_property = {
   "config": {
     "title": "速度",
     "axisXLen": 8,
@@ -58,7 +60,7 @@ var speed_graph_property = {
   ]
 };
 
-var accelerationZ_graph_property = {
+mapGraph.accelerationZ_property = {
   "config": {
     "title": "加速度 Z",
     "minY": -1.5,
@@ -70,7 +72,7 @@ var accelerationZ_graph_property = {
   ]
 };
 
-var altitude_graph_property = {
+mapGraph.altitude_property = {
   "config": {
     "title": "高度",
     "axisXLen": 8,
@@ -83,7 +85,16 @@ var altitude_graph_property = {
   ]
 };
 
-function showGraph(positions, skip_draw) {
+mapGraph.isVisible = function() {
+    var ret = false;
+    if (document.getElementById('graph_field').style.display === "inline") {
+        ret = true;
+    }
+
+    return ret;
+};
+
+mapGraph.toggleView = function(positions, skip_draw) {
     if (!positions) {
         alert("グラフに表示可能なデータがありません");
         return;
@@ -94,26 +105,30 @@ function showGraph(positions, skip_draw) {
         return;
     }
 
-    if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
-        document.getElementById('info_field').style.display = "none";
-        document.getElementById('graph_field').style.display = "inline";
-        document.getElementById('graph_field').style.width = "55%";
-        document.getElementById('graph_field').style.height = "95%";
-        document.getElementById('map_canvas').style.width = "45%";
-        document.getElementById('range_field').style.width = "45%";
-        document.getElementById('panorama_canvas').style.width = "50%";
-        map_range_slider.onResizeWork();
-        showXYaccelerationCanvas();
+    if (mapGraph.isVisible() === false) {
+        mapGraph.show(positions, skip_draw);
         if (skip_draw === false) {
-            plotAcceleration(positions, range.start, range.end);
+            mapGraph.plot(positions, range.start, range.end);
         }
     } else {
-        hideGraph();
+        mapGraph.hide();
     }
-    //map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));  // 本来の位置とズレるので放置
-}
+};
 
-function hideGraph() {
+mapGraph.show = function() {
+    document.getElementById('info_field').style.display = "none";
+    document.getElementById('graph_field').style.display = "inline";
+    document.getElementById('graph_field').style.width = "55%";
+    document.getElementById('graph_field').style.height = "95%";
+    document.getElementById('map_canvas').style.width = "45%";
+    document.getElementById('range_field').style.width = "45%";
+    document.getElementById('panorama_canvas').style.width = "50%";
+    map_range_slider.onResizeWork();
+    showXYaccelerationCanvas();
+    //map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));  // 本来の位置とズレるので放置
+};
+
+mapGraph.hide = function() {
     document.getElementById('graph_field').style.display = "none";
     document.getElementById('info_field').style.display = "inline";
     document.getElementById('graph_field').style.width = "0px";
@@ -123,89 +138,89 @@ function hideGraph() {
     document.getElementById('panorama_canvas').style.width = "100%";
     map_range_slider.onResizeWork();
     hideXYaccelerationCanvas();
-}
+};
 
-function plotAcceleration(positions, start, end) {
-    var checkCentralZ = function(positions, start, end, skip) {
-      var ret = 0;
-      var total = 0;
-      var count = 0;
+mapGraph._checkCentralZ = function(positions, start, end, skip) {
+    var ret = 0;
+    var total = 0;
+    var count = 0;
 
-      for (var i=start; i<end; i+=skip) {
+    for (var i=start; i<end; i+=skip) {
         if (positions[i].est) {
-          total += positions[i].est.z;
-          count++;
+            total += positions[i].est.z;
+            count++;
         }
-      }
-      const ave = count !== 0 ? total / count : 0;
-      if (Math.abs(ave) < 0.5) {
+    }
+    const ave = count !== 0 ? total / count : 0;
+    if (Math.abs(ave) < 0.5) {
         ret = -1.0;
-      }
+    }
 
-      return ret;
-    };
+    return ret;
+};
 
-    var pushIntermitData = function(property, data_index, value) {
-      if (isNaN(value) === false) {
+mapGraph._pushIntermitData = function(property, data_index, value) {
+    if (isNaN(value) === false) {
         property["data"][1][data_index] = value;
         if (value > property["config"]["maxY"]) {
-          property["config"]["maxY"] = value;
+            property["config"]["maxY"] = value;
         }
         if (value < property["config"]["minY"]) {
-          property["config"]["minY"] = value;
+            property["config"]["minY"] = value;
         }
-      } else {
+    } else {
         if (data_index === 0) {
-          property["data"][1][data_index] = 0;
+            property["data"][1][data_index] = 0;
         } else {
-          property["data"][1][data_index] = property["data"][1][data_index - 1];
+            property["data"][1][data_index] = property["data"][1][data_index - 1];
         }
-      }
-    };
+    }
+};
 
-    if (document.getElementById('graph_field').style.display === "" || document.getElementById('graph_field').style.display === "none") {
+mapGraph.plot = function(positions, start, end) {
+    if (mapGraph.isVisible() === false) {
         return;
     }
 
     var graph_behavior = new graphBehavior(document.getElementById('graph_behavior'));
     var skip = Math.floor((end - start)/5000) + 1;
-    const z_central = checkCentralZ(positions, start, end, skip);
+    const z_central = mapGraph._checkCentralZ(positions, start, end, skip);
 
-    clearAccelerationGraphData();
+    mapGraph.clearData();
     var data_index = 1;
     for (var i=start; i<end; i+=skip) {
         var p = positions[i];
-        accelerationXY_graph_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
-        accelerationXY_graph_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
-        accelerationZ_graph_property["data"][1][data_index]  = p.est ? replaceNanToZero(p.est.z) + z_central : 0;
-        gyro_graph_property["data"][1][data_index] = p.gyro ? replaceNanToZero(p.gyro.x) : 0;
-        gyro_graph_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
-        gyro_graph_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
+        mapGraph.accelerationXY_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
+        mapGraph.accelerationXY_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
+        mapGraph.accelerationZ_property["data"][1][data_index]  = p.est ? replaceNanToZero(p.est.z) + z_central : 0;
+        mapGraph.gyro_property["data"][1][data_index] = p.gyro ? replaceNanToZero(p.gyro.x) : 0;
+        mapGraph.gyro_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
+        mapGraph.gyro_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
         graph_behavior.push(p);
-        pushIntermitData(speed_graph_property, data_index, p.speed);
-        pushIntermitData(altitude_graph_property, data_index, p.altitude);
+        mapGraph._pushIntermitData(mapGraph.speed_property, data_index, p.speed);
+        mapGraph._pushIntermitData(mapGraph.altitude_property, data_index, p.altitude);
         pushXYaccelerationData(data_index, p);
         data_index++;
     }
 
-    ccchart.init('graph_accelXY', accelerationXY_graph_property);
-    ccchart.init('graph_accelZ', accelerationZ_graph_property);
-    ccchart.init('graph_gyro', gyro_graph_property);
-    ccchart.init('graph_altitude', altitude_graph_property);
-    ccchart.init('graph_speed', speed_graph_property);
+    ccchart.init('graph_accelXY', mapGraph.accelerationXY_property);
+    ccchart.init('graph_accelZ', mapGraph.accelerationZ_property);
+    ccchart.init('graph_gyro', mapGraph.gyro_property);
+    ccchart.init('graph_altitude', mapGraph.altitude_property);
+    ccchart.init('graph_speed', mapGraph.speed_property);
     graph_behavior.plot();
     plotXYacceleration();
-}
+};
 
-function clearAccelerationGraphData() {
-    accelerationXY_graph_property["data"][1].splice(1, accelerationXY_graph_property["data"][1].length - 1);
-    accelerationXY_graph_property["data"][2].splice(1, accelerationXY_graph_property["data"][2].length - 1);
-    accelerationZ_graph_property["data"][1].splice(1, accelerationZ_graph_property["data"][1].length - 1);
-    gyro_graph_property["data"][1].splice(1, gyro_graph_property["data"][1].length - 1);
-    gyro_graph_property["data"][2].splice(1, gyro_graph_property["data"][2].length - 1);
-    gyro_graph_property["data"][3].splice(1, gyro_graph_property["data"][3].length - 1);
-    speed_graph_property["data"][1].splice(1, speed_graph_property["data"][1].length - 1);
-    altitude_graph_property["config"]["maxY"] = 100;
-    altitude_graph_property["data"][1].splice(1, altitude_graph_property["data"][1].length - 1);
+mapGraph.clearData = function() {
+    mapGraph.accelerationXY_property["data"][1].splice(1, mapGraph.accelerationXY_property["data"][1].length - 1);
+    mapGraph.accelerationXY_property["data"][2].splice(1, mapGraph.accelerationXY_property["data"][2].length - 1);
+    mapGraph.accelerationZ_property["data"][1].splice(1, mapGraph.accelerationZ_property["data"][1].length - 1);
+    mapGraph.gyro_property["data"][1].splice(1, mapGraph.gyro_property["data"][1].length - 1);
+    mapGraph.gyro_property["data"][2].splice(1, mapGraph.gyro_property["data"][2].length - 1);
+    mapGraph.gyro_property["data"][3].splice(1, mapGraph.gyro_property["data"][3].length - 1);
+    mapGraph.speed_property["data"][1].splice(1, mapGraph.speed_property["data"][1].length - 1);
+    mapGraph.altitude_property["config"]["maxY"] = 100;
+    mapGraph.altitude_property["data"][1].splice(1, mapGraph.altitude_property["data"][1].length - 1);
     clearXYaccelerationData();
-}
+};

@@ -165,7 +165,7 @@ mapPlaybackRoute.prototype._refresh = function(positions, latlng) {
     this.ins_map.setCenter(latlng);
 
     const past_pos = this.pos_index > 100 ? this.pos_index - 100 : 0;
-    plotAcceleration(positions, past_pos, this.pos_index);
+    mapGraph.plot(positions, past_pos, this.pos_index);
 
     map_range_slider.setPlaybackPosition(Math.floor((this.pos_index / positions.length) * 1000));
 
