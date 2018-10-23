@@ -10,6 +10,7 @@ var endMarker = null;
 var poly = new Array();
 var positions;
 var polyline_clicked_info = null;
+var map_operation;
 var map_range_slider;
 
 var pre_lat;
@@ -79,6 +80,7 @@ function map_init() {
 
   playback = new mapPlaybackRoute(map);
   maptrack = new mapTrack();
+  map_operation = new mapOperation();
   map_range_slider = new mapRangeSlider();
   eventMarker = new mapEventMarker({map: map});
 
@@ -92,64 +94,14 @@ function map_init() {
   };
   panorama = new google.maps.StreetViewPanorama(document.getElementById('panorama_canvas'), panoramaOptions);
   map.setStreetView(panorama);
-  resetLatLngMinMax();
+  map_operation.resetLatLngMinMax();
 }
 
-function resetLatLngMinMax() {
-  lat_min = 0;
-  lng_min = 0;
-  lat_max = 0;
-  lng_max = 0;
-}
-
-function setLatLngMinMax(lat, lng) {
-  if (lat_min === 0 || lat_min > lat) {
-    lat_min = lat;
-  }
-  if (lat_max === 0 || lat_max < lat) {
-    lat_max = lat;
-  }
-  if (lng_min === 0 || lng_min > lng) {
-    lng_min = lng;
-  }
-  if (lng_max === 0 || lng_max < lng) {
-    lng_max = lng;
-  }
-}
-
-function getCenterLocation(lat_min, lng_min, lat_max, lng_max) {
-  var lat_ave = (lat_min + lat_max) / 2;
-  var lng_ave = (lng_min + lng_max) / 2;
+function getCenterLocation() {
+  var lat_ave = (map_operation.lat_min + map_operation.lat_max) / 2;
+  var lng_ave = (map_operation.lng_min + map_operation.lng_max) / 2;
 
   return new google.maps.LatLng(lat_ave, lng_ave);
-}
-
-function getMapScale() {
-  var distance = Math.sqrt(Math.pow(lat_max - lat_min, 2) + Math.pow(lng_max - lng_min, 2));
-
-  if (distance < 0.0001) {
-    return 19;
-  } else if (distance < 0.001) {
-    return 18;
-  } else if (distance < 0.002) {
-    return 17;
-  } else if (distance < 0.01) {
-    return 15;
-  } else if (distance < 0.1) {
-    return 12;
-  } else if (distance < 0.2) {
-    return 11;
-  } else if (distance < 0.7) {
-    return 10;
-  } else if (distance < 1.2) {
-    return 8;
-  } else if (distance < 5.0) {
-    return 7;
-  } else if (distance < 15) {
-    return 4;
-  } else {
-    return 3;
-  }
 }
 
 function setPanoramaPosition(gm_latlng, heading) {
@@ -225,14 +177,14 @@ function get_latlng(lat, lng) {
   pre_lat = lat;
   pre_lng = lng;
 
-  setLatLngMinMax(lat, lng);
+  map_operation.setLatLngMinMax(lat, lng);
 
   return new google.maps.LatLng(lat, lng);
 }
 
 // 経路描画
 function map_route() {
-  resetLatLngMinMax();
+  map_operation.resetLatLngMinMax();
   maptrack.clearIndex();
   maptrack.searchTrackIndex(positions);
   if (reloadMap(0, positions.length) === true) {
@@ -411,8 +363,8 @@ function plotMapPolyLine(route, color) {
 
 // マップの中央を奇跡が全て見える位置に合わせる
 function centeringMap() {
-  map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));
-  map.setZoom(parseInt(getMapScale()));
+  map.panTo(getCenterLocation());
+  map.setZoom(parseInt(map_operation.getMapScale()));
 }
 
 function putStartGeoCode(results, status) {
@@ -564,17 +516,12 @@ function makeEventTitle(behavior) {
     for (var i=0; i<4; i++) {
         const case_bit = 1 << i;
         if ((behavior & case_bit) === case_bit) {
-            if (title.length !== 0) {
-                title += " / ";
-            }
+            title += title.length === 0 ? "" : " / ";
             title += config.title.event[i];
         }
     }
-    if (title.length === 0) {
-        title = "--";
-    }
 
-    return title;
+    return title ? title : "--";
 }
 
 function getPositionDifference(positions, index, back_count) {
