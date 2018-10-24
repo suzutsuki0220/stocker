@@ -13,36 +13,33 @@ mapTrack.prototype.getTrackCount = function() {
 };
 
 mapTrack.prototype.searchTrackIndex = function(tracks) {
+    this.scene_before = "";
     for (var i=0; i<tracks.length; i++) {
-        const datetime = tracks[i].datetime;
         const scene = tracks[i].scene;
-        if (scene) {
-            if (this.scene_before !== scene) {
-                if (scene === "driving") {
-                    var ti = new Object();
-                    ti.num = i;
-                    ti.datetime = datetime;
-                    this.track_index.push(ti);
-                    //console.log(i + " : " + datetime);
-                }
-            }
-            this.scene_before = scene;
+        if (!scene) {
+            continue;
         }
+
+        if (this.scene_before !== scene && scene === "driving") {
+            var ti = new Object();
+            ti.num = i;
+            ti.datetime = tracks[i].datetime;
+            this.track_index.push(ti);
+            //console.log(i + " : " + tracks[i].datetime);
+        }
+        this.scene_before = scene;
     }
 };
 
 mapTrack.prototype.getIndexNum = function(position_idx) {
-    var idx = 0;
+    if (this.track_index[0].num > position_idx) { // case of idx=0
+        return 0;
+    }
 
-    for (; idx<this.track_index.length; idx++) {
-        if (idx === 0) {
-            if (this.track_index[idx].num > position_idx) {
-                break;
-            }
-        } else {
-            if (this.track_index[idx - 1] <= position_idx && this.track_index[idx].num > position_idx) {
-                break;
-            }
+    var idx;
+    for (idx = 1; idx<this.track_index.length; idx++) {
+        if (this.track_index[idx - 1] <= position_idx && this.track_index[idx].num > position_idx) {
+            break;
         }
     }
 
@@ -75,31 +72,24 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
         return NaN;
     }
 
-    var dt_range = NaN;
+    var duration = NaN;
     for (var i=0; i<this.track_index.length; i++) {
+        const dt_start_str = i === 0 ? tracks[0].datetime : this.track_index[i - 1].datetime;
+        const dt_start = getDateFromDatetimeString(dt_start_str);
         const dt_end = getDateFromDatetimeString(this.track_index[i].datetime);
-        if (i === 0) {
-            if (dt_end >= datetime) {
-                dt_range = dt_end - getDateFromDatetimeString(tracks[0].datetime);
-                break;
-            }
-        } else {
-            const dt_start = getDateFromDatetimeString(this.track_index[i - 1].datetime);
-            if (dt_end >= datetime && datetime > dt_start) {
-                dt_range = dt_end - dt_start;
-                break;
-            }
+
+        if (dt_end >= datetime && datetime > dt_start) {
+            duration = dt_end - dt_start;
+            break;
         }
     }
-    if (isNaN(dt_range) === true) {
+    if (isNaN(duration) === true) {
         const dt_start = getDateFromDatetimeString(this.track_index[this.track_index.length - 1].datetime);
         if (dt_start < datetime) {
             const last_datetime = tracks[tracks.length - 1].datetime;
-            if (last_datetime) {
-                dt_range = getDateFromDatetimeString(last_datetime) - dt_start;
-            }
+            duration = last_datetime ? getDateFromDatetimeString(last_datetime) - dt_start : NaN;
         }
     }
 
-    return dt_range;
+    return duration;
 }
