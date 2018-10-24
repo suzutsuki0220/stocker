@@ -1,6 +1,5 @@
 // 正規表現パターン
 var gpsNmea = function() {
-    this.position = new Array();
     this.re_degree = /(\d+)(\d\d\.\d+)/;
 
     this.sentence_parser = [
@@ -41,16 +40,17 @@ gpsNmea.prototype._getRMC = function(self, sentence) {
 
     const time_str = col[1];
     const date_str = col[9];
+    const latitude  = self._getDegree(col[3], col[4] === "S");
+    const longitude = self._getDegree(col[5], col[6] === "W");
 
     if (col[2] === "A") {  // sentence status OK
-        var position = new Object();
-        position.datetime  = self._makeNmeaDateTime(date_str, time_str);
-        position.latitude  = self._getDegree(col[3], col[4] === "S");
-        position.longitude = self._getDegree(col[5], col[6] === "W");
-        self._addHoldData(position);
+        var track = new Object();
+        track.datetime  = self._makeNmeaDateTime(date_str, time_str);
+        track.coordinate = gpsCommon.makeCoordinate(latitude, longitude, 0);
+        self._addHoldData(track);
         self._clearHoldData();
 
-        gpsCommon.positions.push(position);
+        gpsCommon.tracks.push(track);
     }
 };
 
@@ -93,7 +93,7 @@ gpsNmea.prototype._addHoldData = function(obj) {
     }
 
     if (isNaN(this._altitude) === false) {
-        obj.altitude = this._altitude;
+        obj.coordinate.altitude = this._altitude;
     }
 
     if (this._gsensor) {

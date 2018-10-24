@@ -198,7 +198,7 @@ mapGraph.plot = function(positions, start, end) {
         mapGraph.gyro_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
         graph_behavior.push(p);
         mapGraph._pushIntermitData(mapGraph.speed_property, data_index, p.speed);
-        mapGraph._pushIntermitData(mapGraph.altitude_property, data_index, p.altitude);
+        mapGraph._pushIntermitData(mapGraph.altitude_property, data_index, p.coordinate.altitude);
         pushXYaccelerationData(data_index, p);
         data_index++;
     }

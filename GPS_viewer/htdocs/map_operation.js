@@ -10,22 +10,31 @@ mapOperation.prototype.resetLatLngMinMax = function() {
     this.lng_min = 0;
     this.lat_max = 0;
     this.lng_max = 0;
-}
+};
 
-mapOperation.prototype.setLatLngMinMax = function(lat, lng) {
-    if (this.lat_min === 0 || this.lat_min > lat) {
-        this.lat_min = lat;
+mapOperation.prototype.setLatLngMinMax = function(coordinate) {
+    if (this.lat_min === 0 || this.lat_min > coordinate.latitude) {
+        this.lat_min = coordinate.latitude;
     }
-    if (this.lat_max === 0 || this.lat_max < lat) {
-        this.lat_max = lat;
+    if (this.lat_max === 0 || this.lat_max < coordinate.latitude) {
+        this.lat_max = coordinate.latitude;
     }
-    if (this.lng_min === 0 || this.lng_min > lng) {
-        this.lng_min = lng;
+    if (this.lng_min === 0 || this.lng_min > coordinate.longitude) {
+        this.lng_min = coordinate.longitude;
     }
-    if (this.lng_max === 0 || this.lng_max < lng) {
-        this.lng_max = lng;
+    if (this.lng_max === 0 || this.lng_max < coordinate.longitude) {
+        this.lng_max = coordinate.longitude;
     }
-}
+};
+
+mapOperation.prototype.getCenterLatlng = function() {
+    var ave_coord = new Object();
+    ave_coord.latitude  = (map_operation.lat_min + map_operation.lat_max) / 2;
+    ave_coord.longitude = (map_operation.lng_min + map_operation.lng_max) / 2;
+
+    return ave_coord;
+};
+
 mapOperation.prototype.getMapScale = function() {
     var distance = Math.sqrt(Math.pow(this.lat_max - this.lat_min, 2) + Math.pow(this.lng_max - this.lng_min, 2));
 

@@ -3,8 +3,8 @@
  * 第五引数に設定するキー（unit）で単位別で取得できる
 **/
 function getDistance(latlng1, latlng2, unit) {
-    var theta = latlng1.lng - latlng2.lng;
-    var dist = Math.sin(deg2rad(laglng1.lat)) * Math.sin(deg2rad(latlng2.lat)) +  Math.cos(deg2rad(latlng1.lat)) * Math.cos(deg2rad(latlng2.lat)) * Math.cos(deg2rad(theta));
+    var theta = latlng1.longitude - latlng2.longitude;
+    var dist = Math.sin(deg2rad(laglng1.latitude)) * Math.sin(deg2rad(latlng2.latitude)) +  Math.cos(deg2rad(latlng1.latitude)) * Math.cos(deg2rad(latlng2.latitude)) * Math.cos(deg2rad(theta));
     if (dist > 1) {
         dist = Math.acos(1);
     } else if (dist < -1) {
@@ -61,13 +61,13 @@ const GRS80  = 1;
 const WGS84  = 2;
 
 function getDistHubeny(latlng1, latlng2, type) {
-    if (!latlng1.lat || !latlng1.lng || !latlng2.lat || !latlng2.lng) {
+    if (!latlng1.latitude || !latlng1.longitude || !latlng2.latitude || !latlng2.longitude) {
         return 0;
     }
 
-    const my = deg2rad((latlng1.lat + latlng2.lat) / 2.0);
-    const dy = deg2rad(latlng1.lat - latlng2.lat);
-    const dx = deg2rad(latlng1.lng - latlng2.lng);
+    const my = deg2rad((latlng1.latitude + latlng2.latitude) / 2.0);
+    const dy = deg2rad(latlng1.latitude - latlng2.latitude);
+    const dx = deg2rad(latlng1.longitude - latlng2.longitude);
 
     const sin = Math.sin(my);
     const w = Math.sqrt(1.0 - E2[type] * sin * sin);

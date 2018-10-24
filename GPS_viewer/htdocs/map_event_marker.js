@@ -78,12 +78,12 @@ mapEventMarker.prototype.setup = function() {
     };
 }
 
-mapEventMarker.prototype.create = function(positions, index) {
-    var p = positions[index];
+mapEventMarker.prototype.create = function(tracks, index) {
+    var p = tracks[index];
 
     var tl = this._getMarkerLabelByBehavior(p.behavior);
     var markerOptions = {
-        position: new google.maps.LatLng(p.latitude, p.longitude),
+        position: new google.maps.LatLng(p.coordinate.latitude, p.coordinate.longitude),
         icon: CAUTION_MARKER_ICON,
         map: this.ins_map,
         title: tl.title,
@@ -92,7 +92,7 @@ mapEventMarker.prototype.create = function(positions, index) {
     };
     var marker = new google.maps.Marker(markerOptions);
 
-    this.__addToMap(marker, positions, index);
+    this.__addToMap(marker, tracks, index);
     this.eventMarkers.push(marker);
 };
 
@@ -106,9 +106,9 @@ mapEventMarker.prototype.clear = function() {
     }
 };
 
-mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, canvasXY_id, canvasS_id) {
-    var p = positions[index];
-    var diff_p = getPositionDifference(positions, index + 12, 12);  // 位置情報は加速度より遅れるので先のサンプルで比較する
+mapEventMarker.prototype.__makeEventInfoContents = function(tracks, index, canvasXY_id, canvasS_id) {
+    var p = tracks[index];
+    var diff_p = getPositionDifference(tracks, index + 12, 12);  // 位置情報は加速度より遅れるので先のサンプルで比較する
 
     const title = makeEventTitle(p.behavior);
     const level = p.level ? " (level: " + p.level + ")" : "";
@@ -116,8 +116,8 @@ mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, ca
     var contents;
     contents  = '<div style="color: #202020">';
     contents += '<div style="float: left; width: 95px; height: 95px; margin-right: 5px">';
-    contents += '<a href="javascript:setPanoramaPosition(new google.maps.LatLng(' + p.latitude + ',' + p.longitude + '),' + diff_p.azimuth + ')">';
-    contents += '<img src="' + makeStreetviewImgUrl(p.latitude, p.longitude, diff_p.azimuth) + '">';
+    contents += '<a href="javascript:setPanoramaPosition(new google.maps.LatLng(' + p.coordinate.latitude + ',' + p.coordinate.longitude + '),' + diff_p.azimuth + ')">';
+    contents += '<img src="' + makeStreetviewImgUrl(p.coordinate, diff_p.azimuth) + '">';
     contents += '</a></div><div style="height: 95px">';
     contents += '<b>' + title + level + "</b><br>";
     contents += "発生時刻: " + p.datetime + "<br>";
@@ -132,16 +132,16 @@ mapEventMarker.prototype.__makeEventInfoContents = function(positions, index, ca
     return contents;
 }
 
-mapEventMarker.prototype.plotEventInfoGraph = function(positions, index, canvasXY_id, canvasS_id) {
+mapEventMarker.prototype.plotEventInfoGraph = function(tracks, index, canvasXY_id, canvasS_id) {
     const i_start = index >= this.EVENT_GRAPH_RANGE ? index - this.EVENT_GRAPH_RANGE : 0;
-    const i_end   = positions.length >= index + this.EVENT_GRAPH_RANGE ? index + this.EVENT_GRAPH_RANGE : positions.length;
+    const i_end   = tracks.length >= index + this.EVENT_GRAPH_RANGE ? index + this.EVENT_GRAPH_RANGE : tracks.length;
 
     this.setup();
 
     var n = 1;  // 0はグラフ凡例
     for (var i=i_start; i<i_end; i++) {
         var minmax;
-        var p = positions[i];
+        var p = tracks[i];
         if (!isNaN(p.speed)) {
             this.speed_property["data"][1][n] = normalize(p.speed, this.graph_speed_min, this.graph_speed_max);
         } else {
@@ -158,17 +158,17 @@ mapEventMarker.prototype.plotEventInfoGraph = function(positions, index, canvasX
     ccchart.init(canvasS_id, this.speed_property);
 };
 
-mapEventMarker.prototype.__addToMap = function(marker, positions, index) {
+mapEventMarker.prototype.__addToMap = function(marker, tracks, index) {
     var self = this;
     const canvasXY_id = uuid();
     const canvasS_id  = uuid();
 
     var showInfoWindow = function(event) {
         var windowOptions = new Object();
-        windowOptions.content = self.__makeEventInfoContents(positions, index, canvasXY_id, canvasS_id);
+        windowOptions.content = self.__makeEventInfoContents(tracks, index, canvasXY_id, canvasS_id);
         var infoWindow = new google.maps.InfoWindow(windowOptions);
         infoWindow.open(marker.getMap(), marker);
-        infoWindow.addListener('domready', function() {self.plotEventInfoGraph(positions, index, canvasXY_id, canvasS_id)});
+        infoWindow.addListener('domready', function() {self.plotEventInfoGraph(tracks, index, canvasXY_id, canvasS_id)});
     };
     google.maps.event.addListener(marker, 'click', showInfoWindow);
 };

@@ -1,11 +1,11 @@
 var gpsCommon = new Object();
 
-gpsCommon.positions = new Array();
+gpsCommon.tracks = new Array();
 gpsCommon.nmea_name_pattern = /\.(nmea)$/;
 gpsCommon.accel_csv_name_pattern = /\.(accel.csv)$/;
 
 gpsCommon.getPosition = function(text_data, name) {
-    gpsCommon.positions = [];
+    gpsCommon.tracks = [];
     if (gpsCommon.nmea_name_pattern.test(name.toLowerCase())) {
         // nmeaデータ
         var parser = new gpsNmea();
@@ -20,7 +20,7 @@ gpsCommon.getPosition = function(text_data, name) {
         getPositionXml(xml);
     }
 
-    return gpsCommon.positions;
+    return gpsCommon.tracks;
 };
 
 gpsCommon.parseEachLines = function(data, parse_func) {
@@ -43,6 +43,15 @@ gpsCommon.getXYZvalue = function(col, i) {
     ret.x = col[i+1] ? replaceNanToZero(col[i+1].trim()) : 0;
     ret.y = col[i+2] ? replaceNanToZero(col[i+2].trim()) : 0;
     ret.z = col[i+3] ? replaceNanToZero(col[i+3].trim()) : 0;
+
+    return ret;
+};
+
+gpsCommon.makeCoordinate = function(lat, lng, alt) {
+    var ret = new Object();
+    ret.latitude  = replaceNanToZero(lat);
+    ret.longitude = replaceNanToZero(lng);
+    ret.altitude  = replaceNanToZero(alt);
 
     return ret;
 };

@@ -1,15 +1,19 @@
 /* 緯度経度計算に関するfunctions */
 
-function isValidLatLng(lat, lng) {
-  if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
-    return false;
-  }
+function isValidLatLng(coordinate) {
+    if (!coordinate) {
+        return false;
+    }
 
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    return false;
-  }
+    if (isNaN(coordinate.latitude) || isNaN(coordinate.longitude) || (coordinate.latitude === 0 && coordinate.longitude === 0)) {
+        return false;
+    }
 
-  return true;
+    if (Math.abs(coordinate.latitude) > 90 || Math.abs(coordinate.longitude) > 180) {
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -42,9 +46,9 @@ function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
     return ret;
 }
 
-function isNearLatLng(lat1, lng1, lat2, lng2, precision) {
+function isNearLatLng(latlng1, latlng2, precision) {
     var precision = typeof precision !== 'undefined' ? precision : 0.000001;
-    if (Math.abs(lat2 - lat1) < precision && Math.abs(lng2 - lng1) < precision) {
+    if (Math.abs(latlng2.latitude - latlng1.latitude) < precision && Math.abs(latlng2.longitude - latlng1.longitude) < precision) {
         // 位置の変化が数センチ規模 (約1m未満)
         return true;
     }
@@ -54,7 +58,7 @@ function isNearLatLng(lat1, lng1, lat2, lng2, precision) {
 /**
  * 2点の緯度経度から方位角を求める
 **/
-function getAzimuth(lat1, lng1, lat2, lng2) {
+function getAzimuth(latlng1, latlng2) {
     var getRadian = function(deg) {
         return deg * (Math.PI / 180);
     };
@@ -64,14 +68,14 @@ function getAzimuth(lat1, lng1, lat2, lng2) {
 
     var theta, azimuth;
 
-    if (isNearLatLng(lat1, lng1, lat2, lng2)) {
+    if (isNearLatLng(latlng1, latlng2)) {
         // 位置の変化が数センチ規模 (約1m未満)
         return NaN;
     }
 
-    var dx = getRadian(lng2) - getRadian(lng1);
-    var y1 = getRadian(lat1);
-    var y2 = getRadian(lat2);
+    var dx = getRadian(latlng2.longitude) - getRadian(latlng1.longitude);
+    var y1 = getRadian(latlng1.latitude);
+    var y2 = getRadian(latlng2.latitude);
 
     theta = Math.atan2(Math.sin(dx), (Math.cos(y1) * Math.tan(y2) - Math.sin(y1) * Math.cos(dx)));
     if (theta >= 0) {

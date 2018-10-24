@@ -8,7 +8,7 @@ var eventMarker = null;
 var startMarker = null;
 var endMarker = null;
 var poly = new Array();
-var positions;
+var tracks;
 var polyline_clicked_info = null;
 var map_operation;
 var map_range_slider;
@@ -41,9 +41,9 @@ function getDateFromDatetimeString(datetime) {
     return d.getTime();  // ミリ秒
 }
 
-function makeStreetviewImgUrl(lat, lng, heading) {
+function makeStreetviewImgUrl(coordinate, heading) {
     const url_base = "https://maps.googleapis.com/maps/api/streetview";
-    var parameters = "size=96x96&fov=90&heading=" + heading + "&pitch=10&location=" + lat + "," + lng;
+    var parameters = "size=96x96&fov=90&heading=" + heading + "&pitch=10&location=" + coordinate.latitude + "," + coordinate.longitude;
     if (config.apiKey.googlemap) {
         parameters += "&key=" + config.apiKey.googlemap;
     }
@@ -95,13 +95,6 @@ function map_init() {
   panorama = new google.maps.StreetViewPanorama(document.getElementById('panorama_canvas'), panoramaOptions);
   map.setStreetView(panorama);
   map_operation.resetLatLngMinMax();
-}
-
-function getCenterLocation() {
-  var lat_ave = (map_operation.lat_min + map_operation.lat_max) / 2;
-  var lng_ave = (map_operation.lng_min + map_operation.lng_max) / 2;
-
-  return new google.maps.LatLng(lat_ave, lng_ave);
 }
 
 function setPanoramaPosition(gm_latlng, heading) {
@@ -162,32 +155,32 @@ function map_clear() {
   document.getElementById("end_address").innerHTML = "";
 }
 
-function get_latlng(lat, lng) {
-  if (isValidLatLng(lat, lng) === false) {
+function get_latlng(coordinate) {
+  if (isValidLatLng(coordinate) === false) {
     return null;
   }
 
   if (pre_lat !== 0 && pre_lng !== 0) {
-    //var d = getDistance({lat: lat, lng: lng}, {lat: pre_lat, lng: pre_lng}, "K");
-    var d = getDistHubeny({lat: lat, lng: lng}, {lat: pre_lat, lng: pre_lng}, WGS84) / 1000;
+    //var d = getDistance(coordinate, {latitude: pre_lat, longitude: pre_lng}, "K");
+    var d = getDistHubeny(coordinate, {latitude: pre_lat, longitude: pre_lng}, WGS84) / 1000;
     if (d === d) {  // is not NaN
       distance += d;
     }
   }
-  pre_lat = lat;
-  pre_lng = lng;
+  pre_lat = coordinate.latitude;
+  pre_lng = coordinate.longitude;
 
-  map_operation.setLatLngMinMax(lat, lng);
+  map_operation.setLatLngMinMax(coordinate);
 
-  return new google.maps.LatLng(lat, lng);
+  return new google.maps.LatLng(coordinate.latitude, coordinate.longitude);
 }
 
 // 経路描画
 function map_route() {
   map_operation.resetLatLngMinMax();
   maptrack.clearIndex();
-  maptrack.searchTrackIndex(positions);
-  if (reloadMap(0, positions.length) === true) {
+  maptrack.searchTrackIndex(tracks);
+  if (reloadMap(0, tracks.length) === true) {
     centeringMap();
   }
 }
@@ -203,7 +196,7 @@ function reloadMap(start_range, end_range) {
   var line_color = "";
   var last_line_color = "";
   var beforeMarkerDatetime = 0;
-  const p_diff = getPositionDifference(positions, start_range + 12, 12);  // streetviewの向き決定用
+  const p_diff = getPositionDifference(tracks, start_range + 12, 12);  // streetviewの向き決定用
 
   distance = 0;
   pre_lat = 0;
@@ -211,8 +204,8 @@ function reloadMap(start_range, end_range) {
   eventMarker.clear();
   playback.stop();
   for (var i=start_range; i<end_range; i+=skip_idx) {
-    const p = positions[i];
-    const latlng = get_latlng(p.latitude, p.longitude);
+    const p = tracks[i];
+    const latlng = get_latlng(p.coordinate);
     if (latlng != null) {
       if (start_route === null) {
         map_clear();  // ここに来れば有効なサンプルは存在してるはず
@@ -224,7 +217,7 @@ function reloadMap(start_range, end_range) {
       if (p.behavior && p.behavior !== 0) {
         var dt = getDateFromDatetimeString(p.datetime);
         if (dt && dt - beforeMarkerDatetime > 3000) {
-          eventMarker.create(positions, i);
+          eventMarker.create(tracks, i);
           beforeMarkerDatetime = dt;
         }
       }
@@ -264,12 +257,12 @@ function reloadMap(start_range, end_range) {
   document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
   document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
 
-  duration = getDuration(positions[start_range].datetime, positions[end_range - 1].datetime);
+  duration = getDuration(tracks[start_range].datetime, tracks[end_range - 1].datetime);
   if (!isNaN(duration)) {
       document.getElementById("duration_text").innerHTML = duration.toFixed() + " 秒"; 
   }
-  document.getElementById('start_datetime').innerHTML = positions[start_range].datetime ? positions[start_range].datetime : "不明";
-  document.getElementById('end_datetime').innerHTML = positions[end_range - 1].datetime ? positions[end_range - 1].datetime : "不明";
+  document.getElementById('start_datetime').innerHTML = tracks[start_range].datetime ? tracks[start_range].datetime : "不明";
+  document.getElementById('end_datetime').innerHTML = tracks[end_range - 1].datetime ? tracks[end_range - 1].datetime : "不明";
 
   var delayReloadFunc = function() {
     geocoder.geocode({'location': start_route}, putStartGeoCode);
@@ -305,9 +298,9 @@ function reloadMap(start_range, end_range) {
 }
 
 function setStartEndRangeByPolylineClicked(name, lat, lng) {
-    const index = searchPositionIndexByLatLng(lat, lng);
+    const index = searchTracksIndexByLatLng({latitude: lat, longitude: lng});
     if (isNaN(index) === false) {
-        var value = Math.floor(index / positions.length * 1000);
+        var value = Math.floor(index / tracks.length * 1000);
         var sr = map_range_slider.getStartEndValue();
         if (name === "range_start_pos") {
             map_range_slider.setRangePosition(value, sr.end);
@@ -363,7 +356,10 @@ function plotMapPolyLine(route, color) {
 
 // マップの中央を奇跡が全て見える位置に合わせる
 function centeringMap() {
-  map.panTo(getCenterLocation());
+  const center = map_operation.getCenterLatlng();
+  const latlng = new google.maps.LatLng(center.latitude, center.longitude);
+
+  map.panTo(latlng);
   map.setZoom(parseInt(map_operation.getMapScale()));
 }
 
@@ -403,7 +399,7 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
                 //document.getElementById('sStatus').innerHTML = "読み込み中...";
             } else if (httpRequest.readyState == 4) {
                 if (httpRequest.status == 200) {
-                    positions = gpsCommon.getPosition(httpRequest.responseText, name);
+                    tracks = gpsCommon.getPosition(httpRequest.responseText, name);
                     map_route();
                 } else {
                     alert("ERROR: " + httpRequest.status);
@@ -443,18 +439,18 @@ function getPositionStartEndFromRangeController(p) {
 }
 
 function rangeChanged() {
-    if (positions) {
-        const range = getPositionStartEndFromRangeController(positions);
+    if (tracks) {
+        const range = getPositionStartEndFromRangeController(tracks);
         reloadMap(range.start, range.end);
     }
 }
 
 function plotRangeStroke() {
     var data = new Array();
-    const skip_idx = Math.floor(positions.length / 1000) + 1;
+    const skip_idx = Math.floor(tracks.length / 1000) + 1;
 
-    for (var i=0; i<positions.length; i+=skip_idx) {
-        data.push(positions[i].speed);
+    for (var i=0; i<tracks.length; i+=skip_idx) {
+        data.push(tracks[i].speed);
     }
 
     map_range_slider.setStrokeData(data, 0, 120);
@@ -470,8 +466,8 @@ function paintTimeRangeBgSpeed(canvas) {
     ctx.setLineDash([0]);
 
     for (var i=0; i<canvas.width; i+=step) {
-        const get_pos = Math.floor(positions.length * ((i + step / 2) / canvas.width));
-        const p = positions[get_pos];
+        const get_pos = Math.floor(tracks.length * ((i + step / 2) / canvas.width));
+        const p = tracks[get_pos];
         var graphY = (canvas.height - graphY_offset) - (p.speed / 100 * canvas.height);
         var color = "#0000b1";
         if (p.speed > 100) {
@@ -502,9 +498,9 @@ function showMapWarning(message) {
 }
 
 function playbackRoute() {
-    var range = getPositionStartEndFromRangeController(positions);
+    var range = getPositionStartEndFromRangeController(tracks);
     if (range.length >= 100) {
-        playback.start(positions, range.start, range.end);
+        playback.start(tracks, range.start, range.end);
     } else {
         alert("開始位置と終了位置の間隔が狭すぎるため処理できません");
     }
@@ -516,69 +512,68 @@ function makeEventTitle(behavior) {
     for (var i=0; i<4; i++) {
         const case_bit = 1 << i;
         if ((behavior & case_bit) === case_bit) {
-            title += title.length === 0 ? "" : " / ";
-            title += config.title.event[i];
+            title += title ? " / " + config.title.event[i] : config.title.event[i];
         }
     }
 
     return title ? title : "--";
 }
 
-function getPositionDifference(positions, index, back_count) {
+function getPositionDifference(tracks, index, back_count) {
     var position_diff = new Object();
 
     var current_index = !isNaN(index) ? index : 0;
-    if (current_index >= positions.length) {
-        current_index = positions.length - 1;
+    if (current_index >= tracks.length) {
+        current_index = tracks.length - 1;
     }
-    while(!positions[current_index] && current_index < positions.length) {
+    while(!tracks[current_index] && current_index < tracks.length) {
         current_index++;
     }
 
     var back_index = current_index - back_count;
     if (back_index >= 0) {
-        while(!positions[back_index] && back_index > 0) {
+        while(!tracks[back_index] && back_index > 0) {
             back_index--;
         }
     } else {
         back_index = 0;
     }
-    while(!positions[back_index] && current_index > back_index) {
+    while(!tracks[back_index] && current_index > back_index) {
         back_index++;
     }
 
-    const p_curr = positions[current_index];
-    const p_back = positions[back_index];
+    const p_curr = tracks[current_index];
+    const p_back = tracks[back_index];
 
     if (p_curr && p_back) {
-        const azimuth = getAzimuth(p_back.latitude, p_back.longitude, p_curr.latitude, p_curr.longitude);
+        const azimuth = getAzimuth(p_back.coordinate, p_curr.coordinate);
         position_diff.azimuth   = azimuth;
         position_diff.direction = getDirectionString(azimuth);
-        position_diff.altitude  = p_curr.altitude ? p_curr.altitude - p_back.altitude : 0;
+        position_diff.altitude  = p_curr.coordinate.altitude ? p_curr.coordinate.altitude - p_back.coordinate.altitude : 0;
         position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
     }
 
     return position_diff;
 }
 
-function searchPositionIndexByLatLng(lat, lng) {
-    // 数メートル単位で近いpositionsを探す
-    for (var i=0; i<positions.length; i++) {
-        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng)) {
+function searchTracksIndexByLatLng(latlng) {
+    // 数メートル単位で近いtracksを探す
+    for (var i=0; i<tracks.length; i++) {
+        if (isNearLatLng(tracks[i].coordinate, latlng)) {
             return i;
         }
     }
 
     // 1桁上げて比較
-    for (var i=0; i<positions.length; i++) {
-        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng, 0.00001)) {
+    for (var i=0; i<tracks.length; i++) {
+        if (isNearLatLng(tracks[i].coordinate, latlng, 0.00001)) {
             return i;
         }
     }
 
     // 更に1桁
-    for (var i=0; i<positions.length; i+=5) {
-        if (isNearLatLng(positions[i].latitude, positions[i].longitude, lat, lng, 0.0001)) {
+    for (var i=0; i<tracks.length; i+=5) {
+        if (isNearLatLng(tracks[i].coordinate, latlng, 0.0001)) {
             return i;
         }
     }
@@ -597,7 +592,7 @@ function setTimeRangeByTrack(num) {
     }
 
     if (last_pos !== maptrack_pos) {
-        var range = maptrack.getTrackRange(positions, maptrack_pos);
+        var range = maptrack.getTrackRange(tracks, maptrack_pos);
         // シーンの切替えより少し手前の範囲を出す
         if (range.start > 30) {
             range.start -= 30;
@@ -605,8 +600,8 @@ function setTimeRangeByTrack(num) {
             range.start = 0;
         }
 
-        const start_pos = Math.floor(range.start / positions.length * 1000);
-        const end_pos   = Math.floor(range.end / positions.length * 1000);
+        const start_pos = Math.floor(range.start / tracks.length * 1000);
+        const end_pos   = Math.floor(range.end / tracks.length * 1000);
         map_range_slider.setRangePosition(start_pos, end_pos);
 
         reloadMap(range.start, range.end);

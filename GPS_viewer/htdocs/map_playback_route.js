@@ -38,23 +38,23 @@ mapPlaybackRoute.prototype.isPlaying = function() {
     return this.playing;
 }
 
-mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
+mapPlaybackRoute.prototype.start = function(tracks, start_index, end_index) {
     var self = this;
 
     var moveMarker = function() {
-        var p = positions[self.pos_index];
+        var p = tracks[self.pos_index];
         if (p) {
             var latlng = self.marker.getPosition();
-            if (isValidLatLng(p.latitude, p.longitude) === true) {
-                latlng = new google.maps.LatLng(p.latitude, p.longitude);
+            if (isValidLatLng(p.coordinate) === true) {
+                latlng = new google.maps.LatLng(p.coordinate.latitude, p.coordinate.longitude);
                 self.marker.setPosition(latlng);
             }
             self._showEventBalloon(p, latlng);
-            self._refresh(positions, latlng);
+            self._refresh(tracks, latlng);
 
             self.pos_index++;
             if (self.pos_index < end_index) {
-                const next_wait = self._getPlaybackNextWait(p.datetime, positions[self.pos_index].datetime);
+                const next_wait = self._getPlaybackNextWait(p.datetime, tracks[self.pos_index].datetime);
                 setTimeout(moveMarker, next_wait);
             } else {
                 self.hidePlaybackInfo();
@@ -67,18 +67,18 @@ mapPlaybackRoute.prototype.start = function(positions, start_index, end_index) {
         }
     };
 
-    if (!positions || this.playing === true) {
+    if (!tracks || this.playing === true) {
         this.stop(); // かり
         return;
     }
     this.playing = true;
 
-    this._init(positions, start_index, end_index);
+    this._init(tracks, start_index, end_index);
     moveMarker();
 };
 
 mapPlaybackRoute.prototype.stop = function() {
-    this.pos_index = positions.length || 0;
+    this.pos_index = tracks.length || 0;
     this.hidePlaybackInfo();
     map_range_slider.setPlaybackPositionVisible(false);
     this._hideInfoWindow();
@@ -102,7 +102,7 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
     const gps_status_mes = ["不明", "良好", "低下", "悪い"];
     var content = "【再生中】<br>";
     content += p.datetime + "<br>";
-    if (isValidLatLng(p.latitude, p.longitude) === true) {
+    if (isValidLatLng(p.coordinate) === true) {
         var gps_level = getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy);
         content += "GPS感度: " + gps_status_mes[gps_level] + "<br>";
         content += "進行方向: " + diff_p.direction + "<br>";
@@ -120,7 +120,7 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
     document.getElementById('playback_status').innerHTML = content;
 };
 
-mapPlaybackRoute.prototype._setupView = function(positions, start_index, end_index) {
+mapPlaybackRoute.prototype._setupView = function(tracks, start_index, end_index) {
     // マップの表示を変える (好み)
     this.ins_map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
     if (this.ins_map.getZoom() < 17) {
@@ -130,47 +130,47 @@ mapPlaybackRoute.prototype._setupView = function(positions, start_index, end_ind
     this.marker = this.marker || new mapCarMarker(this.ins_map);
     this.marker.setVisible(true);
 
-    this._setCenterToFirstPosition(positions, start_index, end_index);
+    this._setCenterToFirstPosition(tracks, start_index, end_index);
     map_range_slider.setPlaybackPositionVisible(true);
 
     this.showPlaybackInfo();
 };
 
-mapPlaybackRoute.prototype._setCenterToFirstPosition = function(positions, start_index, end_index) {
+mapPlaybackRoute.prototype._setCenterToFirstPosition = function(tracks, start_index, end_index) {
     for (var i=start_index; i<end_index; i++) {
-        const p = positions[i];
-        if (p && isValidLatLng(p.latitude, p.longitude) === true) {
-            const latlng = new google.maps.LatLng(p.latitude, p.longitude);
+        const p = tracks[i];
+        if (p && isValidLatLng(p.coordinate) === true) {
+            const latlng = new google.maps.LatLng(p.coordinate.latitude, p.coordinate.longitude);
             this.ins_map.setCenter(latlng);
             break;
         }
     }
 };
 
-mapPlaybackRoute.prototype._init = function(positions, start_index, end_index) {
+mapPlaybackRoute.prototype._init = function(tracks, start_index, end_index) {
     this.distance_from_last_streetview = 0;
     this.behavior_after_samples = 0;
     this.last_lat = NaN;
     this.last_lng = NaN;
 
     this.pos_index = start_index;
-    this._setupView(positions, start_index, end_index);
+    this._setupView(tracks, start_index, end_index);
 };
 
-mapPlaybackRoute.prototype._refresh = function(positions, latlng) {
-    const p = positions[this.pos_index];
-    const diff_p = getPositionDifference(positions, this.pos_index, 10)
+mapPlaybackRoute.prototype._refresh = function(tracks, latlng) {
+    const p = tracks[this.pos_index];
+    const diff_p = getPositionDifference(tracks, this.pos_index, 10)
     this.outputPlaybackInfo(p, diff_p);
     this._followStreetview(p, diff_p, latlng);
     this.ins_map.setCenter(latlng);
 
     const past_pos = this.pos_index > 100 ? this.pos_index - 100 : 0;
-    mapGraph.plot(positions, past_pos, this.pos_index);
+    mapGraph.plot(tracks, past_pos, this.pos_index);
 
-    map_range_slider.setPlaybackPosition(Math.floor((this.pos_index / positions.length) * 1000));
+    map_range_slider.setPlaybackPosition(Math.floor((this.pos_index / tracks.length) * 1000));
 
-    this.last_lat = p.latitude;
-    this.last_lng = p.longitude;
+    this.last_lat = p.coordinate.latitude;
+    this.last_lng = p.coordinate.longitude;
 };
 
 mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
@@ -178,7 +178,7 @@ mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
         return;
     }
 
-    this.distance_from_last_streetview += getDistHubeny({lat: p.latitude, lng: p.longitude}, {lat: this.last_lat, lng: this.last_lng}, WGS84);
+    this.distance_from_last_streetview += getDistHubeny(p.coordinate, {lat: this.last_lat, lng: this.last_lng}, WGS84);
     if (isNaN(diff_p.azimuth) === false) {
         if (this.distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && this.distance_from_last_streetview > 10)) {
             // 60m離れるか、速度0になった位置で更新

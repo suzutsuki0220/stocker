@@ -91,16 +91,15 @@ function getPositionXml(data) {
 
 function parseCoordinateLine(line) {
     var col = line.split(",");
-    if (col) {
-        var position = new Object();
-        position.latitude  = replaceNanToZero(col[1]);
-        position.longitude = replaceNanToZero(col[0]);
-        position.altitude  = replaceNanToZero(col[2]);
-
-        if (isValidLatLng(position.latitude, position.longitude)) {
-            return position;
-        }
+    if (!col) {
+        return null;
     }
 
-    return null;
+    const coordinate = gpsCommon.makeCoordinate(
+                            replaceNanToZero(col[1]),
+                            replaceNanToZero(col[0]),
+                            replaceNanToZero(col[2])
+                       );
+
+    return isValidLatLng(coordinate) === true ? coordinate : null;
 }
