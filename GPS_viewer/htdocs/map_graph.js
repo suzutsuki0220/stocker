@@ -94,21 +94,21 @@ mapGraph.isVisible = function() {
     return ret;
 };
 
-mapGraph.toggleView = function(positions, skip_draw) {
-    if (!positions) {
+mapGraph.toggleView = function(tracks, skip_draw) {
+    if (!tracks) {
         alert("グラフに表示可能なデータがありません");
         return;
     }
-    var range = getPositionStartEndFromRangeController(positions);
+    var range = getPositionStartEndFromRangeController(tracks);
     if (range.length < 10) {
         alert("開始位置と終了位置の間隔が狭すぎるためにグラフを表示できません");
         return;
     }
 
     if (mapGraph.isVisible() === false) {
-        mapGraph.show(positions, skip_draw);
+        mapGraph.show(tracks, skip_draw);
         if (skip_draw === false) {
-            mapGraph.plot(positions, range.start, range.end);
+            mapGraph.plot(tracks, range.start, range.end);
         }
     } else {
         mapGraph.hide();
@@ -140,14 +140,14 @@ mapGraph.hide = function() {
     hideXYaccelerationCanvas();
 };
 
-mapGraph._checkCentralZ = function(positions, start, end, skip) {
+mapGraph._checkCentralZ = function(tracks, start, end, skip) {
     var ret = 0;
     var total = 0;
     var count = 0;
 
     for (var i=start; i<end; i+=skip) {
-        if (positions[i].est) {
-            total += positions[i].est.z;
+        if (tracks[i].est) {
+            total += tracks[i].est.z;
             count++;
         }
     }
@@ -177,19 +177,19 @@ mapGraph._pushIntermitData = function(property, data_index, value) {
     }
 };
 
-mapGraph.plot = function(positions, start, end) {
+mapGraph.plot = function(tracks, start, end) {
     if (mapGraph.isVisible() === false) {
         return;
     }
 
     var graph_behavior = new graphBehavior(document.getElementById('graph_behavior'));
     var skip = Math.floor((end - start)/5000) + 1;
-    const z_central = mapGraph._checkCentralZ(positions, start, end, skip);
+    const z_central = mapGraph._checkCentralZ(tracks, start, end, skip);
 
     mapGraph.clearData();
     var data_index = 1;
     for (var i=start; i<end; i+=skip) {
-        var p = positions[i];
+        var p = tracks[i];
         mapGraph.accelerationXY_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
         mapGraph.accelerationXY_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
         mapGraph.accelerationZ_property["data"][1][data_index]  = p.est ? replaceNanToZero(p.est.z) + z_central : 0;

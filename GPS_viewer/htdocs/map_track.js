@@ -12,10 +12,10 @@ mapTrack.prototype.getTrackCount = function() {
     return this.track_index.length;
 };
 
-mapTrack.prototype.searchTrackIndex = function(positions) {
-    for (var i=0; i<positions.length; i++) {
-        const datetime = positions[i].datetime;
-        const scene = positions[i].scene;
+mapTrack.prototype.searchTrackIndex = function(tracks) {
+    for (var i=0; i<tracks.length; i++) {
+        const datetime = tracks[i].datetime;
+        const scene = tracks[i].scene;
         if (scene) {
             if (this.scene_before !== scene) {
                 if (scene === "driving") {
@@ -49,7 +49,7 @@ mapTrack.prototype.getIndexNum = function(position_idx) {
     return idx;
 };
 
-mapTrack.prototype.getTrackRange = function(positions, idx) {
+mapTrack.prototype.getTrackRange = function(tracks, idx) {
     var track_range = new Object();
 
     if (idx === 0) {
@@ -59,7 +59,7 @@ mapTrack.prototype.getTrackRange = function(positions, idx) {
         track_range.start = this.track_index[idx - 1].num;
 
         if (idx >= this.track_index.length) {
-            track_range.end = positions.length - 1;
+            track_range.end = tracks.length - 1;
         } else {
             track_range.end = this.track_index[idx].num;
         }
@@ -69,7 +69,7 @@ mapTrack.prototype.getTrackRange = function(positions, idx) {
 };
 
 // 指定したdatetimeに入る範囲のTrackの長さを求める
-mapTrack.prototype.getTrackDuration = function(positions, datetime_str) {
+mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
     const datetime = getDateFromDatetimeString(datetime_str);
     if (isNaN(datetime) === true) {
         return NaN;
@@ -80,7 +80,7 @@ mapTrack.prototype.getTrackDuration = function(positions, datetime_str) {
         const dt_end = getDateFromDatetimeString(this.track_index[i].datetime);
         if (i === 0) {
             if (dt_end >= datetime) {
-                dt_range = dt_end - getDateFromDatetimeString(positions[0].datetime);
+                dt_range = dt_end - getDateFromDatetimeString(tracks[0].datetime);
                 break;
             }
         } else {
@@ -94,7 +94,7 @@ mapTrack.prototype.getTrackDuration = function(positions, datetime_str) {
     if (isNaN(dt_range) === true) {
         const dt_start = getDateFromDatetimeString(this.track_index[this.track_index.length - 1].datetime);
         if (dt_start < datetime) {
-            const last_datetime = positions[positions.length - 1].datetime;
+            const last_datetime = tracks[tracks.length - 1].datetime;
             if (last_datetime) {
                 dt_range = getDateFromDatetimeString(last_datetime) - dt_start;
             }
