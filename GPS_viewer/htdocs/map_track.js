@@ -1,11 +1,9 @@
 var mapTrack = function() {
     this.track_index = new Array();
-    this.scene_before;
 };
 
 mapTrack.prototype.clearIndex = function() {
     this.track_index = [];
-    this.scene_before = "";
 };
 
 mapTrack.prototype.getTrackCount = function() {
@@ -13,13 +11,13 @@ mapTrack.prototype.getTrackCount = function() {
 };
 
 mapTrack.prototype.searchTrackIndex = function(tracks) {
-    this.scene_before = "";
+    var scene_before = "";
     for (var i=0; i<tracks.length; i++) {
-        if (this.scene_before !== tracks[i].scene && tracks[i].scene === "driving") {
+        if (scene_before !== tracks[i].scene && tracks[i].scene === "driving") {
             this.track_index.push({num: i, datetime: tracks[i].datetime});
             //console.log(i + " : " + tracks[i].datetime);
         }
-        this.scene_before = tracks[i].scene;
+        scene_before = tracks[i].scene;
     }
 };
 
@@ -65,20 +63,15 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
     }
 
     var duration = NaN;
-    for (var i=0; i<this.track_index.length; i++) {
+    for (var i=0; i<=this.track_index.length; i++) {
         const dt_start_str = i === 0 ? tracks[0].datetime : this.track_index[i - 1].datetime;
         const dt_start = getDateFromDatetimeString(dt_start_str);
-        const dt_end   = getDateFromDatetimeString(this.track_index[i].datetime);
+        const dt_end_str = i < this.track_index.length ? this.track_index[i].datetime : tracks[tracks.length - 1].datetime;
+        const dt_end   = getDateFromDatetimeString(dt_end_str);
 
         if (dt_end >= datetime && datetime > dt_start) {
             duration = dt_end - dt_start;
             break;
-        }
-    }
-    if (isNaN(duration) === true) {
-        const dt_start = getDateFromDatetimeString(this.track_index[this.track_index.length - 1].datetime);
-        if (dt_start < datetime) {  // compare with last of list datetime
-            duration = getDateFromDatetimeString(tracks[tracks.length - 1].datetime) - dt_start;
         }
     }
 
