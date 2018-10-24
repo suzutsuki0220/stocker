@@ -15,19 +15,11 @@ mapTrack.prototype.getTrackCount = function() {
 mapTrack.prototype.searchTrackIndex = function(tracks) {
     this.scene_before = "";
     for (var i=0; i<tracks.length; i++) {
-        const scene = tracks[i].scene;
-        if (!scene) {
-            continue;
-        }
-
-        if (this.scene_before !== scene && scene === "driving") {
-            var ti = new Object();
-            ti.num = i;
-            ti.datetime = tracks[i].datetime;
-            this.track_index.push(ti);
+        if (this.scene_before !== tracks[i].scene && tracks[i].scene === "driving") {
+            this.track_index.push({num: i, datetime: tracks[i].datetime});
             //console.log(i + " : " + tracks[i].datetime);
         }
-        this.scene_before = scene;
+        this.scene_before = tracks[i].scene;
     }
 };
 
@@ -76,7 +68,7 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
     for (var i=0; i<this.track_index.length; i++) {
         const dt_start_str = i === 0 ? tracks[0].datetime : this.track_index[i - 1].datetime;
         const dt_start = getDateFromDatetimeString(dt_start_str);
-        const dt_end = getDateFromDatetimeString(this.track_index[i].datetime);
+        const dt_end   = getDateFromDatetimeString(this.track_index[i].datetime);
 
         if (dt_end >= datetime && datetime > dt_start) {
             duration = dt_end - dt_start;
@@ -85,9 +77,8 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
     }
     if (isNaN(duration) === true) {
         const dt_start = getDateFromDatetimeString(this.track_index[this.track_index.length - 1].datetime);
-        if (dt_start < datetime) {
-            const last_datetime = tracks[tracks.length - 1].datetime;
-            duration = last_datetime ? getDateFromDatetimeString(last_datetime) - dt_start : NaN;
+        if (dt_start < datetime) {  // compare with last of list datetime
+            duration = getDateFromDatetimeString(tracks[tracks.length - 1].datetime) - dt_start;
         }
     }
 
