@@ -146,7 +146,7 @@ gpsNmea.prototype._makeNmeaDateTime = function(date_str, time_str) {
 };
 
 gpsNmea.prototype._splitPayload = function(nmea) {
-    var ret = {checksum: "", payload: ""};
+    var ret = {checksum: "", payload: nmea};
     const checksum_pos = nmea.indexOf('*');
     if (checksum_pos > 0) {
         ret.checksum = nmea.substring(checksum_pos + 1);  // TODO: checksum判定は未実装
