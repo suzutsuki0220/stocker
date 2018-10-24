@@ -67,8 +67,8 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
 
     var duration = NaN;
     for (var i=0; i<=this.track_index.length; i++) {
-        const dt_start = i === 0 ? getDateFromDatetimeString(tracks[0].datetime) : this.track_index[i - 1].datetime;
-        const dt_end   = i < this.track_index.length ? this.track_index[i].datetime : getDateFromDatetimeString(tracks[tracks.length - 1].datetime);
+        const dt_start = this.__getStartDatetime(i, tracks);
+        const dt_end   = this.__getEndDatetime(i, tracks);
 
         if (dt_end >= datetime && datetime > dt_start) {
             duration = dt_end - dt_start;
@@ -78,3 +78,26 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
 
     return duration;
 }
+
+mapTrack.prototype.__getStartDatetime = function(i, tracks) {
+    var dt_start;
+
+    if (i === 0) {
+        dt_start = getDateFromDatetimeString(tracks[0].datetime)
+    } else {
+        dt_start = this.track_index[i - 1].datetime;
+    }
+
+    return dt_start;
+};
+
+mapTrack.prototype.__getEndDatetime = function(i, tracks) {
+    var dt_end;
+    if (i < this.track_index.length) {
+        dt_end = this.track_index[i].datetime;
+    } else {
+        dt_end = getDateFromDatetimeString(tracks[tracks.length - 1].datetime);
+    }
+
+    return dt_end;
+};
