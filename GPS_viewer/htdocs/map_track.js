@@ -14,8 +14,11 @@ mapTrack.prototype.searchTrackIndex = function(tracks) {
     var scene_before = "";
     for (var i=0; i<tracks.length; i++) {
         if (scene_before !== tracks[i].scene && tracks[i].scene === "driving") {
-            this.track_index.push({num: i, datetime: tracks[i].datetime});
-            //console.log(i + " : " + tracks[i].datetime);
+            var ti = new Object();
+            ti.num = i;
+            ti.datetime = getDateFromDatetimeString(tracks[i].datetime);
+            this.track_index.push(ti);
+            //console.log(i + " : " + ti.datetime);
         }
         scene_before = tracks[i].scene;
     }
@@ -28,7 +31,7 @@ mapTrack.prototype.getIndexNum = function(position_idx) {
 
     var idx;
     for (idx = 1; idx<this.track_index.length; idx++) {
-        if (this.track_index[idx - 1] <= position_idx && this.track_index[idx].num > position_idx) {
+        if (this.track_index[idx - 1].num <= position_idx && this.track_index[idx].num > position_idx) {
             break;
         }
     }
@@ -64,10 +67,8 @@ mapTrack.prototype.getTrackDuration = function(tracks, datetime_str) {
 
     var duration = NaN;
     for (var i=0; i<=this.track_index.length; i++) {
-        const dt_start_str = i === 0 ? tracks[0].datetime : this.track_index[i - 1].datetime;
-        const dt_start = getDateFromDatetimeString(dt_start_str);
-        const dt_end_str = i < this.track_index.length ? this.track_index[i].datetime : tracks[tracks.length - 1].datetime;
-        const dt_end   = getDateFromDatetimeString(dt_end_str);
+        const dt_start = i === 0 ? getDateFromDatetimeString(tracks[0].datetime) : this.track_index[i - 1].datetime;
+        const dt_end   = i < this.track_index.length ? this.track_index[i].datetime : getDateFromDatetimeString(tracks[tracks.length - 1].datetime);
 
         if (dt_end >= datetime && datetime > dt_start) {
             duration = dt_end - dt_start;
