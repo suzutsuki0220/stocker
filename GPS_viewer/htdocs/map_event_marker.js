@@ -116,7 +116,7 @@ mapEventMarker.prototype.__makeEventInfoContents = function(tracks, index, canva
     var contents;
     contents  = '<div style="color: #202020">';
     contents += '<div style="float: left; width: 95px; height: 95px; margin-right: 5px">';
-    contents += '<a href="javascript:setPanoramaPosition(new google.maps.LatLng(' + p.coordinate.latitude + ',' + p.coordinate.longitude + '),' + diff_p.azimuth + ')">';
+    contents += '<a href="javascript:map_googlemaps.setPanoramaPosition(new google.maps.LatLng(' + p.coordinate.latitude + ',' + p.coordinate.longitude + '),' + diff_p.azimuth + ')">';
     contents += '<img src="' + makeStreetviewImgUrl(p.coordinate, diff_p.azimuth) + '">';
     contents += '</a></div><div style="height: 95px">';
     contents += '<b>' + title + level + "</b><br>";

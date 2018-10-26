@@ -178,11 +178,11 @@ mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
         return;
     }
 
-    this.distance_from_last_streetview += getDistHubeny(p.coordinate, {lat: this.last_lat, lng: this.last_lng}, WGS84);
+    this.distance_from_last_streetview += getDistHubeny(p.coordinate, {latitude: this.last_lat, longitude: this.last_lng}, WGS84);
     if (isNaN(diff_p.azimuth) === false) {
         if (this.distance_from_last_streetview > 60 || (p.speed && p.speed < 1.0 && this.distance_from_last_streetview > 10)) {
             // 60m離れるか、速度0になった位置で更新
-            setPanoramaPosition(latlng, diff_p.azimuth);
+            map_googlemaps.setPanoramaPosition(latlng, diff_p.azimuth);
             this.distance_from_last_streetview = 0;
         }
     }

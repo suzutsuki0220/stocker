@@ -1,17 +1,16 @@
 var map;
 var geocoder;
-var panorama;
 var playback;
 var maptrack;
 var maptrack_pos = 0;
 var eventMarker = null;
-var startMarker = null;
-var endMarker = null;
 var poly = new Array();
 var tracks;
 var polyline_clicked_info = null;
+var map_info_field;
 var map_operation;
 var map_range_slider;
+var map_googlemaps;
 
 var pre_lat;
 var pre_lng;
@@ -80,55 +79,14 @@ function map_init() {
 
   playback = new mapPlaybackRoute(map);
   maptrack = new mapTrack();
+  map_info_field = new mapInfoField();
   map_operation = new mapOperation();
   map_range_slider = new mapRangeSlider();
   eventMarker = new mapEventMarker({map: map});
+  map_googlemaps = new mapGoogleMaps();
 
-  var panoramaOptions = {
-    position: central,
-    pov: {
-      heading: 180,
-      pitch: -5
-    },
-    motionTracking: false
-  };
-  panorama = new google.maps.StreetViewPanorama(document.getElementById('panorama_canvas'), panoramaOptions);
-  map.setStreetView(panorama);
+  map_googlemaps.initPanorama(document.getElementById('panorama_canvas'));
   map_operation.resetLatLngMinMax();
-}
-
-function setPanoramaPosition(gm_latlng, heading) {
-  var pov = {
-    pitch: 10
-  };
-  pov.heading = !isNaN(heading) ? heading : 180;
-
-  var get_callback = function(panoramaData, status) {
-    switch (status) {
-    case google.maps.StreetViewStatus.OK:
-        panorama.setPosition(panoramaData.location.latLng);
-        panorama.setPov(pov);
-        break;
-    case google.maps.StreetViewStatus.UNKNOWN_ERROR:
-        if (playback.isPlaying() === false) {
-            alert("StreetViewのデータ取得に失敗しました");
-        }
-        break;
-    case google.maps.StreetViewStatus.ZERO_RESULTS:
-        if (playback.isPlaying() === false) {
-            showMapWarning("道路以外の場所からルートが始まっている可能性があります");
-        }
-        break;
-    }
-  };
-
-  var svs = new google.maps.StreetViewService;
-  svs.getPanorama({
-    location: gm_latlng,
-    preference: google.maps.StreetViewPreference.NEAREST,
-    radius: 100,  // メートル
-    source: google.maps.StreetViewSource.OUTDOOR
-  }, get_callback);
 }
 
 function map_clear() {
@@ -136,23 +94,10 @@ function map_clear() {
     google.maps.event.clearListeners(polyline, "click");
     polyline.setMap(null);
   }
-  if (startMarker != null) {
-    startMarker.setMap(null);
-    startMarker = null;
-  }
-  if (endMarker != null) {
-    endMarker.setMap(null);
-    endMarker = null;
-  }
+  map_googlemaps.clearStartEndMarker();
 
   map_range_slider.setStrokeData([], 0, 120); // clear stroke
-
-  document.getElementById("distance_text").innerHTML = "--  km"; 
-  document.getElementById("duration_text").innerHTML = "---- 秒"; 
-  document.getElementById("sample_count").innerHTML = "0";
-  document.getElementById("invalid_sample_count").innerHTML = "0";
-  document.getElementById("start_address").innerHTML = "";
-  document.getElementById("end_address").innerHTML = "";
+  map_info_field.clear();
 }
 
 function get_latlng(coordinate) {
@@ -196,7 +141,6 @@ function reloadMap(start_range, end_range) {
   var line_color = "";
   var last_line_color = "";
   var beforeMarkerDatetime = 0;
-  const p_diff = getPositionDifference(tracks, start_range + 12, 12);  // streetviewの向き決定用
 
   distance = 0;
   pre_lat = 0;
@@ -265,9 +209,10 @@ function reloadMap(start_range, end_range) {
   document.getElementById('end_datetime').innerHTML = tracks[end_range - 1].datetime ? tracks[end_range - 1].datetime : "不明";
 
   var delayReloadFunc = function() {
+    const p_diff = getPositionDifference(tracks, start_range + 12, 12);  // streetviewの向き決定用
     geocoder.geocode({'location': start_route}, putStartGeoCode);
     geocoder.geocode({'location': end_route}, putEndGeoCode);
-    setPanoramaPosition(start_route, p_diff.azimuth);  // street viewは開始位置にする
+    map_googlemaps.setPanoramaPosition(start_route, p_diff.azimuth);  // street viewは開始位置にする
     lastDelayReloadTimerID = NaN;
   }
   if (isNaN(lastDelayReloadTimerID) === false) {
@@ -278,21 +223,7 @@ function reloadMap(start_range, end_range) {
   document.getElementById("start_address").innerHTML = "取得中";
   document.getElementById("end_address").innerHTML = "取得中";
 
-  var StartMarkerOptions = {
-    position: start_route,
-    icon: START_MARKER_ICON,
-    map: map,
-    title: "Start Point"
-  };
-  startMarker = new google.maps.Marker(StartMarkerOptions);
-
-  var EndMarkerOptions = {
-    position: end_route,
-    icon: END_MARKER_ICON,
-    map: map,
-    title: "End Point"
-  };
-  endMarker = new google.maps.Marker(EndMarkerOptions);
+  map_googlemaps.setStartEndMarker(map, start_route, end_route);
 
   return true;
 }
@@ -360,20 +291,20 @@ function centeringMap() {
   const latlng = new google.maps.LatLng(center.latitude, center.longitude);
 
   map.panTo(latlng);
-  map.setZoom(parseInt(map_operation.getMapScale()));
+  map.setZoom(map_operation.getCentralScale());
 }
 
 function putStartGeoCode(results, status) {
-  var elem = document.getElementById("start_address");
-  putGeoCode(elem, results, status);
+  map_info_field.setStartAddress(getGeoCode(results, status));
 }
 
 function putEndGeoCode(results, status) {
-  var elem = document.getElementById("end_address");
-  putGeoCode(elem, results, status);
+  map_info_field.setEndAddress(getGeoCode(results, status));
 }
 
-function putGeoCode(elem, results, status) {
+function getGeoCode(results, status) {
+  var ret = '取得失敗: ' + status;
+
   if (status === 'OK') {
     // debug
 //    var i=0;
@@ -383,13 +314,13 @@ function putGeoCode(elem, results, status) {
 //    }
 
     if (results[0]) {
-      elem.innerHTML = results[0].formatted_address;
+      ret = results[0].formatted_address;
     } else {
-      elem.innerHTML = '住所不明';
+      ret = '住所不明';
     }
-  } else {
-    elem.innerHTML = '取得失敗: ' + status;
   }
+
+  return ret;
 }
 
 function getPositionData(get_file_cgi, base_name, url_path, name) {
@@ -487,14 +418,21 @@ function paintTimeRangeBgSpeed(canvas) {
     ctx.closePath();
 }
 
-function clearTimeRangeBgSpeed(canvas) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
 function showMapWarning(message) {
+    if (playback.isPlaying() === true) {
+        return;
+    }
+
     document.getElementById('map_warningText').innerHTML = "<i class=\"fas fa-exclamation-triangle\"></i> " + message;
     document.getElementById('map_warningText').style.display = "inline";
+}
+
+function showMapError(message) {
+    if (playback.isPlaying() === false) {
+        return;
+    }
+
+    alert(message);
 }
 
 function playbackRoute() {
@@ -594,11 +532,7 @@ function setTimeRangeByTrack(num) {
     if (last_pos !== maptrack_pos) {
         var range = maptrack.getTrackRange(tracks, maptrack_pos);
         // シーンの切替えより少し手前の範囲を出す
-        if (range.start > 30) {
-            range.start -= 30;
-        } else {
-            range.start = 0;
-        }
+        range.start = range.start > 30 ? range.start - 30 : 0;
 
         const start_pos = Math.floor(range.start / tracks.length * 1000);
         const end_pos   = Math.floor(range.end / tracks.length * 1000);
@@ -609,9 +543,9 @@ function setTimeRangeByTrack(num) {
 }
 
 function uuid() {
-    var uuid = "", i, random;
+    var uuid = "";
     for (var i=0; i<32; i++) {
-        random = Math.random() * 16 | 0;
+        const random = Math.random() * 16 | 0;
         if (i == 8 || i == 12 || i == 16 || i == 20) {
             uuid += "-"
         }

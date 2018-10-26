@@ -35,7 +35,8 @@ mapOperation.prototype.getCenterLatlng = function() {
     return ave_coord;
 };
 
-mapOperation.prototype.getMapScale = function() {
+// 緯度経度の最小値、最大値から全体が見渡せるスケールを返す
+mapOperation.prototype.getCentralScale = function() {
     var distance = Math.sqrt(Math.pow(this.lat_max - this.lat_min, 2) + Math.pow(this.lng_max - this.lng_min, 2));
 
     const operand = [
