@@ -14,7 +14,6 @@ var map_googlemaps;
 
 var pre_lat;
 var pre_lng;
-var distance;
 var lat_min, lng_min, lat_max, lng_max;
 var lastDelayReloadTimerID = NaN;
 
@@ -48,17 +47,6 @@ function makeStreetviewImgUrl(coordinate, heading) {
     }
 
     return url_base + "?" + parameters;
-}
-
-function getDuration(start, end) {
-    var s = getDateFromDatetimeString(start);
-    var e = getDateFromDatetimeString(end);
-
-    if (isNaN(s) || isNaN(e)) {
-        return NaN;
-    }
-
-    return (e - s) / 1000;
 }
 
 function drawMap(get_file_cgi, base_name, url_path, name) {
@@ -101,21 +89,8 @@ function map_clear() {
 }
 
 function get_latlng(coordinate) {
-  if (isValidLatLng(coordinate) === false) {
-    return null;
-  }
-
   if (pre_lat !== 0 && pre_lng !== 0) {
-    //var d = getDistance(coordinate, {latitude: pre_lat, longitude: pre_lng}, "K");
-    var d = getDistHubeny(coordinate, {latitude: pre_lat, longitude: pre_lng}, WGS84) / 1000;
-    if (d === d) {  // is not NaN
-      distance += d;
-    }
   }
-  pre_lat = coordinate.latitude;
-  pre_lng = coordinate.longitude;
-
-  map_operation.setLatLngMinMax(coordinate);
 
   return new google.maps.LatLng(coordinate.latitude, coordinate.longitude);
 }
@@ -134,55 +109,66 @@ function reloadMap(start_range, end_range) {
   var route = [];
   var start_route = null;
   var end_route = null;
-  var duration = 0;
-  var route_length = 0;
+  var plot_count = 0;
   var invalid_count = 0;
-  var skip_idx = Math.floor((end_range - start_range)/10000) + 1;
   var line_color = "";
   var last_line_color = "";
   var beforeMarkerDatetime = 0;
 
-  distance = 0;
+  var count = {
+      total: (end_range - start_range),
+      plot: 0,
+      invalid:  0,
+      skip: Math.floor((end_range - start_range)/10000)
+  };
+
+  var distance = 0;
   pre_lat = 0;
   pre_lng = 0;
   eventMarker.clear();
   playback.stop();
-  for (var i=start_range; i<end_range; i+=skip_idx) {
+  for (var i=start_range; i<end_range; i+=(count.skip + 1)) {
     const p = tracks[i];
-    const latlng = get_latlng(p.coordinate);
-    if (latlng != null) {
-      if (start_route === null) {
-        map_clear();  // ここに来れば有効なサンプルは存在してるはず
-        start_route = latlng;
-        last_line_color = judgePolyLineColor(p);
-      }
-      end_route = latlng;
-      route_length++;
-      if (p.behavior && p.behavior !== 0) {
-        var dt = getDateFromDatetimeString(p.datetime);
-        if (dt && dt - beforeMarkerDatetime > 3000) {
-          eventMarker.create(tracks, i);
-          beforeMarkerDatetime = dt;
-        }
-      }
-
-      line_color = judgePolyLineColor(p);
-      if (last_line_color !== line_color) {
-        route.push(latlng);
-        plotMapPolyLine(route, last_line_color);
-        route = [];
-      }
-      route.push(latlng);
-      last_line_color = line_color;
-    } else {
-      invalid_count++;
+    const latlng = map_googlemaps.getLatLng(p.coordinate);
+    if (latlng === null) {
+      count.invalid++;
+      continue;
     }
-  }
-  if (start_route !== null && end_route !== null) {
-    plotMapPolyLine(route, line_color);
+
+    if (start_route === null) {
+      map_clear();
+      start_route = latlng;
+      last_line_color = judgePolyLineColor(p);
+    }
+    end_route = latlng;
+    count.plot++;
+
+    //distance += getDistance(p.coordinate, {latitude: pre_lat, longitude: pre_lng}, "K");
+    distance += getDistHubeny(p.coordinate, {latitude: pre_lat, longitude: pre_lng}, WGS84) / 1000;
+
+    if (p.behavior && p.behavior !== 0) {
+      const dt = getDateFromDatetimeString(p.datetime);
+      if (dt && dt - beforeMarkerDatetime > 3000) {
+        eventMarker.create(tracks, i);
+        beforeMarkerDatetime = dt;
+      }
+    }
+
+    line_color = judgePolyLineColor(p);
+    if (last_line_color !== line_color) {
+      route.push(latlng);
+      plotMapPolyLine(route, last_line_color);
+      route = [];
+    }
+    route.push(latlng);
+    last_line_color = line_color;
+
+    pre_lat = p.coordinate.latitude;
+    pre_lng = p.coordinate.longitude;
+    map_operation.setLatLngMinMax(p.coordinate);
   }
 
-  if (route_length === 0) {
+  if (count.plot === 0) {
     if (start_range !== end_range) {
       showMapWarning('有効な位置情報がありません');
       map_clear();
@@ -191,41 +177,41 @@ function reloadMap(start_range, end_range) {
     }
     return false;
   }
-  document.getElementById('map_warningText').style.display = "none";
 
+  plotMapPolyLine(route, line_color);
+  hideMapWarning();
   plotRangeStroke();
 
-  document.getElementById("distance_text").innerHTML = distance.toFixed(3) + " km"; 
-  document.getElementById("sample_count").innerHTML  = String(end_range - start_range);
-  document.getElementById("point_count").innerHTML  = String(route_length);
-  document.getElementById("skip_sample").innerHTML  = String(skip_idx - 1);
-  document.getElementById("invalid_sample_count").innerHTML  = String(invalid_count);
+  map_info_field.setCounter(count);
+  map_info_field.setDistance(distance); 
+  map_info_field.setDuration(tracks[start_range].datetime, tracks[end_range - 1].datetime);
+  map_info_field.setDatetime(tracks[start_range].datetime, tracks[end_range - 1].datetime);
 
-  duration = getDuration(tracks[start_range].datetime, tracks[end_range - 1].datetime);
-  if (!isNaN(duration)) {
-      document.getElementById("duration_text").innerHTML = duration.toFixed() + " 秒"; 
-  }
-  document.getElementById('start_datetime').innerHTML = tracks[start_range].datetime ? tracks[start_range].datetime : "不明";
-  document.getElementById('end_datetime').innerHTML = tracks[end_range - 1].datetime ? tracks[end_range - 1].datetime : "不明";
+  setAddress(start_range, start_route, end_route);
+  map_googlemaps.setStartEndMarker(map, start_route, end_route);
 
+  return true;
+}
+
+function setAddress(start_range, start_route, end_route) {
   var delayReloadFunc = function() {
-    const p_diff = getPositionDifference(tracks, start_range + 12, 12);  // streetviewの向き決定用
     geocoder.geocode({'location': start_route}, putStartGeoCode);
     geocoder.geocode({'location': end_route}, putEndGeoCode);
+
+    const p_diff = getPositionDifference(tracks, start_range + 12, 12);  // streetviewの向き決定用
     map_googlemaps.setPanoramaPosition(start_route, p_diff.azimuth);  // street viewは開始位置にする
+
     lastDelayReloadTimerID = NaN;
-  }
+  };
+
   if (isNaN(lastDelayReloadTimerID) === false) {
     clearTimeout(lastDelayReloadTimerID);
     lastDelayReloadTimerID = NaN;
   }
+
   lastDelayReloadTimerID = setTimeout(delayReloadFunc, 3000);
-  document.getElementById("start_address").innerHTML = "取得中";
-  document.getElementById("end_address").innerHTML = "取得中";
-
-  map_googlemaps.setStartEndMarker(map, start_route, end_route);
-
-  return true;
+  map_info_field.setStartAddress("取得中");
+  map_info_field.setEndAddress("取得中");
 }
 
 function setStartEndRangeByPolylineClicked(name, lat, lng) {
@@ -426,6 +412,10 @@ function showMapWarning(message) {
     document.getElementById('map_warningText').innerHTML = "<i class=\"fas fa-exclamation-triangle\"></i> " + message;
     document.getElementById('map_warningText').style.display = "inline";
 }
+
+function hideMapWarning() {
+    document.getElementById('map_warningText').style.display = "none";
+};
 
 function showMapError(message) {
     if (playback.isPlaying() === false) {

@@ -14,6 +14,14 @@ var mapGoogleMaps = function() {
     };
 };
 
+mapGoogleMaps.prototype.getLatLng = function(coordinate) {
+    if (isValidLatLng(coordinate) === false) {
+        return null;
+    }
+
+    return new google.maps.LatLng(coordinate.latitude, coordinate.longitude);
+};
+
 mapGoogleMaps.prototype.setStartEndMarker = function(map_ins, start_latlng, end_latlng) {
     const StartMarkerOptions = {
         position: start_latlng,
