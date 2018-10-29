@@ -252,12 +252,12 @@ function getPositionData(get_file_cgi, base_name, url_path, name) {
     };
 
     var httpRequest = ajax_init();
-    if (!httpRequest) {
+    if (httpRequest) {
+        ajax_set_instance(httpRequest, function() { getPositionDataResult(httpRequest, name); });
+        ajax_post(httpRequest, get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
+    } else {
         alert('情報取得プロセスの起動に失敗しました');
-        return false;
     }
-    ajax_set_instance(httpRequest, function() { getPositionDataResult(httpRequest, name); });
-    ajax_post(httpRequest, get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
 }
 
 function getPositionStartEndFromRangeController(p) {
@@ -407,22 +407,17 @@ function getLastValidPositionIndex(start_index) {
 }
 
 function searchTracksIndexByLatLng(latlng) {
-    var idx_high_prec   = NaN;
-    var idx_middle_prec = NaN;
-    var idx_low_prec    = NaN;
+    var scanTracks = function(prec) {
+        for (var i=0; i<tracks.length; i++) {
+            if (isNearLatLng(tracks[i].coordinate, latlng, prec) === true) {
+                return i;
+            }
+        }
+        return NaN;
+    };
 
-    for (var i=0; i<tracks.length; i++) {
-        // 数メートル単位で近いtracksを探す
-        idx_high_prec   = idx_high_prec || (isNearLatLng(tracks[i].coordinate, latlng) ? i : NaN);
-
-        // 1桁上げて比較
-        idx_middle_prec = idx_middle_prec || (isNearLatLng(tracks[i].coordinate, latlng, 0.00001) ? i : NaN);
-
-        // 更に1桁
-        idx_low_prec    = idx_low_prec || (isNearLatLng(tracks[i].coordinate, latlng, 0.0001) ? i : NaN);
-    }
-
-    return idx_high_prec || idx_middle_prec || idx_low_prec;
+    // 数メートル単位から1桁ずつ精度を下げて最も近いtracksを探す
+    return scanTracks(0.000001) || scanTracks(0.00001) || scanTracks(0.0001);
 }
 
 function setTimeRangeByTrack(num) {
