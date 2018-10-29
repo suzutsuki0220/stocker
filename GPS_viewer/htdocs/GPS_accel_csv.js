@@ -55,11 +55,7 @@ gpsAccelCsv.prototype.get = function(data) {
 
 gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
     var col = line.split(",");
-    if (!col) {
-        return;
-    }
-
-    if (datetime_pattern.test(col[0]) === false) {
+    if (!col || datetime_pattern.test(col[0]) === false) {
         return;
     }
 
@@ -76,17 +72,17 @@ gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
         } else if (col[i] === "F") {
             track.est = gpsCommon.getXYZvalue(col ,i);
             track.scene    = col[i+4];
-            track.behavior = col[i+5] ? parseInt(col[i+5].trim()) : 0;
-            track.level    = col[i+6] ? parseInt(col[i+6].trim()) : 0;
+            track.behavior = replaceNanToZero(col[i+5]);
+            track.level    = replaceNanToZero(col[i+6]);
             i += 6;
         } else if (col[i] === "GPS" || col[i] === "Location") {
             track.coordinate = gpsCommon.makeCoordinate(col[i+1], col[i+2], col[i+3]);
             i += 3;
         } else if (col[i] === "m/s" || col[i] === "Speed") {
-            track.speed = col[i+1] ? parseFloat(col[i+1].trim()) * 3.6 : 0;
+            track.speed = replaceNanToZero(col[i+1]) * 3.6;
             i += 1;
         } else if (col[i] === "Accuracy") {
-            track.horizontal_accuracy = col[i+1] ? parseFloat(col[i+1].trim()) : 0;
+            track.horizontal_accuracy = replaceNanToZero(col[i+1]);
             i += 1;
         }
     }

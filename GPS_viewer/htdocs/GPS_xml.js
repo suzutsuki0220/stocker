@@ -46,25 +46,7 @@ function getPositionXml(data) {
         const coordinates_elem = kml_elem.item(0).getElementsByTagName("coordinates");
         if (coordinates_elem != null && coordinates_elem.length != 0) {
             const coordinates = coordinates_elem.item(0).firstChild.data;
-
-            sp = 0;
-            while((ep = coordinates.indexOf("\n", sp)) != -1) {
-                var line = coordinates.substring(sp, ep);
-                var p = new Object();
-                p.coordinate = parseCoordinateLine(line);
-                if (p.coordinate != null) {
-                    gpsCommon.tracks.push(p);
-                }
-                sp = ep + 1;
-            }
-            if (sp < coordinates.length) {  // 最後の行(改行で終わっていない)
-                var line = coordinates.substring(sp);
-                var p = new Object();
-                p.coordinate = parseCoordinateLine(line);
-                if (p.coordinate != null) {
-                    gpsCommon.tracks.push(p);
-                }
-            }
+            gpsCommon.parseEachLines(coordinates, parseCoordinateLine);
         }
     } else {
         const gpx_elem = data.getElementsByTagName("gpx");
@@ -96,14 +78,17 @@ function getPositionXml(data) {
 function parseCoordinateLine(line) {
     var col = line.split(",");
     if (!col) {
-        return null;
+        return;
     }
 
-    const coordinate = gpsCommon.makeCoordinate(
-                            replaceNanToZero(col[1]),
-                            replaceNanToZero(col[0]),
-                            replaceNanToZero(col[2])
-                       );
+    var p = new Object();
+    p.coordinate = gpsCommon.makeCoordinate(
+                       replaceNanToZero(col[1]),
+                       replaceNanToZero(col[0]),
+                       replaceNanToZero(col[2])
+                   );
 
-    return isValidLatLng(coordinate) === true ? coordinate : null;
+    if (isValidLatLng(p.coordinate) === true) {
+        gpsCommon.tracks.push(p);
+    }
 }

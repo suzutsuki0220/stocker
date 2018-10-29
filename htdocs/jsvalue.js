@@ -1,7 +1,7 @@
 function replaceNanToZero(value) {
     var ret = 0;
     if (value) {
-        ret = parseFloat(value);
+        ret = parseFloat(value.trim ? value.trim() : value);
         if (isNaN(ret) === true) {
             ret = 0;
         }
