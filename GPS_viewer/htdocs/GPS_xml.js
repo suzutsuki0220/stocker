@@ -50,17 +50,19 @@ function getPositionXml(data) {
             sp = 0;
             while((ep = coordinates.indexOf("\n", sp)) != -1) {
                 var line = coordinates.substring(sp, ep);
-                var p = parseCoordinateLine(line);
-                if (p != null) {
-                    gpsCommon.positions.push(p);
+                var p = new Object();
+                p.coordinate = parseCoordinateLine(line);
+                if (p.coordinate != null) {
+                    gpsCommon.tracks.push(p);
                 }
                 sp = ep + 1;
             }
             if (sp < coordinates.length) {  // 最後の行(改行で終わっていない)
                 var line = coordinates.substring(sp);
-                var p = parseCoordinateLine(line);
-                if (p != null) {
-                    gpsCommon.positions.push(p);
+                var p = new Object();
+                p.coordinate = parseCoordinateLine(line);
+                if (p.coordinate != null) {
+                    gpsCommon.tracks.push(p);
                 }
             }
         }
@@ -75,12 +77,14 @@ function getPositionXml(data) {
                         const trkpt_elem = trkseg_elem.children.item(i);
                         if (trkpt_elem.nodeName === "trkpt") {
                             var p = new Object();
-                            p.latitude  = parseFloat(trkpt_elem.getAttribute('lat'));
-                            p.longitude = parseFloat(trkpt_elem.getAttribute('lon'));
+                            p.coordinate = gpsCommon.makeCoordinate(
+                                               parseFloat(trkpt_elem.getAttribute('lat')),
+                                               parseFloat(trkpt_elem.getAttribute('lon')),
+                                               parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("ele")))
+                                           );
                             p.datetime = convertGpxTime(getFirstChildData(trkpt_elem.getElementsByTagName("time")));
                             p.speed = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("speed"))) * 3.6;
-                            p.altitude = parseFloat(getFirstChildData(trkpt_elem.getElementsByTagName("ele")));
-                            gpsCommon.positions.push(p);
+                            gpsCommon.tracks.push(p);
                         }
                     }
                 }
