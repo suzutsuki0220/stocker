@@ -373,63 +373,56 @@ function makeEventTitle(behavior) {
 function getPositionDifference(tracks, index, back_count) {
     var position_diff = new Object();
 
-    var current_index = !isNaN(index) ? index : 0;
-    if (current_index >= tracks.length) {
-        current_index = tracks.length - 1;
-    }
-    while(!tracks[current_index] && current_index < tracks.length) {
-        current_index++;
-    }
-
-    var back_index = current_index - back_count;
-    if (back_index >= 0) {
-        while(!tracks[back_index] && back_index > 0) {
-            back_index--;
-        }
-    } else {
-        back_index = 0;
-    }
-    while(!tracks[back_index] && current_index > back_index) {
-        back_index++;
-    }
+    const current_index = getFirstValidPositionIndex(normalize(index, 0, tracks.length - 1));
+    const back_index    = getLastValidPositionIndex(normalize(current_index - back_count, 0, tracks.length - 1));
 
     const p_curr = tracks[current_index];
     const p_back = tracks[back_index];
 
-    if (p_curr && p_back) {
-        const azimuth = getAzimuth(p_back.coordinate, p_curr.coordinate);
-        position_diff.azimuth   = azimuth;
-        position_diff.direction = getDirectionString(azimuth);
-        position_diff.altitude  = p_curr.coordinate.altitude ? p_curr.coordinate.altitude - p_back.coordinate.altitude : 0;
-        position_diff.speed     = p_curr.speed ? p_curr.speed - p_back.speed : 0;
-    }
+    const azimuth = getAzimuth(p_back.coordinate, p_curr.coordinate);
+    position_diff.azimuth   = azimuth;
+    position_diff.direction = getDirectionString(azimuth);
+    position_diff.altitude  = replaceNanToZero(p_curr.coordinate.altitude - p_back.coordinate.altitude);
+    position_diff.speed     = replaceNanToZero(p_curr.speed - p_back.speed);
 
     return position_diff;
 }
 
+function getFirstValidPositionIndex(start_index) {
+    var index = start_index;
+    while(index < tracks.length && isValidLatLng(tracks[index].coordinate) === false) {
+        index++;
+    }
+
+    return index;
+};
+
+function getLastValidPositionIndex(start_index) {
+    var index = start_index;
+    while(index > 0 && isValidLatLng(tracks[index].coordinate) === false) {
+        index--;
+    }
+
+    return index;
+}
+
 function searchTracksIndexByLatLng(latlng) {
-    // 数メートル単位で近いtracksを探す
+    var idx_high_prec   = NaN;
+    var idx_middle_prec = NaN;
+    var idx_low_prec    = NaN;
+
     for (var i=0; i<tracks.length; i++) {
-        if (isNearLatLng(tracks[i].coordinate, latlng)) {
-            return i;
-        }
+        // 数メートル単位で近いtracksを探す
+        idx_high_prec   = idx_high_prec || (isNearLatLng(tracks[i].coordinate, latlng) ? i : NaN);
+
+        // 1桁上げて比較
+        idx_middle_prec = idx_middle_prec || (isNearLatLng(tracks[i].coordinate, latlng, 0.00001) ? i : NaN);
+
+        // 更に1桁
+        idx_low_prec    = idx_low_prec || (isNearLatLng(tracks[i].coordinate, latlng, 0.0001) ? i : NaN);
     }
 
-    // 1桁上げて比較
-    for (var i=0; i<tracks.length; i++) {
-        if (isNearLatLng(tracks[i].coordinate, latlng, 0.00001)) {
-            return i;
-        }
-    }
-
-    // 更に1桁
-    for (var i=0; i<tracks.length; i+=5) {
-        if (isNearLatLng(tracks[i].coordinate, latlng, 0.0001)) {
-            return i;
-        }
-    }
-
-    return NaN;
+    return idx_high_prec || idx_middle_prec || idx_low_prec;
 }
 
 function setTimeRangeByTrack(num) {
