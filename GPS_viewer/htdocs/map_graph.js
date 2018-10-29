@@ -106,7 +106,7 @@ mapGraph.toggleView = function(tracks, skip_draw) {
     }
 
     if (mapGraph.isVisible() === false) {
-        mapGraph.show(tracks, skip_draw);
+        mapGraph.show();
         if (skip_draw === false) {
             mapGraph.plot(tracks, range.start, range.end);
         }
@@ -177,6 +177,18 @@ mapGraph._pushIntermitData = function(property, data_index, value) {
     }
 };
 
+mapGraph._pushImuGraph = function(data_index, p, z_central) {
+    var est  = p.est  || {x:0, y:0, z:0};
+    var gyro = p.gyro || {x:0, y:0, z:0};
+
+    mapGraph.accelerationXY_property["data"][1][data_index] = replaceNanToZero(est.x);
+    mapGraph.accelerationXY_property["data"][2][data_index] = replaceNanToZero(est.y);
+    mapGraph.accelerationZ_property["data"][1][data_index]  = replaceNanToZero(est.z) + z_central;
+    mapGraph.gyro_property["data"][1][data_index] = replaceNanToZero(gyro.x);
+    mapGraph.gyro_property["data"][2][data_index] = replaceNanToZero(gyro.y);
+    mapGraph.gyro_property["data"][3][data_index] = replaceNanToZero(gyro.z);
+};
+
 mapGraph.plot = function(tracks, start, end) {
     if (mapGraph.isVisible() === false) {
         return;
@@ -190,12 +202,7 @@ mapGraph.plot = function(tracks, start, end) {
     var data_index = 1;
     for (var i=start; i<end; i+=skip) {
         var p = tracks[i];
-        mapGraph.accelerationXY_property["data"][1][data_index] = p.est ? replaceNanToZero(p.est.x) : 0;
-        mapGraph.accelerationXY_property["data"][2][data_index] = p.est ? replaceNanToZero(p.est.y) : 0;
-        mapGraph.accelerationZ_property["data"][1][data_index]  = p.est ? replaceNanToZero(p.est.z) + z_central : 0;
-        mapGraph.gyro_property["data"][1][data_index] = p.gyro ? replaceNanToZero(p.gyro.x) : 0;
-        mapGraph.gyro_property["data"][2][data_index] = p.gyro ? replaceNanToZero(p.gyro.y) : 0;
-        mapGraph.gyro_property["data"][3][data_index] = p.gyro ? replaceNanToZero(p.gyro.z) : 0;
+        mapGraph._pushImuGraph(data_index, p, z_central);
         graph_behavior.push(p);
         mapGraph._pushIntermitData(mapGraph.speed_property, data_index, p.speed);
         mapGraph._pushIntermitData(mapGraph.altitude_property, data_index, p.coordinate.altitude);
