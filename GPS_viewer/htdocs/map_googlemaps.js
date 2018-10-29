@@ -107,6 +107,7 @@ mapGoogleMaps.prototype.clearPolyLinePath = function() {
 };
 
 mapGoogleMaps.prototype.plotPolyLine = function(color) {
+    var self = this;
     var polyOptions = {
         path: this.poly_route,
         strokeColor: color,
@@ -115,7 +116,7 @@ mapGoogleMaps.prototype.plotPolyLine = function(color) {
     };
     var poly = new google.maps.Polyline(polyOptions);
     poly.setMap(this.map_ins);
-    poly.addListener("click", this.polyLineClickEvent);
+    poly.addListener("click", function(e) {self.polyLineClickEvent(e);});
 
     this.polylines.push(poly);
     this.clearPolyLinePath();  // pushした座標をクリア
