@@ -133,29 +133,34 @@ mapEventMarker.prototype.__makeEventInfoContents = function(tracks, index, canva
 }
 
 mapEventMarker.prototype.plotEventInfoGraph = function(tracks, index, canvasXY_id, canvasS_id) {
-    const i_start = index >= this.EVENT_GRAPH_RANGE ? index - this.EVENT_GRAPH_RANGE : 0;
-    const i_end   = tracks.length >= index + this.EVENT_GRAPH_RANGE ? index + this.EVENT_GRAPH_RANGE : tracks.length;
+    const i_start = normalize(index - this.EVENT_GRAPH_RANGE, 0, tracks.length);
+    const i_end   = normalize(index + this.EVENT_GRAPH_RANGE, 0, tracks.length);
 
     this.setup();
 
     var n = 1;  // 0はグラフ凡例
     for (var i=i_start; i<i_end; i++) {
-        var minmax;
         var p = tracks[i];
-        if (!isNaN(p.speed)) {
-            this.speed_property["data"][1][n] = normalize(p.speed, this.graph_speed_min, this.graph_speed_max);
-        } else {
-            this.speed_property["data"][1][n] = i !== 0 ? this.speed_property["data"][1][n-1] : 0;
-        }
+        this._setGraphSpeedValue(p.speed, n);
 
-        this.accel_property["data"][1][n] = normalize(p.est.x, this.graph_accel_min, this.graph_accel_max);
-        this.accel_property["data"][2][n] = normalize(p.est.y, this.graph_accel_min, this.graph_accel_max);
+        const est_x = normalize(p.est.x, this.graph_accel_min, this.graph_accel_max);
+        const est_y = normalize(p.est.y, this.graph_accel_min, this.graph_accel_max);
+        this.accel_property["data"][1][n] = est_x;
+        this.accel_property["data"][2][n] = est_y;
 
         n++;
     }
 
     ccchart.init(canvasXY_id, this.accel_property);
     ccchart.init(canvasS_id, this.speed_property);
+};
+
+mapEventMarker.prototype._setGraphSpeedValue = function(speed, n) {
+    if (isNaN(speed) === false) {
+        this.speed_property["data"][1][n] = normalize(speed, this.graph_speed_min, this.graph_speed_max);
+    } else {
+        this.speed_property["data"][1][n] = n > 1 ? this.speed_property["data"][1][n-1] : 0;
+    }
 };
 
 mapEventMarker.prototype.__addToMap = function(marker, tracks, index) {
