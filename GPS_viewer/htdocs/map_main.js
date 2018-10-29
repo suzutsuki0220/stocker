@@ -4,9 +4,7 @@ var playback;
 var maptrack;
 var maptrack_pos = 0;
 var eventMarker = null;
-var poly = new Array();
 var tracks;
-var polyline_clicked_info = null;
 var map_info_field;
 var map_operation;
 var map_range_slider;
@@ -39,16 +37,6 @@ function getDateFromDatetimeString(datetime) {
     return d.getTime();  // ミリ秒
 }
 
-function makeStreetviewImgUrl(coordinate, heading) {
-    const url_base = "https://maps.googleapis.com/maps/api/streetview";
-    var parameters = "size=96x96&fov=90&heading=" + heading + "&pitch=10&location=" + coordinate.latitude + "," + coordinate.longitude;
-    if (config.apiKey.googlemap) {
-        parameters += "&key=" + config.apiKey.googlemap;
-    }
-
-    return url_base + "?" + parameters;
-}
-
 function drawMap(get_file_cgi, base_name, url_path, name) {
     map_init();
     getPositionData(get_file_cgi, base_name, url_path, name);
@@ -71,28 +59,18 @@ function map_init() {
   map_operation = new mapOperation();
   map_range_slider = new mapRangeSlider();
   eventMarker = new mapEventMarker({map: map});
-  map_googlemaps = new mapGoogleMaps();
+  map_googlemaps = new mapGoogleMaps(map);
 
   map_googlemaps.initPanorama(document.getElementById('panorama_canvas'));
   map_operation.resetLatLngMinMax();
 }
 
 function map_clear() {
-  while ((polyline = poly.pop()) !== undefined) {
-    google.maps.event.clearListeners(polyline, "click");
-    polyline.setMap(null);
-  }
+  map_googlemaps.clearPolyLine();
   map_googlemaps.clearStartEndMarker();
 
   map_range_slider.setStrokeData([], 0, 120); // clear stroke
   map_info_field.clear();
-}
-
-function get_latlng(coordinate) {
-  if (pre_lat !== 0 && pre_lng !== 0) {
-  }
-
-  return new google.maps.LatLng(coordinate.latitude, coordinate.longitude);
 }
 
 // 経路描画
@@ -101,12 +79,11 @@ function map_route() {
   maptrack.clearIndex();
   maptrack.searchTrackIndex(tracks);
   if (reloadMap(0, tracks.length) === true) {
-    centeringMap();
+    map_googlemaps.centeringMap(map_operation.getCenterLatlng(), map_operation.getCentralScale());
   }
 }
 
 function reloadMap(start_range, end_range) {
-  var route = [];
   var start_route = null;
   var end_route = null;
   var plot_count = 0;
@@ -154,13 +131,12 @@ function reloadMap(start_range, end_range) {
       }
     }
 
+    map_googlemaps.pushPolyLinePath(latlng);
     line_color = judgePolyLineColor(p);
     if (last_line_color !== line_color) {
-      route.push(latlng);
-      plotMapPolyLine(route, last_line_color);
-      route = [];
+      map_googlemaps.plotPolyLine(last_line_color);
+      map_googlemaps.pushPolyLinePath(latlng);
     }
-    route.push(latlng);
     last_line_color = line_color;
 
     pre_lat = p.coordinate.latitude;
@@ -169,16 +145,12 @@ function reloadMap(start_range, end_range) {
   }
 
   if (count.plot === 0) {
-    if (start_range !== end_range) {
-      showMapWarning('有効な位置情報がありません');
-      map_clear();
-    } else {
-      showMapWarning('開始位置-終了位置の指定が不適切なため、走行データを表示できません');
-    }
+    showMapWarning('選択された範囲に有効な位置情報がありません');
+    map_clear();
     return false;
   }
 
-  plotMapPolyLine(route, line_color);
+  map_googlemaps.plotPolyLine(line_color);
   hideMapWarning();
   plotRangeStroke();
 
@@ -187,13 +159,13 @@ function reloadMap(start_range, end_range) {
   map_info_field.setDuration(tracks[start_range].datetime, tracks[end_range - 1].datetime);
   map_info_field.setDatetime(tracks[start_range].datetime, tracks[end_range - 1].datetime);
 
-  setAddress(start_range, start_route, end_route);
-  map_googlemaps.setStartEndMarker(map, start_route, end_route);
+  reloadAfterDelayWork(start_range, start_route, end_route);
+  map_googlemaps.setStartEndMarker(start_route, end_route);
 
   return true;
 }
 
-function setAddress(start_range, start_route, end_route) {
+function reloadAfterDelayWork(start_range, start_route, end_route) {
   var delayReloadFunc = function() {
     geocoder.geocode({'location': start_route}, putStartGeoCode);
     geocoder.geocode({'location': end_route}, putEndGeoCode);
@@ -228,56 +200,7 @@ function setStartEndRangeByPolylineClicked(name, lat, lng) {
     } else {
         alert("経路内で近似のサンプルが見つかりませんでした。別の場所を選択してください");
     }
-    if (polyline_clicked_info !== null) {
-        polyline_clicked_info.close();
-        polyline_clicked_info = null;
-    }
-}
-
-function polyLineClickEvent(e) {
-    const lat = e.latLng.lat();
-    const lng = e.latLng.lng();
-
-    // 航空写真表示では位置がずれてしまうことがあったので、地図表示で選択させたい
-    if (map.getMapTypeId() !== google.maps.MapTypeId.ROADMAP) {
-        if (window.confirm("範囲選択のために地図表示に切り替えます")) {
-            map.setMapTypeId(google.maps.MapTypeId.ROADMAP)
-        }
-        return;
-    }
-
-    const info_content = "<div style=\"color: #202020\">経路の範囲</div><br><a href=\"javascript:setStartEndRangeByPolylineClicked('range_start_pos', " + lat + ", " + lng + ")\" class=\"button\">開始位置に指定</a>&nbsp;<a href=\"javascript:setStartEndRangeByPolylineClicked('range_end_pos', " + lat + ", " + lng + ")\" class=\"button\">終了位置に指定</a>";
-
-    if (polyline_clicked_info === null) {
-        polyline_clicked_info = new google.maps.InfoWindow();
-    } else {
-        polyline_clicked_info.close();
-    }
-    polyline_clicked_info.setPosition(e.latLng);
-    polyline_clicked_info.setContent(info_content);
-    polyline_clicked_info.open(map);
-}
-
-function plotMapPolyLine(route, color) {
-  var polyOptions = {
-    path: route,
-    strokeColor: color,
-    strokeOpacity: 0.75,
-    strokeWeight: 5
-  }
-  var polyline = new google.maps.Polyline(polyOptions);
-  polyline.setMap(map);
-  polyline.addListener("click", polyLineClickEvent);
-  poly.push(polyline);
-}
-
-// マップの中央を奇跡が全て見える位置に合わせる
-function centeringMap() {
-  const center = map_operation.getCenterLatlng();
-  const latlng = new google.maps.LatLng(center.latitude, center.longitude);
-
-  map.panTo(latlng);
-  map.setZoom(map_operation.getCentralScale());
+    map_googlemaps.closePolyLineInfo();
 }
 
 function putStartGeoCode(results, status) {
