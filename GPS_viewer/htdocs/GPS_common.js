@@ -38,11 +38,11 @@ gpsCommon.parseEachLines = function(data, parse_func) {
     }
 };
 
-gpsCommon.getXYZvalue = function(col, i) {
+gpsCommon.makeXYZobject = function(x, y, z) {
     var ret = new Object();
-    ret.x = col[i+1] ? replaceNanToZero(col[i+1].trim()) : 0;
-    ret.y = col[i+2] ? replaceNanToZero(col[i+2].trim()) : 0;
-    ret.z = col[i+3] ? replaceNanToZero(col[i+3].trim()) : 0;
+    ret.x = replaceNanToZero(x);
+    ret.y = replaceNanToZero(y);
+    ret.z = replaceNanToZero(z);
 
     return ret;
 };

@@ -64,13 +64,13 @@ gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
 
     for (var i=1; i<col.length; i++) {
         if (col[i] === "A") {
-            track.accel = gpsCommon.getXYZvalue(col, i);
+            track.accel = gpsCommon.makeXYZobject(col[i+1], col[i+2], col[i+3]);
             i += 3;
         } else if (col[i] === "G") {
-            track.gyro = gpsCommon.getXYZvalue(col, i); 
+            track.gyro = gpsCommon.makeXYZobject(col[i+1], col[i+2], col[i+3]); 
             i += 3;
         } else if (col[i] === "F") {
-            track.est = gpsCommon.getXYZvalue(col ,i);
+            track.est = gpsCommon.makeXYZobject(col[i+1] ,col[i+2], col[i+3]);
             track.scene    = col[i+4];
             track.behavior = replaceNanToZero(col[i+5]);
             track.level    = replaceNanToZero(col[i+6]);

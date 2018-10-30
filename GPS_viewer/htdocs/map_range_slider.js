@@ -51,13 +51,17 @@ mapRangeSlider.prototype.onLoadWork = function(args) {
     draggable(this.range_start, this.drag_range_start);
     draggable(this.range_end, this.drag_range_end);
 
+    this.resetRangePosition();
+};
+
+mapRangeSlider.prototype.resetRangePosition = function() {
     this.setRangePosition(0, 1000);
-}
+};
 
 mapRangeSlider.prototype.onResizeWork = function() {
     var startEnd = this.getStartEndValue();
     this.setRangePosition(startEnd.start, startEnd.end);
-}
+};
 
 mapRangeSlider.prototype.onMouseUpWork = function() {
     this.drag_range_start.isMouseDown = false;
@@ -170,18 +174,15 @@ mapRangeSlider.prototype.setStrokeData = function(data, min, max) {
     }
 
     var d = "";
-    if (data.length !== 0) {
-        d = "M";
-        if (data.length === 1) {
-            const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[0], min, max)));
-            d += "0," + zero_point_y + "," + base_area_width + "," + point_y;
-        } else {
-            for (var i=0; i<data.length; i++) {
-                const point_x = Math.floor(base_area_width / (data.length - 1) * i);
-                const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[i], min, max)));
-                d += i === 0 ? "" : ",";
-                d += point_x + "," + point_y;
-            }
+    if (data.length === 1) {
+        const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[0], min, max)));
+        d = "M0," + zero_point_y + "," + base_area_width + "," + point_y;
+    } else {
+        for (var i=0; i<data.length; i++) {
+            const point_x = Math.floor(base_area_width / (data.length - 1) * i);
+            const point_y = Math.floor(zero_point_y - (y_interval * normalize(data[i], min, max)));
+            d += i === 0 ? "M" : ",";
+            d += point_x + "," + point_y;
         }
     }
     this.stroke_elem.setAttribute('d', d);

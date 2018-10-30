@@ -83,7 +83,7 @@ gpsNmea.prototype._getGGA = function(self, sentence) {
 gpsNmea.prototype._getGSENSOR = function(self, sentence) {
     var col = sentence.split(",");
     if (col && col.length === 4) {
-        self._gsensor = gpsCommon.getXYZvalue(col, 0);
+        self._gsensor = gpsCommon.makeXYZobject(col[1], col[2], col[3]);
     }
 };
 

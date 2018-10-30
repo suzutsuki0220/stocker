@@ -70,8 +70,6 @@ function map_init() {
 function map_clear() {
   map_googlemaps.clearPolyLine();
   map_googlemaps.clearStartEndMarker();
-
-  map_range_slider.setStrokeData([], 0, 120); // clear stroke
   map_info_field.clear();
 }
 
@@ -80,6 +78,9 @@ function map_route() {
   map_operation.resetLatLngMinMax();
   maptrack.clearIndex();
   maptrack.searchTrackIndex(tracks);
+  map_range_slider.setStrokeData([], 0, 120); // clear stroke
+  map_range_slider.resetRangePosition();
+
   if (reloadMap(0, tracks.length) === true) {
     map_googlemaps.centeringMap(map_operation.getCenterLatlng(), map_operation.getCentralScale());
   }
@@ -97,7 +98,7 @@ function reloadMap(start_range, end_range) {
   var count = {
       total: (end_range - start_range),
       plot: 0,
-      invalid:  0,
+      invalid: 0,
       skip: Math.floor((end_range - start_range)/10000)
   };
 
