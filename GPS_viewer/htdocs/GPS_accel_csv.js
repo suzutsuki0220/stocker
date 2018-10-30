@@ -54,6 +54,10 @@ gpsAccelCsv.prototype.get = function(data) {
 };
 
 gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
+    var getXYZ = function(col, i) {
+        return gpsCommon.makeXYZobject(col[i+1], col[i+2], col[i+3]);
+    }
+
     var col = line.split(",");
     if (!col || datetime_pattern.test(col[0]) === false) {
         return;
@@ -64,13 +68,13 @@ gpsAccelCsv.prototype.parseAccelCsvLine = function(line) {
 
     for (var i=1; i<col.length; i++) {
         if (col[i] === "A") {
-            track.accel = gpsCommon.makeXYZobject(col[i+1], col[i+2], col[i+3]);
+            track.accel = getXYZ(col, i);
             i += 3;
         } else if (col[i] === "G") {
-            track.gyro = gpsCommon.makeXYZobject(col[i+1], col[i+2], col[i+3]); 
+            track.gyro = getXYZ(col, i); 
             i += 3;
         } else if (col[i] === "F") {
-            track.est = gpsCommon.makeXYZobject(col[i+1] ,col[i+2], col[i+3]);
+            track.est = getXYZ(col, i);
             track.scene    = col[i+4];
             track.behavior = replaceNanToZero(col[i+5]);
             track.level    = replaceNanToZero(col[i+6]);
