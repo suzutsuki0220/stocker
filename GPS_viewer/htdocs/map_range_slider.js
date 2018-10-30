@@ -64,51 +64,46 @@ mapRangeSlider.prototype.onMouseUpWork = function() {
     this.drag_range_end.isMouseDown = false;
 };
 
-mapRangeSlider.prototype.onMouseMoveWork = function(e) {
-    var self = this;  // 局所化したfunction内ではthisの意味が変わるので、代わりにselfを使う
-    var moveElement = function(e, drag) {
-        drag.target.x.baseVal.value = e.clientX - drag.offsetx;
-        //drag.target.y.baseVal.value = e.clientY - drag.offsety;
+mapRangeSlider.prototype._normalizeRange = function() {
+    const base_area_width = this.base_area.clientWidth;
+    const s_line_width  = parseInt(this.range_start.getAttribute('width'), 10);
+    const e_line_width  = parseInt(this.range_end.getAttribute('width'), 10);
+    const range_start_x = parseInt(this.range_start.getAttribute('x'), 10);
+    const range_end_x   = parseInt(this.range_end.getAttribute('x'), 10);
 
-        const base_area_width = self.base_area.clientWidth;
-        const e_line_width = parseInt(drag.target.getAttribute('width'), 10);
-        drag.target.x.baseVal.value = normalize(drag.target.x.baseVal.value, 0, base_area_width - e_line_width);
-        normalizeRange();
-
-        self._setStartEndValueByPosition();
-        self._stretchMaskArea();
-        self.after_changed_func && self.after_changed_func();
-    };
-    var normalizeRange = function() {
-        const base_area_width = self.base_area.clientWidth;
-        const s_line_width  = parseInt(self.range_start.getAttribute('width'), 10);
-        const e_line_width  = parseInt(self.range_end.getAttribute('width'), 10);
-        const range_start_x = parseInt(self.range_start.getAttribute('x'), 10);
-        const range_end_x   = parseInt(self.range_end.getAttribute('x'), 10);
-
-        // start位置がendより右に行った場合はendも動かす
-        if (range_start_x + s_line_width > range_end_x) {
-            var to_move_x = range_start_x + s_line_width;
-            if (to_move_x + e_line_width > base_area_width) {
-                to_move_x = base_area_width - e_line_width;
-            }
-            self.range_end.setAttribute('x', to_move_x);
-        }
-        // end位置がstartより左に行った場合はstartも動かす
-        if (range_end_x < range_start_x + s_line_width) {
-            var to_move_x = range_end_x - s_line_width;
-            if (to_move_x < 0) {
-                to_move_x = 0;
-            }
-            self.range_start.setAttribute('x', to_move_x);
-        }
-    };
-
-    if (this.drag_range_start.isMouseDown === true) {
-        moveElement(e, this.drag_range_start);
-    } else if(this.drag_range_end.isMouseDown === true) {
-        moveElement(e, this.drag_range_end);
+    // start位置がendより右に行った場合はendも動かす
+    if (range_start_x + s_line_width > range_end_x) {
+        const to_move_x = normalize(range_start_x + s_line_width, 0, base_area_width - e_line_width);
+        this.range_end.setAttribute('x', to_move_x);
     }
+    // end位置がstartより左に行った場合はstartも動かす
+    if (range_end_x < range_start_x + s_line_width) {
+        const to_move_x = normalize(range_end_x - s_line_width, 0, base_area_width - e_line_width);
+        this.range_start.setAttribute('x', to_move_x);
+    }
+};
+
+mapRangeSlider.prototype.onMouseMoveWork = function(e) {
+    var drag;
+    if (this.drag_range_start.isMouseDown === true) {
+        drag = this.drag_range_start;
+    } else if(this.drag_range_end.isMouseDown === true) {
+        drag = this.drag_range_end;
+    } else {
+        return;
+    }
+
+    drag.target.x.baseVal.value = e.clientX - drag.offsetx;
+    //drag.target.y.baseVal.value = e.clientY - drag.offsety;
+
+    const base_area_width = this.base_area.clientWidth;
+    const e_line_width = parseInt(drag.target.getAttribute('width'), 10);
+    drag.target.x.baseVal.value = normalize(drag.target.x.baseVal.value, 0, base_area_width - e_line_width);
+    this._normalizeRange();
+
+    this._setStartEndValueByPosition();
+    this._stretchMaskArea();
+    this.after_changed_func && this.after_changed_func();
 };
 
 mapRangeSlider.prototype._setStartEndValueByPosition = function() {

@@ -5,7 +5,11 @@ function isValidLatLng(coordinate) {
         return false;
     }
 
-    if (isNaN(coordinate.latitude) || isNaN(coordinate.longitude) || (coordinate.latitude === 0 && coordinate.longitude === 0)) {
+    if (isNaN(coordinate.latitude) || isNaN(coordinate.longitude)) {
+        return false;
+    }
+
+    if (coordinate.latitude === 0 && coordinate.longitude === 0) {
         return false;
     }
 
