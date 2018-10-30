@@ -56,6 +56,7 @@ eval {
       "%htdocs_root%/map_graph_behavior.js",
       "%htdocs_root%/map_graph_XYacceleration.js",
       "%htdocs_root%/map_car_marker.js",
+      "%htdocs_root%/map_event.js",
       "%htdocs_root%/map_event_marker.js",
       "%htdocs_root%/map_operation.js",
       "%htdocs_root%/map_range_slider.js",

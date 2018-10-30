@@ -5,6 +5,7 @@ var maptrack;
 var maptrack_pos = 0;
 var eventMarker = null;
 var tracks;
+var map_event;
 var map_info_field;
 var map_operation;
 var map_range_slider;
@@ -55,6 +56,7 @@ function map_init() {
 
   playback = new mapPlaybackRoute(map);
   maptrack = new mapTrack();
+  map_event = new mapEvent();
   map_info_field = new mapInfoField();
   map_operation = new mapOperation();
   map_range_slider = new mapRangeSlider();
@@ -355,19 +357,6 @@ function playbackRoute() {
     } else {
         alert("開始位置と終了位置の間隔が狭すぎるため処理できません");
     }
-}
-
-function makeEventTitle(behavior) {
-    var title = "";
-
-    for (var i=0; i<4; i++) {
-        const case_bit = 1 << i;
-        if ((behavior & case_bit) === case_bit) {
-            title += title ? " / " + config.title.event[i] : config.title.event[i];
-        }
-    }
-
-    return title ? title : "--";
 }
 
 function getPositionDifference(tracks, index, back_count) {

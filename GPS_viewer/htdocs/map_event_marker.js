@@ -110,7 +110,7 @@ mapEventMarker.prototype.__makeEventInfoContents = function(tracks, index, canva
     var p = tracks[index];
     var diff_p = getPositionDifference(tracks, index + 12, 12);  // 位置情報は加速度より遅れるので先のサンプルで比較する
 
-    const title = makeEventTitle(p.behavior);
+    const title = map_event.makeTitle(p.behavior);
     const level = p.level ? " (level: " + p.level + ")" : "";
 
     var contents;

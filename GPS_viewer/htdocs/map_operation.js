@@ -11,11 +11,6 @@ mapOperation.prototype.resetLatLngMinMax = function() {
 };
 
 mapOperation.prototype.setLatLngMinMax = function(coordinate) {
-    var setMinMax = function(value, obj) {
-        obj.min = isNaN(obj.min) ? value : (obj.min > value ? value : obj.min);
-        obj.max = isNaN(obj.max) ? value : (obj.max < value ? value : obj.max);
-    };
-
     setMinMax(coordinate.latitude, this.lat);
     setMinMax(coordinate.longitude, this.lng);
 };

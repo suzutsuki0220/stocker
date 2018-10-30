@@ -23,3 +23,8 @@ function normalize(input, min, max) {
         return input;
     }
 }
+
+function setMinMax(value, obj) {
+    obj.min = isNaN(obj.min) ? value : (obj.min > value ? value : obj.min);
+    obj.max = isNaN(obj.max) ? value : (obj.max < value ? value : obj.max);
+}

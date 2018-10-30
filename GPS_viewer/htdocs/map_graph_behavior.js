@@ -49,36 +49,22 @@ graphBehavior.prototype.__makeCanvasContext = function() {
     return ctx;
 };
 
-graphBehavior.prototype.__isMatchBehavior = function(data, behavior) {
-    var ret = false;
-
-    if (data) {
-        if ((data.behavior & behavior) === behavior) {
-            ret = true;
-        }
-    }
-
-    return ret;
-};
-
 graphBehavior.prototype.__getEventLevelInRange = function(start, end, behavior) {
-    var max_level = 0;
+    var level_minmax = {min: 0, max: 0};
 
     for (var i=start; i<=end; i++) {
-        if (this.__isMatchBehavior(this.graph_data[i], behavior) === false) {
+        if (!this.graph_data[i] || map_event.isMatchBehavior(this.graph_data[i].behavior, behavior) === false) {
             continue;
-        };
+        }
 
-        const level = isNaN(this.graph_data[i].level) === true ? 1 : this.graph_data[i].level;
-        if (level > max_level) {
-            max_level = level;
-            if (max_level === 3) {
-                break;
-            }
+        const level = this.graph_data[i].level || 1;
+        setMinMax(level, level_minmax);
+        if (level_minmax.max === 3) {
+            break;
         }
     }
 
-    return max_level;
+    return level_minmax.max;
 };
 
 graphBehavior.prototype.__hasStopInRange = function(start, end) {

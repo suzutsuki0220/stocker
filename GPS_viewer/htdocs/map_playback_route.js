@@ -193,7 +193,7 @@ mapPlaybackRoute.prototype._showEventBalloon = function(p, latlng) {
         this._showInfoWindow(this.ins_map, latlng, config.title.scene.stop);
         this.behavior_after_samples = 0;
     } else if (p.behavior && p.behavior !== 0) {
-        this._showInfoWindow(this.ins_map, latlng, makeEventTitle(p.behavior));
+        this._showInfoWindow(this.ins_map, latlng, map_event.makeTitle(p.behavior));
         this.behavior_after_samples = 30;
     } else {
         if (this.behavior_after_samples === 0) {
