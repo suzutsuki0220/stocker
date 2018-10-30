@@ -1,43 +1,36 @@
 var mapOperation = function() {
-    this.lat_max = 0;
-    this.lat_min = 0;
-    this.lng_max = 0;
-    this.lng_min = 0;
+    this.lat = new Object();
+    this.lng = new Object();
 };
 
 mapOperation.prototype.resetLatLngMinMax = function() {
-    this.lat_min = 0;
-    this.lng_min = 0;
-    this.lat_max = 0;
-    this.lng_max = 0;
+    this.lat.min = NaN;
+    this.lng.min = NaN;
+    this.lat.max = NaN;
+    this.lng.max = NaN;
 };
 
 mapOperation.prototype.setLatLngMinMax = function(coordinate) {
-    if (this.lat_min === 0 || this.lat_min > coordinate.latitude) {
-        this.lat_min = coordinate.latitude;
-    }
-    if (this.lat_max === 0 || this.lat_max < coordinate.latitude) {
-        this.lat_max = coordinate.latitude;
-    }
-    if (this.lng_min === 0 || this.lng_min > coordinate.longitude) {
-        this.lng_min = coordinate.longitude;
-    }
-    if (this.lng_max === 0 || this.lng_max < coordinate.longitude) {
-        this.lng_max = coordinate.longitude;
-    }
+    var setMinMax = function(value, obj) {
+        obj.min = isNaN(obj.min) ? value : (obj.min > value ? value : obj.min);
+        obj.max = isNaN(obj.max) ? value : (obj.max < value ? value : obj.max);
+    };
+
+    setMinMax(coordinate.latitude, this.lat);
+    setMinMax(coordinate.longitude, this.lng);
 };
 
 mapOperation.prototype.getCenterLatlng = function() {
     var ave_coord = new Object();
-    ave_coord.latitude  = (map_operation.lat_min + map_operation.lat_max) / 2;
-    ave_coord.longitude = (map_operation.lng_min + map_operation.lng_max) / 2;
+    ave_coord.latitude  = (this.lat.min + this.lat.max) / 2;
+    ave_coord.longitude = (this.lng.min + this.lng.max) / 2;
 
     return ave_coord;
 };
 
 // 緯度経度の最小値、最大値から全体が見渡せるスケールを返す
 mapOperation.prototype.getCentralScale = function() {
-    var distance = Math.sqrt(Math.pow(this.lat_max - this.lat_min, 2) + Math.pow(this.lng_max - this.lng_min, 2));
+    const distance = Math.sqrt(Math.pow(this.lat.max - this.lat.min, 2) + Math.pow(this.lng.max - this.lng.min, 2));
 
     const operand = [
         {distance: 0.0001, ret_val: 19},
