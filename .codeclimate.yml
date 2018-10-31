@@ -30,6 +30,11 @@ checks:
   identical-code:
     config:
       threshold: # language-specific defaults. an override will affect all languages.
+plugins:
+  csslint:
+    enabled: true
+  eslint:
+    enabled: true
 exclude_patterns:
   - "GPS_viewer/htdocs/leaflet.js"
   - "GPS_viewer/htdocs/ccchart-min.js"
