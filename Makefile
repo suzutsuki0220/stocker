@@ -3,7 +3,7 @@
 include directory_defs.mk
 
 LIB_FILES  = FileOperator.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
-DOC_FILES  = $(wildcard htdocs/*)
+DOC_FILES  = $(wildcard htdocs/*) $(wildcard jsUtils/src/*)
 CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi summary.cgi text_viewer.cgi
 CONF_FILES = basedirs.conf SupportTypes.pl stocker.conf
 
