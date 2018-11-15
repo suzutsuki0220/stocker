@@ -433,6 +433,10 @@ function setTimeRangeByTrack(num) {
     }
 }
 
+function map_onResize() {
+    map_range_slider.onResize();
+}
+
 function uuid() {
     var uuid = "";
     for (var i=0; i<32; i++) {

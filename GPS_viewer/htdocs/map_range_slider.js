@@ -1,18 +1,9 @@
 var mapRangeSlider = function() {
-    this.drag_range_start = {
-        isMouseDown : false,
-        target : null,
-        offsetx : 0,
-        offsety : 0,
-    };
-    this.drag_range_end = {
-        isMouseDown : false,
-        target : null,
-        offsetx : 0,
-        offsety : 0,
-    };
+    this.offset_x = 0;
+    this.offset_y = 0;
     this.start_value = 0;
     this.end_value = 0;
+    this.drag_elem = null;
     this.after_changed_func = null;  // スライダーが移動された後に動かす処理
     this.range_start = null;  // rectエレメント
     this.range_end = null;    // rectエレメント
@@ -23,20 +14,24 @@ var mapRangeSlider = function() {
     this.stroke_elem = null;  // pathエレメント
 };
 
+mapRangeSlider.prototype.__addMoveStartEvent = function(elem) {
+    elem.addEventListener("mousedown", e => this.onMouseDown(e), false);
+    elem.addEventListener("touchstart",  e => this.onMouseDown(e), false);
+}
+
+mapRangeSlider.prototype.__addMoveUpEvent = function(elem) {
+    elem.addEventListener("mousemove", e => this.onMouseMove(e), false);
+    elem.addEventListener("touchmove", e => this.onMouseMove(e), false);
+    elem.addEventListener("mouseup", e => this.onMouseUp(e), false);
+    elem.addEventListener("touchend", e => this.onMouseUp(e), false);
+};
+
 // onLoad時にelementをセットする
-mapRangeSlider.prototype.onLoadWork = function(args) {
-    var draggable = function(element, drag) {
-        var dragStartWork = function(e) {
-            e.preventDefault();
-            var rect = element.getBoundingClientRect();
-            drag.offsetx = e.clientX - rect.left;
-            drag.offsety = e.clientY - rect.top;
-            drag.isMouseDown = true;
-            return false;
-        };
-        //element.addEventListener('touchstart', dragStartWork);  // スマホ用。後回し
-        element.addEventListener('mousedown', dragStartWork);
-        drag.target = element;
+mapRangeSlider.prototype.onLoad = function(args) {
+    var self = this;
+    var draggable = function(element) {
+        self.__addMoveStartEvent(element);
+        self.__addMoveUpEvent(element);
     };
 
     this.after_changed_func = args.after_changed_func;
@@ -48,24 +43,46 @@ mapRangeSlider.prototype.onLoadWork = function(args) {
     this.mask_after_end     = args.mask_after_end;
     this.stroke_elem        = args.stroke_elem;
 
-    draggable(this.range_start, this.drag_range_start);
-    draggable(this.range_end, this.drag_range_end);
+    this.drag_elem = null;
+    this.__addMoveUpEvent(this.base_area);
+
+    draggable(this.range_start);
+    draggable(this.range_end);
 
     this.resetRangePosition();
+};
+
+mapRangeSlider.prototype.mousePointToSVGPoint = function(e) {
+    const p = this.base_area.createSVGPoint();
+    p.x = e.clientX;
+    p.y = e.clientY;
+    const CTM = this.drag_elem.getScreenCTM();
+
+    return p.matrixTransform(CTM.inverse());
 };
 
 mapRangeSlider.prototype.resetRangePosition = function() {
     this.setRangePosition(0, 1000);
 };
 
-mapRangeSlider.prototype.onResizeWork = function() {
+mapRangeSlider.prototype.onResize = function(e) {
     var startEnd = this.getStartEndValue();
     this.setRangePosition(startEnd.start, startEnd.end);
 };
 
-mapRangeSlider.prototype.onMouseUpWork = function() {
-    this.drag_range_start.isMouseDown = false;
-    this.drag_range_end.isMouseDown = false;
+mapRangeSlider.prototype.onMouseUp = function(e) {
+    this.drag_elem = null;
+};
+
+mapRangeSlider.prototype.onMouseDown = function(e) {
+    const event = (e.type === "mousedown") ? e : e.changedTouches[0];
+    this.drag_elem = event.target;
+
+    const p = this.mousePointToSVGPoint(event);
+    this.offset_x = p.x - this.drag_elem.getAttribute('x');
+    this.offset_y = p.y - this.drag_elem.getAttribute('y');
+
+    event.preventDefault();
 };
 
 mapRangeSlider.prototype._normalizeRange = function() {
@@ -87,27 +104,29 @@ mapRangeSlider.prototype._normalizeRange = function() {
     }
 };
 
-mapRangeSlider.prototype.onMouseMoveWork = function(e) {
-    var drag;
-    if (this.drag_range_start.isMouseDown === true) {
-        drag = this.drag_range_start;
-    } else if(this.drag_range_end.isMouseDown === true) {
-        drag = this.drag_range_end;
-    } else {
+mapRangeSlider.prototype.onMouseMove = function(e) {
+    if (!this.drag_elem) {
         return;
     }
 
-    drag.target.x.baseVal.value = e.clientX - drag.offsetx;
-    //drag.target.y.baseVal.value = e.clientY - drag.offsety;
+    const event = (e.type === "mousemove") ? e : e.changedTouches[0];
+    const p = this.mousePointToSVGPoint(event);
 
     const base_area_width = this.base_area.clientWidth;
-    const e_line_width = parseInt(drag.target.getAttribute('width'), 10);
-    drag.target.x.baseVal.value = normalize(drag.target.x.baseVal.value, 0, base_area_width - e_line_width);
+    const e_line_width = parseInt(this.drag_elem.getAttribute('width'), 10);
+
+    const x = normalize(p.x - this.offset_x, 0, base_area_width - e_line_width);
+    //var y = p.y - this.offset_y;
+    this.drag_elem.setAttribute('x', x);
+    //this.drag_elem.setAttribute('y', y - this.offset_y);
+
     this._normalizeRange();
 
     this._setStartEndValueByPosition();
     this._stretchMaskArea();
     this.after_changed_func && this.after_changed_func();
+
+    event.preventDefault();
 };
 
 mapRangeSlider.prototype._setStartEndValueByPosition = function() {
