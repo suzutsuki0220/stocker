@@ -1,15 +1,7 @@
 /* 緯度経度計算に関するfunctions */
 
 function isValidLatLng(coordinate) {
-    if (!coordinate) {
-        return false;
-    }
-
-    if (isNaN(coordinate.latitude) || isNaN(coordinate.longitude)) {
-        return false;
-    }
-
-    if (coordinate.latitude === 0 && coordinate.longitude === 0) {
+    if (!coordinate || !coordinate.latitude || !coordinate.longitude) {
         return false;
     }
 
@@ -29,13 +21,11 @@ function getPositionQuality(horizontal_accuracy, vertical_accuracy) {
     var max_accuracy = NaN;
     var ret = 0;
 
-    if (isNaN(horizontal_accuracy) === false && horizontal_accuracy !== 0) {
+    if (horizontal_accuracy) { // not 0 / NaN / null
         max_accuracy = horizontal_accuracy;
     }
-    if (isNaN(vertical_accuracy) === false && vertical_accuracy !== 0) {
-        if (max_accuracy < vertical_accuracy) {
-            max_accuracy = vertical_accuracy;
-        }
+    if (vertical_accuracy && max_accuracy < vertical_accuracy) {
+        max_accuracy = vertical_accuracy;
     }
     if (isNaN(max_accuracy) === false) {
         if (max_accuracy >= 30) {  // fail
@@ -50,8 +40,8 @@ function getPositionQuality(horizontal_accuracy, vertical_accuracy) {
     return ret;
 }
 
-function isNearLatLng(latlng1, latlng2, precision) {
-    var precision = (typeof precision !== 'undefined') ? precision : 0.000001;
+function isNearLatLng(latlng1, latlng2, prec) {
+    const precision = (typeof prec !== 'undefined') ? prec : 0.000001;
     const latitude_diff  = Math.abs(latlng2.latitude - latlng1.latitude);
     const longitude_diff = Math.abs(latlng2.longitude - latlng1.longitude);
 
