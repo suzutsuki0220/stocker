@@ -25,7 +25,7 @@ function isValidLatLng(coordinate) {
  *
  * 0: 精度情報なし  1: 良好  2: 低下  3: 悪い
 **/
-function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
+function getPositionQuality(horizontal_accuracy, vertical_accuracy) {
     var max_accuracy = NaN;
     var ret = 0;
 
@@ -51,12 +51,11 @@ function getPositionLevel(horizontal_accuracy, vertical_accuracy) {
 }
 
 function isNearLatLng(latlng1, latlng2, precision) {
-    var precision = typeof precision !== 'undefined' ? precision : 0.000001;
-    if (Math.abs(latlng2.latitude - latlng1.latitude) < precision && Math.abs(latlng2.longitude - latlng1.longitude) < precision) {
-        // 位置の変化が数センチ規模 (約1m未満)
-        return true;
-    }
-    return false;
+    var precision = (typeof precision !== 'undefined') ? precision : 0.000001;
+    const latitude_diff  = Math.abs(latlng2.latitude - latlng1.latitude);
+    const longitude_diff = Math.abs(latlng2.longitude - latlng1.longitude);
+
+    return (latitude_diff < precision &&  longitude_diff < precision);
 }
 
 /**
