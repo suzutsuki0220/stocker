@@ -123,7 +123,7 @@ mapGraph.show = function() {
     document.getElementById('map_canvas').style.width = "45%";
     document.getElementById('range_field').style.width = "45%";
     document.getElementById('panorama_canvas').style.width = "50%";
-    map_range_slider.onResizeWork();
+    map_onResize();
     showXYaccelerationCanvas();
     //map.panTo(getCenterLocation(lat_min, lng_min, lat_max, lng_max));  // 本来の位置とズレるので放置
 };
@@ -136,7 +136,7 @@ mapGraph.hide = function() {
     document.getElementById('map_canvas').style.width = "100%";
     document.getElementById('range_field').style.width = "100%";
     document.getElementById('panorama_canvas').style.width = "100%";
-    map_range_slider.onResizeWork();
+    map_onResize();
     hideXYaccelerationCanvas();
 };
 

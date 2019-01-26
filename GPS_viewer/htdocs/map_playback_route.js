@@ -103,7 +103,7 @@ mapPlaybackRoute.prototype.outputPlaybackInfo = function(p, diff_p) {
     var content = "【再生中】<br>";
     content += p.datetime + "<br>";
     if (isValidLatLng(p.coordinate) === true) {
-        var gps_level = getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy);
+        var gps_level = getPositionQuality(p.horizontal_accuracy, p.vertical_accuracy);
         content += "GPS感度: " + gps_status_mes[gps_level] + "<br>";
         content += "進行方向: " + diff_p.direction + "<br>";
 
@@ -174,7 +174,7 @@ mapPlaybackRoute.prototype._refresh = function(tracks, latlng) {
 };
 
 mapPlaybackRoute.prototype._followStreetview = function(p, diff_p, latlng) {
-    if (getPositionLevel(p.horizontal_accuracy, p.vertical_accuracy) > 1) { // GPS低下or悪い
+    if (getPositionQuality(p.horizontal_accuracy, p.vertical_accuracy) > 1) { // GPS低下or悪い
         return;
     }
 

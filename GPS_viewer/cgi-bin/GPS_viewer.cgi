@@ -105,22 +105,10 @@ my $html = <<EOF;
       }
     };
 
-    document.onmouseup = function() {
-        if (map_range_slider) {
-            map_range_slider.onMouseUpWork();
-        }
-    };
-
-    document.onmousemove = function(e) {
-        if (map_range_slider) {
-            map_range_slider.onMouseMoveWork(e);
-        }
-    };
-
     window.onload = function() {
         drawMap('${GETFILE_CGI}', '${encoded_dir}', '${in_file}', '${file_name}');
 
-        map_range_slider.onLoadWork({
+        map_range_slider.onLoad({
             after_changed_func: rangeChanged,
             range_start: document.getElementById('range_start_pos'),
             range_end  : document.getElementById('range_end_pos'),
@@ -156,14 +144,6 @@ my $html = <<EOF;
 <b>${file_name}</b><br>
 </span>
 <span style="float: right">
-<a href="javascript:playbackRoute()"><i class="fas fa-play-circle fa-lg" style="color: #ffffff"></i></a>
-<select name="playback_speed" id="playback_speed" size="1">
-<option value="1.0" selected>1.0</option>
-<option value="1.1">1.1</option>
-<option value="1.2">1.2</option>
-<option value="1.5">1.5</option>
-<option value="2.0">2.0</option>
-</select>x
 <a href="${back_link}" class="button">戻る</a>
 <a href="javascript:mapGraph.toggleView(tracks, playback.isPlaying())" class="button">グラフ</a>
 </span>
@@ -205,9 +185,17 @@ my $html = <<EOF;
 </div>
 <div style="margin: 3px 0 3px 0.5em;">
 Track: 
-<input type="button" name="track_prev" value="＜" onClick="setTimeRangeByTrack(-1)">
+<a href="javascript:playbackRoute()" class="button"><i class="fas fa-play fa-lg"></i></a>
+<select name="playback_speed" id="playback_speed" size="1">
+<option value="1.0" selected>1.0</option>
+<option value="1.1">1.1</option>
+<option value="1.2">1.2</option>
+<option value="1.5">1.5</option>
+<option value="2.0">2.0</option>
+</select>x
+<a href="javascript:setTimeRangeByTrack(-1)" class="button"><i class="fas fa-step-backward"></i></a>
 <span id="current_track"></span>
-<input type="button" name="track_next" value="＞" onClick="setTimeRangeByTrack(1)">
+<a href="javascript:setTimeRangeByTrack(1)" class="button"><i class="fas fa-step-forward"></i></a>
 </div>
 <div style="margin-left: 2em;">
 開始位置<br>
