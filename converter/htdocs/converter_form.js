@@ -413,15 +413,17 @@ function showInfoTable(httpRequest) {
                 var videos = movie_info_elem.getElementsByTagName('video');
                 var audios = movie_info_elem.getElementsByTagName('audio');
 
-                for (var i=0; i<videos.length; i++) {
-                    if (i === 0) {
-                        video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
+                if (videos.length > 0) {
+                    for (var i=0; i<videos.length; i++) {
+                        if (i === 0) {
+                            video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
+                        }
+                        video_table += makeVideoTable(videos[i].childNodes);
                     }
-                    video_table += makeVideoTable(videos[i].childNodes);
+                    best_video_index = getBestVideoStream(videos);
+                    best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
+                    best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
                 }
-                best_video_index = getBestVideoStream(videos);
-                best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
-                best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
 
                 for (var i=0; i<audios.length; i++) {
                     if (i === 0) {
