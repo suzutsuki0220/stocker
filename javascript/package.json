@@ -6,6 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "bulma": "^0.7.4",
+    "js-utils": "https://github.com/suzutsuki0220/jsUtils.git"
+  },
   "author": "suzutsuki0220",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.7.1"
+  }
 }
