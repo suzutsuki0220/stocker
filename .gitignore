@@ -47,3 +47,5 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+javascript/app/main.js
