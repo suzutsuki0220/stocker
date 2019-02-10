@@ -15,6 +15,7 @@ all:
 	make -C picture_viewer/
 	make -C status/
 	make -C thumbnail/
+	sh -c "cd javascript; npm run webpack"
 
 clean:
 	make -C GPS_viewer/ clean
@@ -50,6 +51,7 @@ install-libs:
 	cp -r lib/* $(LIBS_DIR)
 
 install-htdocs:
+	cp javascript/app/main.js $(DOCS_DIR)
 	cp -r $(DOC_FILES) $(DOCS_DIR)
 	sed -i -e 's|%cgi_root%|$(CGI_ROOT)|g' \
 	       $(DOCS_DIR)/*.js $(DOCS_DIR)/*.html
