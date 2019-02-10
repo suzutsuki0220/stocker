@@ -10,7 +10,8 @@ module.exports = {
     mode: MODE,
     entry: [
         './node_modules/@fortawesome/fontawesome-free/css/all.css',
-        './assets/scss/bulma.scss'
+        './assets/scss/bulma.scss',
+        './index.js'
     ],
     output: {
         path: path.join(__dirname, 'app/'),
