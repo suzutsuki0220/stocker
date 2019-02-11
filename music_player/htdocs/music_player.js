@@ -51,12 +51,12 @@ function printMusicList() {
 }
 
 function addTagInfoToTrack(data, idx) {
-    track[idx].title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0));
+    track[idx].title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0)) || track[idx].name;  // tagにtitleがなければファイル名を使う
     track[idx].artist   = getXMLfirstChildData(data.getElementsByTagName('artist').item(0));
     track[idx].album    = getXMLfirstChildData(data.getElementsByTagName('album').item(0));
     track[idx].year     = getXMLfirstChildData(data.getElementsByTagName('year').item(0));
     track[idx].comment  = getXMLfirstChildData(data.getElementsByTagName('comment').item(0));
-    track[idx].track_no = getXMLfirstChildData(data.getElementsByTagName('track').item(0));
+    track[idx].track_no = getXMLfirstChildData(data.getElementsByTagName('track').item(0)) || track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
     track[idx].genre    = getXMLfirstChildData(data.getElementsByTagName('genre').item(0));
     track[idx].bitrate  = getXMLfirstChildData(data.getElementsByTagName('bitrate').item(0));
     track[idx].sample_rate = getXMLfirstChildData(data.getElementsByTagName('sample_rate').item(0));
@@ -64,9 +64,6 @@ function addTagInfoToTrack(data, idx) {
     track[idx].duration = getXMLfirstChildData(data.getElementsByTagName('duration').item(0));
     track[idx].time     = getXMLfirstChildData(data.getElementsByTagName('time').item(0));
     track[idx].getProperty = true;
-
-    track[idx].track_no ?= track[idx].num;  // tagにtrack noがなければファイル名順の番号を使う
-    track[idx].title ?= track[idx].name;  // tagにtitleがなければファイル名を使う
 
     music_count++;
     printMusicList();
