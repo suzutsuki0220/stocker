@@ -1,2 +1,2 @@
-const jsUtils = require('js-utils');
+window.jsUtils = require('js-utils');
 
