@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "webpack": "npx webpack --mode production",
+    "webpack-dev": "npx webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
