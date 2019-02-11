@@ -14,7 +14,7 @@ function getXMLfirstChildData(node) {
 function sortMusicListByTrackNumber() {
     for(i=track.length-1 ; i>0 ; i--) {
         for(j=0 ; j<i ; j++) {
-            if(parseInt(track[j][0]) > parseInt(track[j+1][0])) {
+            if(parseInt(track[j].track_no) > parseInt(track[j+1].track_no)) {
                 var temp = track[j+1];
                 track[j+1] = track[j];
                 track[j] = temp;
@@ -35,82 +35,126 @@ function printMusicList() {
             const num = i+1;
             content += "<tr id='track" + i + "'>";
             content += "<td>"+ num +"</td>";
-            content += "<td><a href=\"javascript:playit('"+ i +"')\">"+ track[i][2] +"</a></td>";
-            content += "<td>"+ track[i][3] +"</td>";
-            content += "<td>"+ track[i][4] +"</td>";
-            content += "<td>"+ track[i][5] +"</td>";
-            content += "<td>"+ track[i][6] +"</td>";
+            content += "<td><a href=\"javascript:playit('"+ i +"')\">"+ track[i].title +"</a></td>";
+            content += "<td>"+ track[i].time +"</td>";
+            content += "<td>"+ track[i].artist +"</td>";
+            content += "<td>"+ track[i].album +"</td>";
+            content += "<td>"+ track[i].year +"</td>";
             content += "</tr>";
         }
         content += "</table>";
     } else {
-        content = "タグを読み込み中 " + track.length + "/" + music_count;
+        content = "タグを読み込み中 " + music_count + "/" + track.length;
     }
 
     document.getElementById('music_list').innerHTML = content;
 }
 
-function addToMusicList(data, base_name, name, num, url_path) {
-    const title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0));
-    const artist   = getXMLfirstChildData(data.getElementsByTagName('artist').item(0));
-    const album    = getXMLfirstChildData(data.getElementsByTagName('album').item(0));
-    const year     = getXMLfirstChildData(data.getElementsByTagName('year').item(0));
-    const comment  = getXMLfirstChildData(data.getElementsByTagName('comment').item(0));
-    const track_no = getXMLfirstChildData(data.getElementsByTagName('track').item(0));
-    const genre    = getXMLfirstChildData(data.getElementsByTagName('genre').item(0));
-    const bitrate  = getXMLfirstChildData(data.getElementsByTagName('bitrate').item(0));
-    const sample_rate = getXMLfirstChildData(data.getElementsByTagName('sample_rate').item(0));
-    const channels = getXMLfirstChildData(data.getElementsByTagName('channels').item(0));
-    const duration = getXMLfirstChildData(data.getElementsByTagName('duration').item(0));
-    const time     = getXMLfirstChildData(data.getElementsByTagName('time').item(0));
+function addTagInfoToTrack(data, idx) {
+    track[idx].title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0));
+    track[idx].artist   = getXMLfirstChildData(data.getElementsByTagName('artist').item(0));
+    track[idx].album    = getXMLfirstChildData(data.getElementsByTagName('album').item(0));
+    track[idx].year     = getXMLfirstChildData(data.getElementsByTagName('year').item(0));
+    track[idx].comment  = getXMLfirstChildData(data.getElementsByTagName('comment').item(0));
+    track[idx].track_no = getXMLfirstChildData(data.getElementsByTagName('track').item(0));
+    track[idx].genre    = getXMLfirstChildData(data.getElementsByTagName('genre').item(0));
+    track[idx].bitrate  = getXMLfirstChildData(data.getElementsByTagName('bitrate').item(0));
+    track[idx].sample_rate = getXMLfirstChildData(data.getElementsByTagName('sample_rate').item(0));
+    track[idx].channels = getXMLfirstChildData(data.getElementsByTagName('channels').item(0));
+    track[idx].duration = getXMLfirstChildData(data.getElementsByTagName('duration').item(0));
+    track[idx].time     = getXMLfirstChildData(data.getElementsByTagName('time').item(0));
+    track[idx].getProperty = true;
 
-/**
-    console.log(title ? title : "");
-    console.log(artist ? artist : "");
-    console.log(album ? album : "");
-    console.log(year ? year : "");
-    console.log(comment ? comment : "");
-    console.log(track_no ? track_no : "");
-    console.log(genre ? genre : "");
-    console.log(bitrate ? bitrate : "");
-    console.log(sample_rate ? sample_rate : "");
-    console.log(channels ? channels : "");
-    console.log(duration ? duration : "");
-    console.log(time ? time : "");
-**/
+    track[idx].track_no ?= track[idx].num;  // tagにtrack noがなければファイル名順の番号を使う
+    track[idx].title ?= track[idx].name;  // tagにtitleがなければファイル名を使う
 
-    var tag = new Array(track_no != 0 ? track_no : num, url_path, title ? title : name, time, artist, album, year, base_name);
-    track.push(tag);
-
+    music_count++;
     printMusicList();
 }
 
-function getMusicProperties(get_media_cgi, base_name, name, num, url_path, receive_func) {
-    var httpRequest = ajax_init();
-    if (!httpRequest) {
-        alert('情報取得プロセスの起動に失敗しました');
-        return false;
-    }
-    ajax_set_instance(httpRequest, function() { getMusicPropertiesResult(httpRequest, base_name, name, num, url_path, receive_func); });
-    ajax_post(httpRequest, get_media_cgi, "dir=" + base_name + "&file=" + url_path + "&mode=tag");
-
-    music_count++;  // ajaxを呼んだ数
-}
-
-function getMusicPropertiesResult(httpRequest, base_name, name, num, url_path, receive_func) {
+function musicList(data) {
     try {
-        if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-            //document.getElementById('sStatus').innerHTML = "読み込み中...";
-        } else if (httpRequest.readyState == 4) {
-            if (httpRequest.status == 200) {
-                var data = httpRequest.responseXML;
-                receive_func(data, base_name, name, num, url_path);
-            } else {
-                alert("ERROR: " + httpRequest.status);
-            }
-        }
+        const properties = data.getElementsByTagName('properties').item(0);
+        const up_path    = getXMLfirstChildData(properties.getElementsByTagName('up_path').item(0));
+
+        getDirectoryList(base_name, up_path, 0, 0, getMusicFiles);
     } catch(e) {
         alert("ERROR: " + e.description);
     }
 }
 
+function findNotGetPropertyTrack() {
+    for (var i=0; i<track.length; i++) {
+        if (track[i].getProperty === false) {
+            return i;
+        }
+    }
+
+    return NaN;
+}
+
+function getMusicProperties() {
+    const ajax = jsUtils.ajax;
+
+    const idx = findNotGetPropertyTrack();
+    if (isNaN(idx) === true) {
+        return;
+    }
+
+    ajax.init();
+    ajax.setOnSuccess(function(httpRequest) {
+        addTagInfoToTrack(httpRequest.responseXML, idx);
+        getMusicProperties();
+    });
+    ajax.setOnError(function(httpRequest) {
+        alert("Error: " + httpRequest.status);
+    });
+    ajax.post(TAGINFO_CGI, "dir=" + track[idx].base_name + "&file=" + track[idx].path + "&mode=tag");
+}
+
+function getMusicFiles(data) {
+    const properties = data.getElementsByTagName('properties');
+    if (properties != null) {
+        const name_elem = properties.item(0).getElementsByTagName('name');
+        var name_string = "";
+        if (name_elem != null && name_elem.item(0).firstChild != null) {
+            name_string = name_elem.item(0).firstChild.data;
+        }
+        document.title = name_string;
+        document.getElementById('directory_name_area').innerHTML = name_string;
+    }
+
+    const contents = data.getElementsByTagName('contents').item(0);
+    if (contents == null) {
+        alert("ERROR: music files list is NULL");
+        return;
+    }
+
+    const elements = contents.getElementsByTagName('element');
+    if (elements == null) {
+        alert("ERROR: music list has no elements");
+        return;
+    }
+
+    for (var i=0; i<elements.length; i++) {
+        var name_elem = elements.item(i).getElementsByTagName('name');
+        var path_elem = elements.item(i).getElementsByTagName('path');
+        var num_elem = elements.item(i).getElementsByTagName('num');  // tagが無い場合のソート用
+        if (name_elem != null && path_elem != null) {
+            var name = name_elem.item(0).firstChild.data;
+            var path = path_elem.item(0).firstChild.data;
+            var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
+
+            if (music_pattern.test(name.toLowerCase())) {
+                track.push({
+                    "name": name,
+                    "getProperty": false,
+                    "num": num,
+                    "base_name": base_name,
+                    "path": path
+                });
+            }
+        }
+    }
+    getMusicProperties();
+}

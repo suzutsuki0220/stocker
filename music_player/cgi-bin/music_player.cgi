@@ -45,13 +45,13 @@ my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKet
 $path =~ /(.*)\/([^\/]{1,})$/;
 my $up_path = $1;
 my $media_file = $2;
- 
+
 my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
 my $stocker_src = "${STOCKER_CGI}?dir=${base_name}&file=${encoded_up_path}";
 
 eval {
   my @jslist = (
-      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/main.js",
       "%htdocs_root%/get_directory_list.js",
       "%htdocs_root%/music_player.js",
   );
@@ -93,8 +93,8 @@ print <<EOF;
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
 
-    document.coverart.src = "${TAGINFO_CGI}?mode=picture&dir=" + track[track_no][7] + "&file=" + track[track_no][1];
-    audio_player.src = "${GET_MEDIA_CGI}?dir=" + track[track_no][7] + "&file=" +track[track_no][1] + "&type=" + play_type;
+    document.coverart.src = "${TAGINFO_CGI}?mode=picture&dir=" + track[track_no].base_name + "&file=" + track[track_no].path;
+    audio_player.src = "${GET_MEDIA_CGI}?dir=" + track[track_no].base_name + "&file=" +track[track_no].path + "&type=" + play_type;
     audio_player.play();
     document.controller.button_pause.value = "Pause";
 
@@ -119,7 +119,7 @@ print <<EOF;
     }
     fill_color(track_no);
     document.controller.text_trnum.value = parseInt(track_no) + 1;
-    document.controller.text_title.value = track[track_no][2];
+    document.controller.text_title.value = track[track_no].title;
     audio_player.addEventListener('timeupdate', function() {
       audio_player.removeEventListener('timeupdate', arguments.callee, false);
       var sec = '0' + Math.floor(audio_player.currentTime % 60);
@@ -218,60 +218,10 @@ function errorCoverart() {
   document.coverart.src = "${graypad}";
 }
 
+const TAGINFO_CGI = "${TAGINFO_CGI}";
+const base_name = "${base_name}";
+const music_pattern = /\\.(${music_pattern})\$/;  // 拡張子判定
 getDirectoryList("${base_name}", "${encoded_path}", 0, 0, musicList);
-
-function musicList(data) {
-  try {
-    const properties = data.getElementsByTagName('properties').item(0);
-    const up_path    = getXMLfirstChildData(properties.getElementsByTagName('up_path').item(0));
-
-    getDirectoryList("${base_name}", up_path, 0, 0, getMusicFiles);
-  } catch(e) {
-    alert("ERROR: " + e.description);
-  }
-}
-
-function getMusicFiles(data) {
-  const properties = data.getElementsByTagName('properties');
-  if (properties != null) {
-    const name_elem = properties.item(0).getElementsByTagName('name');
-    var name_string = "";
-    if (name_elem != null && name_elem.item(0).firstChild != null) {
-      name_string = name_elem.item(0).firstChild.data;
-    }
-    document.title = name_string;
-    document.getElementById('directory_name_area').innerHTML = name_string;
-  }
-
-  const contents = data.getElementsByTagName('contents').item(0);
-  if (contents == null) {
-    alert("ERROR: music files list is NULL");
-    return;
-  }
-
-  const elements = contents.getElementsByTagName('element');
-  if (elements == null) {
-    alert("ERROR: music list has no elements");
-    return;
-  }
-
-  const music_pattern = /\\.(${music_pattern})\$/;  // 拡張子判定
-  for (var i=0; i<elements.length; i++) {
-    var name_elem = elements.item(i).getElementsByTagName('name');
-    var path_elem = elements.item(i).getElementsByTagName('path');
-    var num_elem = elements.item(i).getElementsByTagName('num');  // tagが無い場合のソート用
-    if (name_elem != null && path_elem != null) {
-      var name = name_elem.item(0).firstChild.data;
-      var path = path_elem.item(0).firstChild.data;
-      var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
-
-      if (music_pattern.test(name.toLowerCase())) {
-        getMusicProperties("${TAGINFO_CGI}", "${base_name}", name, num, path, addToMusicList)
-      }
-    }
-  }
-}
-
 -->
 </script>
 DATA
