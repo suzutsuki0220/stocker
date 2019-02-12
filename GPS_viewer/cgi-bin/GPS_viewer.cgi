@@ -44,7 +44,7 @@ my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8
 eval {
   my @jslist = (
       "%htdocs_root%/ccchart-min.js",
-      "%htdocs_root%/fontawesome-all.min.js",
+      "%htdocs_root%/main.js",
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/jsvalue.js",
       "%htdocs_root%/map_main.js",
@@ -184,7 +184,7 @@ my $html = <<EOF;
 位置情報: 総数=<span id="sample_count">0</span>, Points=<span id="point_count">0</span>(間引き <span id="skip_sample">0</span>), 無効=<span id="invalid_sample_count">0</span><br>
 </div>
 <div style="margin: 3px 0 3px 0.5em;">
-Track: 
+Track:
 <a href="javascript:playbackRoute()" class="button"><i class="fas fa-play fa-lg"></i></a>
 <select name="playback_speed" id="playback_speed" size="1">
 <option value="1.0" selected>1.0</option>
