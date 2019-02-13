@@ -69,6 +69,15 @@ function addTagInfoToTrack(data, idx) {
     printMusicList();
 }
 
+function addEmptyInfoToTrack(idx) {
+    track[idx].title    = track[idx].name;  // tagにtitleがなければファイル名を使う
+    track[idx].track_no = track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
+    track[idx].getProperty = true;
+
+    music_count++;
+    printMusicList();
+}
+
 function musicList(data) {
     try {
         const properties = data.getElementsByTagName('properties').item(0);
@@ -104,7 +113,9 @@ function getMusicProperties() {
         getMusicProperties();
     });
     ajax.setOnError(function(httpRequest) {
-        alert("Error: " + httpRequest.status);
+        console.log("failed to get property: " + track[idx].name + ' (' + httpRequest.status + ' ' + httpRequest.statusText + ')');
+        addEmptyInfoToTrack(idx);
+        getMusicProperties();
     });
     ajax.post(TAGINFO_CGI, "dir=" + track[idx].base_name + "&file=" + track[idx].path + "&mode=tag");
 }
