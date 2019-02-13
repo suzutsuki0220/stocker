@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "bulma": "^0.7.4",
-    "js-utils": "https://github.com/suzutsuki0220/jsUtils.git"
+    "js-utils": "git+https://github.com/suzutsuki0220/jsUtils.git"
   },
   "author": "suzutsuki0220",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.7.1",
+    "@fortawesome/fontawesome-free": "^5.7.2",
     "css-loader": "^2.1.0",
     "extract-text-webpack-plugin": "^3.0.2",
     "node-sass": "^4.11.0",
