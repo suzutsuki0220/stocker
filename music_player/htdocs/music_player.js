@@ -1,16 +1,6 @@
 var track = new Array();
 var music_count = 0;  // ajaxを読んだ数とcallbackが実行された数が一致した時にリスト内の情報を全て読み込んだと判断する
 
-function getXMLfirstChildData(node) {
-    if (node) {
-        if (node.firstChild) {
-            return node.firstChild.data;
-        }
-    }
-
-    return "";
-}
-
 function sortMusicListByTrackNumber() {
     for(i=track.length-1 ; i>0 ; i--) {
         for(j=0 ; j<i ; j++) {
@@ -86,10 +76,11 @@ function addEmptyInfoToTrack(idx) {
 
 function musicList(data) {
     try {
-        const properties = data.getElementsByTagName('properties').item(0);
-        const up_path    = getXMLfirstChildData(properties.getElementsByTagName('up_path').item(0));
+        const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
+        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
 
-        getDirectoryList(base_name, up_path, 0, 0, getMusicFiles);
+        document.getElementById('back_link').href = STOCKER_CGI + "?dir=" + base_name + "&file=" + properties['up_path'];
+        getDirectoryList(base_name, properties['up_path'], 0, 0, getMusicFiles);
     } catch(e) {
         alert("ERROR: " + e.description);
     }
@@ -127,23 +118,12 @@ function getMusicProperties() {
 }
 
 function getMusicFiles(data) {
-    const properties = data.getElementsByTagName('properties');
-    if (properties != null) {
-        const name_elem = properties.item(0).getElementsByTagName('name');
-        var name_string = "";
-        if (name_elem != null && name_elem.item(0).firstChild != null) {
-            name_string = name_elem.item(0).firstChild.data;
-        }
-        document.title = name_string;
-        document.getElementById('directory_name_area').innerHTML = name_string;
-    }
+    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
+    const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name'])[0];
+    document.title = properties.name;
+    document.getElementById('directory_name_area').innerHTML = properties.name;
 
-    const contents = data.getElementsByTagName('contents').item(0);
-    if (contents == null) {
-        alert("ERROR: music files list is NULL");
-        return;
-    }
-
+    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
     const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "num"]);
     if (elements === null) {
         alert("ERROR: music list has no elements");

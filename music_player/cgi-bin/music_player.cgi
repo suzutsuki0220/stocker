@@ -22,15 +22,11 @@ require $SUPPORT_TYPES;
 
 my $form = eval{new CGI};
 
-my $path;
-my $base;
 my $base_name = scalar($form->param('dir'));
 my $encoded_path = scalar($form->param('file'));
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
-  $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
-  $base = $ins->{base};
 };
 if ($@) {
   HTML_Elem->header();
@@ -40,14 +36,6 @@ if ($@) {
 $base_name = HTML_Elem->url_encode(scalar($form->param('dir')));
 
 my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-
-#### ディレクトリ一覧 ####
-$path =~ /(.*)\/([^\/]{1,})$/;
-my $up_path = $1;
-my $media_file = $2;
-
-my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
-my $stocker_src = "${STOCKER_CGI}?dir=${base_name}&file=${encoded_up_path}";
 
 eval {
   my @jslist = (
@@ -177,7 +165,7 @@ print <<EOF;
 EOF
 
 print <<DATA;
-<a href=\"${stocker_src}\">← 戻る</a>
+<a href="#" id="back_link">← 戻る</a>
 <hr>
 <h2 id="directory_name_area"></h2>
 <p>
@@ -218,6 +206,7 @@ function errorCoverart() {
   document.coverart.src = "${graypad}";
 }
 
+const STOCKER_CGI = "${STOCKER_CGI}";
 const TAGINFO_CGI = "${TAGINFO_CGI}";
 const base_name = "${base_name}";
 const music_pattern = /\\.(${music_pattern})\$/;  // 拡張子判定
