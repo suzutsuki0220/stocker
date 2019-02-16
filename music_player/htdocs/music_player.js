@@ -51,18 +51,24 @@ function printMusicList() {
 }
 
 function addTagInfoToTrack(data, idx) {
-    track[idx].title    = getXMLfirstChildData(data.getElementsByTagName('title').item(0)) || track[idx].name;  // tagにtitleがなければファイル名を使う
-    track[idx].artist   = getXMLfirstChildData(data.getElementsByTagName('artist').item(0));
-    track[idx].album    = getXMLfirstChildData(data.getElementsByTagName('album').item(0));
-    track[idx].year     = getXMLfirstChildData(data.getElementsByTagName('year').item(0));
-    track[idx].comment  = getXMLfirstChildData(data.getElementsByTagName('comment').item(0));
-    track[idx].track_no = getXMLfirstChildData(data.getElementsByTagName('track').item(0)) || track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
-    track[idx].genre    = getXMLfirstChildData(data.getElementsByTagName('genre').item(0));
-    track[idx].bitrate  = getXMLfirstChildData(data.getElementsByTagName('bitrate').item(0));
-    track[idx].sample_rate = getXMLfirstChildData(data.getElementsByTagName('sample_rate').item(0));
-    track[idx].channels = getXMLfirstChildData(data.getElementsByTagName('channels').item(0));
-    track[idx].duration = getXMLfirstChildData(data.getElementsByTagName('duration').item(0));
-    track[idx].time     = getXMLfirstChildData(data.getElementsByTagName('time').item(0));
+    const get_names = [
+        "title",
+        "artist",
+        "album",
+        "year",
+        "comment",
+        "track",
+        "genre",
+        "bitrate",
+        "sample_rate",
+        "channels",
+        "duration",
+        "time"
+    ];
+    track[idx] = Object.assign(track[idx], jsUtils.xml.getDataInElements(data, "tag", get_names)[0]);
+
+    track[idx].title    = track[idx].title || track[idx].name;  // tagにtitleがなければファイル名を使う
+    track[idx].track_no = track[idx].track || track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
     track[idx].getProperty = true;
 
     music_count++;
@@ -138,30 +144,22 @@ function getMusicFiles(data) {
         return;
     }
 
-    const elements = contents.getElementsByTagName('element');
-    if (elements == null) {
+    const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "num"]);
+    if (elements === null) {
         alert("ERROR: music list has no elements");
         return;
     }
 
     for (var i=0; i<elements.length; i++) {
-        var name_elem = elements.item(i).getElementsByTagName('name');
-        var path_elem = elements.item(i).getElementsByTagName('path');
-        var num_elem = elements.item(i).getElementsByTagName('num');  // tagが無い場合のソート用
-        if (name_elem != null && path_elem != null) {
-            var name = name_elem.item(0).firstChild.data;
-            var path = path_elem.item(0).firstChild.data;
-            var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
-
-            if (music_pattern.test(name.toLowerCase())) {
-                track.push({
-                    "name": name,
-                    "getProperty": false,
-                    "num": num,
-                    "base_name": base_name,
-                    "path": path
-                });
-            }
+        const e = elements[i];
+        if (music_pattern.test(e.name.toLowerCase())) {
+            track.push({
+                "name": e.name,
+                "getProperty": false,
+                "num": !isNaN(e.num) ? e.num : 0,
+                "base_name": base_name,
+                "path": e.path
+            });
         }
     }
     getMusicProperties();
