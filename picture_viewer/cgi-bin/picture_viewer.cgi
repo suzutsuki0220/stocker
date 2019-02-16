@@ -53,7 +53,7 @@ my $file_name = ParamPath->get_filename($path);
 
 eval {
   my @jslist = (
-      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/main.js",
       "%htdocs_root%/get_directory_list.js",
       "%htdocs_root%/picture_viewer.js",
   );
