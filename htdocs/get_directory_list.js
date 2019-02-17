@@ -16,7 +16,7 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
         receive_func(httpRequest.responseXML);
     });
     jsUtils.ajax.setOnError(function(httpRequest) {
-        alert("ERROR: " + httpRequest.status);
+        alert("ERROR: " + get_dir_cgi + " param: " + param + " status: " + httpRequest.status);
     });
 
     jsUtils.ajax.post(get_dir_cgi, param);
