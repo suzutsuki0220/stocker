@@ -378,15 +378,18 @@ function fillFolderName(pathText) {
 }
 
 function getMovieInfo(movie_info_url, base_name, path) {
-    var httpRequest = ajax_init();
-    if (httpRequest) {
-        var query = "dir=" + base_name + "&file=" + path;
-        ajax_set_instance(httpRequest, function() { showInfoTable(httpRequest) });
-        ajax_post(httpRequest, movie_info_url, query);
+    const ajax = jsUtils.ajax;
+    ajax.init();
+    ajax.setOnSuccess(showInfoTable);
+    ajax.setOnLoading(function() {
         document.getElementById('information_table').innerHTML = "読み込み中";
-    } else {
+    });
+    ajax.setOnError(function(httpRequest) {
         document.getElementById('information_table').innerHTML = "動画ファイルの情報取得に失敗しました";
-    }
+    });
+
+    const query = "dir=" + base_name + "&file=" + path;
+    ajax.post(movie_info_url, query);
 }
 
 function showInfoTable(httpRequest) {
@@ -396,44 +399,42 @@ function showInfoTable(httpRequest) {
     var best_video_height = 480;
     var best_audio_index = NaN;
 
-    if (httpRequest.readyState == 4) {
-        if (httpRequest.status == 200) {
-            var data = httpRequest.responseXML;
-            var video_table = "";
-            var audio_table = "";
-            var width, height;
+    var data = httpRequest.responseXML;
+    var video_table = "";
+    var audio_table = "";
+    var width, height;
 
-            var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
-            if (movie_info_elem !== null) {
-                var duration = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
-                var filename = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filename');
-                var filesize = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filesize');
-                var format = getXmlFirstFindTagData(movie_info_elem.childNodes, 'format');
+    var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
+    if (movie_info_elem !== null) {
+        var duration = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
+        var filename = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filename');
+        var filesize = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filesize');
+        var format = getXmlFirstFindTagData(movie_info_elem.childNodes, 'format');
 
-                var videos = movie_info_elem.getElementsByTagName('video');
-                var audios = movie_info_elem.getElementsByTagName('audio');
+        var videos = movie_info_elem.getElementsByTagName('video');
+        var audios = movie_info_elem.getElementsByTagName('audio');
 
-                if (videos.length > 0) {
-                    for (var i=0; i<videos.length; i++) {
-                        if (i === 0) {
-                            video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
-                        }
-                        video_table += makeVideoTable(videos[i].childNodes);
-                    }
-                    best_video_index = getBestVideoStream(videos);
-                    best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
-                    best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
+        if (videos.length > 0) {
+            for (var i=0; i<videos.length; i++) {
+                if (i === 0) {
+                    video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
                 }
+                video_table += makeVideoTable(videos[i].childNodes);
+            }
+            best_video_index = getBestVideoStream(videos);
+            best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
+            best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
+        }
 
-                for (var i=0; i<audios.length; i++) {
-                    if (i === 0) {
-                        audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
-                    }
-                    audio_table += makeAudioTable(audios[i].childNodes);
-                }
-                best_audio_index = isNaN(best_video_index) ? getBestAudioStream(audios) : getNearestAudioStream(audios, videos, best_video_index);
+        for (var i=0; i<audios.length; i++) {
+            if (i === 0) {
+                audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
+            }
+            audio_table += makeAudioTable(audios[i].childNodes);
+        }
+        best_audio_index = isNaN(best_video_index) ? getBestAudioStream(audios) : getNearestAudioStream(audios, videos, best_video_index);
 
-                content = `
+        content = `
 <table border="3">
 <tr><th colspan="3">全般</th></tr>
 <tr><th colspan="2">ファイル名</th><td>${filename}</td></tr>
@@ -443,22 +444,19 @@ function showInfoTable(httpRequest) {
 ${video_table}
 ${audio_table}
 </table>`;
-            } else {
-                content = "予期しないデータを受け取りました";
-            }
-        } else {
-            content = "動画情報のパースに失敗しました";
-        }
-        document.getElementById('information_table').innerHTML = content;
+    } else {
+        content = "予期しないデータを受け取りました";
+    }
 
-        // check radio button
-        if (isNaN(best_video_index) === false) {
-            document.getElementsByName('v_map')[best_video_index].checked = true;
-            setPreviewSize(document.getElementById('vimg'), best_video_width, best_video_height);
-        }
-        if (isNaN(best_audio_index) === false) {
-            document.getElementsByName('a_map')[best_audio_index].checked = true;
-        }
+    document.getElementById('information_table').innerHTML = content;
+
+    // check radio button
+    if (isNaN(best_video_index) === false) {
+        document.getElementsByName('v_map')[best_video_index].checked = true;
+        setPreviewSize(document.getElementById('vimg'), best_video_width, best_video_height);
+    }
+    if (isNaN(best_audio_index) === false) {
+        document.getElementsByName('a_map')[best_audio_index].checked = true;
     }
 }
 

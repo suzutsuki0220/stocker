@@ -157,7 +157,7 @@ sub add_encodejob()
   }
   $job->{pass2} = $q->param('pass2') ? 'true' : 'false';
   $job->{v_v_map} = $q->param('v_map');
-  $job->{v_v_copy} = $q->param('v_copy') ? 'true' : 'false'; 
+  $job->{v_v_copy} = $q->param('v_copy') ? 'true' : 'false';
   $job->{v_enable_crop} = $q->param('enable_crop') ? 'true' : 'false';
   $job->{v_crop_w} = $q->param('crop_w');
   $job->{v_crop_h} = $q->param('crop_h');
@@ -210,9 +210,9 @@ sub print_form() {
   my $mes;
 
   my @jslist = (
+      "%htdocs_root%/main.js",
       "%htdocs_root%/converter_common.js",
       "%htdocs_root%/converter_form.js",
-      "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/stocker_xml.js",
   );
   my @csslist = (
@@ -285,7 +285,7 @@ EOF
   writeSourceLocation("${path}");
 EOD
   print encode('utf-8', $mes);
- 
+
   print <<EOD;
   function getPreviewUrl(width) {
     var url = "${MOVIEIMG_CGI}?dir=${dir}&file=${encoded_path}&size=" + width;
@@ -547,30 +547,19 @@ EOD
   }
 
   function addJob() {
-    var httpRequest = ajax_init();
-    if (!httpRequest) {
-      alert("中断 :( XMLHTTPインスタンスを生成できませんでした");
-      return false;
-    }
-    ajax_set_instance(httpRequest, function() { getAddJobResult(httpRequest); });
-    ajax_post(httpRequest, "$ENV{'SCRIPT_NAME'}", query);
-  }
+    const ajax = jsUtils.ajax;
 
-  function getAddJobResult(httpRequest) {
-    try {
-      if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-        document.getElementById('sStatus').innerHTML = "登録中...";
-      } else if (httpRequest.readyState == 4) {
-        if (httpRequest.status == 200) {
-          document.getElementById('sStatus').innerHTML = "完了";
-          //document.getElementById('sValue').innerHTML = httpRequest.responseText;
-        } else {
-          document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
-        }
-      }
-    } catch(e) {
-      alert("ERROR: " + e.description);
-    }
+    ajax.init();
+    ajax.setOnLoading(function() {
+      document.getElementById('sStatus').innerHTML = "登録中...";
+    });
+    ajax.setOnSuccess(function(httpRequest) {
+      document.getElementById('sStatus').innerHTML = "完了";
+    });
+    ajax.setOnError(function(httpRequest) {
+      document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
+    });
+    ajax.post("$ENV{'SCRIPT_NAME'}", query);
   }
 -->
 </script>
@@ -630,12 +619,12 @@ EOF
 <fieldset>
 <legend>映像設定</legend>
 <input type="checkbox" name="v_copy"> 変換しない<br>
-プリセット: 
+プリセット:
 <input type="button" name="preset_vga" value="SD(4:3)" onClick="presetVga()">
 <input type="button" name="preset_sdwide" value="SD(16:9)" onClick="presetSdwide()">
 <input type="button" name="preset_720p" value="720p" onClick="preset720p()">
 <br>
-<input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp; 
+<input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
 <span id="TrimSel" style="display: none">
 サイズ <input type="text" name="crop_w" onChange="print_aspect('crop')" size="5">x<input type="text" name="crop_h" onChange="print_aspect('crop')" size="5">
 (比率 <span id="crop_aspect">-----</span>)
@@ -643,7 +632,7 @@ EOF
 <input type="button" onClick="openPreviewWindow()" value="preview">
 </span>
 <br>
-<input type="checkbox" name="enable_pad" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp; 
+<input type="checkbox" name="enable_pad" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp;
 <span id="PaddingSel" style="display: none">
 サイズ <input type="text" name="pad_w" onChange="print_aspect('padding')" size="5">x<input type="text" name="pad_h" onChange="print_aspect('padding')" size="5">
 (比率 <span id="padding_aspect">-----</span>)
@@ -663,7 +652,7 @@ EOF
 &nbsp;&nbsp;動作:
 <input type="radio" name="move_freq" value="high">高度
 <input type="radio" name="move_freq" value="middle" checked>中度
-<input type="radio" name="move_freq" value="low">低度 
+<input type="radio" name="move_freq" value="low">低度
 <input type="button" name="btn_calc_bitrate_aim" value="算出" onClick="calcBitrateAim()">)<br>
 <fieldset><legend>画質調整</legend>
 <input type="checkbox" name="enable_adjust" onChange="actionAdjEnable(); showElem(getElementById('adjustForm'), document.enc_setting.enable_adjust)"> 画質調整する<br>
@@ -676,7 +665,7 @@ EOF
 <input type="button" name="bright_default" value="default:0.0" onClick="set_brightness(0.0)"> (-1〜1)<br>
 コントラスト
 <input type="button" name="contrast_minus" value="&lt;" onClick="adj_contrast(-0.03)">
-<input type="text" name="contrast" size="5" value="1.0"> 
+<input type="text" name="contrast" size="5" value="1.0">
 <input type="button" name="contrast_plus" value="&gt;" onClick="adj_contrast(0.03)">
 <input type="button" name="contrast_default" value="default:1.0" onClick="set_contrast(1.0)">
 (-2〜2)<br>
@@ -737,7 +726,7 @@ weight
 <fieldset>
 <legend>音声設定</legend>
 <input type="checkbox" name="a_copy"> 変換しない<br>
-プリセット: 
+プリセット:
 <input type="button" name="preset_audio_high" value="高音質" onClick="presetAudHigh()">
 <input type="button" name="preset_audio_normal" value="標準" onClick="presetAudNormal()">
 <br>

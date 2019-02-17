@@ -23,7 +23,7 @@ our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
 
 eval {
   my @jslist = (
-      "%htdocs_root%/ajax_html_request.js",
+      "%htdocs_root%/main.js",
       "%htdocs_root%/stocker_list.js",
       "%htdocs_root%/get_directory_list.js",
   );

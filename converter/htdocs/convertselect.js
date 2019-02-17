@@ -122,7 +122,7 @@ function keyDownWork(e) {
       case 72:
         addTime(document.f1.skip.value);
         break;
-      case 38: // up     
+      case 38: // up
         selectSkipDown(-1);
         break;
       case 40: // down
@@ -220,40 +220,40 @@ function addTime(num) {
 }
 
 function getMovieDuration(movie_info_url, base_name, path, vno) {
-    var httpRequest = ajax_init();
-    if (httpRequest) {
-        var query = "dir=" + base_name + "&file=" + path;
-        ajax_set_instance(httpRequest, function() { getMovieDurationResult(httpRequest, vno) });
-        ajax_post(httpRequest, movie_info_url, query);
-    } else {
-        alert("動画ファイルの情報取得に失敗しました");
-    }
+    const ajax = jsUtils.ajax;
+    ajax.init();
+
+    ajax.setOnSuccess(function(httpRequest) {
+        getMovieDurationResult(httpRequest, vno);
+        callGetSceneData();
+    });
+    ajax.setOnError(function(httpRequest) {
+        alert("動画の長さ取得に失敗しました");
+    });
+
+    const query = "dir=" + base_name + "&file=" + path;
+    ajax.post(movie_info_url, query);
 }
 
 function getMovieDurationResult(httpRequest, vno) {
-    if (httpRequest.readyState == 4) {
-        if (httpRequest.status == 200) {
-            var data = httpRequest.responseXML;
-            var width, height;
-            var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
-            if (movie_info_elem !== null) {
-                var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
-                duration = getSecondFromFormatTime(hhmmssxxx);
-                moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
-                callGetSceneData();
+    var data = httpRequest.responseXML;
+    var width, height;
+    var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
+    if (movie_info_elem !== null) {
+        var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
+        duration = getSecondFromFormatTime(hhmmssxxx);
+        moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
 
-                var videos = movie_info_elem.getElementsByTagName('video');
-                for (var i=0; i<videos.length; i++) {
-                    var video_elem = videos[i].childNodes;
-                    const vid_no = getXmlFirstFindTagData(video_elem, 'no');
-                    if (vid_no === vno) {
-                        const disp_width   = getXmlFirstFindTagData(video_elem, 'disp_width');
-                        const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
-                        if (disp_width.length !== 0 && disp_height !== 0) {
-                            setPreviewSize(document.getElementById('startPreviewArea'), parseInt(disp_width), parseInt(disp_height));
-                            setPreviewSize(document.getElementById('endPreviewArea'), parseInt(disp_width), parseInt(disp_height));
-                        }
-                    }
+        var videos = movie_info_elem.getElementsByTagName('video');
+        for (var i=0; i<videos.length; i++) {
+            var video_elem = videos[i].childNodes;
+            const vid_no = getXmlFirstFindTagData(video_elem, 'no');
+            if (vid_no === vno) {
+                const disp_width   = getXmlFirstFindTagData(video_elem, 'disp_width');
+                const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
+                if (disp_width.length !== 0 && disp_height !== 0) {
+                    setPreviewSize(document.getElementById('startPreviewArea'), parseInt(disp_width), parseInt(disp_height));
+                    setPreviewSize(document.getElementById('endPreviewArea'), parseInt(disp_width), parseInt(disp_height));
                 }
             }
         }
@@ -261,38 +261,36 @@ function getMovieDurationResult(httpRequest, vno) {
 }
 
 function getSceneData(getfile_cgi, base_name, scene_path) {
-    var httpRequest = ajax_init();
-    if (httpRequest) {
-        var query = "dir=" + base_name + "&file=" + scene_path + "&mime=text/plain";
-        ajax_set_instance(httpRequest, function() { getSceneDataResult(httpRequest) });
-        ajax_post(httpRequest, getfile_cgi, query);
-    }
+    const ajax = jsUtils.ajax;
+    ajax.init();
+
+    ajax.setOnSuccess(getSceneDataResult);
+    ajax.setOnError(function(httpRequest) {});
+
+    const query = "dir=" + base_name + "&file=" + scene_path + "&mime=text/plain";
+    ajax.post(getfile_cgi, query);
 }
 
 function getSceneDataResult(httpRequest) {
-    if (httpRequest.readyState == 4) {
-        if (httpRequest.status == 200) {
-            var sp, ep;
-            var data = httpRequest.responseText;
-            var html;
+    var sp, ep;
+    var data = httpRequest.responseText;
 
-            sp = 0;
-            while((ep = data.indexOf("\n", sp)) != -1) {
-                var line = data.substring(sp, ep);
-                pushSceneList(line);
-                sp = ep + 1;
-            }
-            if (sp < data.length) {
-                var line = data.substring(sp);
-                pushSceneList(line);
-            }
+    sp = 0;
+    while((ep = data.indexOf("\n", sp)) != -1) {
+        var line = data.substring(sp, ep);
+        pushSceneList(line);
+        sp = ep + 1;
+    }
+    if (sp < data.length) {
+        var line = data.substring(sp);
+        pushSceneList(line);
+    }
 
-            if (sceneList.length > 0) {
-                html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
-                html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
-                document.getElementById('sceneSelectArea').innerHTML = html;
-            }
-        }
+    if (sceneList.length > 0) {
+        var html;
+        html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
+        html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
+        document.getElementById('sceneSelectArea').innerHTML = html;
     }
 }
 

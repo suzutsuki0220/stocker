@@ -59,10 +59,10 @@ my @skip_options = (
 );
 
 my @jslist = (
+      "%htdocs_root%/main.js",
       "%htdocs_root%/converter_common.js",
       "%htdocs_root%/convertselect.js",
       "%htdocs_root%/stocker_xml.js",
-      "%htdocs_root%/ajax_html_request.js",
 );
 my @csslist = (
       "%htdocs_root%/stocker.css",

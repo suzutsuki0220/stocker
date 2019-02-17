@@ -155,48 +155,25 @@ function trimThumbnail(id, imgUrl) {
 
 function reloadDirectoryList(encoded_dir, url_path, from, to) {
     document.getElementById('directoryListArea').innerHTML = "読み込み中...";
-
-    getDirectoryList(encoded_dir, url_path, from, to, directoryList);
-
-    // sub-directory jump link
     document.getElementById('path_link').innerHTML = "";
-    makeSubdirectoryLink(encoded_dir, url_path);
-
     document.file_check.target.value = url_path;  // for edit.cgi
+
+    getDirectoryList(encoded_dir, url_path, from, to, function(dir_xml) {
+        directoryList(dir_xml);
+        addSubdirectoryLink(dir_xml, encoded_dir, url_path);
+    });
 }
 
 function makeSubdirectoryLink(encoded_dir, url_path) {
     const get_dir_cgi = "%cgi_root%/get_dir";
+    const param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
 
-    var httpRequest = ajax_init();
-    var param = "";
-
-    if (!httpRequest) {
-        document.getElementById('path_link').innerHTML = "";
-        return;
-    }
-
-    param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
-
-    ajax_set_instance(httpRequest, function() { makeSubdirectoryLinkResult(httpRequest, encoded_dir, url_path); } );
-    ajax_post(httpRequest, get_dir_cgi, param);
-}
-
-function makeSubdirectoryLinkResult(httpRequest, encoded_dir, url_path) {
-//    try {
-        if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-            //document.getElementById('sStatus').innerHTML = "読み込み中...";
-        } else if (httpRequest.readyState == 4) {
-            if (httpRequest.status == 200) {
-                var data = httpRequest.responseXML;
-                addSubdirectoryLink(data, encoded_dir, url_path);
-            } else {
-                alert("ERROR: " + httpRequest.status);
-            }
-        }
-//    } catch(e) {
-//        alert("ERROR: " + e.description);
-//    }
+    const ajax = jsUtils.ajax;
+    ajax.init();
+    ajax.setOnSuccess(function(httpRequest) {
+        addSubdirectoryLink(httpRequest.responseXML, encoded_dir, url_path);
+    });
+    ajax.post(get_dir_cgi, param);
 }
 
 function addSubdirectoryLink(data, encoded_dir, url_path) {

@@ -41,24 +41,17 @@ function do_rename(rename_count) {
 function popRenameWork() {
     var param = renameList.pop()
     if (param) {
-        var httpRequest = ajax_init();
-        ajax_set_instance(httpRequest, function() { renameResult(httpRequest); } );
-        ajax_post(httpRequest, filefunc_cgi, param);
+        const ajax = jsUtils.ajax;
+        ajax.init();
+        ajax.setOnSuccess(function(httpRequest) {
+            popRenameWork();
+        });
+        ajax.setOnError(function(httpRequest) {
+            alert("ERROR: " + httpRequest.status);
+        });
+        ajax.post(filefunc_cgi, param);
     } else {
         location.href = document.f1.back.value;
-    }
-}
-
-function renameResult(httpRequest) {
-    if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-        //document.getElementById('sStatus').innerHTML = "読み込み中...";
-    } else if (httpRequest.readyState == 4) {
-        if (httpRequest.status == 200) {
-            var data = httpRequest.responseXML;
-        } else {
-            alert("ERROR: " + httpRequest.status);
-        }
-        popRenameWork();
     }
 }
 

@@ -37,8 +37,8 @@ my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
 eval {
   my @jslist = (
+      "%htdocs_root%/main.js",
       "%htdocs_root%/filefunc.js",
-      "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/get_directory_list.js",
   );
   my @csslist = (
