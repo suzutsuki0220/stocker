@@ -177,27 +177,18 @@ function makeSubdirectoryLink(encoded_dir, url_path) {
 }
 
 function addSubdirectoryLink(data, encoded_dir, url_path) {
-    const properties_elem = data.getElementsByTagName('properties');
-    if (properties_elem == null) {
-        return;
+    const xml = jsUtils.xml;
+    const directory = xml.getFirstFoundChildNode(data, 'directory');
+    const properties = xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
+
+    if (properties['name']) {
+        var s = document.getElementById('path_link').innerHTML;
+        document.getElementById('path_link').innerHTML = "/ <a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + url_path + "', 0, " + boxes + ")\">" + properties['name'] + "</a> " + s;
     }
 
-    const title_elem = properties_elem.item(0).getElementsByTagName('name');
-    if (title_elem != null) {
-        if (title_elem.item(0).firstChild) {
-            var s = document.getElementById('path_link').innerHTML;
-            document.getElementById('path_link').innerHTML = "/ <a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + url_path + "', 0, " + boxes + ")\">" + title_elem.item(0).firstChild.data + "</a> " + s;
-        }
-    }
-
-    const uppath_elem = properties_elem.item(0).getElementsByTagName('up_path');
-    if (uppath_elem != null) {
-        if (uppath_elem.item(0).firstChild) {
-            const up_path = uppath_elem.item(0).firstChild.data;
-            if (up_path.length !== 0 && up_path !== "/") {
-                makeSubdirectoryLink(encoded_dir, uppath_elem.item(0).firstChild.data);
-            }
-        }
+    const up_path = properties['up_path'];
+    if (up_path.length !== 0 && up_path !== "/") {
+        makeSubdirectoryLink(encoded_dir, up_path);
     }
 }
 
@@ -246,4 +237,3 @@ function handleDownload(dir, file, filename) {
         document.body.removeChild(a);
     }
 }
-
