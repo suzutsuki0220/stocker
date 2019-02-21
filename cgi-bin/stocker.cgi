@@ -157,7 +157,6 @@ print <<EOD;
 <!--
 var boxes = ${boxes};
 var encoded_dir = document.file_check.fm_dir.value;
-var elements;
 
 reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
@@ -176,44 +175,16 @@ function directoryList(data) {
 //  try {
     encoded_dir = document.file_check.fm_dir.value;
 
-    const properties_elem = data.getElementsByTagName('properties');
-    if (properties_elem == null) {
-      alert("ERROR: properties tag is not found");
-      return;
-    }
+    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
 
-    // titleをディレクトリ名にする
-    const title_elem = properties_elem.item(0).getElementsByTagName('name');
-    if (title_elem != null) {
-      if (title_elem.item(0).firstChild) {
-        document.title = title_elem.item(0).firstChild.data;
-      } else {
-        document.title = "";
-      }
-    }
-
-    // 上位パスのリンク
-    const uppath_elem = properties_elem.item(0).getElementsByTagName('up_path');
-    if (uppath_elem != null) {
-      if (uppath_elem.item(0).firstChild) {
-        document.getElementById('uppath').innerHTML = "<a href=\\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + uppath_elem.item(0).firstChild.data + "', 0, " + boxes + ")\\">↑UP</a>";
-      } else {
-        document.getElementById('uppath').innerHTML = "";
-      }
-    }
-
-    const contents_elem = data.getElementsByTagName('contents');
-    if (contents_elem == null) {
-      alert("ERROR: files list is NULL");
-      return;
-    }
-
-    if (contents_elem.item(0) == null) {
+    displayDirectoryProperty(directory);
+    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
+    if (contents == null) {
       document.getElementById('directoryListArea').innerHTML = "ファイル・ディレクトリは存在しません";
       return;
     }
 
-    elements = contents_elem.item(0).getElementsByTagName('element');
+    const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
     if (elements == null) {
       alert("ERROR: files list has no elements");
       return;
@@ -223,23 +194,15 @@ function directoryList(data) {
 
     clearTrimWork();
     for (var i=0; i<elements.length; i++) {
-      var name_elem = elements.item(i).getElementsByTagName('name');
-      var path_elem = elements.item(i).getElementsByTagName('path');
-      var type_elem = elements.item(i).getElementsByTagName('type');
-      var size_elem = elements.item(i).getElementsByTagName('size');
-      var last_modified_elem = elements.item(i).getElementsByTagName('last_modified');
+        const e = elements[i];
 
-      if (name_elem != null && path_elem != null && type_elem != null && size_elem != null && last_modified_elem != null) {
         var icon;
         var action;
 
-        var name = name_elem.item(0).firstChild.data;
-        var path = path_elem.item(0).firstChild.data;
-        var type = type_elem.item(0).firstChild.data;
-        var size = size_elem.item(0).firstChild.data;
-        var last_modified = last_modified_elem.item(0).firstChild.data;
+        var name = e.name;
+        var path = e.path;
 
-        if (type === "DIRECTORY") {
+        if (e.type === "DIRECTORY") {
             icon   = "${ICON_DIRECTORY}";
             action = "dir:" + path;
         } else {
@@ -275,8 +238,7 @@ function directoryList(data) {
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
           }
         }
-        printIcon(i, ${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, size, last_modified, icon, action);
-      }
+        printIcon(i, ${BOX_WIDTH}, ${BOX_HEIGHT}, path, name, e.size, e.last_modified, icon, action);
     }
     doTrimWork();
 //  } catch(e) {

@@ -58,6 +58,20 @@ function toggleCheckFile(value) {
     }
 }
 
+function displayDirectoryProperty(directory) {
+    const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
+
+    // titleをディレクトリ名にする
+    document.title = properties.name;
+
+    // 上位パスのリンク
+    if (properties.name) {
+        document.getElementById('uppath').innerHTML = "<a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + properties.up_path + "', 0, " + boxes + ")\">↑UP</a>";
+    } else {
+        document.getElementById('uppath').innerHTML = "";  // 最上位にはnameがない
+    }
+}
+
 function actionClickedIcon (action, clicked_path) {
     if (isAnyChecked()) {
         toggleCheckFile(clicked_path);
