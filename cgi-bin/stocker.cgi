@@ -160,7 +160,7 @@ var encoded_dir = document.file_check.fm_dir.value;
 
 reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
-function directoryList(data) {
+function printIcons(elements) {
   // 拡張子判定
   var movie_pattern = /\\.(${movie_pattern})\$/;
   var music_pattern = /\\.(${music_pattern})\$/;
@@ -173,23 +173,6 @@ function directoryList(data) {
   var pdf_pattern = /\\.(${pdf_pattern})\$/;
 
 //  try {
-    encoded_dir = document.file_check.fm_dir.value;
-
-    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-
-    displayDirectoryProperty(directory);
-    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-    if (contents == null) {
-      document.getElementById('directoryListArea').innerHTML = "ファイル・ディレクトリは存在しません";
-      return;
-    }
-
-    const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
-    if (elements == null) {
-      alert("ERROR: files list has no elements");
-      return;
-    }
-
     document.getElementById('directoryListArea').innerHTML = "";
 
     clearTrimWork();

@@ -1,5 +1,6 @@
 const get_file_cgi = "%cgi_root%/get_file";
 var trimWork = [];
+var elements = null;
 
 function setScreenSize() {
     var s_width = 640;
@@ -178,6 +179,27 @@ function reloadDirectoryList(encoded_dir, url_path, from, to) {
     });
 }
 
+function directoryList(data) {
+    encoded_dir = document.file_check.fm_dir.value;
+
+    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
+
+    displayDirectoryProperty(directory);
+    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
+    if (contents == null) {
+      document.getElementById('directoryListArea').innerHTML = "ファイル・ディレクトリは存在しません";
+      return;
+    }
+
+    elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
+    if (elements == null) {
+      alert("ERROR: files list has no elements");
+      return;
+    }
+
+    printIcons(elements);
+}
+
 function makeSubdirectoryLink(encoded_dir, url_path) {
     const get_dir_cgi = "%cgi_root%/get_dir";
     const param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
@@ -208,22 +230,16 @@ function addSubdirectoryLink(data, encoded_dir, url_path) {
 
 function downloadWork(dir) {
     var files = document.getElementsByName("file");
-    if (files) {
+    if (files && elements) {
         for (var i=0; i<files.length; i++) {
-            var filename = "";
             if (files[i].checked === false) {
                 continue;
             }
 
             for (var j=0; j<elements.length; j++) {
-                var name_elem = elements.item(j).getElementsByTagName('name');
-                var path_elem = elements.item(j).getElementsByTagName('path');
-                if (name_elem != null && path_elem != null) {
-                    if (files[i].value === path_elem.item(0).firstChild.data) {
-                        filename  = name_elem.item(0).firstChild.data;
-                        handleDownload(dir, files[i].value, filename);
-                        break;
-                    }
+                if (files[i].value === elements[j].path) {
+                    handleDownload(dir, files[i].value, elements[j].name);
+                    break;
                 }
             }
         }
