@@ -394,134 +394,118 @@ function getMovieInfo(movie_info_url, base_name, path) {
 
 function showInfoTable(httpRequest) {
     var content;
-    var best_video_index = NaN;
-    var best_video_width  = 640;
-    var best_video_height = 480;
-    var best_audio_index = NaN;
 
     var data = httpRequest.responseXML;
     var video_table = "";
     var audio_table = "";
     var width, height;
 
-    var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
-    if (movie_info_elem !== null) {
-        var duration = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
-        var filename = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filename');
-        var filesize = getXmlFirstFindTagData(movie_info_elem.childNodes, 'filesize');
-        var format = getXmlFirstFindTagData(movie_info_elem.childNodes, 'format');
+    const xml = jsUtils.xml;
+    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
+    const properties = xml.getDataInElements(data, 'movie_info', ["filename", "filesize", "format", "duration"])[0];
 
-        var videos = movie_info_elem.getElementsByTagName('video');
-        var audios = movie_info_elem.getElementsByTagName('audio');
+    if (!properties) {
+        document.getElementById('information_table').innerHTML = "予期しないデータを受け取りました";
+        return;
+    }
 
-        if (videos.length > 0) {
-            for (var i=0; i<videos.length; i++) {
-                if (i === 0) {
-                    video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
-                }
-                video_table += makeVideoTable(videos[i].childNodes);
+    const videos = xml.getDataInElements(movie_info, 'video', ["no", "bitrate", "codec", "fps", "fps_average", "width", "height", "disp_width", "disp_height", "disp_aspect", "sar", "gop_size"]);
+    const audios = xml.getDataInElements(movie_info, 'audio', ['no' ,'sample_rate' ,'channel' ,'bitrate' ,'sample_fmt' ,'codec']);
+
+    if (videos.length > 0) {
+        for (var i=0; i<videos.length; i++) {
+            if (i === 0) {
+                video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
             }
-            best_video_index = getBestVideoStream(videos);
-            best_video_width  = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_width'));
-            best_video_height = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'disp_height'));
+            video_table += makeVideoTable(videos[i]);
         }
+    }
 
+    if (audios.length > 0) {
         for (var i=0; i<audios.length; i++) {
             if (i === 0) {
                 audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
             }
-            audio_table += makeAudioTable(audios[i].childNodes);
+            audio_table += makeAudioTable(audios[i]);
         }
-        best_audio_index = isNaN(best_video_index) ? getBestAudioStream(audios) : getNearestAudioStream(audios, videos, best_video_index);
-
-        content = `
-<table border="3">
-<tr><th colspan="3">全般</th></tr>
-<tr><th colspan="2">ファイル名</th><td>${filename}</td></tr>
-<tr><th colspan="2">ファイルサイズ</th><td>${filesize} Byte</td></tr>
-<tr><th colspan="2">時間</th><td>${duration}</td></tr>
-<tr><th colspan="2">フォーマット</th><td>${format}</td></tr>
-${video_table}
-${audio_table}
-</table>`;
-    } else {
-        content = "予期しないデータを受け取りました";
     }
 
-    document.getElementById('information_table').innerHTML = content;
+    document.getElementById('information_table').innerHTML
+        = "<table border=\"3\">"
+                + "<tr><th colspan=\"3\">全般</th></tr>"
+                + "<tr><th colspan=\"2\">ファイル名</th><td>" + properties.filename + "</td></tr>"
+                + "<tr><th colspan=\"2\">ファイルサイズ</th><td>" + properties.filesize + " Byte</td></tr>"
+                + "<tr><th colspan=\"2\">時間</th><td>" + properties.duration + "</td></tr>"
+                + "<tr><th colspan=\"2\">フォーマット</th><td>" + properties.format + "</td></tr>"
+                + video_table + audio_table + "</table>";
+
+    const best_stream = getBestStream(videos, audios);
 
     // check radio button
-    if (isNaN(best_video_index) === false) {
-        document.getElementsByName('v_map')[best_video_index].checked = true;
-        setPreviewSize(document.getElementById('vimg'), best_video_width, best_video_height);
+    if (isNaN(best_stream.video.index) === false) {
+        document.getElementsByName('v_map')[best_stream.video.index].checked = true;
+        doVideoStreamSelected(best_stream.video.no);
     }
-    if (isNaN(best_audio_index) === false) {
-        document.getElementsByName('a_map')[best_audio_index].checked = true;
+    if (isNaN(best_stream.audio.index) === false) {
+        document.getElementsByName('a_map')[best_stream.audio.index].checked = true;
     }
 }
 
-function makeVideoTable(video_elem) {
-    const vid_no       = getXmlFirstFindTagData(video_elem, 'no');
-    const vid_bitrate  = getXmlFirstFindTagData(video_elem, 'bitrate');
-    const vid_codec    = getXmlFirstFindTagData(video_elem, 'codec');
-    const vid_fps      = getXmlFirstFindTagData(video_elem, 'fps');
-    const vid_fps_ave  = getXmlFirstFindTagData(video_elem, 'fps_average');
-    const vid_width    = getXmlFirstFindTagData(video_elem, 'width');
-    const vid_height   = getXmlFirstFindTagData(video_elem, 'height');
-    const disp_width   = getXmlFirstFindTagData(video_elem, 'disp_width');
-    const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
-    const vid_sar      = getXmlFirstFindTagData(video_elem, 'sar');
-    const disp_aspect  = getXmlFirstFindTagData(video_elem, 'disp_aspect');
-    const vid_gop_size = getXmlFirstFindTagData(video_elem, 'gop_size');
-
+function makeVideoTable(vid) {
     var print_average = "";
-    if (isNaN(vid_fps_ave) === false) {
-        print_average = "(平均 " + vid_fps_ave + ")";
+    if (isNaN(vid.fps_average) === false) {
+        print_average = "(平均 " + vid.fps_average + ")";
     }
 
     return `
-<tr><td rowspan="6"><input type="radio" name="v_map" value="${vid_no}" onClick="doVideoStreamSelected(${vid_no})">${vid_no}</td>
-<th>幅 x 高さ</th><td id="size_${vid_no}">${vid_width} x ${vid_height} (SAR ${vid_sar})</td></tr>
-<tr><th>表示上のサイズ</th><td id="disp_${vid_no}">${disp_width} x ${disp_height} (DAR ${disp_aspect})</td></tr>
-<tr><th>ビットレート</th><td id="bps_${vid_no}">${vid_bitrate}</td></tr>
-<tr><th>コーデック</th><td>${vid_codec}</td></tr>
-<tr><th>フレームレート</th><td id="fps_${vid_no}">${vid_fps} ${print_average}</td></tr>
-<tr><th>GOP</th><td>${vid_gop_size}</td></tr>
+<tr><td rowspan="6"><input type="radio" name="v_map" value="${vid.no}" onClick="doVideoStreamSelected(${vid.no})">${vid.no}</td>
+<th>幅 x 高さ</th><td id="size_${vid.no}">${vid.width} x ${vid.height} (SAR ${vid.sar})</td></tr>
+<tr><th>表示上のサイズ</th><td id="disp_${vid.no}">${vid.disp_width} x ${vid.disp_height} (DAR ${vid.disp_aspect})</td></tr>
+<tr><th>ビットレート</th><td id="bps_${vid.no}">${vid.bitrate}</td></tr>
+<tr><th>コーデック</th><td>${vid.codec}</td></tr>
+<tr><th>フレームレート</th><td id="fps_${vid.no}">${vid.fps} ${print_average}</td></tr>
+<tr><th>GOP</th><td>${vid.gop_size}</td></tr>
 `;
 }
 
-function makeAudioTable(audio_elem) {
-    const aud_no          = getXmlFirstFindTagData(audio_elem, 'no');
-    const aud_sample_rate = getXmlFirstFindTagData(audio_elem, 'sample_rate');
-    const aud_channel     = getXmlFirstFindTagData(audio_elem, 'channel');
-    const aud_bitrate     = getXmlFirstFindTagData(audio_elem, 'bitrate');
-    const aud_bits        = getXmlFirstFindTagData(audio_elem, 'sample_fmt');
-    const aud_codec       = getXmlFirstFindTagData(audio_elem, 'codec');
-
+function makeAudioTable(aud) {
     return `
-<tr><td rowspan="5"><input type="radio" name="a_map" value="${aud_no}">${aud_no}</td>
-<th>サンプリングレート</th><td>${aud_sample_rate}</td></tr>
-<tr><th>チャンネル</th><td>${aud_channel}</td></tr>
-<tr><th>ビットレート</th><td>${aud_bitrate}</td></tr>
-<tr><th>ビット数</th><td>${aud_bits}</td></tr>
-<tr><th>コーデック</th><td>${aud_codec}</td></tr>
+<tr><td rowspan="5"><input type="radio" name="a_map" value="${aud.no}">${aud.no}</td>
+<th>サンプリングレート</th><td>${aud.sample_rate}</td></tr>
+<tr><th>チャンネル</th><td>${aud.channel}</td></tr>
+<tr><th>ビットレート</th><td>${aud.bitrate}</td></tr>
+<tr><th>ビット数</th><td>${aud.sample_fmt}</td></tr>
+<tr><th>コーデック</th><td>${aud.codec}</td></tr>
 `;
+}
+
+function getBestStream(videos, audios) {
+    if (videos.length === 0) {
+        return {
+            video: {no: NaN, index: NaN},
+            audio: getBestAudioStream(audios)
+        };
+    }
+
+    const best_video = getBestVideoStream(videos);
+    return {
+        video: best_video,
+        audio: getNearestAudioStream(audios, best_video.no)
+    };
 }
 
 function getBestVideoStream(videos) {
     var ret_index = 0;
     var max_pixel_dimension = 0;
-    var max_fps = NaN;
+    var max_fps = 0;
     var max_bitrate = NaN;
     var max_pixel_streams = new Array();
 
     // 最も大きい解像度のストリームを探す
     for (var i=0; i<videos.length; i++) {
-        const video_elem = videos[i].childNodes;
-        const vid_width  = parseInt(getXmlFirstFindTagData(video_elem, 'width'));
-        const vid_height = parseInt(getXmlFirstFindTagData(video_elem, 'height'));
-        const pixel_dimension = vid_width * vid_height;
-
+        const width  = jsUtils.value.replaceNanToZero(videos[i].width)
+        const height = jsUtils.value.replaceNanToZero(videos[i].height);
+        const pixel_dimension = width * height;
         if (max_pixel_dimension < pixel_dimension) {
             max_pixel_dimension = pixel_dimension;
         }
@@ -529,11 +513,9 @@ function getBestVideoStream(videos) {
 
     // 最大解像度と同じストリームが複数ある場合を想定してインデックスを保持する
     for (var i=0; i<videos.length; i++) {
-        const video_elem = videos[i].childNodes;
-        const vid_width   = parseInt(getXmlFirstFindTagData(video_elem, 'width'));
-        const vid_height  = parseInt(getXmlFirstFindTagData(video_elem, 'height'));
-        const pixel_dimension = vid_width * vid_height;
-
+        const width  = jsUtils.value.replaceNanToZero(videos[i].width)
+        const height = jsUtils.value.replaceNanToZero(videos[i].height);
+        const pixel_dimension = width * height;
         if (max_pixel_dimension === pixel_dimension) {
             max_pixel_streams.push(i);
         }
@@ -541,27 +523,19 @@ function getBestVideoStream(videos) {
 
     // 最も大きい解像度のストリームの中から最もfpsが高いストリームを探す
     for (var i=0; i< max_pixel_streams.length; i++) {
-        const video_elem = videos[max_pixel_streams[i]].childNodes;
-        const vid_fps = parseInt(getXmlFirstFindTagData(video_elem, 'fps'));
-        if (isNaN(vid_fps) === false) {
-            if (isNaN(max_fps) === true) {
-                max_fps = vid_fps;
-            } else {
-                if (max_fps < vid_fps) {
-                    max_fps = vid_fps;
-                }
-            }
+        const vid_fps = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].fps);
+        if (max_fps < vid_fps) {
+            max_fps = vid_fps;
         }
     }
 
     // 更にビットレートで比較
     for (var i=0; i< max_pixel_streams.length; i++) {
-        const video_elem  = videos[max_pixel_streams[i]].childNodes;
-        const vid_fps     = parseInt(getXmlFirstFindTagData(video_elem, 'fps'));
-        const vid_bitrate = parseInt(getXmlFirstFindTagData(video_elem, 'bitrate'));
+        const vid_fps = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].fps);
+        const vid_bitrate = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].bitrate);
 
-        if (isNaN(max_fps) === true || vid_fps === max_fps) {
-            if (isNaN(vid_bitrate) === false && vid_bitrate !== 0) {
+        if (max_fps && vid_fps === max_fps) {
+            if (vid_bitrate) {
                 if (isNaN(max_bitrate) === true) {
                     max_bitrate = vid_bitrate;
                     ret_index = max_pixel_streams[i];
@@ -577,21 +551,21 @@ function getBestVideoStream(videos) {
         }
     }
 
-    return ret_index;
+    return {
+        index: ret_index,
+        no: parseInt(videos[ret_index].no)
+    };
 }
 
-function getNearestAudioStream(audios, videos, best_video_index) {
-    var best_video_no = parseInt(getXmlFirstFindTagData(videos[best_video_index].childNodes, 'no'));
-
+function getNearestAudioStream(audios, best_video_no) {
     for (var i=0; i<audios.length; i++) {
-        const audio_elem = audios[i].childNodes;
-        const aud_no = parseInt(getXmlFirstFindTagData(audio_elem, 'no'));
+        const aud_no = jsUtils.value.replaceNanToZero(audios[i].no);
         if ((best_video_no > 0 && best_video_no -1 === aud_no) || best_video_no + 1 === aud_no) {
-            return i;
+            return {index: i, no: aud_no};
         }
     }
 
-    return 0;
+    return {index: 0, no: parseInt(audios[0].no)};
 }
 
 function getBestAudioStream(audios) {
@@ -602,44 +576,36 @@ function getBestAudioStream(audios) {
     var max_channel_streams = new Array();
 
     for (var i=0; i<audios.length; i++) {
-        const audio_elem = audios[i].childNodes;
-        const aud_channel = parseInt(getXmlFirstFindTagData(audio_elem, 'channel'));
+        const aud_channel = jsUtils.value.replaceNanToZero(audios[i].channel);
         if (max_channel < aud_channel) {
             max_channel = aud_channel;
         }
     }
 
     for (var i=0; i<audios.length; i++) {
-        const audio_elem = audios[i].childNodes;
-        const aud_channel = parseInt(getXmlFirstFindTagData(audio_elem, 'channel'));
-
+        const aud_channel = jsUtils.value.replaceNanToZero(audios[i].channel);
         if (max_channel === aud_channel) {
             max_channel_streams.push(i);
         }
     }
 
     for (var i=0; i<max_channel_streams.length; i++) {
-        const audio_elem = audios[max_channel_streams[i]].childNodes;
-        const aud_sample_rate = parseInt(getXmlFirstFindTagData(audio_elem, 'sample_rate'));
-
-        if (isNaN(aud_sample_rate) === false) {
-            if (isNaN(max_sample_rate) === true) {
+        const aud_sample_rate = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].sample_rate);
+        if (isNaN(max_sample_rate) === true) {
+            max_sample_rate = aud_sample_rate;
+        } else {
+            if (max_sample_rate < aud_sample_rate) {
                 max_sample_rate = aud_sample_rate;
-            } else {
-                if (max_sample_rate < aud_sample_rate) {
-                    max_sample_rate = aud_sample_rate;
-                }
             }
         }
     }
 
     for (var i=0; i<max_channel_streams.length; i++) {
-        const audio_elem = audios[max_channel_streams[i]].childNodes;
-        const aud_sample_rate = parseInt(getXmlFirstFindTagData(audio_elem, 'sample_rate'));
-        const aud_bitrate     = parseInt(getXmlFirstFindTagData(audio_elem, 'bitrate'));
+        const aud_sample_rate = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].sample_rate);
+        const aud_bitrate     = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].bitrate);
 
-        if (isNaN(max_sample_rate) === true || max_sample_rate === aud_sample_rate) {
-            if (isNaN(aud_bitrate) === false && aud_bitrate !== 0) {
+        if (max_sample_rate === aud_sample_rate) {
+            if (aud_bitrate !== 0) {
                 if (isNaN(max_bitrate) === true) {
                     max_bitrate = aud_bitrate;
                     ret_index = max_channel_streams[i];
@@ -655,7 +621,10 @@ function getBestAudioStream(audios) {
         }
     }
 
-    return ret_index;
+    return {
+        index: ret_index,
+        no: parseInt(audios[ret_index].no)
+    };
 }
 
 function doVideoStreamSelected(vid_no) {

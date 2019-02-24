@@ -224,7 +224,7 @@ function getMovieDuration(movie_info_url, base_name, path, vno) {
     ajax.init();
 
     ajax.setOnSuccess(function(httpRequest) {
-        getMovieDurationResult(httpRequest, vno);
+        getMovieDurationResult(httpRequest.responseXML, vno);
         callGetSceneData();
     });
     ajax.setOnError(function(httpRequest) {
@@ -235,25 +235,23 @@ function getMovieDuration(movie_info_url, base_name, path, vno) {
     ajax.post(movie_info_url, query);
 }
 
-function getMovieDurationResult(httpRequest, vno) {
-    var data = httpRequest.responseXML;
-    var width, height;
-    var movie_info_elem = getXmlFirstFindChildNode(data, 'movie_info');
-    if (movie_info_elem !== null) {
-        var hhmmssxxx = getXmlFirstFindTagData(movie_info_elem.childNodes, 'duration');
+function getMovieDurationResult(data, vno) {
+    const xml = jsUtils.xml;
+    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
+    const hhmmssxxx = xml.getFirstFoundTagData(movie_info.childNodes, 'duration');
+    if (hhmmssxxx) {
         duration = getSecondFromFormatTime(hhmmssxxx);
         moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
 
-        var videos = movie_info_elem.getElementsByTagName('video');
+        const videos = xml.getDataInElements(movie_info, 'video', ["no", "disp_width", "disp_height"]);
         for (var i=0; i<videos.length; i++) {
-            var video_elem = videos[i].childNodes;
-            const vid_no = getXmlFirstFindTagData(video_elem, 'no');
-            if (vid_no === vno) {
-                const disp_width   = getXmlFirstFindTagData(video_elem, 'disp_width');
-                const disp_height  = getXmlFirstFindTagData(video_elem, 'disp_height');
+            const v = videos[i];
+            if (vno === v.no) {
+                const disp_width   = parseInt(v.disp_width);
+                const disp_height  = parseInt(v.disp_height);
                 if (disp_width.length !== 0 && disp_height !== 0) {
-                    setPreviewSize(document.getElementById('startPreviewArea'), parseInt(disp_width), parseInt(disp_height));
-                    setPreviewSize(document.getElementById('endPreviewArea'), parseInt(disp_width), parseInt(disp_height));
+                    setPreviewSize(document.getElementById('startPreviewArea'), disp_width, disp_height);
+                    setPreviewSize(document.getElementById('endPreviewArea'), disp_width, disp_height);
                 }
             }
         }

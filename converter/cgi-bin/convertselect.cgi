@@ -62,7 +62,6 @@ my @jslist = (
       "%htdocs_root%/main.js",
       "%htdocs_root%/converter_common.js",
       "%htdocs_root%/convertselect.js",
-      "%htdocs_root%/stocker_xml.js",
 );
 my @csslist = (
       "%htdocs_root%/stocker.css",

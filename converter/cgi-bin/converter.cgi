@@ -213,7 +213,6 @@ sub print_form() {
       "%htdocs_root%/main.js",
       "%htdocs_root%/converter_common.js",
       "%htdocs_root%/converter_form.js",
-      "%htdocs_root%/stocker_xml.js",
   );
   my @csslist = (
       "%htdocs_root%/stocker.css",
