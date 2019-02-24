@@ -248,22 +248,5 @@ function downloadWork(dir) {
 
 function handleDownload(dir, file, filename) {
     const get_url = get_file_cgi + "?mime=application/force-download&dir=" + dir + "&file=" + file;
-    if (window.navigator.msSaveBlob) {  // IE
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", get_url, true);
-        xhr.responseType = "blob";
-        xhr.onload = function (e) {
-            var blob = xhr.response;
-            window.navigator.msSaveBlob(blob, filename);
-        }
-        xhr.send();
-    } else {  // chrome,firefox
-        var a = document.createElement('a');
-        a.href = get_url;
-        a.download = filename;
-
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
+    jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
 }
