@@ -76,7 +76,7 @@ Range::parse(const char *httprange)
         }
 
         if (strlen(to) == 0) {
-            len.end = maxsize;
+            len.end = maxsize - 1;
         } else {
             len.end = (size_t)strtol(to, &endptr, 10);
             if (to == endptr) {
