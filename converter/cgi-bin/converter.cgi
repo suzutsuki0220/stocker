@@ -225,17 +225,17 @@ sub print_form() {
 
   $mes = <<EOF;
 <a href="${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}">← 戻る</a><br>
-<h1>ファイル変換</h1>
 EOF
   print encode('utf8', $mes);
 
   if ($mtype eq "video") {
     if (lc($path) =~ /\.mp4$/ || lc($path) =~ /\.m4v$/ || lc($path) =~ /\.mpg4$/) {
-      print "<video src=\"$mp4_url\" id=\"vimg\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
-    } else {
-      print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
+      print "<h1>動画プレビュー</h1>";
+      print "<video src=\"$mp4_url\" id=\"video_preview\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
     }
   }
+  print "<h1>ファイル変換</h1>";
+  print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
