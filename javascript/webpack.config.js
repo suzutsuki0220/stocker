@@ -9,7 +9,8 @@ ExtractTextPlugin = require('extract-text-webpack-plugin');
 module.exports = {
     mode: MODE,
     entry: [
-        './node_modules/@fortawesome/fontawesome-free/css/all.css',
+        './node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css',
+        './node_modules/@fortawesome/fontawesome-free/css/solid.min.css',
         './assets/scss/bulma.scss',
         './index.js'
     ],
@@ -55,6 +56,7 @@ module.exports = {
         ],
     },
     externals: [
+        'fs',
         'xmlhttprequest'
     ],
 };
