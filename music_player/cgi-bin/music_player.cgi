@@ -39,7 +39,7 @@ my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKet
 
 eval {
   my @jslist = (
-      "%htdocs_root%/main.js",
+      "%htdocs_root%/bundle.js",
       "%htdocs_root%/get_directory_list.js",
       "%htdocs_root%/music_player.js",
   );

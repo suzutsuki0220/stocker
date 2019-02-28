@@ -50,7 +50,7 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 
 eval {
   my @jslist = (
-      "%htdocs_root%/main.js",
+      "%htdocs_root%/bundle.js",
       "%htdocs_root%/stocker_list.js",
       "%htdocs_root%/get_directory_list.js",
   );

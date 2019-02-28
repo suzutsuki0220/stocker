@@ -59,7 +59,7 @@ my @skip_options = (
 );
 
 my @jslist = (
-      "%htdocs_root%/main.js",
+      "%htdocs_root%/bundle.js",
       "%htdocs_root%/converter_common.js",
       "%htdocs_root%/convertselect.js",
 );

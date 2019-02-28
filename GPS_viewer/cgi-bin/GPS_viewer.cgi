@@ -44,7 +44,7 @@ my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8
 eval {
   my @jslist = (
       "%htdocs_root%/ccchart-min.js",
-      "%htdocs_root%/main.js",
+      "%htdocs_root%/bundle.js",
       "%htdocs_root%/ajax_html_request.js",
       "%htdocs_root%/jsvalue.js",
       "%htdocs_root%/map_main.js",

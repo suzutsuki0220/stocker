@@ -51,7 +51,7 @@ install-libs:
 	cp -r lib/* $(LIBS_DIR)
 
 install-htdocs:
-	cp javascript/app/main.js $(DOCS_DIR)
+	cp javascript/app/bundle.js $(DOCS_DIR)
 	cp -r $(DOC_FILES) $(DOCS_DIR)
 	sed -i -e 's|%cgi_root%|$(CGI_ROOT)|g' \
 	       $(DOCS_DIR)/*.js $(DOCS_DIR)/*.html
