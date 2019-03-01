@@ -11,6 +11,7 @@ use ParamPath;
 use HTML_Elem;
 use MimeTypes;
 use FileOperator;
+use FileTypes;
 
 our $BASE_DIR_CONF;
 our $BOX_WIDTH;
@@ -140,15 +141,15 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   &show_prev_pagelink(@dir_list);
 }
 
-my $movie_pattern = makePatternString(\@support_video_types);
-my $music_pattern = makePatternString(\@support_audio_types);
-my $photo_pattern = makePatternString(\@support_image_types);
-my $gps_pattern = makePatternString(\@support_gps_types);
-my $txt_pattern = makePatternString(\@support_txt_types);
-my $doc_pattern = makePatternString(\@support_doc_types);
-my $excel_pattern = makePatternString(\@support_excel_types);
-my $ppt_pattern = makePatternString(\@support_ppt_types);
-my $pdf_pattern = makePatternString(\@support_pdf_types);
+my $movie_pattern = FileTypes->makeSuffixPatternString(\@support_video_types);
+my $music_pattern = FileTypes->makeSuffixPatternString(\@support_audio_types);
+my $photo_pattern = FileTypes->makeSuffixPatternString(\@support_image_types);
+my $gps_pattern = FileTypes->makeSuffixPatternString(\@support_gps_types);
+my $txt_pattern = FileTypes->makeSuffixPatternString(\@support_txt_types);
+my $doc_pattern = FileTypes->makeSuffixPatternString(\@support_doc_types);
+my $excel_pattern = FileTypes->makeSuffixPatternString(\@support_excel_types);
+my $ppt_pattern = FileTypes->makeSuffixPatternString(\@support_ppt_types);
+my $pdf_pattern = FileTypes->makeSuffixPatternString(\@support_pdf_types);
 
 ### ディレクトリ内のentry表示
 print <<EOD;
@@ -162,15 +163,15 @@ reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
 function printIcons(elements) {
   // 拡張子判定
-  var movie_pattern = /\\.(${movie_pattern})\$/;
-  var music_pattern = /\\.(${music_pattern})\$/;
-  var photo_pattern = /\\.(${photo_pattern})\$/;
-  var gps_pattern = /\\.(${gps_pattern})\$/;
-  var txt_pattern = /\\.(${txt_pattern})\$/;
-  var doc_pattern = /\\.(${doc_pattern})\$/;
-  var excel_pattern = /\\.(${excel_pattern})\$/;
-  var ppt_pattern = /\\.(${ppt_pattern})\$/;
-  var pdf_pattern = /\\.(${pdf_pattern})\$/;
+  var movie_pattern = ${movie_pattern};
+  var music_pattern = ${music_pattern};
+  var photo_pattern = ${photo_pattern};
+  var gps_pattern = ${gps_pattern};
+  var txt_pattern = ${txt_pattern};
+  var doc_pattern = ${doc_pattern};
+  var excel_pattern = ${excel_pattern};
+  var ppt_pattern = ${ppt_pattern};
+  var pdf_pattern = ${pdf_pattern};
 
 //  try {
     document.getElementById('directoryListArea').innerHTML = "";
@@ -456,17 +457,3 @@ sub getMimeType
   return MimeTypes->content_type($extention);
 }
 
-sub makePatternString
-{
-  my ($array_ref) = @_;
-  my $ret = "";
-
-  foreach my $type (@$array_ref) {
-    if (length($ret) != 0) {
-      $ret .= "|";
-    }
-    $ret .= $type;
-  }
-
-  return $ret;
-}
