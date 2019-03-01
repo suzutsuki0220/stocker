@@ -136,7 +136,7 @@ sub save_thumcache
   }
 
   copy("${thm_file}", encode('utf-8', "$cache_path"));
-  utime(undef, $lastmodified, encode('utf-8', "$cache_path"));
+  utime(time, $lastmodified, encode('utf-8', "$cache_path"));
 
   return 0;
 }

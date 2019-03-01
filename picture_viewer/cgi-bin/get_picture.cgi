@@ -156,7 +156,7 @@ eval {
   # キャッシュ保存
   if($size == 640) {
     copy("${TMP_FILE}", "$cache_path");
-    utime(undef, $lastmodified, "$cache_path");
+    utime(time, $lastmodified, "$cache_path");
   }
   unlink("${TMP_FILE}");
 

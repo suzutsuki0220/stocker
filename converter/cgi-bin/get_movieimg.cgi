@@ -50,7 +50,7 @@ my $param_dir = scalar($form->param('dir'));
 if (! $param_dir || length($param_dir) == 0) {
   $param_dir = "DEFAULT";
 }
-$MOVIE_IMAGE_CACHE_DIR =~ s/\/{1,}$//g;  # $BKvHx$K(B"/"$B$,IU$$$F$$$?$i>C$9(B
+$MOVIE_IMAGE_CACHE_DIR =~ s/\/{1,}$//g;  # 末尾に"/"が付いていたら消す
 my $cache = $MOVIE_IMAGE_CACHE_DIR ."/". $param_dir ."/". $path;
 
 my $size = 640;
@@ -203,7 +203,7 @@ sub save_imgcache()
     }
   }
   copy($TMP_PATH, $cache);
-  utime(undef, $lastmodified, $cache);
+  utime(time, $lastmodified, $cache);
 
   return 0;
 }
