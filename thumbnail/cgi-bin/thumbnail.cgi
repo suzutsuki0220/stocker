@@ -12,6 +12,7 @@ use File::Copy 'copy';
 use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
+use FileTypes;
 
 our $BASE_DIR_CONF;
 our $SUPPORT_TYPES;
@@ -52,23 +53,17 @@ if ($@) {
 my $ret = &thumbnail_cache($base_name, $base, $path);
 
 if ($ret != 0) {
-  $path =~ /\.(.*)$/;
-  my $suffix = $1 ? lc($1) : "";
-  foreach my $type (@support_video_types) {
-    if ($type eq $suffix) {
-      $ret = &thumbnail_cmd($movie_thumb_cmd, ${base}, ${path});
-      last;
-    }
-  }
-  if ($ret != 0) {
-    foreach my $type (@support_image_types) {
-      if ($type eq $suffix) {
-        $ret = &thumbnail_cmd($image_thumb_cmd, ${base}, ${path});
-        last;
-      }
-    }
+  if (FileTypes->isSuffixPatternMatch($path, \@support_video_types)) {
+    $ret = &thumbnail_cmd($movie_thumb_cmd, ${base}, ${path});
   }
 }
+
+if ($ret != 0) {
+  if (FileTypes->isSuffixPatternMatch($path, \@support_image_types)) {
+    $ret = &thumbnail_cmd($image_thumb_cmd, ${base}, ${path});
+  }
+}
+
 if ($ret != 0) {
   print STDERR "thumbnail ERROR: thumbnail command failed\n";
   print "Content-Type: image/jpeg\n";
