@@ -33,11 +33,11 @@ my $size = scalar($form->param('size'));
 
 my $base;
 my $path;
-my $base_name = scalar($form->param('dir'));
+my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_path = scalar($form->param('file'));
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
+  $ins->init_by_base_name($base_name);
   $path = decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
