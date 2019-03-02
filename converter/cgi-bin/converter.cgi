@@ -11,6 +11,7 @@ use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use ConverterJob;
+use FileTypes;
 
 our $STOCKER_CGI    = "";
 our $SELECTOR_CGI   = "";
@@ -233,9 +234,9 @@ EOF
       print "<h1>動画プレビュー</h1>";
       print "<video src=\"$mp4_url\" id=\"video_preview\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
     }
+    print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
   }
   print "<h1>ファイル変換</h1>";
-  print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
   print "<h2>変換元ファイル</h2>\n";
 
   foreach (@files) {
@@ -780,15 +781,11 @@ sub check_capable_type
 {
   my ($file) = @_;
 
-  foreach my $type (@support_video_types) {
-    if (lc($file) =~ /\.${type}$/) {
-      return "video";
-    }
+  if (FileTypes->isSuffixPatternMatch($file, \@support_video_types)) {
+    return "video";
   }
-  foreach my $type (@support_audio_types) {
-    if (lc($file) =~ /\.${type}$/) {
-      return "audio";
-    }
+  if (FileTypes->isSuffixPatternMatch($file, \@support_audio_types)) {
+    return "audio";
   }
   return "unsupported";
 }
