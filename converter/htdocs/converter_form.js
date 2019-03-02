@@ -628,13 +628,12 @@ function getBestAudioStream(audios) {
 }
 
 function doVideoStreamSelected(vid_no) {
-    var width, height, disp_width, disp_height, fps;
+    var width, height, disp_width, disp_height;
 
     var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/;
-    var fps_pattern = /^(\d+).*$/;
     var size_str = document.getElementById("size_" + vid_no).innerHTML;
     var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
-    var fps_str  = document.getElementById("fps_" + vid_no).innerHTML;
+    var fps  = parseFloat(document.getElementById("fps_" + vid_no).innerHTML);
     var bps  = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
 
     var wxh_result = wxh_pattern.exec(size_str);
@@ -644,9 +643,6 @@ function doVideoStreamSelected(vid_no) {
     var disp_wxh_result = wxh_pattern.exec(disp_str);
     disp_width  = parseInt(disp_wxh_result[1]);
     disp_height = parseInt(disp_wxh_result[2]);
-
-    var fps_result = fps_pattern.exec(fps_str);
-    fps = parseFloat(fps_result[1]);
 
     if (bps === 0) {
         bps = Math.floor(width * height * fps * 0.125);
