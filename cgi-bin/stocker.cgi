@@ -204,7 +204,7 @@ function printIcons(elements) {
             action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (txt_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_TEXT}";
-            action = "${TEXT_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "%htdocs_root%/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (doc_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MS_WORD}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
