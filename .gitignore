@@ -48,4 +48,4 @@ pids
 *.seed
 *.pid.lock
 
-javascript/app/main.js
+javascript/app/bundle.js
