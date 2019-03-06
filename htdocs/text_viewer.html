@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="has-navbar-fixed-top">
 <head>
 <meta charset="utf-8" />
 <meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -19,7 +19,9 @@
             document.getElementById('fileNameArea').textContent = properties.name;
 
             const params = jsUtils.url.getRawParams();
-            document.getElementById('backAnchor').href = stockerConfig.cgi_root + '/stocker.cgi?dir=' + params.dir + '&file=' + properties.up_path;
+            const back = stockerConfig.cgi_root + '/stocker.cgi?dir=' + params.dir + '&file=' + properties.up_path;
+            document.getElementById('backAnchor').href = back;
+            document.getElementById('backBurgerAnchor').href = back;
 
             getTextContents();
         });
@@ -47,10 +49,25 @@
 <title></title>
 </head>
 <body>
-<a id="backAnchor" href="#">← 戻る</a><br>
-<h1 id="fileNameArea"></h1>
-<hr>
-<pre id="textDataArea"></pre>
+  <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <h1 class="navbar-item" id="fileNameArea"></h1>
+      <a role="button" class="navbar-burger is-active" aria-label="menu" id="backBurgerAnchor" href="#" aria-expanded="false">
+        <span aria-hidden="true"></span> <!-- It has to contain three empty (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+      </div>
+      <div class="navbar-end">
+        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
+      </div>
+    </div>
+  </nav>
+
+  <pre id="textDataArea"></pre>
 
 <script type="text/javascript">
     getFileProperties();
