@@ -26,42 +26,11 @@ function print_aspect(location) {
     }
 }
 
-function get_ratio(a,b) {
-    if (isNaN(a) || isNaN(b)) {
-        return 0;
-    }
-    if (a == 0 || b == 0) {
-        return 0;
-    }
-
-    while (a != b) {
-        if (a > b) {
-            r = a - b;
-            a = b;
-            b = r;
-        } else {
-            r = b - a;
-            b = r;
-        }
-        if (a <= 0 || b <= 0) {
-            return 0;
-        }
-    }
-    return a;
-}
-
 // 表示比率を求める
 function get_video_aspect(width, height) {
-    var x_ratio = 1;
-    var y_ratio = 1;
-    var vid_ratio = get_ratio(width, height);
-    if(vid_ratio != 0) {
-        x_ratio = width / vid_ratio;
-        y_ratio = height / vid_ratio;
-        return x_ratio + ":" + y_ratio;
-    } else {
-        return "-----";
-    }
+    const ratio = jsUtils.image.getAspect({width: width, height: height});
+
+    return ratio ? ratio.x + ":" + ratio.y : "-----";
 }
 
 // 解像度とfpsから最適なビットレートを計算する
