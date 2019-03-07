@@ -476,7 +476,7 @@ function getBestVideoStream(videos) {
         if (max_pixel_dimension < pixel_dimension) {
             // 最大解像度が更新された
             max_pixel_dimension = pixel_dimension;
-            max_pixel_streams = (i);  // 既に保持しているArrayを消して作り直す
+            max_pixel_streams = [i];  // 既に保持しているArrayを消して作り直す
         } else if (max_pixel_dimension === pixel_dimension) {
             // 最大解像度と同じストリームが複数ある場合を想定してインデックスを保持する
             max_pixel_streams.push(i);
