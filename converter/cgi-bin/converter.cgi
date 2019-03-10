@@ -626,6 +626,8 @@ EOF
 <br>
 <input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
 <span id="TrimSel" style="display: none">
+<input type="button" name="preset_crop43" onClick="setPresetCrop43()" value="to 4:3">
+<br>
 サイズ <input type="text" name="crop_w" onChange="print_aspect('crop')" size="5">x<input type="text" name="crop_h" onChange="print_aspect('crop')" size="5">
 (比率 <span id="crop_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="crop_x" size="5">x<input type="text" name="crop_y" size="5">

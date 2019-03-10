@@ -16,6 +16,17 @@ function getRadioButtonValue(elem) {
     return ret;
 }
 
+function setFormValues(items) {
+    const keys = Object.keys(items);
+    for (var i=0; i<keys.length; i++) {
+        const k = keys[i];
+        const e = document.getElementsByName(k)[0];
+        if (e) {
+            e.value = items[k];
+        }
+    }
+}
+
 function setPreviewSize(element, disp_width, disp_height) {
     const preview_width  = element.clientWidth;
     const preview_height = Math.floor(preview_width / disp_width * disp_height);
