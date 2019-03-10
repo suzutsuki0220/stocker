@@ -51,22 +51,13 @@ function isValidFormatTime(time_str) {
     return true;
 }
 
-function formatTime(hour, min, sec, mili) {
-    hour = ("0" + hour).substr(-2);
-    min  = ("0" + min).substr(-2);
-    sec  = ("0" + sec).substr(-2);
-    mili = ("00" + mili).substr(-3);
-
-    return hour + ":" + min + ":" + sec + "." + mili;
-}
-
 function getFormatTimeFromSecond(milisec) {
     var hour = Math.floor(milisec / 3600000);
     var min  = Math.floor((milisec - hour * 3600000) / 60000);
     var sec  = Math.floor(((milisec - hour * 3600000) - (min * 60000)) / 1000);
     var mili = milisec - hour * 3600000 - min * 60000 - sec * 1000;
 
-    return formatTime(hour, min, sec, mili);
+    return jsUtils.datetime.getFormatTime(hour, min, sec, mili);
 }
 
 function getSecondFromFormatTime(format_time) {
