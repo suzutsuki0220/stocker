@@ -1,5 +1,44 @@
 var selectedVideo = new Object();
 
+const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'out_dir', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
+
+function makeEncodeQuery() {
+    const getNamedValue = function(key) {
+        const e = document.getElementsByName(key);
+        var v = "";
+        if (e && e[0]) {
+            if (e[0].type === 'checkbox') {
+                v = e[0].checked ? 'true' : 'false';
+            } else {
+                v = e[0].value;
+            }
+        }
+
+        return v;
+    };
+
+    var query = "mode=encode";
+
+    const files = document.getElementsByName('file');
+    for (var i=0; i<files.length; i++) {
+        query += '&file=' + files[i].value;
+    }
+
+    for (var i=0; i<=timeSelNum; i++) {
+        const ss = 'ss' + i;
+        const t = 't' + i;
+
+        query += '&' + ss + '=' + getNamedValue(ss);
+        query += '&' + t  + '=' + getNamedValue(t);
+    }
+
+    for (var i=0; i<enc_params.length; i++) {
+        query += '&' + enc_params[i] + '=' + getNamedValue(enc_params[i]);
+    }
+
+    return query;
+}
+
 // 隠している部分を表示する
 function showElem(fElem, checkbox) {
     if (checkbox.checked == true) {
