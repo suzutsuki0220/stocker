@@ -17,7 +17,7 @@ function makeEncodeQuery() {
         return v;
     };
 
-    var query = "mode=encode";
+    var query = "mode=encode&dir=" + getNamedValue('dir');
 
     const files = document.getElementsByName('file');
     for (var i=0; i<files.length; i++) {
