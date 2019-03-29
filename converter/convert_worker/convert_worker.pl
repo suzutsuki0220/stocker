@@ -17,6 +17,7 @@ our $TMP_PATH       = "";
 our $CONV_OUT_DIR   = "";
 our $ENCODE_BATCH   = "";
 our $ENCBATCH_LIST  = "";
+our $ENCODING_THREAD = "2";
 require '%conf_dir%/converter.conf';
 
 our @CONVERT_PARAMS;
@@ -100,7 +101,7 @@ sub set_general_option
   my ($job) = @_;
   my $general_option = "";
   $general_option .= " -y";  # 強制上書き
-  $general_option .= " -threads 2";  # エンコードスレッド数
+  $general_option .= " -threads ".${ENCODING_THREAD};  # エンコードスレッド数
 
 #  privent unspecified sample format ERROR
 #  $general_option .= " -analyzeduration 30M -probesize 30M";
