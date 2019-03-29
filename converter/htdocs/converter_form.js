@@ -1,3 +1,44 @@
+var selectedVideo = new Object();
+
+const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'out_dir', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
+
+function makeEncodeQuery() {
+    const getNamedValue = function(key) {
+        const e = document.getElementsByName(key);
+        var v = "";
+        if (e && e[0]) {
+            if (e[0].type === 'checkbox') {
+                v = e[0].checked ? 'true' : 'false';
+            } else {
+                v = e[0].value;
+            }
+        }
+
+        return v;
+    };
+
+    var query = "mode=encode&dir=" + getNamedValue('dir');
+
+    const files = document.getElementsByName('file');
+    for (var i=0; i<files.length; i++) {
+        query += '&file=' + files[i].value;
+    }
+
+    for (var i=0; i<=timeSelNum; i++) {
+        const ss = 'ss' + i;
+        const t = 't' + i;
+
+        query += '&' + ss + '=' + getNamedValue(ss);
+        query += '&' + t  + '=' + getNamedValue(t);
+    }
+
+    for (var i=0; i<enc_params.length; i++) {
+        query += '&' + enc_params[i] + '=' + getNamedValue(enc_params[i]);
+    }
+
+    return query;
+}
+
 // 隠している部分を表示する
 function showElem(fElem, checkbox) {
     if (checkbox.checked == true) {
@@ -590,8 +631,6 @@ function getBestAudioStream(audios) {
 }
 
 function doVideoStreamSelected(vid_no) {
-    var width, height, disp_width, disp_height;
-
     var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/;
     var size_str = document.getElementById("size_" + vid_no).innerHTML;
     var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
@@ -599,24 +638,55 @@ function doVideoStreamSelected(vid_no) {
     var bps  = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
 
     var wxh_result = wxh_pattern.exec(size_str);
-    width  = parseInt(wxh_result[1]);
-    height = parseInt(wxh_result[2]);
+    selectedVideo.width  = parseInt(wxh_result[1]);
+    selectedVideo.height = parseInt(wxh_result[2]);
 
     var disp_wxh_result = wxh_pattern.exec(disp_str);
-    disp_width  = parseInt(disp_wxh_result[1]);
-    disp_height = parseInt(disp_wxh_result[2]);
+    selectedVideo.disp_width  = parseInt(disp_wxh_result[1]);
+    selectedVideo.disp_height = parseInt(disp_wxh_result[2]);
 
     if (bps === 0) {
-        bps = Math.floor(width * height * fps * 0.125);
+        bps = Math.floor(selectedVideo.width * selectedVideo.height * fps * 0.125);
     }
 
-    document.enc_setting.s_w.value = disp_width - (disp_width % 8);
-    document.enc_setting.s_h.value = disp_height - (disp_height % 8);
-    document.enc_setting.r.value = Math.floor(fps * 100) / 100;  // 少数点第2位以下は捨てる
-    document.enc_setting.b.value = Math.floor(bps / 1000);
+    var obj = {
+        s_w: selectedVideo.disp_width - (selectedVideo.disp_width % 8),
+        s_h: selectedVideo.disp_height - (selectedVideo.disp_height % 8),
+        r:   jsUtils.value.round(fps, 2),  // 少数点第2位以下は捨てる
+        b:   Math.floor(bps / 1000)
+    };
+    setFormValues(obj);
 
     document.getElementById('vimg').src = getPreviewUrl(640);
-    setPreviewSize(document.getElementById('vimg'), disp_width, disp_height);
+    setPreviewSize(document.getElementById('vimg'), selectedVideo.disp_width, selectedVideo.disp_height);
+}
+
+function setPresetCrop43() {
+    const image = jsUtils.image;
+
+    const disp = {
+        width: selectedVideo.disp_width,
+        height: selectedVideo.disp_height
+    };
+    const ratio = jsUtils.image.getAspect(disp);
+    const gcd = jsUtils.value.getGcd(disp.width, disp.height);
+
+    const crop_size = {
+        width:  gcd * 4 * (ratio.y / 3),
+        height: disp.height
+    };
+    const center = image.getCenteringPositionXY(crop_size, disp);
+
+    const disp_stretch_x = selectedVideo.width / disp.width;
+    const disp_stretch_y = selectedVideo.height / disp.height;
+
+    var obj = {
+        crop_w: crop_size.width * disp_stretch_x,
+        crop_h: crop_size.height * disp_stretch_y,
+        crop_x: center.x * disp_stretch_x,
+        crop_y: center.y * disp_stretch_y
+    }
+    setFormValues(obj);
 }
 
 var timeSelNum = 0;

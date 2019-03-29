@@ -105,6 +105,11 @@ exit(0);
 
 #############################
 
+sub getBoolean() {
+  my ($param) = @_;
+  return $param ? $param : 'false';
+}
+
 ### エンコード
 sub perform_encode() {
   HTML_Elem->header();
@@ -141,7 +146,7 @@ sub add_encodejob()
   $job->{source} = $source;
   $job->{out_dir} = decode('utf-8', $q->param('out_dir'));
   $job->{format} = $q->param('format');
-  if ($q->param('set_position')) {
+  if (&getBoolean($q->param('set_position')) eq 'true') {
     $job->{set_position} = 'true';
     my @ss_list = ();
     my @t_list = ();
@@ -156,15 +161,15 @@ sub add_encodejob()
   } else {
     $job->{set_position} = 'false';
   }
-  $job->{pass2} = $q->param('pass2') ? 'true' : 'false';
+  $job->{pass2} = &getBoolean($q->param('pass2'));
   $job->{v_v_map} = $q->param('v_map');
-  $job->{v_v_copy} = $q->param('v_copy') ? 'true' : 'false';
-  $job->{v_enable_crop} = $q->param('enable_crop') ? 'true' : 'false';
+  $job->{v_v_copy} = &getBoolean($q->param('v_copy'));
+  $job->{v_enable_crop} = &getBoolean($q->param('enable_crop'));
   $job->{v_crop_w} = $q->param('crop_w');
   $job->{v_crop_h} = $q->param('crop_h');
   $job->{v_crop_x} = $q->param('crop_x');
   $job->{v_crop_y} = $q->param('crop_y');
-  $job->{v_enable_pad} = $q->param('enable_pad') ? 'true' : 'false';
+  $job->{v_enable_pad} = &getBoolean($q->param('enable_pad'));
   $job->{v_pad_w} = $q->param('pad_w');
   $job->{v_pad_h} = $q->param('pad_h');
   $job->{v_pad_x} = $q->param('pad_x');
@@ -177,7 +182,7 @@ sub add_encodejob()
   $job->{v_aspect_denominator} = $q->param('aspect_denominator');
   $job->{v_r} = $q->param('r');
   $job->{v_b} = $q->param('b');
-  $job->{v_enable_adjust} = $q->param('enable_adjust') ? 'true' : 'false';
+  $job->{v_enable_adjust} = &getBoolean($q->param('enable_adjust'));
   $job->{v_brightness} = $q->param('brightness');
   $job->{v_contrast} = $q->param('contrast');
   $job->{v_gamma} = $q->param('gamma');
@@ -188,10 +193,10 @@ sub add_encodejob()
   $job->{v_gg} = $q->param('gg');
   $job->{v_bg} = $q->param('bg');
   $job->{v_weight} = $q->param('weight');
-  $job->{v_deinterlace} = $q->param('deinterlace') ? 'true' : 'false';
-  $job->{v_deshake} = $q->param('deshake')? 'true' : 'false';
+  $job->{v_deinterlace} = &getBoolean($q->param('deinterlace'));
+  $job->{v_deshake} = &getBoolean($q->param('deshake'));
   $job->{a_a_map} = $q->param('a_map');
-  $job->{a_a_copy} = $q->param('a_copy') ? 'true' : 'false';
+  $job->{a_a_copy} = &getBoolean($q->param('a_copy'));
   $job->{a_ar} = $q->param('ar');
   $job->{a_ab} = $q->param('ab');
   $job->{a_ac} = $q->param('ac');
@@ -554,12 +559,13 @@ EOD
       document.getElementById('sStatus').innerHTML = "登録中...";
     });
     ajax.setOnSuccess(function(httpRequest) {
-      document.getElementById('sStatus').innerHTML = "完了";
+      document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
     });
     ajax.setOnError(function(httpRequest) {
       document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
     });
-    ajax.post("$ENV{'SCRIPT_NAME'}", query);
+
+    ajax.post("$ENV{'SCRIPT_NAME'}", makeEncodeQuery());
   }
 -->
 </script>
@@ -626,6 +632,8 @@ EOF
 <br>
 <input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
 <span id="TrimSel" style="display: none">
+<input type="button" name="preset_crop43" onClick="setPresetCrop43()" value="to 4:3">
+<br>
 サイズ <input type="text" name="crop_w" onChange="print_aspect('crop')" size="5">x<input type="text" name="crop_h" onChange="print_aspect('crop')" size="5">
 (比率 <span id="crop_aspect">-----</span>)
 &nbsp;&nbsp;地点 <input type="text" name="crop_x" size="5">x<input type="text" name="crop_y" size="5">
@@ -740,8 +748,7 @@ weight
 
 <div id="sStatus"></div>
 <p style="text-align: center">
-<!-- <input type="button" value="変換する" onClick="addJob()"> -->
-<input type="submit" value="変換する">
+<input type="button" class="button is-primary" value="変換する" onClick="addJob()">
 </p>
 </form>
 EOF

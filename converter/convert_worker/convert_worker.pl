@@ -17,6 +17,7 @@ our $TMP_PATH       = "";
 our $CONV_OUT_DIR   = "";
 our $ENCODE_BATCH   = "";
 our $ENCBATCH_LIST  = "";
+our $ENCODING_THREAD = "2";
 require '%conf_dir%/converter.conf';
 
 our @CONVERT_PARAMS;
@@ -78,9 +79,7 @@ sub worker
   while ($job) {
     if($$job->{'pass2'} eq "true") {
       # 2pass 有効
-      mkpath("${TMP_PATH}");
       &run_converter($job, 1, $log_file) and &run_converter($job, 2, $log_file);
-      rmtree("${TMP_PATH}");
     } else {
       # 2pass 無効
       &run_converter($job, 0, $log_file);
@@ -102,7 +101,7 @@ sub set_general_option
   my ($job) = @_;
   my $general_option = "";
   $general_option .= " -y";  # 強制上書き
-  $general_option .= " -threads 2";  # エンコードスレッド数
+  $general_option .= " -threads ".${ENCODING_THREAD};  # エンコードスレッド数
 
 #  privent unspecified sample format ERROR
 #  $general_option .= " -analyzeduration 30M -probesize 30M";
@@ -140,10 +139,11 @@ sub set_video_option
   }
   if($$job->{'v_deshake'} eq "true") {
 #    push(@vf_option, "deshake=rx=64:ry=64,crop=9/10*in_w:9/10*in_h");
+    my $analyze_result = $CONV_OUT_DIR ."/". $$job->{'out_dir'} . "/stabilize.trf";
     if ($pass == 1) {
-      push(@vf_option, "vidstabdetect=shakiness=10:accuracy=15:result=\"${TMP_PATH}/stabilize.trf\"");
+      push(@vf_option, "vidstabdetect=shakiness=10:accuracy=15:result=\"${analyze_result}\"");
     } elsif ($pass == 2) {
-      push(@vf_option, "vidstabtransform=zoom=5:input=\"${TMP_PATH}/stabilize.trf\"");
+      push(@vf_option, "vidstabtransform=zoom=5:input=\"${analyze_result}\"");
     }
   }
   if($$job->{'v_enable_crop'} eq "true") {
@@ -158,16 +158,16 @@ sub set_video_option
     push(@vf_option, "unsharp=3:3:".$$job->{'v_sharp'});
   }
   push(@vf_option, "scale=".$$job->{'v_s_w'}.":".$$job->{'v_s_h'});  # 解像度
-  
+
   my $numerator   = $$job->{'v_aspect_numerator'};
   my $denominator = $$job->{'v_aspect_denominator'};
-  
+
   if ($$job->{'v_aspect_set'} eq "setsar") {
     push(@vf_option, "setsar=ratio=${numerator}/${denominator}:max=1000");
   } elsif ($$job->{'v_aspect_set'} eq "setdar") {
     push(@vf_option, "setdar=ratio=${numerator}/${denominator}:max=1000");
   }
-  
+
   if ($#vf_option >= 0) {
     $video_option .= " -vf \"";
     foreach (@vf_option) {
@@ -179,7 +179,7 @@ sub set_video_option
   if (length($extopt) > 0) {
     $video_option .= " $extopt";
   }
-  
+
   return $video_option;
 }
 
@@ -280,7 +280,6 @@ sub make_cmd()
 {
   my ($job, $pass, $out_file) = @_;
 
-  my $tmpfile = ${TMP_PATH} ."/encodelog.dat";
   $$out_file = $$job->{'source'};
   my $orig_ext;
   $$out_file =~ s/([^\/]{1,})\.([^\.]{0,})$//;
@@ -376,11 +375,12 @@ sub make_cmd()
     return;
   }
 
+  my $passlog_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/passlog.dat";
   my $pass_opt = "";
   if($pass == 1) {
-    $pass_opt = " -pass 1 -passlogfile ${tmpfile}";
+    $pass_opt = " -pass 1 -passlogfile ${passlog_file}";
   } elsif($pass == 2) {
-    $pass_opt = " -pass 2 -passlogfile ${tmpfile}";
+    $pass_opt = " -pass 2 -passlogfile ${passlog_file}";
   }
   $$out_file = &get_temporary_name($$out_file, $pass);
 
@@ -417,7 +417,7 @@ sub rev_temporary_name
 {
   my ($name, $pass) = @_;
   my $path = "";
- 
+
   if ($name =~ /\//) {
     $name =~ s/(.{0,})\/(.+)$//;
     $path = $1 . "/";
