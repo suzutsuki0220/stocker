@@ -571,11 +571,10 @@ EOD
 </script>
 EOD
 
-  my $date_string = &get_date_string();
   print <<EOF;
 <br>
 <div id="dirlist"></div>
-出力先: <input type="text" class="fit_width" name="out_dir" value="${date_string}" size="50"><br>
+出力先: <input type="text" class="fit_width" name="out_dir" value="" size="50"><br>
 EOF
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
@@ -751,19 +750,13 @@ weight
 <input type="button" class="button is-primary" value="変換する" onClick="addJob()">
 </p>
 </form>
+
+<script type="text/javascript">
+    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
+</script>
 EOF
 
   HTML_Elem->tail();
-}
-
-sub get_date_string
-{
-  my $date_string;
-  my($sec, $min, $hour, $day, $mon, $year) = localtime(time);
-  $year += 1900;
-  $mon += 1;
-  $date_string = sprintf("%d-%02d-%02d_%02d%02d%02d", $year, $mon, $day, $hour, $min, $sec);
-  return $date_string;
 }
 
 sub get_video_ratio
