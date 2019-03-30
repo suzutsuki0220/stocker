@@ -656,6 +656,7 @@ function doVideoStreamSelected(vid_no) {
         b:   Math.floor(bps / 1000)
     };
     setFormValues(obj);
+    print_aspect('ssize');
 
     document.getElementById('vimg').src = getPreviewUrl(640);
     setPreviewSize(document.getElementById('vimg'), selectedVideo.disp_width, selectedVideo.disp_height);
