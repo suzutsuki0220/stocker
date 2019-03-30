@@ -158,7 +158,7 @@ function reloadMap(start_range, end_range) {
   plotRangeStroke();
 
   map_info_field.setCounter(count);
-  map_info_field.setDistance(distance); 
+  map_info_field.setDistance(distance);
   map_info_field.setDuration(tracks[start_range].datetime, tracks[end_range - 1].datetime);
   map_info_field.setDatetime(tracks[start_range].datetime, tracks[end_range - 1].datetime);
 
@@ -236,31 +236,16 @@ function getGeoCode(results, status) {
 }
 
 function getPositionData(get_file_cgi, base_name, url_path, name) {
-    var getPositionDataResult = function(httpRequest, name) {
-        try {
-            if (httpRequest.readyState == 0 || httpRequest.readyState == 1 || httpRequest.readyState == 2) {
-                //document.getElementById('sStatus').innerHTML = "読み込み中...";
-            } else if (httpRequest.readyState == 4) {
-                if (httpRequest.status == 200) {
-                    tracks = gpsCommon.getPosition(httpRequest.responseText, name);
-                    map_route();
-                } else {
-                    alert("ERROR: " + httpRequest.status);
-                }
-            }
-        } catch(e) {
-            const description = e.description ? e.description : "";
-            alert("get position ERROR: " + description);
-        }
-    };
-
-    var httpRequest = ajax_init();
-    if (httpRequest) {
-        ajax_set_instance(httpRequest, function() { getPositionDataResult(httpRequest, name); });
-        ajax_post(httpRequest, get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
-    } else {
+    const ajax = jsUtils.ajax;
+    ajax.init();
+    ajax.setOnSuccess(function(httpRequest) {
+        tracks = gpsCommon.getPosition(httpRequest.responseText, name);
+        map_route();
+    });
+    ajax.setOnError(function(httpRequest) {
         alert('情報取得プロセスの起動に失敗しました');
-    }
+    });
+    ajax.post(get_file_cgi, "dir=" + base_name + "&file=" + url_path + "&mime=application/xml");
 }
 
 function getPositionStartEndFromRangeController(p) {

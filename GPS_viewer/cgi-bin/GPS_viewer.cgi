@@ -45,8 +45,6 @@ eval {
   my @jslist = (
       "%htdocs_root%/ccchart-min.js",
       "%htdocs_root%/bundle.js",
-      "%htdocs_root%/ajax_html_request.js",
-      "%htdocs_root%/jsvalue.js",
       "%htdocs_root%/map_main.js",
       "%htdocs_root%/map_distance.js",
       "%htdocs_root%/map_info_field.js",
@@ -134,6 +132,18 @@ my $html = <<EOF;
       }
 
       return stroke_color[index];
+    }
+
+    function replaceNanToZero(value) {
+      jsUtils.value.replaceNanToZero(value);
+    }
+
+    function normalize(input, min, max) {
+      jsUtils.value.normalize(input, min, max);
+    }
+
+    function setMinMax(value, obj) {
+      jsUtils.value.setMinMax(value, obj);
     }
 </script>
 <div id="map_warningText"></div>
