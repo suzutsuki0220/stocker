@@ -264,8 +264,6 @@ EOF
   my $vid_width  = 0;
   my $vid_height = 0;
   my $vid_fps    = 0;
-  my $x_ratio = 1;
-  my $y_ratio = 1;
   my $default_bps  = 0;
   my $round_fps    = 0;
 
@@ -337,36 +335,6 @@ EOD
       adjust_preview();
     } else {
       document.adjpreview.src = "${GRAY_PAD}";
-    }
-  }
-
-  function fixHeight() {
-    if( document.enc_setting.s_w.length <= 0 || document.enc_setting.s_w.value <= 10 ) {
-      alert('解像度が小さすぎます');
-      return;
-    }
-    if( document.enc_setting.s_w.value % 8 != 0 ) {
-      alert('解像度は8の倍数にして下さい。');
-      return;
-    }
-    print_aspect('ssize');
-    if( document.enc_setting.save_aspect.checked == true ) {
-      document.enc_setting.s_h.value = Math.round(document.enc_setting.s_w.value / ${x_ratio} * ${y_ratio});
-    }
-  }
-
-  function fixWidth() {
-    if( document.enc_setting.s_h.length <= 0 || document.enc_setting.s_h.value <= 10 ) {
-      alert('解像度が小さすぎます');
-      return;
-    }
-    if( document.enc_setting.s_h.value % 8 != 0 ) {
-      alert('解像度は8の倍数にして下さい。');
-      return;
-    }
-    print_aspect('ssize');
-    if( document.enc_setting.save_aspect.checked == true ) {
-      document.enc_setting.s_w.value = Math.round(document.enc_setting.s_h.value / ${y_ratio} * ${x_ratio});
     }
   }
 
@@ -757,24 +725,6 @@ weight
 EOF
 
   HTML_Elem->tail();
-}
-
-sub get_video_ratio
-{
-  my ($a, $b) = @_;
-  while ($a != $b) {
-    my $r;
-    if ($a > $b) {
-      $r = $a - $b;
-      $a = $b;
-      $b = $r;
-    } else {
-      $r = $b - $a;
-      $b = $r;
-    }
-  }
-
-  return $a;
 }
 
 sub check_capable_type

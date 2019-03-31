@@ -74,6 +74,37 @@ function get_video_aspect(width, height) {
     return ratio ? ratio.x + ":" + ratio.y : "-----";
 }
 
+function checkSize(elem) {
+    if (elem.length === 0 || elem.value <= 10) {
+        alert('解像度が小さすぎます');
+        return false;
+    }
+    if (elem.value % 8 !== 0) {
+        alert('解像度は8の倍数にして下さい。');
+        return false;
+    }
+
+    return true;
+}
+
+function fixHeight() {
+    if (checkSize(document.enc_setting.s_w)) {
+        if( document.enc_setting.save_aspect.checked == true ) {
+            document.enc_setting.s_h.value = Math.round(document.enc_setting.s_w.value / selectedVideo.ratio.x * selectedVideo.ratio.y);
+        }
+        print_aspect('ssize');
+    }
+}
+
+function fixWidth() {
+    if (checkSize(document.enc_setting.s_h)) {
+        if( document.enc_setting.save_aspect.checked == true ) {
+            document.enc_setting.s_w.value = Math.round(document.enc_setting.s_h.value / selectedVideo.ratio.y * selectedVideo.ratio.x);
+        }
+        print_aspect('ssize');
+    }
+}
+
 // 解像度とfpsから最適なビットレートを計算する
 function calcBitrateAim() {
     // aimed bitrate calcurate from BPP (http://service.jp.real.com/help/faq/prod/faq_4226.html)
@@ -656,6 +687,8 @@ function doVideoStreamSelected(vid_no) {
         b:   Math.floor(bps / 1000)
     };
     setFormValues(obj);
+
+    selectedVideo.ratio = jsUtils.image.getAspect({width: obj.s_w, height: obj.s_h});
     print_aspect('ssize');
 
     document.getElementById('vimg').src = getPreviewUrl(640);
