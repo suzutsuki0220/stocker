@@ -13,13 +13,13 @@
 
 @CONVERT_PARAMS = (
    [
-       "mts",
-       "mts",
-       "libx264",
-       "-nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12",
-       "libfdk_aac",
-       "-profile:a aac_he -afterburner 1 -strict experimental",
-       "mpegts"
+      "mts",
+      "mts",
+      "libx264",
+      "-nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12",
+      "ac3",
+      "-strict experimental",
+      "mpegts"
    ],
   [
       "dvd",
