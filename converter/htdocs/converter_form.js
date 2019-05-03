@@ -9,6 +9,13 @@ function makeEncodeQuery() {
         if (e && e[0]) {
             if (e[0].type === 'checkbox') {
                 v = e[0].checked ? 'true' : 'false';
+            } else if (e[0].type === 'radio') {
+                for (var i=0; i<e.length; i++) {
+                    if (e[i].checked === true) {
+                        v = e[i].value;
+                        break;
+                    }
+                }
             } else {
                 v = e[0].value;
             }
