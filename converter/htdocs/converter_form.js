@@ -1,4 +1,5 @@
 var selectedVideo = new Object();
+var sceneListPath = "";
 
 const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'out_dir', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
 
@@ -423,6 +424,35 @@ function writeSourceLocation(path)
 
 function fillFolderName(pathText) {
     document.enc_setting.out_dir.value = pathText;
+}
+
+function getSceneListFilePath(file_name, base_name, dir_path, encoded_path) {
+    const list_file = file_name.replace(/.*\/([^\/]*)\.(.*?)$/, '$1.vdr');
+
+    const ajax = jsUtils.ajax;
+    ajax.init();
+    ajax.setOnSuccess(function(xhr) {
+        const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
+        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
+        const elements = jsUtils.xml.getDataInElements(contents, 'element', ['name', 'path', 'type']);
+
+        sceneListPath = "";
+        for (var i=0; i<elements.length; i++) {
+            const e = elements[i];
+            if (e.type === 'FILE' && e.name === list_file) {
+                sceneListPath = e.path;
+                break;
+            }
+        }
+
+        getMovieInfo(stockerConfig.uri.converter.movie_info, base_name, encoded_path);
+    });
+    ajax.setOnError(function() {
+        getMovieInfo(stockerConfig.uri.converter.movie_info, base_name, encoded_path);
+    });
+
+    const query = "dir=" + base_name + "&file=" + dir_path;
+    ajax.post(stockerConfig.uri.get_dir, query);
 }
 
 function getMovieInfo(movie_info_url, base_name, path) {

@@ -64,7 +64,9 @@ function setTime() {
 
 // durationが取得出来た時にシーンのデータを取得する
 function callGetSceneData() {
-    getSceneData(stockerConfig.uri.get_file, encoded_dir, "${encoded_scene_path}");
+    if (scene_list_path) {
+        getSceneData(stockerConfig.uri.get_file, encoded_dir, scene_list_path);
+    }
 }
 
 function apply() {

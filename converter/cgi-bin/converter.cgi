@@ -255,7 +255,7 @@ EOF
 
 <script type="text/javascript">
 <!--
-  getMovieInfo('${MOVIE_INFO_CGI}', '${dir}', '${encoded_path}');
+  getSceneListFilePath('$files[0]', '${dir}', '${encoded_up_path}', '${encoded_path}');
 -->
 </script>
 EOF
@@ -510,12 +510,12 @@ EOD
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
     const url = "%htdocs_root%/convertselect.html?file=${encoded_path}&dir=${dir}"
-              + "&clicked=" + clicked + "&v_map=" + vno
+              + "&scene_list=" + sceneListPath + "&clicked=" + clicked + "&v_map=" + vno
               + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 
     var child = window.open(url, "範囲指定",
                 'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
-               );
+                );
   }
 
   function addJob() {
