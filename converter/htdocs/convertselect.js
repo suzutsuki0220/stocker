@@ -25,7 +25,7 @@ const skip_options = [
 ];
 
 function buildSkipOptions() {
-    const default_value = 180;
+    const default_value = 3;
 
     for(var i=0; i<skip_options.length; i++) {
         let op = document.createElement("option");
