@@ -3,11 +3,68 @@ var loading = false;  // previewの更新多発を抑止するフラグ
 var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
 var sceneList = new Array();
 
+const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+
+const skip_options = [
+    [3600, "60 分"],
+    [1800, "30 分"],
+    [900, "15 分"],
+    [180, "3 分"],
+    [60, "1 分"],
+    [30, "30 秒"],
+    [15, "15 秒"],
+    [5, "5 秒"],
+    [3, "3 秒"],
+    [1, "1 秒"],
+    [0.5, "1/2 秒"],
+    [0.25, "1/4 秒"],
+    [0.125, "1/8 秒"],
+    [0.063, "1/16 秒"],
+    [0.031, "1/32 秒"],
+    [0.001, "1/100 秒"],
+];
+
+function buildSkipOptions() {
+    const default_value = 180;
+
+    for(var i=0; i<skip_options.length; i++) {
+        let op = document.createElement("option");
+        op.value = skip_options[i][0] * 1000;
+        op.text = skip_options[i][1];
+        op.selected = default_value === skip_options[i][0] ? true : false;
+        document.f1.skip.appendChild(op);
+    }
+}
+
 // キーボードのキー入力イベント
-if (document.addEventListener) {
-    document.addEventListener("keydown", keyDownWork);
-} else if (document.attachEvent) {
-    document.attachEvent("onkeydown", keyDownWork);
+function setKeyDownEvent() {
+    if (document.addEventListener) {
+        document.addEventListener("keydown", keyDownWork);
+    } else if (document.attachEvent) {
+        document.attachEvent("onkeydown", keyDownWork);
+    }
+}
+
+function setTime() {
+    if (!window.opener || window.opener.closed) {
+        window.alert("メインウィンドウが閉じられています");
+        return;
+    }
+
+    const parent_window = window.opener.document;
+    var ss = document.getElementsByName('selectedTimeStart')[0].value;
+    var te = document.getElementsByName('selectedTimeEnd')[0].value;
+    const duration = getEncTimeDuration(ss, te);
+
+    const f_num = params.f_num;
+    parent_window.getElementsByName('ss' + f_num)[0].value = ss;
+    parent_window.getElementsByName('tend' + f_num)[0].value = duration > 0 ? te : ss;
+    parent_window.getElementsByName('t' + f_num)[0].value = getFormatTimeFromSecond(jsUtils.value.normalize(duration, 0, duration));
+}
+
+// durationが取得出来た時にシーンのデータを取得する
+function callGetSceneData() {
+    getSceneData(stockerConfig.uri.get_file, encoded_dir, "${encoded_scene_path}");
 }
 
 function apply() {
@@ -21,6 +78,11 @@ function apply() {
 
 function closeWindow() {
     window.close();
+}
+
+function getImageURL(elem) {
+    var ss = elem.value;
+    return stockerConfig.uri.converter.movie_img + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=1&ss=" + ss;
 }
 
 function reloadImage() {

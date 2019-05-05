@@ -499,20 +499,19 @@ EOD
     document.enc_setting.cutoff.value = 18000;
   }
 
-  function openTimerSelector(elem, sf, ef, df) {
+  function openTimerSelector(elem, f_num) {
     var size_w = 670;
     var size_h = 700;
     var pos_l = Math.floor((screen.width - size_w) / 2);
     var pos_t = Math.floor((screen.height - size_h) / 2);
 
-    const ss = document.getElementsByName(sf)[0].value;
-    const tend = document.getElementsByName(ef)[0].value;
+    const ss = document.getElementsByName('ss' + f_num)[0].value;
+    const tend = document.getElementsByName('tend' + f_num)[0].value;
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
-    const url = "${SELECTOR_CGI}?file=${encoded_path}&dir=${dir}"
-              + "&clicked=" + clicked + "&vno=" + vno
-              + "&start_f=" + sf + "&end_f=" + ef + "&duration_f=" + df
-              + "&ss=" + ss + "&tend=" + tend;
+    const url = "%htdocs_root%/convertselect.html?file=${encoded_path}&dir=${dir}"
+              + "&clicked=" + clicked + "&v_map=" + vno
+              + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 
     var child = window.open(url, "範囲指定",
                 'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
@@ -565,8 +564,8 @@ EOF
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
-1.位置 <input type="text" name="ss0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')">
- ～ <input type="text" name="tend0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, 'ss0', 'tend0', 't0')">
+1.位置 <input type="text" name="ss0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, '0')">
+ ～ <input type="text" name="tend0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, '0')">
  長さ<input type="text" name="t0" class="hhmmssxxx" value="00:00:00.000" readonly>
 <div id="TimeSelAddtion"></div>
 <input type="button" name="add_time_sel" onClick="addTimeSel()" value="追加">

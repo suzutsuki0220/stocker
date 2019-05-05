@@ -4,7 +4,7 @@ include ../directory_defs.mk
 
 LIB_FILES  = ConverterJob.pm
 DOC_FILES  = $(wildcard htdocs/*)
-CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi convertselect.cgi
+CGI_FILES  = converter.cgi get_movieimg.cgi convertlist.cgi
 CONF_FILES = converter.conf ConvertParams.pl
 
 all:
