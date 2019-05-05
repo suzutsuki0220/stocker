@@ -19,13 +19,13 @@
             document.getElementById('fileNameArea').textContent = properties.name;
 
             const params = jsUtils.url.getRawParams();
-            const back = stockerConfig.cgi_root + '/stocker.cgi?dir=' + params.dir + '&file=' + properties.up_path;
+            const back = stockerConfig.uri.stocker + '?dir=' + params.dir + '&file=' + properties.up_path;
             document.getElementById('backAnchor').href = back;
             document.getElementById('backBurgerAnchor').href = back;
 
             getTextContents();
         });
-        ajax.post(stockerConfig.cgi_root + '/get_dir', jsUtils.url.getQueryInUrl());
+        ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
     }
 
     function getTextContents() {
@@ -42,7 +42,7 @@
         ajax.setOnError(function(xhr) {
             document.getElementById('textDataArea').textContent = "読み込み失敗: " + xhr.status + " " + xhr.statusText;
         });
-        ajax.post(stockerConfig.cgi_root + '/get_file', jsUtils.url.getQueryInUrl() + "&mime=text/plain");
+        ajax.post(stockerConfig.uri.get_file, jsUtils.url.getQueryInUrl() + "&mime=text/plain");
     }
 </script>
 <link rel="stylesheet" type="text/css" href="stocker_list.css">
