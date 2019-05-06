@@ -17,6 +17,7 @@ const MUSIC_PLAYER_URI = {
 };
 
 const URI = {
+    filefunc: CGI_ROOT + '/filefunc.cgi',
     stocker: CGI_ROOT + '/stocker.cgi',
     get_dir: CGI_ROOT + '/get_dir',
     get_file: CGI_ROOT + '/get_file',
