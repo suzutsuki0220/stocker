@@ -1,5 +1,3 @@
-const get_dir_cgi = "%cgi_root%/get_dir";
-
 function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
     var param = "";
 
@@ -16,8 +14,8 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
         receive_func(httpRequest.responseXML);
     });
     jsUtils.ajax.setOnError(function(httpRequest) {
-        alert("ERROR: " + get_dir_cgi + " param: " + param + " status: " + httpRequest.status);
+        alert("ERROR: " + stockerConfig.uri.get_dir + " param: " + param + " status: " + httpRequest.status);
     });
 
-    jsUtils.ajax.post(get_dir_cgi, param);
+    jsUtils.ajax.post(stockerConfig.uri.get_dir, param);
 }

@@ -1,4 +1,3 @@
-const get_file_cgi = "%cgi_root%/get_file";
 var trimWork = [];
 var elements = null;
 
@@ -201,7 +200,6 @@ function directoryList(data) {
 }
 
 function makeSubdirectoryLink(encoded_dir, url_path) {
-    const get_dir_cgi = "%cgi_root%/get_dir";
     const param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
 
     const ajax = jsUtils.ajax;
@@ -209,7 +207,7 @@ function makeSubdirectoryLink(encoded_dir, url_path) {
     ajax.setOnSuccess(function(httpRequest) {
         addSubdirectoryLink(httpRequest.responseXML, encoded_dir, url_path);
     });
-    ajax.post(get_dir_cgi, param);
+    ajax.post(stockerConfig.uri.get_dir, param);
 }
 
 function addSubdirectoryLink(data, encoded_dir, url_path) {
@@ -247,6 +245,6 @@ function downloadWork(dir) {
 }
 
 function handleDownload(dir, file, filename) {
-    const get_url = get_file_cgi + "?mime=application/force-download&dir=" + dir + "&file=" + file;
+    const get_url = stockerConfig.uri.get_file + "?mime=application/force-download&dir=" + dir + "&file=" + file;
     jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
 }

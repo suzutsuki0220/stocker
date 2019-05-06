@@ -1,5 +1,3 @@
-const filefunc_cgi = "%cgi_root%/filefunc.cgi";
-
 var renameList = new Array();
 
 function jump(url) {
@@ -49,7 +47,7 @@ function popRenameWork() {
         ajax.setOnError(function(httpRequest) {
             alert("ERROR: " + httpRequest.status);
         });
-        ajax.post(filefunc_cgi, param);
+        ajax.post(stockerConfig.uri.filefunc, param);
     } else {
         location.href = document.f1.back.value;
     }

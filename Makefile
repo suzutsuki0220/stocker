@@ -53,8 +53,6 @@ install-libs:
 install-htdocs:
 	cp javascript/app/bundle.js $(DOCS_DIR)
 	cp -r $(DOC_FILES) $(DOCS_DIR)
-	sed -i -e 's|%cgi_root%|$(CGI_ROOT)|g' \
-	       $(DOCS_DIR)/*.js $(DOCS_DIR)/*.html
 	find $(DOCS_DIR) -type f -exec chmod 644 {} \;
 
 install-cgi:
