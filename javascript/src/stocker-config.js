@@ -2,6 +2,7 @@ const CGI_ROOT = "/cgi-bin/stocker";
 
 const CONVERTER_URI = {
     selector: CGI_ROOT + '/convertselect.cgi',
+    list: CGI_ROOT + '/convertlist.cgi',
     movie_img: CGI_ROOT + '/get_movieimg.cgi',
     movie_info: CGI_ROOT + '/movie_info'
 };
