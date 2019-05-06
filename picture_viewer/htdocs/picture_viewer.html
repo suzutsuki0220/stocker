@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja" class="has-navbar-fixed-top">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="format-detection" content="telephone=no">
+<script type="text/javascript" src="bundle.js"></script>
+<script type="text/javascript" src="get_directory_list.js"></script>
+<script type="text/javascript" src="picture_viewer.js"></script>
+<script type="text/javascript">
+    const image_pattern = /\.(jpg|jpeg|png|gif|bmp|tif|tiff)$/;  // 拡張子判定
+    const params = jsUtils.url.getRawParams();
+
+    function getPictureSrc(path) {
+        return stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640";
+    }
+
+    function getExifInfoHref(path) {
+        return "javascript:toggleExifLayer('" + path + "')";
+    }
+
+    function getFileProperties() {
+        const ajax = jsUtils.ajax;
+        ajax.init();
+        ajax.setOnSuccess(function(xhr) {
+            const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
+            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
+
+            document.title = properties.name;
+            document.getElementById('fileNameArea').textContent = properties.name;
+            setFileName(properties.name);
+
+            getImageList(params.dir, properties.up_path);
+            imageLoading(params.file);
+
+            const back = stockerConfig.uri.stocker + '?dir=' + params.dir + '&file=' + properties.up_path;
+            document.getElementById('backAnchor').href = back;
+            document.getElementById('backBurgerAnchor').href = back;
+        });
+        ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
+    }
+</script>
+<link rel="stylesheet" type="text/css" href="stocker.css">
+<link rel="stylesheet" type="text/css" href="picture_viewer.css">
+<title></title>
+</head>
+<body>
+  <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <h1 class="navbar-item" id="fileNameArea"></h1>
+      <a role="button" class="navbar-burger is-active" aria-label="menu" id="backBurgerAnchor" href="#" aria-expanded="false">
+        <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+      </div>
+      <div class="navbar-end">
+        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<span id="control_field"></span>
+<div id="ContentArea">
+  <div id="ExifLayer" style="display: none"></div>
+  <div id="loadingText">loading...</div>
+  <span class="InfoLinkArea maruButton"><a href="" id="InfoLink">i</a></span>
+  <img src="" width="100%" name="ImageArea" id="ImageArea">
+</div>
+
+<script type="text/javascript">
+    document.getElementById('ImageArea').src = stockerConfig.uri.thumbnail + '?' + jsUtils.url.getQueryInUrl();
+    getFileProperties();
+</script>
+
+</body>
+</html>

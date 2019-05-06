@@ -198,7 +198,7 @@ function printIcons(elements) {
             action = "${CONVERTER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (photo_pattern.test(name.toLowerCase())) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
-            action = "${PICTURE_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "%htdocs_root%/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (gps_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MAP}";
             action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;

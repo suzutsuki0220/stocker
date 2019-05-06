@@ -92,7 +92,7 @@ function changeImage(index) {
     document.getElementById('ExifLayer').style.display = "none";
 
     document.title = img.name;
-    document.getElementById('filename_field').innerHTML = img.name;
+    document.getElementById('fileNameArea').innerHTML = img.name;
     imageLoading(img.path);
     renewControlField(index);
 }
@@ -134,16 +134,16 @@ function unsetLoading() {
     }
 }
 
-function toggleExifLayer(exif_info_url, base_name, path) {
+function toggleExifLayer(path) {
     if (document.getElementById('ExifLayer').style.display === "none") {
         document.getElementById('ExifLayer').style.display = "block";
-        requestExifData(exif_info_url, base_name, path);
+        requestExifData(path);
     } else {
         document.getElementById('ExifLayer').style.display = "none";
     }
 }
 
-function requestExifData(exif_info_url, base_name, path) {
+function requestExifData(path) {
     const ajax = jsUtils.ajax;
     ajax.init();
     ajax.setOnLoading(function(httpRequest) {
@@ -156,8 +156,8 @@ function requestExifData(exif_info_url, base_name, path) {
         document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";
     });
 
-    const query = "mode=exif&dir=" + base_name + "&file=" + path;
-    ajax.post(exif_info_url, query);
+    const query = "mode=exif&dir=" + params.dir + "&file=" + path;
+    ajax.post(stockerConfig.uri.picture_viewer.exif_info, query);
 }
 
 function showExif(httpRequest) {

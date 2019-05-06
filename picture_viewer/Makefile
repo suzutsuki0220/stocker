@@ -4,7 +4,7 @@ include ../directory_defs.mk
 
 LIB_FILES  =
 DOC_FILES  = $(wildcard htdocs/*)
-CGI_FILES  = get_picture.cgi picture_viewer.cgi
+CGI_FILES  = get_picture.cgi
 CONF_FILES = picture_viewer.conf
 
 all:
