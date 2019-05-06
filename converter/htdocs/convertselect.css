@@ -18,7 +18,7 @@ div.imageAndTimeArea {
 div#startPreviewArea, div#endPreviewArea {
     float: left;
     position: relative;
-    width: 60%; 
+    width: 59%;
 }
 
 div.timeArea {

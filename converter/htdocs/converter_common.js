@@ -28,7 +28,7 @@ function setFormValues(items) {
 }
 
 function setPreviewSize(element, disp_width, disp_height) {
-    const preview_width  = element.clientWidth;
+    const preview_width  = Math.floor(element.clientWidth);
     const preview_height = Math.floor(preview_width / disp_width * disp_height);
 
     if (preview_width > 0 && preview_height > 0) {
