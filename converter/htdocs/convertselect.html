@@ -70,11 +70,11 @@
 <datalist id="sceneListMarks"></datalist>
 <br>
 <div id="sceneSelectArea"></div>
-<input type="button" name="btnDown" value="-" onClick="addTime(document.f1.skip.value * (-1))">&nbsp;
+<input type="button" name="btnDown" class="fas" value="&#xf048;" onClick="addTime(document.f1.skip.value * (-1))">&nbsp;
 <select name="skip" onChange="document.f1.skip.blur()"></select>
-<input type="button" name="btnUp" value="+" onClick="addTime(document.f1.skip.value)">
+<input type="button" name="btnUp" class="fas" value="&#xf051;" onClick="addTime(document.f1.skip.value)">
 <p id="controlButtonArea">
-＜&nbsp;
+<i class="fas fa-backward"></i>&nbsp;
 <input type="button" name="btnDown4" value="60" onClick="addTime(-60000)">
 <input type="button" name="btnDown3" value="15" onClick="addTime(-15000)">
 <input type="button" name="btnDown2" value="1" onClick="addTime(-1000)">
@@ -84,7 +84,7 @@
 <input type="button" name="btnUp2" value="1" onClick="addTime(1000)">
 <input type="button" name="btnUp3" value="15" onClick="addTime(15000)">
 <input type="button" name="btnUp4" value="60" onClick="addTime(60000)">
-&nbsp;＞
+&nbsp;<i class="fas fa-forward"></i>
 </p>
 <div id="messageArea"></div>
 <input type="button" onClick="apply()" class="submit_button" name="btnApply" value="適用">&nbsp;
