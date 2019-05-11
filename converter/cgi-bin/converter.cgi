@@ -115,10 +115,6 @@ sub perform_encode() {
   HTML_Elem->header();
   print "<h2>エンコードキューに入れました</h2>";
 
-  if (-d $out_path) {
-    print "<p><font color=\"red\">警告: 出力先が既に存在します。同名のファイルは上書きされます</font></p>";
-  }
-
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
       &add_encodejob("${base}" . $_);
