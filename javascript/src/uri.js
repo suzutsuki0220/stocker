@@ -1,3 +1,4 @@
+const htdocs_root = "/stocker";
 const cgi_root = "/cgi-bin/stocker";
 
 const converter_uri = {
@@ -18,6 +19,7 @@ const music_player_uri = {
 };
 
 module.exports.cgi_root = cgi_root;
+module.exports.htdocs_root = htdocs_root;
 
 module.exports.cgi = {
     filefunc: cgi_root + '/filefunc.cgi',
