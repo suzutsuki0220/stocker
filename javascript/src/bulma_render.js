@@ -1,6 +1,11 @@
 function textNode(tagName, value, option = {}) {
     var elem = document.createElement(tagName);
-    elem.appendChild(document.createTextNode(value));
+    elem.innerHTML = value;  // enable HTML tags
+//    elem.appendChild(document.createTextNode(value));
+
+    for (var property in option) {
+        elem.setAttribute(property, option[property]);
+    }
 
     return elem;
 }
@@ -46,3 +51,11 @@ module.exports.makeTable = function(elem, names, values) {
     elem.appendChild(tableHeader(names));
     elem.appendChild(tableBody(values));
 }
+
+module.exports.notification = function(elem, message) {
+    elem.appendChild(textNode('div', message, {class: "notification is-info"}));
+};
+
+module.exports.warning = function(elem, message) {
+    elem.appendChild(textNode('div', message, {class: "notification is-danger"}));
+};
