@@ -24,15 +24,14 @@ require '%conf_dir%/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode   = scalar($form->param('mode'));
-my $target = scalar($form->param('target'));
 my @files = $form->param('file');
 my $out_dir   = scalar($form->param('out_dir'));
 
 my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
-my $up_path = ParamPath->get_up_path(ParamPath->urlpath_decode($files[0])); 
-my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8', $up_path)) . "&dir=" . $encoded_dir; 
+my $up_path = ParamPath->get_up_path(ParamPath->urlpath_decode($files[0]));
+my $back_link = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8', $up_path)) . "&dir=" . $encoded_dir;
 my $exif_cmd = "/usr/local/bin/exif --tag=%%TAG%% --ifd=EXIF --set-value=%%VALUE%% --output=%%TMP_FILE%% '%%INPUT%%' 2>&1 > /dev/null";
 
 our $path;
@@ -124,24 +123,24 @@ sub form_setting() {
   my $y_ratio = 1;
 
   if ($img_flag) {
-    my $Img = new GD::Image->newFromJpeg("${base}/" . ParamPath->urlpath_decode($files[0]));
-    ($img_width, $img_height) = $Img->getBounds();
+    #my $Img = new GD::Image->newFromJpeg("${base}/" . ParamPath->urlpath_decode($files[0]));
+    #($img_width, $img_height) = $Img->getBounds();
 
-    my $a = $img_width;
-    my $b = $img_height;
-    while ($a != $b) {
-      if ($a > $b) {
-        my $r = $a - $b;
-        $a = $b;
-        $b = $r;
-      } else {
-        my $r = $b - $a;
-        $b = $r;
-      }
-    }
-    $ratio = $a;
-    $x_ratio = $img_width / $ratio;
-    $y_ratio = $img_height / $ratio;
+    #my $a = $img_width;
+    #my $b = $img_height;
+    #while ($a != $b) {
+    #  if ($a > $b) {
+    #    my $r = $a - $b;
+    #    $a = $b;
+    #    $b = $r;
+    #  } else {
+    #    my $r = $b - $a;
+    #    $b = $r;
+    #  }
+    #}
+    #$ratio = $a;
+    #$x_ratio = $img_width / $ratio;
+    #$y_ratio = $img_height / $ratio;
   }
 
   my($sec, $min, $hour, $day, $mon, $year) = localtime(time);
@@ -193,7 +192,7 @@ sub form_setting() {
     var x_ratio = $x_ratio;
     var y_ratio = $y_ratio;
     var s_width = document.f1.out_size.options[document.f1.out_size.selectedIndex].value;
-    var s_height = Math.round(s_width / x_ratio * y_ratio); 
+    var s_height = Math.round(s_width / x_ratio * y_ratio);
     document.getElementById('area_simulated_size').innerHTML = "縮小後サイズ(予想): "+ s_width +"x" + s_height + "&nbsp;&nbsp;比率 " + x_ratio + ":" + y_ratio;
     // 切取りサイズの初期値代入
     document.f1.start_x.value = 0;
@@ -206,7 +205,7 @@ sub form_setting() {
     var x_ratio = $x_ratio;
     var y_ratio = $y_ratio;
     var s_width = document.f1.out_size.options[document.f1.out_size.selectedIndex].value;
-    var s_height = Math.round(s_width / x_ratio * y_ratio); 
+    var s_height = Math.round(s_width / x_ratio * y_ratio);
     document.f1.start_x.value = Math.round((s_width - document.f1.crop_width.value) / 2);
     document.f1.start_y.value = Math.round((s_height - document.f1.crop_height.value) / 2);
   }
@@ -252,7 +251,7 @@ EOD
     print "<input type=\"hidden\" name=\"mode\" value=\"do_resize\">\n";
     print "画像サイズ(横幅のピクセル): <select name=\"out_size\" onChange=\"sizeSimulate()\"><option value=\"1920\">1920 (FullHD)</option><option value=\"1280\">1280 (SXGA)</option><option value=\"1024\">1024 (XGA)</option><option value=\"800\" selected>800 (SVGA)</option><option value=\"640\" selected>640 (VGA)</option><option value=\"320\">320 (QVGA)</option><option value=\"160\">160</option></select>\n";
     print "<span id=\"area_simulated_size\"></span><br>";
-    print "<input type=\"checkbox\" name=\"save_exif\" value=\"1\" checked>EXIFデーターを付ける<br>\n";
+    print "<input type=\"checkbox\" name=\"save_exif\" value=\"1\" checked>EXIFデータを付ける<br>\n";
     print "<input type=\"checkbox\" name=\"crop_on\" value=\"1\" onChange=\"changeCropForm()\">画像を切り取る&nbsp;&nbsp;\n";
     print "切取始点 (<input type=\"text\" name=\"start_x\" size=\"5\" value=\"0\" disabled>,<input type=\"text\" name=\"start_y\" size=\"5\" value=\"0\" disabled>)&nbsp;&nbsp;";
     print "サイズ: <input type=\"text\" name=\"crop_width\" size=\"5\" disabled>x<input type=\"text\" name=\"crop_height\" size=\"5\" disabled>&nbsp;&nbsp;";
@@ -329,8 +328,8 @@ sub do_resize {
     system("convert \"$path/$entry\" -resize ".$form->param('out_size')." -filter Cubic ${opt_strip} ${opt_crop} -quality 90 $out_dir/$entry");
     if( $form->param('save_exif') eq "1" ) {
       # Fix width and height of exif info
-      my $Img = new GD::Image->newFromJpeg("$out_dir/$entry");
-      my($small_w, $small_h) = $Img->getBounds();
+      #my $Img = new GD::Image->newFromJpeg("$out_dir/$entry");
+      my($small_w, $small_h) = (0,0); #$Img->getBounds();
       my $tmp_file = "/tmp/edit_tmp_".$ENV{'UNIQUE_ID'};
 
       my $cmd = $exif_cmd;
