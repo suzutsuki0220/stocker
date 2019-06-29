@@ -13,6 +13,20 @@ function setScreenSize() {
     }
 }
 
+function getCheckedFiles() {
+    var checked = new Array();
+    var files = document.getElementsByName("file");
+    if (files) {
+        for (var i=0; i<files.length; i++) {
+            if (files[i].checked === true) {
+                checked.push(files[i].value);
+            }
+        }
+    }
+
+    return checked;
+}
+
 function allCheck() {
     var files = document.getElementsByName("file");
     if (files) {

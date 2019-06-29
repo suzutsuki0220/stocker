@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja" class="has-navbar-fixed-top">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="format-detection" content="telephone=no">
+<script type="text/javascript" src="../bundle.js"></script>
+<script type="text/javascript">
+    const myQuery = jsUtils.url.getQueryInUrl();
+    const params = new URLSearchParams(myQuery);
+    const files = params.getAll('file');
+
+function execute() {
+    changeStatus(0, "done");
+    changeStatus(1, "error");
+    changeStatus(2, "warning");
+    changeStatus(3, "info");
+    changeStatus(4, "loading");
+}
+
+function setBackToStocker(backUrl) {
+    document.getElementById('cancelButton').href = backUrl;
+    document.getElementById('backAnchor').href = backUrl;
+    document.getElementById('backBurgerAnchor').href = backUrl;
+}
+
+function getFileName(filenameObj, path) {
+    for (var i=0; i<filenameObj.length; i++) {
+        const f = filenameObj[i];
+        if (path === f.path) {
+            return f.name;
+        }
+    }
+
+    return "";
+}
+
+function filenameTable(filename) {
+    document.getElementById('filesArea').innerHTML = "";
+
+    if (filename.length !== 0) {
+        setBackToStocker(filename[0].back);
+    }
+
+    var list = new Array();
+    for (var i=0; i<files.length; i++) {
+        const num = i + 1;
+        list.push([num, getFileName(filename, files[i]), '<span id="status_' + i + '">未実行</span>']);
+    }
+
+    bulmaRender.makeTable(document.getElementById('filesArea'), ['No', 'ファイル名', '実行結果'], list);
+}
+
+
+function changeStatus(listNumber, stat) {
+    const elem = document.getElementById('status_' + listNumber);
+    if (elem) {
+        elem.innerHTML = bulmaRender.statusIcon[stat];
+    }
+}
+
+function getFilenames(param, callBack) {
+    const init = {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: param
+    };
+
+    fetch(stockerConfig.cgi_root + "/filename.cgi", init).then(function(response) {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return Promise.reject(new Error("ERROR status: " + response.status));
+        }
+    }).then(function(json) {
+        callBack(json);
+        actionParam = json;
+    }).catch(function(error) {
+        console.log('error: ' + error.message);
+    });
+}
+</script>
+</head>
+<body>
+  <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <h1 class="navbar-item">縮小画像作成</h1>
+      <a role="button" class="navbar-burger is-active" aria-label="menu" id="backBurgerAnchor" href="#" aria-expanded="false">
+        <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+      </div>
+      <div class="navbar-end">
+        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
+      </div>
+    </div>
+  </nav>
+  <span id="warning"></span>
+    <section class="section">
+      <div class="container">
+        <h1 class="title is-5">出力先</h1>
+        <h2 class="subtitle is-6">ディレクトリ名: <span id="outputDirectoryArea"></span></h2>
+        <a class="button is-primary" href="javascript:execute()">実行</a>
+        <a class="button" id="cancelButton">キャンセル</a>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <h1 class="title is-5">選択</h1>
+        <h2 class="subtitle is-6"><span id="filesCountArea"></span>ファイル</h2>
+        <table class="table" id="filesArea"></table>
+      </div>
+    </section>
+
+<script>
+    if (files.length === 0) {
+        bulmaRender.warning(document.getElementById('warning'), "ファイルが選択されていません");
+    }
+
+    document.getElementById('filesCountArea').innerText = files.length;
+
+    document.getElementById('filesArea').innerHTML = "読み込み中...";
+    getFilenames(myQuery, filenameTable);
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "XXXX",
+    "title": "項目ダミー",
+    "form": "XXXX.html",
+    "parameters": {"action": "XXXX.cgi"}
+  },
+  {
+    "id": "make_thumbnail",
+    "title": "縮小画像作成",
+    "form": "make_thumbnail.html",
+    "parameters": {}
+  }
+]

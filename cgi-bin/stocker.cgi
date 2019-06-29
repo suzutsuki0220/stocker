@@ -20,7 +20,7 @@ our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
 our $SUPPORT_TYPES;
 our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
-our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
+our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
 our ($ICON_UNKNOWN, $ICON_DIRECTORY);
@@ -54,6 +54,7 @@ eval {
       "%htdocs_root%/bundle.js",
       "%htdocs_root%/stocker_list.js",
       "%htdocs_root%/get_directory_list.js",
+      "%htdocs_root%/action.js",
   );
   my @csslist = (
       "%htdocs_root%/stocker_list.css",
@@ -108,8 +109,8 @@ print "<span style=\"float: left\">\n";
 print "<input type=\"text\" name=\"search\" size=\"20\" maxlength=\"64\" value=\"${in_search}\">\n";
 print "<input type=\"submit\" value=\"表示絞込み\">\n";
 print "</span>\n";
-print "<span style=\"float: right\">\n";
-&print_action();
+print "<span id=\"action_list\" style=\"float: right\">\n";
+##&print_action();
 print "</span></div>\n";
 
 print "<div id=\"uppath\"></div>\n";
@@ -159,6 +160,7 @@ print <<EOD;
 var boxes = ${boxes};
 var encoded_dir = document.file_check.fm_dir.value;
 
+makeActionList();
 reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
 function printIcons(elements) {

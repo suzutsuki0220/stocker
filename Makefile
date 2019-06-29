@@ -3,8 +3,8 @@
 include directory_defs.mk
 
 LIB_FILES  = FileOperator.pm FileTypes.pm HTML_Elem.pm MimeTypes.pm ParamPath.pm
-DOC_FILES  = $(wildcard htdocs/*) $(wildcard jsUtils/src/*)
-CGI_FILES  = edit.cgi filefunc.cgi stocker.cgi summary.cgi supporttypes.cgi
+DOC_FILES  = $(wildcard htdocs/*)
+CGI_FILES  = edit.cgi filefunc.cgi filename.cgi stocker.cgi summary.cgi supporttypes.cgi
 CONF_FILES = basedirs.conf SupportTypes.pl stocker.conf
 
 all:
@@ -28,6 +28,7 @@ clean:
 
 make-directory:
 	mkdir -p $(CGI_DIR)
+	mkdir -p $(CGI_DIR)/action
 	mkdir -p $(DOCS_DIR)
 	mkdir -p $(BASE_DIR)
 	mkdir -p $(BIN_DIR)
@@ -41,6 +42,7 @@ install-config:
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%cgi_root%|$(CGI_ROOT)|g' \
 	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
@@ -56,13 +58,15 @@ install-htdocs:
 	find $(DOCS_DIR) -type f -exec chmod 644 {} \;
 
 install-cgi:
-	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)
+	cp $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)
+	cp $(wildcard cgi-bin/action/*) $(CGI_DIR)/action
 	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
+	       -e 's|%cgi_root%|$(CGI_ROOT)|g' \
 	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
-	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
-	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
+	       $(addprefix $(CGI_DIR)/,$(CGI_FILES)) $(CGI_DIR)/action/*
+	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES)) $(CGI_DIR)/action/*
 
 install-modules:
 	make -C GPS_viewer/ install $(INSTALL_PARAM)
