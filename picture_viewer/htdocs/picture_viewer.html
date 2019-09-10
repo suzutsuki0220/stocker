@@ -9,16 +9,7 @@
 <script type="text/javascript" src="get_directory_list.js"></script>
 <script type="text/javascript" src="picture_viewer.js"></script>
 <script type="text/javascript">
-    const image_pattern = /\.(jpg|jpeg|png|gif|bmp|tif|tiff)$/;  // 拡張子判定
     const params = jsUtils.url.getRawParams();
-
-    function getPictureSrc(path) {
-        return stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640";
-    }
-
-    function getExifInfoHref(path) {
-        return "javascript:toggleExifLayer('" + path + "')";
-    }
 
     function getFileProperties() {
         const ajax = jsUtils.ajax;
@@ -26,7 +17,6 @@
         ajax.setOnSuccess(function(xhr) {
             const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
             const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-
             document.title = properties.name;
             document.getElementById('fileNameArea').textContent = properties.name;
             setFileName(properties.name);
@@ -69,11 +59,11 @@
   <div id="ExifLayer" style="display: none"></div>
   <div id="loadingText"><i class="fas fa-spinner fa-pulse"></i> loading...</div>
   <span class="InfoLinkArea maruButton"><a href="" id="InfoLink">i</a></span>
-  <img src="" width="100%" name="ImageArea" id="ImageArea">
+  <img src="" name="ImageArea" id="ImageArea">
+  <img src="" name="ThumbnailArea" id="ThumbnailArea">
 </div>
 
 <script type="text/javascript">
-    document.getElementById('ImageArea').src = stockerConfig.uri.thumbnail + '?' + jsUtils.url.getQueryInUrl();
     getFileProperties();
 </script>
 

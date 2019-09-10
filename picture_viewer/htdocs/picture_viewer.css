@@ -14,14 +14,11 @@ body {
     text-align: right;
 }
 
-#ImageArea {
-    width: 100%;
-    height: 95%;
-}
-
 #ContentArea {
     clear: both;
     position: relative;
+    width: 100%;
+    height: 95%;
 }
 
 #loadingText {
@@ -68,4 +65,8 @@ table.ExifTable th,td {
 
 #InfoLink {
     text-decoration: none;
+}
+
+#ThumbnailArea {
+    width: 100%;
 }

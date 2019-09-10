@@ -37,7 +37,7 @@ function getImageFiles(data) {
       var path = path_elem.item(0).firstChild.data;
       var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
-      if (image_pattern.test(name.toLowerCase())) {
+      if (stockerConfig.supportTypes.imagePattern.test(name.toLowerCase())) {
         var img = new Object();
 
         img.name = name;
@@ -97,21 +97,36 @@ function changeImage(index) {
     renewControlField(index);
 }
 
+function getPictureSrc(path) {
+    return stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640";
+}
+
+function getThumbnailSrc(path) {
+    return stockerConfig.uri.thumbnail + "?file=" + path + "&dir=" + params.dir;
+}
+
+function getExifInfoHref(path) {
+    return "javascript:toggleExifLayer('" + path + "')";
+}
+
 function imageLoading(path) {
     if (document.ImageArea.addEventListener) {
-      document.ImageArea.addEventListener("load", unsetLoading, false);
+      document.ImageArea.addEventListener("load", onImageLoad, false);
       document.ImageArea.addEventListener("error", unsetLoading, false);
       document.ImageArea.addEventListener("abort", unsetLoading, false);
     } else if (document.ImageArea.attachEvent) {
-      document.ImageArea.attachEvent("onload", unsetLoading);
+      document.ImageArea.attachEvent("onload", onImageLoad);
       document.ImageArea.attachEvent("onerror", unsetLoading);
       document.ImageArea.attachEvent("onabort", unsetLoading);
     }
 
     load_flg = true;
     document.getElementById('ImageArea').src = getPictureSrc(path);
+    document.getElementById('ThumbnailArea').src = getThumbnailSrc(path);
     document.getElementById('InfoLink').href = getExifInfoHref(path);
     document.getElementById('loadingText').style.display = "block";
+
+    toggleImageLayer(false);
 }
 
 function unsetLoading() {
@@ -132,6 +147,22 @@ function unsetLoading() {
         changeImage(load_again);
         load_again = -1;
     }
+}
+
+function onImageLoad() {
+    const contentArea = document.getElementById('ContentArea');
+    const area = document.getElementById('ImageArea');
+    const imageSize = {width: area.naturalWidth, height: area.naturalHeight};
+    const fitSize = jsUtils.image.getMaximumFitSize(imageSize, {width: contentArea.clientWidth, height: contentArea.clientHeight});
+    area.style.width = fitSize.width;
+    area.style.height = fitSize.height;
+    toggleImageLayer(true);
+    unsetLoading();
+}
+
+function toggleImageLayer(sw) {
+    document.getElementById('ImageArea').style.display = sw ? "block" : "none";
+    document.getElementById('ThumbnailArea').style.display = sw ? "none" : "block";
 }
 
 function toggleExifLayer(path) {
