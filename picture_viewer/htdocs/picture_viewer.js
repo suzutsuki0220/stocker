@@ -154,8 +154,8 @@ function onImageLoad() {
     const area = document.getElementById('ImageArea');
     const imageSize = {width: area.naturalWidth, height: area.naturalHeight};
     const fitSize = jsUtils.image.getMaximumFitSize(imageSize, {width: contentArea.clientWidth, height: contentArea.clientHeight});
-    area.style.width = fitSize.width;
-    area.style.height = fitSize.height;
+    area.style.width  = String(fitSize.width) + "px";
+    area.style.height = String(fitSize.height) + "px";
     toggleImageLayer(true);
     unsetLoading();
 }
