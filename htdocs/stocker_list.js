@@ -181,7 +181,21 @@ function trimThumbnail(id, imgUrl) {
     };
 }
 
-function reloadDirectoryList(encoded_dir, url_path, from, to) {
+// 戻る操作で前のページとするURLを追加する
+function addBackHistory(encoded_dir, url_path) {
+    const url = stockerConfig.uri.stocker + '?dir=' + encoded_dir + '&file=' + url_path;
+    history.pushState({dir: encoded_dir, file: url_path}, '', url);
+}
+
+window.onpopstate = function(event) {
+    const s = event.state;
+    reloadDirectoryList(s.dir, s.file, 0, boxes, false);
+}
+
+function reloadDirectoryList(encoded_dir, url_path, from, to, addHistory = true) {
+    if (addHistory === true) {
+        addBackHistory(encoded_dir, url_path);
+    }
     document.getElementById('directoryListArea').innerHTML = "読み込み中...";
     document.getElementById('path_link').innerHTML = "";
     document.file_check.target.value = url_path;  // for edit.cgi
