@@ -189,11 +189,12 @@ function addBackHistory(encoded_dir, url_path) {
 
 window.onpopstate = function(event) {
     const s = event.state;
+    document.file_check.fm_dir.value = s.dir;
     reloadDirectoryList(s.dir, s.file, 0, boxes, false);
-}
+};
 
 function reloadDirectoryList(encoded_dir, url_path, from, to, addHistory = true) {
-    if (addHistory === true) {
+    if (addHistory === true) { // TODO: addHistory フラグを追加したのは綺麗ではないので、読み込み処理だけを別関数にしたい
         addBackHistory(encoded_dir, url_path);
     }
     document.getElementById('directoryListArea').innerHTML = "読み込み中...";
