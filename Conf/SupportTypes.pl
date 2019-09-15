@@ -12,7 +12,7 @@
   "mpg", "mpeg", "mpe", "m2p",
   "ts" , "mts", "m2ts",
   "mp4", "m4v", "mpg4",
-  "asf", "wmv"
+  "asf", "wmv", "3gp"
 );
 
 # @support_audio_types
