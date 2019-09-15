@@ -20,10 +20,8 @@ my $form = eval{new CGI};
 my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
-print "ContentType: text/json\n\n";
 my $first = 1;
 my @files = $form->multi_param('file');
-print "[";
 foreach (@files) {
   my $path = $_;
   my $location = ParamPath->get_up_path(ParamPath->urlpath_decode($path));
@@ -31,6 +29,8 @@ foreach (@files) {
   my $name = ParamPath->get_filename(ParamPath->urlpath_decode($path));
 
   if ($first == 1) {
+    print "Content-Type: text/json\n\n";
+    print "[";
     $first = 0;
   } else {
     print ",";
@@ -38,4 +38,9 @@ foreach (@files) {
 
   print "{\"back\": \"" . $back . "\", \"path\": \"". $path . "\", \"location\": \"" . $location . "\", \"name\": \"". $name . "\"}";
 }
-print "]";
+
+if ($first == 0) {
+  print "]";
+} else {
+  print "Status: 400\n\n";
+}
