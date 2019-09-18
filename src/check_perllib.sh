@@ -1,20 +1,22 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -tW
 
 ### enumerate the library below
 
-my @librarys = (
- "CGI"
+my @libraries = (
+ "utf8"
+ ,"Encode"
+ ,"Encode::Guess"
+ ,"CGI"
  ,"File::Path"
  ,"File::Copy"
- ,"utf8"
- ,"Encode"
+ ,"MIME::Base64"
 );
 
 #####
 
 print "--- Perl library install check start ---\n";
 
-foreach (@librarys) {
+foreach (@libraries) {
     if (&check($_) != 0) {
         exit 1;
     }
