@@ -5,9 +5,9 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta name="format-detection" content="telephone=no">
-<script type="text/javascript" src="bundle.js"></script>
-<script type="text/javascript" src="get_directory_list.js"></script>
-<script type="text/javascript" src="picture_viewer.js"></script>
+<script type="text/javascript" src="bundle/stocker.js"></script>
+<script type="text/javascript" src="javascript/get_directory_list.js"></script>
+<script type="text/javascript" src="javascript/picture_viewer.js"></script>
 <script type="text/javascript">
     const params = jsUtils.url.getRawParams();
 
@@ -31,8 +31,8 @@
         ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
     }
 </script>
-<link rel="stylesheet" type="text/css" href="stocker.css">
-<link rel="stylesheet" type="text/css" href="picture_viewer.css">
+<link rel="stylesheet" type="text/css" href="stylesheet/stocker.css">
+<link rel="stylesheet" type="text/css" href="stylesheet/picture_viewer.css">
 <title></title>
 </head>
 <body>
