@@ -6,14 +6,15 @@ CC=gcc
 CPP=g++
 LIBPARAM=-ltag
 
-COMMON_MODULE=../../common_module/libstockercommon.a
+COMMON_MODULE_DIR=../common
+COMMON_MODULE=$(COMMON_MODULE_DIR)/libstockercommon.a
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
 else
 	CFLAGS=-O2 -Wall -DNDEBUG
 endif
-CFLAGS+=-I../../common_module/Inc
+CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
 CPPFLAGS=$(CFLAGS)
 
@@ -31,7 +32,7 @@ all: make_noimage noimage.h $(OBJECTS) $(COMMON_MODULE)
 #	$(CPP) $(CPPFLAGS) -o $@ $^ $(LIBPARAM)
 
 $(COMMON_MODULE):
-	make -C ../../common_module
+	make -C $(COMMON_MODULE_DIR)
 
 make_noimage: make_noimage.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -41,7 +42,7 @@ noimage.h: noimage/noimage.png
 
 clean:
 	$(RM) $(TARGET) $(OBJECTS) noimage.h make_noimage *~
-	make -C ../../common_module clean
+	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)

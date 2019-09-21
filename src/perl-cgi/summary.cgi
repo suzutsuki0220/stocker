@@ -23,9 +23,9 @@ our ($TEXT_VIEWER_CGI, $PICTURE_VIEWER_CGI, $GET_THUMBNAIL_CGI, $GETFILE_CGI);
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle.js",
-      "%htdocs_root%/stocker_list.js",
-      "%htdocs_root%/get_directory_list.js",
+      "%htdocs_root%/bundle/stocker.js",
+      "%htdocs_root%/javascript/stocker_list.js",
+      "%htdocs_root%/javascript/get_directory_list.js",
   );
   my @csslist = (
       "%htdocs_root%/stocker.css",

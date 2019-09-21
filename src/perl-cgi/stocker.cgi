@@ -51,13 +51,13 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle.js",
-      "%htdocs_root%/stocker_list.js",
-      "%htdocs_root%/get_directory_list.js",
-      "%htdocs_root%/action.js",
+      "%htdocs_root%/bundle/stocker.js",
+      "%htdocs_root%/javascript/stocker_list.js",
+      "%htdocs_root%/javascript/get_directory_list.js",
+      "%htdocs_root%/javascript/action.js",
   );
   my @csslist = (
-      "%htdocs_root%/stocker_list.css",
+      "%htdocs_root%/stylesheet/stocker_list.css",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist,

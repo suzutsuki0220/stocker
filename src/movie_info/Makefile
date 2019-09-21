@@ -7,7 +7,7 @@ FFMPEG_LIBS=    libavdevice                        \
                 libswscale                         \
                 libavutil                          \
 
-COMMON_MODULE_DIR=../../common_module
+COMMON_MODULE_DIR=../common
 LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
@@ -16,7 +16,7 @@ CFLAGS := $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(FFMPEG_LIBS)) $(LDLIBS)
 CPPFLAGS=$(CFLAGS)
 
-include ../../directory_defs.mk
+include ../directory_defs.mk
 
 TARGET = movie_info
 CPP=g++

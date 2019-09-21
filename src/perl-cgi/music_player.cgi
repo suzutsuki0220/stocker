@@ -39,9 +39,9 @@ my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKet
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle.js",
-      "%htdocs_root%/get_directory_list.js",
-      "%htdocs_root%/music_player.js",
+      "%htdocs_root%/bundle/stocker.js",
+      "%htdocs_root%/javascript/get_directory_list.js",
+      "%htdocs_root%/javascript/music_player.js",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist

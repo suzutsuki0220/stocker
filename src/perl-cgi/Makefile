@@ -2,32 +2,21 @@
 
 include ../directory_defs.mk
 
-LIB_FILES  =
-DOC_FILES  = music_player.js
-CGI_FILES  = get_media.cgi music_player.cgi
-CONF_FILES = music_player.conf
+REPLACE_DEST = ../../dist/cgi-bin
+CGI_FILES = $(wildcard *.cgi) $(wildcard action/*.cgi)
 
-all:
+all: libcheck cgi
 	make -C taginfo
 
 clean:
-	rm -f *~
-	make -C taginfo clean
-
-make-directory:
-	mkdir -p $(CGI_DIR)
-	mkdir -p $(DOCS_DIR)
-	mkdir -p $(BASE_DIR)
-	mkdir -p $(BIN_DIR)
-	mkdir -p $(LIBS_DIR)
-	mkdir -p $(CONF_DIR)
-	mkdir -m 1777 -p $(CACHE_DIR)
+	rm -f $(REPLACE_DEST)/$(CGI_FILES)
 
 libcheck:
-	./library_check.sh
+	../check_perllib.sh
 
-install-config:
-	cp -rn $(addprefix Conf/,$(CONF_FILES)) $(CONF_DIR)
+cgi: $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
+	mkdir -p $(REPLACE_DEST)
+	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(REPLACE_DEST)
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
@@ -35,26 +24,10 @@ install-config:
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
-	       $(addprefix $(CONF_DIR)/,$(CONF_FILES))
-
-install-libs:
-	cp -r $(addprefix lib/,$(LIB_FILES)) $(LIBS_DIR)
-	cp -r lib/* $(LIBS_DIR)
-
-install-htdocs:
-	cp -r $(addprefix htdocs/,$(DOC_FILES)) $(DOCS_DIR)
-	chmod 644 $(addprefix $(DOCS_DIR)/,$(DOC_FILES))
+	       $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
+	chmod 755 $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 
 install-cgi:
-	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(CGI_DIR)
-	sed -i -e 's|%bin_dir%|$(BIN_DIR)|g' \
-	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
-	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
-	       $(addprefix $(CGI_DIR)/,$(CGI_FILES))
-	chmod 755 $(addprefix $(CGI_DIR)/,$(CGI_FILES))
+	cp -r $(addprefix $(REPLACE_DEST),$(CGI_FILES)) $(CGI_DIR)
 
-install-bin:
-	make -C taginfo install $(INSTALL_PARAM)
-
-install: libcheck make-directory install-config install-htdocs install-cgi install-bin
-
+install: libcheck make-directory install-cgi

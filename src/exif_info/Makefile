@@ -7,9 +7,9 @@ CFLAGS += -Wall -O2 -g
 CFLAGS := $(shell pkg-config --cflags $(EXIF_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(EXIF_LIBS)) $(LDLIBS)
 
-include ../../directory_defs.mk
+include ../directory_defs.mk
 
-COMMON_MODULE_DIR=../../common_module
+COMMON_MODULE_DIR=../common
 LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
@@ -22,7 +22,7 @@ OBJS=$(addsuffix .o,$(TARGET))
 all: $(OBJS) $(COMMON_MODULE)
 
 $(COMMON_MODULE):
-	make -C $(COMMON_MODULE_DIR) 
+	make -C $(COMMON_MODULE_DIR)
 
 clean:
 	$(RM) $(TARGET) $(OBJS)

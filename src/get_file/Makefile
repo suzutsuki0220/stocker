@@ -5,7 +5,7 @@ OBJECTS=Range.o
 CC=gcc
 CPP=g++
 
-COMMON_MODULE_DIR=../common_module
+COMMON_MODULE_DIR=../common
 LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a
 
 ifeq ($(debug), 1)

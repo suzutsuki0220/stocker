@@ -37,12 +37,12 @@ my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle.js",
-      "%htdocs_root%/filefunc.js",
-      "%htdocs_root%/get_directory_list.js",
+      "%htdocs_root%/bundle/stocker.js",
+      "%htdocs_root%/javascript/filefunc.js",
+      "%htdocs_root%/javascript/get_directory_list.js",
   );
   my @csslist = (
-      "%htdocs_root%/stocker.css",
+      "%htdocs_root%/stylesheet/stocker.css",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist,

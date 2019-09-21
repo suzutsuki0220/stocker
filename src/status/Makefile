@@ -9,14 +9,15 @@ OBJS=$(SRC:.cpp=.o)
 LIBFLAG=-L./
 CC=g++
 
-COMMON_MODULE=../common_module/libstockercommon.a
+COMMON_MODULE_DIR=../common
+COMMON_MODULE=$(COMMON_MODULE_DIR)/libstockercommon.a
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
 else
 	CFLAGS=-O2 -Wall
 endif
-CFLAGS+= -I../common_module/Inc
+CFLAGS+= -I$(COMMON_MODULE_DIR)/Inc
 CPPFLAGS=$(CFLAGS)
 
 include ../directory_defs.mk
@@ -35,11 +36,11 @@ $(MEM_STATUS): $(MEM_STATUS).o $(COMMON_MODULE)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
 $(COMMON_MODULE):
-	make -C ../common_module
+	make -C $(COMMON_MODULE_DIR)
 
 clean:
 	rm -f $(TARGET) $(OBJS) *~
-	make -C ../common_module clean
+	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)

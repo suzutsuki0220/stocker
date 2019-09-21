@@ -212,13 +212,13 @@ sub print_form() {
   my $mes;
 
   my @jslist = (
-      "%htdocs_root%/bundle.js",
-      "%htdocs_root%/converter_common.js",
-      "%htdocs_root%/converter_form.js",
+      "%htdocs_root%/bundle/stocker.js",
+      "%htdocs_root%/javascript/converter_common.js",
+      "%htdocs_root%/javascript/converter_form.js",
   );
   my @csslist = (
-      "%htdocs_root%/stocker.css",
-      "%htdocs_root%/converter_form.css",
+      "%htdocs_root%/stylesheet/stocker.css",
+      "%htdocs_root%/stylesheet/converter_form.css",
   );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
