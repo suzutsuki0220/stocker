@@ -28,6 +28,7 @@ cgi: $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 	chmod 755 $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 
 install-cgi:
+	mkdir -p $(CGI_DIR)
 	cp -r $(addprefix $(REPLACE_DEST),$(CGI_FILES)) $(CGI_DIR)
 
-install: libcheck make-directory install-cgi
+install: libcheck install-cgi

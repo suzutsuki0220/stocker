@@ -26,6 +26,9 @@ install-bin:
 	make -C status install $(INSTALL_PARAM)
 	make -C taginfo install $(INSTALL_PARAM)
 
+libcheck:
+	./check_perllib.sh
+
 make-directory:
 	mkdir -p $(CGI_DIR)
 	mkdir -p $(DOCS_DIR)
@@ -34,8 +37,5 @@ make-directory:
 	mkdir -p $(LIBS_DIR)
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
-
-libcheck:
-	./library_check.sh
 
 install: libcheck make-directory install-bin

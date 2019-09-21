@@ -37,4 +37,3 @@ clean:
 install:
 	mkdir -p $(CGI_DIR)
 	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) $(TARGET).cpp $(LIBSTOCKER_COMMON)
-

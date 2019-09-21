@@ -18,7 +18,7 @@ CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
 CPPFLAGS=$(CFLAGS)
 
-include ../../directory_defs.mk
+include ../directory_defs.mk
 
 .phony: all clean install
 
