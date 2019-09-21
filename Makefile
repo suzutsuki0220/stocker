@@ -15,7 +15,7 @@ all:
 	make -C picture_viewer/
 	make -C status/
 	make -C thumbnail/
-	sh -c "cd javascript; npm run webpack"
+	npm run webpack
 
 clean:
 	make -C GPS_viewer/ clean
