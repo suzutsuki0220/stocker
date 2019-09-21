@@ -1,0 +1,17 @@
+version: '2'
+services:
+    web:
+        container_name: webui
+        build:
+            context: ./container/webui/compose
+
+        volumes:
+            - ./htdocs:/var/www/html:z
+            - ./dist/bundle:/var/www/bundle:z
+            - ./dist/config:/var/www/stocker/config:z
+            - ./dist/cgi-bin:/var/www/cgi-bin:z
+            - ./dist/perl-modules:/var/www/stocker/lib:z
+            - ./src:/var/www/src:z
+            - ./container/log/nginx:/var/log/nginx/web:z
+        ports:
+            - "8080:80"
