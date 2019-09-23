@@ -5,18 +5,17 @@ include ../directory_defs.mk
 REPLACE_DEST = ../../dist/cgi-bin
 CGI_FILES = $(wildcard *.cgi) $(wildcard action/*.cgi)
 
-all: libcheck cgi
-	make -C taginfo
+all: libcheck $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 
 clean:
-	rm -f $(REPLACE_DEST)/$(CGI_FILES)
+	rm -f $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 
 libcheck:
 	../check_perllib.sh
 
-cgi: $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
-	mkdir -p $(REPLACE_DEST)
-	cp -r $(addprefix cgi-bin/,$(CGI_FILES)) $(REPLACE_DEST)
+$(REPLACE_DEST)/%.cgi: %.cgi
+	mkdir -p $(@D)
+	cp $(subst $(REPLACE_DEST),.,$@) $@
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
@@ -24,8 +23,8 @@ cgi: $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
 	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
-	       $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
-	chmod 755 $(addprefix $(REPLACE_DEST)/,$(CGI_FILES))
+	       $@
+	chmod 755 $@
 
 install-cgi:
 	mkdir -p $(CGI_DIR)

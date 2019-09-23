@@ -7,6 +7,7 @@ all:
 	make -C get_dir
 	make -C get_file
 	make -C movie_info
+	make -C perl-cgi
 	make -C status
 	make -C taginfo
 
@@ -15,6 +16,7 @@ clean:
 	make -C get_dir clean
 	make -C get_file clean
 	make -C movie_info clean
+	make -C perl-cgi
 	make -C status clean
 	make -C taginfo clean
 
@@ -23,6 +25,7 @@ install-bin:
 	make -C get_dir install $(INSTALL_PARAM)
 	make -C get_file install $(INSTALL_PARAM)
 	make -C movie_info install $(INSTALL_PARAM)
+	make -C perl-cgi install $(INSTALL_PARAM)
 	make -C status install $(INSTALL_PARAM)
 	make -C taginfo install $(INSTALL_PARAM)
 
