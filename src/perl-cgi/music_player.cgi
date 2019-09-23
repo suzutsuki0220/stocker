@@ -6,7 +6,6 @@ use utf8;
 use Encode;
 use CGI;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
@@ -15,7 +14,7 @@ our $GET_MEDIA_CGI = "";
 our $BASE_DIR_CONF = "";
 our $SUPPORT_TYPES = "";
 our $TAGINFO_CGI   = "taginfo";
-require '%conf_dir%/music_player.conf';
+require $ENV{'STOCKER_CONF'} . '/music_player.conf';
 
 our @support_audio_types;
 require $SUPPORT_TYPES;

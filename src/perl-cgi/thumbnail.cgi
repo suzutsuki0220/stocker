@@ -9,7 +9,6 @@ use File::Path;
 use File::Copy 'copy';
 #use GD;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use FileTypes;
@@ -21,7 +20,7 @@ our $FFMPEG_CMD;
 our $CONVERT_CMD;
 our $THM_CACHE_DIR;
 our $TMP_FILE;
-require '%conf_dir%/thumbnail.conf';
+require $ENV{'STOCKER_CONF'} . '/thumbnail.conf';
 
 our @support_video_types;
 our @support_image_types;

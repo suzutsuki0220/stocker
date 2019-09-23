@@ -19,8 +19,6 @@ $(REPLACE_DEST)/%.cgi: %.cgi
 	sed -i -e 's|%docs_dir%|$(DOCS_DIR)|g' \
 	       -e 's|%bin_dir%|$(BIN_DIR)|g' \
 	       -e 's|%htdocs_root%|$(HTDOCS_ROOT)|g' \
-	       -e 's|%libs_dir%|$(LIBS_DIR)|g' \
-	       -e 's|%conf_dir%|$(CONF_DIR)|g' \
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
 	       $@

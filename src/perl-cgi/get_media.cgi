@@ -5,7 +5,6 @@ use warnings;
 use CGI;
 use Encode;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
@@ -14,7 +13,7 @@ $|=1;  # enable autofulsh
 our $BASE_DIR_CONF = "";
 our $AUDIO_CONVERTER_CMD = "/usr/bin/ffmpeg";
 our $AUDIO_CONVERT_BITRATE = "256k";
-require '%conf_dir%/music_player.conf';
+require $ENV{'STOCKER_CONF'} . '/music_player.conf';
 
 my $form = eval{new CGI};
 

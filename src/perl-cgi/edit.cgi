@@ -11,16 +11,14 @@ use CGI;
 use Encode;
 use File::Path;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use FileOperator;
 
 our $BASE_DIR_CONF;
 our $STOCKER_CGI;
-our $TRASH_PATH;
 our $TMP_FILE;
-require '%conf_dir%/stocker.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode   = scalar($form->param('mode'));

@@ -13,7 +13,6 @@ use File::Copy;  # for file move across the different filesystems
 use File::Path;
 use File::Basename;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use FileOperator;
@@ -24,7 +23,7 @@ our $TRASH_PATH;
 our $TRASH_IGNORE_PATTERN;
 our $TRASH_IGNORE_SIZE;
 our $TMP_FILE;
-require '%conf_dir%/stocker.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode = scalar($form->param('mode'));

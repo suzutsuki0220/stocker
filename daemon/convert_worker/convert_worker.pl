@@ -7,7 +7,6 @@ use Encode;
 use File::Path;
 use XML::Simple;
 
-use lib '%libs_dir%';
 use ParamPath;
 use ConverterJob;
 
@@ -18,10 +17,10 @@ our $CONV_OUT_DIR   = "";
 our $ENCODE_BATCH   = "";
 our $ENCBATCH_LIST  = "";
 our $ENCODING_THREAD = "2";
-require '%conf_dir%/converter.conf';
+require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 our @CONVERT_PARAMS;
-require '%conf_dir%/ConvertParams.pl';
+require $ENV{'STOCKER_CONF'} . '/ConvertParams.pl';
 
 while(1) {
   if (-f "$ENCBATCH_LIST") {

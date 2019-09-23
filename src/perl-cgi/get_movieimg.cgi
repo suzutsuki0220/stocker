@@ -8,7 +8,6 @@ use CGI;
 use File::Copy;
 use File::Path;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
@@ -16,7 +15,7 @@ our $BASE_DIR_CONF;
 our $MOVIE_IMAGE_CACHE_DIR = "";
 our $TMP_PATH = "";
 our $FFMPEG_CMD = "";
-require '%conf_dir%/converter.conf';
+require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 $SIG{HUP} = $SIG{INT} = $SIG{PIPE} = $SIG{QUIT} = $SIG{TERM} = \&remove_temp;
 

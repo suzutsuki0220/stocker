@@ -8,12 +8,11 @@ use CGI;
 use Encode;
 use File::Path;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
 our $STOCKER_CGI;
-require '%conf_dir%/stocker.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 

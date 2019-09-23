@@ -6,7 +6,6 @@ use utf8;
 use CGI;
 use Encode;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use MimeTypes;
@@ -24,7 +23,7 @@ our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
 our ($ICON_UNKNOWN, $ICON_DIRECTORY);
-require '%conf_dir%/stocker.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 our @support_video_types;
 our @support_audio_types;

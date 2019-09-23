@@ -7,23 +7,19 @@ use Encode;
 use CGI;
 use File::Path;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 use ConverterJob;
 use FileTypes;
 
 our $STOCKER_CGI    = "";
-our $SELECTOR_CGI   = "";
 our $MOVIEIMG_CGI   = "";
 our $GETFILE_CGI    = "";
-our $MOVIE_INFO_CGI = "";
 our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
-our $TMP_FILE       = "";
 our $CONV_OUT_DIR   = "";
 our $ENCBATCH_LIST  = "";
-require '%conf_dir%/converter.conf';
+require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 our @support_video_types;
 our @support_audio_types;

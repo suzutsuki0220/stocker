@@ -7,7 +7,6 @@ use File::Path;
 use File::Copy 'copy';
 use Encode;
 
-use lib '%libs_dir%';
 use ParamPath;
 use HTML_Elem;
 
@@ -15,7 +14,7 @@ our $BASE_DIR_CONF;
 our $VGA_CACHE_DIR = "";
 our $TMP_FILE = "";
 our $RESIZE_CMD = "";
-require '%conf_dir%/picture_viewer.conf';
+require $ENV{'STOCKER_CONF'} . '/picture_viewer.conf';
 
 $VGA_CACHE_DIR =~ s/\/{1,}$//g;  # 末尾に"/"が付いていたら消す
 

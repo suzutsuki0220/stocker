@@ -6,14 +6,12 @@ use utf8;
 use CGI;
 use Encode;
 
-use lib '%libs_dir%';
 use ParamPath;
 use MimeTypes;
 use FileTypes;
 
-our $BASE_DIR_CONF;
 our $SUPPORT_TYPES;
-require '%conf_dir%/stocker.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 our @support_video_types;
 our @support_audio_types;

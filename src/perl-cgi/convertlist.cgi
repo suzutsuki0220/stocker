@@ -7,14 +7,12 @@ use Encode;
 use Encode::Guess;
 use CGI;
 
-use lib '%libs_dir%';
-#use ParamPath;
 use HTML_Elem;
 use ConverterJob;
 
 our $STOCKER_CGI    = "";
 our $ENCBATCH_LIST  = "";
-require '%conf_dir%/converter.conf';
+require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 my $script = $ENV{'SCRIPT_NAME'};
 
