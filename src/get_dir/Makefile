@@ -7,8 +7,7 @@ OBJECTS=$(subst .cpp,.o,$(SRC))
 CC=gcc
 CPP=g++
 
-COMMON_MODULE_DIR=../common
-LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a
+include ../directory_defs.mk
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -17,8 +16,6 @@ else
 endif
 CFLAGS+= -I$(COMMON_MODULE_DIR)/Inc
 CPPFLAGS=$(CFLAGS)
-
-include ../directory_defs.mk
 
 .phony: all clean install
 

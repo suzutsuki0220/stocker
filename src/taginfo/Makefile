@@ -6,8 +6,7 @@ CC=gcc
 CPP=g++
 LIBPARAM=-ltag
 
-COMMON_MODULE_DIR=../common
-COMMON_MODULE=$(COMMON_MODULE_DIR)/libstockercommon.a
+include ../directory_defs.mk
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -17,8 +16,6 @@ endif
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
 CPPFLAGS=$(CFLAGS)
-
-include ../directory_defs.mk
 
 .phony: all clean install
 

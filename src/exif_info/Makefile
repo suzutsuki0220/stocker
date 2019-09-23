@@ -1,6 +1,6 @@
 # use pkg-config for getting CFLAGS and LDLIBS
 EXIF_LIBS=libexif
-TARGET = exif_info
+TARGET=exif_info
 CPP=g++
 
 CFLAGS += -Wall -O2 -g
@@ -9,10 +9,7 @@ LDLIBS := $(shell pkg-config --libs $(EXIF_LIBS)) $(LDLIBS)
 
 include ../directory_defs.mk
 
-COMMON_MODULE_DIR=../common
-LIBSTOCKER_COMMON=$(COMMON_MODULE_DIR)/libstockercommon.a
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
-
 CPPFLAGS=$(CFLAGS)
 
 OBJS=$(addsuffix .o,$(TARGET))

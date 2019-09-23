@@ -9,8 +9,7 @@ OBJS=$(SRC:.cpp=.o)
 LIBFLAG=-L./
 CC=g++
 
-COMMON_MODULE_DIR=../common
-COMMON_MODULE=$(COMMON_MODULE_DIR)/libstockercommon.a
+include ../directory_defs.mk
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -20,22 +19,20 @@ endif
 CFLAGS+= -I$(COMMON_MODULE_DIR)/Inc
 CPPFLAGS=$(CFLAGS)
 
-include ../directory_defs.mk
-
 .PHONY: all clean install
 
-all: $(TARGET) $(COMMON_MODULE)
+all: $(TARGET) $(LIBSTOCKER_COMMON)
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) -o $@ -c $<
 
-$(FS_STATUS): $(FS_STATUS).o $(COMMON_MODULE)
+$(FS_STATUS): $(FS_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
-$(MEM_STATUS): $(MEM_STATUS).o $(COMMON_MODULE)
+$(MEM_STATUS): $(MEM_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
-$(COMMON_MODULE):
+$(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 clean:
