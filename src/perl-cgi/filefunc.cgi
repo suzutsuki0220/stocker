@@ -23,6 +23,7 @@ our $TRASH_PATH;
 our $TRASH_IGNORE_PATTERN;
 our $TRASH_IGNORE_SIZE;
 our $TMP_FILE;
+our $HTDOCS_ROOT;
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
@@ -36,12 +37,12 @@ my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle/stocker.js",
-      "%htdocs_root%/javascript/filefunc.js",
-      "%htdocs_root%/javascript/get_directory_list.js",
+      "${HTDOCS_ROOT}/bundle/stocker.js",
+      "${HTDOCS_ROOT}/javascript/filefunc.js",
+      "${HTDOCS_ROOT}/javascript/get_directory_list.js",
   );
   my @csslist = (
-      "%htdocs_root%/stylesheet/stocker.css",
+      "${HTDOCS_ROOT}/stylesheet/stocker.css",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist,

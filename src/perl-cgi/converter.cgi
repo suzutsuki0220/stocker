@@ -19,6 +19,7 @@ our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
 our $CONV_OUT_DIR   = "";
 our $ENCBATCH_LIST  = "";
+our $HTDOCS_ROOT    = "";
 require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 our @support_video_types;
@@ -208,13 +209,13 @@ sub print_form() {
   my $mes;
 
   my @jslist = (
-      "%htdocs_root%/bundle/stocker.js",
-      "%htdocs_root%/javascript/converter_common.js",
-      "%htdocs_root%/javascript/converter_form.js",
+      "${HTDOCS_ROOT}/bundle/stocker.js",
+      "${HTDOCS_ROOT}/javascript/converter_common.js",
+      "${HTDOCS_ROOT}/javascript/converter_form.js",
   );
   my @csslist = (
-      "%htdocs_root%/stylesheet/stocker.css",
-      "%htdocs_root%/stylesheet/converter_form.css",
+      "${HTDOCS_ROOT}/stylesheet/stocker.css",
+      "${HTDOCS_ROOT}/stylesheet/converter_form.css",
   );
   my $html = HTML_Elem->new();
   $html->{'javascript'} = \@jslist;
@@ -501,7 +502,7 @@ EOD
     const tend = document.getElementsByName('tend' + f_num)[0].value;
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
-    const url = "%htdocs_root%/convertselect.html?file=${encoded_path}&dir=${dir}"
+    const url = "${HTDOCS_ROOT}/convertselect.html?file=${encoded_path}&dir=${dir}"
               + "&scene_list=" + sceneListPath + "&clicked=" + clicked + "&v_map=" + vno
               + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 

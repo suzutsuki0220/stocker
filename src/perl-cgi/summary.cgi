@@ -11,12 +11,15 @@ use HTML_Elem;
 use MimeTypes;
 use FileOperator;
 
+our $HTDOCS_ROOT;
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
+
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle/stocker.js",
+      "${HTDOCS_ROOT}/bundle/stocker.js",
   );
   my @csslist = (
-      "%htdocs_root%/stocker.css",
+      "${HTDOCS_ROOT}/stocker.css",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist,

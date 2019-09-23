@@ -14,6 +14,7 @@ our $GET_MEDIA_CGI = "";
 our $BASE_DIR_CONF = "";
 our $SUPPORT_TYPES = "";
 our $TAGINFO_CGI   = "taginfo";
+our $HTDOCS_ROOT   = "";
 require $ENV{'STOCKER_CONF'} . '/music_player.conf';
 
 our @support_audio_types;
@@ -38,9 +39,9 @@ my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKet
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle/stocker.js",
-      "%htdocs_root%/javascript/get_directory_list.js",
-      "%htdocs_root%/javascript/music_player.js",
+      "${HTDOCS_ROOT}/bundle/stocker.js",
+      "${HTDOCS_ROOT}/javascript/get_directory_list.js",
+      "${HTDOCS_ROOT}/javascript/music_player.js",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist

@@ -18,6 +18,7 @@ our $BOX_HEIGHT;
 our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
 our $SUPPORT_TYPES;
+our $HTDOCS_ROOT;
 our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
 our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
@@ -50,13 +51,13 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 
 eval {
   my @jslist = (
-      "%htdocs_root%/bundle/stocker.js",
-      "%htdocs_root%/javascript/stocker_list.js",
-      "%htdocs_root%/javascript/get_directory_list.js",
-      "%htdocs_root%/javascript/action.js",
+      "${HTDOCS_ROOT}/bundle/stocker.js",
+      "${HTDOCS_ROOT}/javascript/stocker_list.js",
+      "${HTDOCS_ROOT}/javascript/get_directory_list.js",
+      "${HTDOCS_ROOT}/javascript/action.js",
   );
   my @csslist = (
-      "%htdocs_root%/stylesheet/stocker_list.css",
+      "${HTDOCS_ROOT}/stylesheet/stocker_list.css",
   );
   my $html = HTML_Elem->new(
       javascript => \@jslist,
@@ -199,13 +200,13 @@ function printIcons(elements) {
             action = "${CONVERTER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (photo_pattern.test(name.toLowerCase())) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
-            action = "%htdocs_root%/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
+            action = "${HTDOCS_ROOT}/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (gps_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MAP}";
             action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (txt_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_TEXT}";
-            action = "%htdocs_root%/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
+            action = "${HTDOCS_ROOT}/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (doc_pattern.test(name.toLowerCase())) {
             icon   = "${ICON_MS_WORD}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
