@@ -9,10 +9,6 @@
 #include "UrlPath.h"
 #include "Config.h"
 
-#ifndef CONFDIR
-#define CONFDIR "/var/www/stocker/conf"
-#endif
-
 #if __cplusplus
 extern "C" {
 #endif
@@ -126,7 +122,6 @@ int main (int argc, char **argv)
 {
     int ret = -1;
     cgi_util *cgi = NULL;
-    UrlPath  *urlpath = NULL;
     FileUtil *fileutil = NULL;
     std::string filepath;
     std::stringstream ss;
@@ -144,7 +139,7 @@ int main (int argc, char **argv)
             return -1;
         }
 
-        urlpath = new UrlPath(CONFDIR);
+        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
 
         std::string f_dir  = cgi->get_value("dir");
         std::string f_file = cgi->get_value("file");

@@ -1,9 +1,9 @@
 FROM nginx
 
 RUN apt-get -q clean && apt-get -q update && apt-get -q install -y spawn-fcgi fcgiwrap \
-    && apt-get -q install -y curl ffmpeg git \
+    && apt-get -q install -y curl ffmpeg git libcgi-pm-perl \
     && apt-get -q install -y build-essential libexif-dev libtag-extras-dev imagemagick libmagick++-dev \
-    && apt-get -q install -y libavcodec-dev libavformat-dev libavutil-dev libcgi-pm-perl
+    && apt-get -q install -y libavcodec-dev libavformat-dev libavutil-dev libavdevice-dev libavfilter-dev libswscale-dev
 RUN sed -i 's/www-data/nginx/g' /etc/init.d/fcgiwrap \
     && chown nginx:nginx /etc/init.d/fcgiwrap \
     && mkdir -p /var/www /var/www/stocker \
