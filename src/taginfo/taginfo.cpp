@@ -60,7 +60,7 @@ conv(string &str)
     char *ptr_in  = (char*)str.c_str();
     size_t  ptr_in_size = str.size();
     char    *ptr_out = str_out;
-    size_t  mybufsz = (size_t) MYBUFSZ;        
+    size_t  mybufsz = (size_t) MYBUFSZ;
 
     ic = iconv_open("UTF-8", "UTF-16");
     iconv(ic, &ptr_in, &ptr_in_size, &ptr_out, &mybufsz);
@@ -218,17 +218,15 @@ int
 main(int argc, char *argv[])
 {
     int ret = -1;
-    cgi_util *cgi = NULL;
-    UrlPath  *urlpath = NULL;
 
     try {
-        cgi = new cgi_util();
+        cgi_util *cgi = new cgi_util();
         if (cgi->parse_param() != 0) {
             print_400_header(cgi->get_err_message().c_str());
             return -1;
         }
 
-        urlpath = new UrlPath(CONFDIR);
+        UrlPath *urlpath = new UrlPath(getenv("STOCKER_CONF"));
 
         std::string filepath;
         std::string f_dir  = cgi->get_value("dir");
@@ -253,18 +251,15 @@ main(int argc, char *argv[])
         } else if (f_mode == "picture") {
             outputPicture(f);
         }
-    } catch (std::bad_alloc ex) {
+
+        ret = 0;
+    } catch (std::bad_alloc &ex) {
         fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
-        goto END;
-    } catch (std::invalid_argument e) {
+    } catch (std::invalid_argument &e) {
         std::stringstream ss;
         ss << "Exception: " << e.what();
         print_400_header(ss.str().c_str());
-        goto END;
     }
-    ret = 0;
 
-END:
     return ret;
 }
-

@@ -24,12 +24,12 @@ clean:
 
 install-bin:
 	make -C config install $(INSTALL_PARAM)
-	make -C exif_info install $(INSTALL_PARAM)
-	make -C get_dir install $(INSTALL_PARAM)
-	make -C get_file install $(INSTALL_PARAM)
+	make -C exif_info install
+	make -C get_dir install
+	make -C get_file install
 	make -C movie_info install $(INSTALL_PARAM)
 	make -C status install $(INSTALL_PARAM)
-	make -C taginfo install $(INSTALL_PARAM)
+	make -C taginfo install
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
 
 libcheck:

@@ -1,11 +1,14 @@
 debug=1
 
 TARGET=get_file
-OBJECTS=Range.o
-CC=gcc
+INC=$(wildcard Inc/*.h Inc/*.hpp)
+SRC=$(wildcard *.cpp)
+OBJECTS=$(subst .cpp,.o,$(SRC))
 CPP=g++
 
 include ../directory_defs.mk
+
+DEST_DIR = ../../dist/cgi-bin
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -18,19 +21,21 @@ CPPFLAGS=$(CFLAGS)
 
 .phony: all clean install
 
-all: $(OBJECTS) $(LIBSTOCKER_COMMON)
+all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
+
+$(DEST_DIR)/$(TARGET): $(OBJECTS) $(LIBSTOCKER_COMMON)
+	$(CPP) $(CPPFLAGS) -o $@ $^
 
 $(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
-%.o: %.cpp %.h
+%.o: %.cpp $(INC)
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) $(TARGET) $(OBJECTS) $(TARGET).o *~
+	$(RM) $(DEST_DIR)/$(TARGET) $(OBJECTS) *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) $(TARGET).cpp $(LIBSTOCKER_COMMON)
-
+	cp -r $(DEST_DIR)/$(TARGET) $(CGI_DIR)

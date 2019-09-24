@@ -1,12 +1,16 @@
 debug=1
 
 TARGET=taginfo
-OBJECTS=
+INC=$(wildcard Inc/*.h Inc/*.hpp)
+SRC=taginfo.cpp
+OBJECTS=$(subst .cpp,.o,$(SRC))
 CC=gcc
 CPP=g++
 LIBPARAM=-ltag
 
 include ../directory_defs.mk
+
+DEST_DIR = ../../dist/cgi-bin
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -19,22 +23,21 @@ CPPFLAGS=$(CFLAGS)
 
 .phony: all clean install
 
-#all: $(TARGET)
-all: make_noimage noimage.h $(OBJECTS) $(COMMON_MODULE)
+all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
 
-%.o: %.cpp %.h
+$(DEST_DIR)/$(TARGET): noimage.h $(OBJECTS) $(LIBSTOCKER_COMMON)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LIBPARAM)
+
+%.o: %.cpp $(INC)
 	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LIBPARAM)
 
-#$(TARGET): $(OBJECTS) $(COMMON_MODULE)
-#	$(CPP) $(CPPFLAGS) -o $@ $^ $(LIBPARAM)
-
-$(COMMON_MODULE):
+$(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 make_noimage: make_noimage.c
 	$(CC) $(CFLAGS) $< -o $@
 
-noimage.h: noimage/noimage.png
+noimage.h: noimage/noimage.png make_noimage
 	./make_noimage $< $@
 
 clean:
@@ -43,4 +46,4 @@ clean:
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(OBJECTS) taginfo.cpp $(COMMON_MODULE) $(LIBPARAM)
+	cp -r $(DEST_DIR)/$(TARGET) $(CGI_DIR)

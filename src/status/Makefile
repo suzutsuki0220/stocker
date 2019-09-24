@@ -11,6 +11,8 @@ CC=g++
 
 include ../directory_defs.mk
 
+DEST_DIR = ../../dist/cgi-bin
+
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
 else
@@ -21,24 +23,24 @@ CPPFLAGS=$(CFLAGS)
 
 .PHONY: all clean install
 
-all: $(TARGET) $(LIBSTOCKER_COMMON)
+all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) -o $@ -c $<
 
-$(FS_STATUS): $(FS_STATUS).o $(LIBSTOCKER_COMMON)
+$(DEST_DIR)/$(FS_STATUS): $(FS_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
-$(MEM_STATUS): $(MEM_STATUS).o $(LIBSTOCKER_COMMON)
+$(DEST_DIR)/$(MEM_STATUS): $(MEM_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
 $(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 clean:
-	rm -f $(TARGET) $(OBJS) *~
+	rm -f $(addprefix $(DEST_DIR)/,$(TARGET)) $(OBJS) *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)
-	cp $(TARGET) $(CGI_DIR)
+	cp $(addprefix $(DEST_DIR)/,$(TARGET)) $(CGI_DIR)

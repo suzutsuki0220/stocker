@@ -12,10 +12,6 @@
 #include "UrlPath.h"
 #include "Range.h"
 
-#ifndef CONFDIR
-#define CONFDIR "/var/www/stocker/conf"
-#endif
-
 int
 main(int argc, char** argv)
 {
@@ -26,7 +22,7 @@ main(int argc, char** argv)
         Range *range  = new Range();
         cgi_util *cgi = new cgi_util();
         FileUtil *fu  = new FileUtil();
-        UrlPath  *urlpath = new UrlPath(CONFDIR);
+        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
 
         if (cgi->parse_param() != 0) {
             print_400_header(cgi->get_err_message().c_str());
@@ -51,7 +47,7 @@ main(int argc, char** argv)
             print_400_header(ss.str().c_str());
             return -1;
         }
- 
+
         filesize = fu->getFilesize(filepath);
         if (filesize == 0 && !fu->get_err_message().empty()) {
             print_400_header(fu->get_err_message().c_str());
@@ -140,10 +136,10 @@ main(int argc, char** argv)
             }
             printf("\r\n--%s--\r\n", boundary.c_str());
         }
-    } catch (std::bad_alloc ex) {
+    } catch (std::bad_alloc &ex) {
         fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
         goto END;
-    } catch (std::invalid_argument e) {
+    } catch (std::invalid_argument &e) {
         std::stringstream ss;
         ss << "Exception: " << e.what();
         print_400_header(ss.str().c_str());

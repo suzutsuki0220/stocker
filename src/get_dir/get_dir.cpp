@@ -14,10 +14,6 @@
 #include "htmlutil.h"
 #include "UrlPath.h"
 
-#ifndef CONFDIR
-#define CONFDIR "/var/www/stocker/conf"
-#endif
-
 #define NUM_PARAM_NO_SET -1
 
 static void
@@ -67,12 +63,12 @@ makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, cgi_
     std::string decoded_path, encoded;
     struct stat st;
 
-    // $B<B:]$K%"%/%;%9$9$k0Y$N%U%k%Q%9(B
+    // 実際にアクセスする為のフルパス
     std::string filepath = p_path;
     filepath.append("/");
     filepath.append(name);
 
-    // $B%Q%i%a!<%?MQ%Q%9(B
+    // パラメータ用パス
     urlpath->decode(decoded_path, path);
     decoded_path.append("/");
     decoded_path.append(name);
@@ -83,7 +79,7 @@ makeElementTag(std::stringstream &ss, FileUtil *fileutil, UrlPath *urlpath, cgi_
 	    std::list<std::string> li;
 	    elem_type = "DIRECTORY";
 	    fileutil->getDirectoryList(li, filepath);
-	    filesize = li.size();  // $B%G%#%l%/%H%j$N>l9g$O$=$NCf?H$N?t(B
+	    filesize = li.size();  // ディレクトリの場合はその中身の数
 	} else {
 	    elem_type = "FILE";
 	    filesize  = st.st_size;
@@ -116,7 +112,7 @@ main(int argc, char** argv)
 	std::stringstream ss;
         cgi_util *cgi = new cgi_util();
         FileUtil *fileutil = new FileUtil();
-        UrlPath  *urlpath  = new UrlPath(CONFDIR);
+        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
 	int from = NUM_PARAM_NO_SET;
 	int to   = NUM_PARAM_NO_SET;
 
@@ -159,7 +155,7 @@ main(int argc, char** argv)
 		return -1;
 	    }
 	}
- 
+
 	type = fileutil->checkPathType(p_path);
 	if (type == PATH_NOTFOUND) {
 	    ss << "failed to open filepath - " << urlpath->getErrorMessage();
@@ -202,16 +198,15 @@ main(int argc, char** argv)
 
 	print_200_header("application/xml", ss.str().length());
 	fwrite(ss.str().c_str(), ss.str().length(), sizeof(char), stdout);
-    } catch (std::bad_alloc ex) {
+
+        ret = 0;
+    } catch (std::bad_alloc &ex) {
         fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
-        goto END;
-    } catch (std::invalid_argument e) {
+    } catch (std::invalid_argument &e) {
         std::stringstream ss;
         ss << "Exception: " << e.what();
         print_400_header(ss.str().c_str());
-        goto END;
     }
-    ret = 0;
 
 END:
     return ret;
