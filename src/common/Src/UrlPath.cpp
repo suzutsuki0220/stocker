@@ -156,7 +156,7 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
 		file_path.clear();
 	    }
 	}
-    } catch (std::invalid_argument e) {
+    } catch (std::invalid_argument &e) {
 	err_message = e.what();
 	file_path.clear();
 	return;

@@ -3,6 +3,8 @@ EXIF_LIBS=libexif
 TARGET=exif_info
 CPP=g++
 
+DEST_DIR = ../../dist/cgi-bin
+
 CFLAGS += -Wall -O2 -g
 CFLAGS := $(shell pkg-config --cflags $(EXIF_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(EXIF_LIBS)) $(LDLIBS)
@@ -12,18 +14,25 @@ include ../directory_defs.mk
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 CPPFLAGS=$(CFLAGS)
 
-OBJS=$(addsuffix .o,$(TARGET))
+SRC=$(wildcard *.cpp)
+OBJS=$(subst .cpp,.o,$(SRC))
 
 .phony: all clean install
 
-all: $(OBJS) $(COMMON_MODULE)
+all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
 
-$(COMMON_MODULE):
+.cpp.o:
+	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LDLIBS)
+
+$(DEST_DIR)/$(TARGET): $(OBJS) $(LIBSTOCKER_COMMON)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
+
+$(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 clean:
-	$(RM) $(TARGET) $(OBJS)
+	$(RM) $(DEST_DIR)/$(TARGET) $(OBJS)
 
 install:
 	mkdir -p $(CGI_DIR)
-	$(CPP) $(CPPFLAGS) -DCONFDIR=\"$(CONF_DIR)\" -o $(CGI_DIR)/$(TARGET) $(TARGET).cpp $(LIBSTOCKER_COMMON) $(LDLIBS)
+	cp -r $(DEST_DIR)/$(TARGET) $(CGI_DIR)
