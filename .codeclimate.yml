@@ -5,5 +5,4 @@ plugins:
   eslint:
     enabled: true
 exclude_patterns:
-  - "GPS_viewer/htdocs/leaflet.js"
-  - "GPS_viewer/htdocs/ccchart-min.js"
+  - "dist/"
