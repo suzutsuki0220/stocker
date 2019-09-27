@@ -5,6 +5,9 @@ services:
         build:
             context: ./container/webui/compose
 
+        environment:
+            - STOCKER_CONF=/var/www/stocker/conf
+            - PERL5LIB=/var/www/stocker/lib
         volumes:
             - ./:/var/www/stocker/repo:z
             - ./container/log/nginx:/var/log/nginx/web:z
