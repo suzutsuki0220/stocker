@@ -4,11 +4,15 @@ include ../directory_defs.mk
 
 REPLACE_DEST = ../../dist/config
 CONF_FILES = $(wildcard *.conf)
+CGI_CONFIG = $(wildcard *.pl)
 
-all: $(addprefix $(REPLACE_DEST)/,$(CONF_FILES))
+all: $(addprefix $(REPLACE_DEST)/,$(CONF_FILES) $(CGI_CONFIG))
 
 clean:
-	rm -f $(addprefix $(REPLACE_DEST)/,$(CONF_FILES))
+	rm -f $(addprefix $(REPLACE_DEST)/,$(CONF_FILES) $(CGI_CONFIG))
+
+$(REPLACE_DEST)/%.pl: %.pl
+	cp $^ $@
 
 $(REPLACE_DEST)/%.conf: %.conf
 	mkdir -p $(@D)
@@ -22,7 +26,7 @@ $(REPLACE_DEST)/%.conf: %.conf
 	       -e 's|%cache_dir%|$(CACHE_DIR)|g' \
 	       -e 's|%trash_dir%|$(TRASH_DIR)|g' \
 	       $@
-	chmod 755 $@
+	chmod 644 $@
 
 install:
 	mkdir -p $(CONF_DIR)
