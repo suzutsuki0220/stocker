@@ -14,6 +14,7 @@ RUN sed -i 's/www-data/nginx/g' /etc/init.d/fcgiwrap \
     && ln -sf /var/www/stocker/repo/src/perl-modules /var/www/stocker/lib
 ADD ./vhost.conf /etc/nginx/conf.d/default.conf
 RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && apt-get install -y nodejs
+RUN apt-get -q install -y libpango1.0-dev
 WORKDIR /var/www
 
 CMD /etc/init.d/fcgiwrap start \
