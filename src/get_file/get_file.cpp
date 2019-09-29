@@ -22,7 +22,7 @@ main(int argc, char** argv)
         Range *range  = new Range();
         cgi_util *cgi = new cgi_util();
         FileUtil *fu  = new FileUtil();
-        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
+        UrlPath  *urlpath = new UrlPath();
 
         if (cgi->parse_param() != 0) {
             print_400_header(cgi->get_err_message().c_str());

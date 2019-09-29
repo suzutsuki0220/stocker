@@ -112,7 +112,7 @@ main(int argc, char** argv)
 	std::stringstream ss;
         cgi_util *cgi = new cgi_util();
         FileUtil *fileutil = new FileUtil();
-        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
+        UrlPath  *urlpath = new UrlPath();
 	int from = NUM_PARAM_NO_SET;
 	int to   = NUM_PARAM_NO_SET;
 
@@ -208,7 +208,5 @@ main(int argc, char** argv)
         print_400_header(ss.str().c_str());
     }
 
-END:
     return ret;
 }
-

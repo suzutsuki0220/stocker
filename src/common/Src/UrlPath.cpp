@@ -9,15 +9,11 @@
 #include "UrlPath.h"
 #include "Config.h"
 
-UrlPath::UrlPath(const char *confdir)
+UrlPath::UrlPath()
 {
     this->cgi = new cgi_util();
     this->futil = new FileUtil();
     this->err_message.clear();
-
-    if (confdir) {
-        this->confdir = confdir; /* @param : confdir (IN)   basedir.confがあるディレクトリ */
-    }
 }
 
 UrlPath::~UrlPath()
@@ -57,7 +53,7 @@ UrlPath::getBaseDir(std::string &basedir, std::string &dir_name)
 
     basedir.clear();
 
-    confpath = this->confdir;
+    confpath = getenv("STOCKER_CONF");
     confpath.append("/basedirs.conf");
 
     if (conf->parse(confpath.c_str()) != 0) {

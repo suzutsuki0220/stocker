@@ -14,9 +14,9 @@ private:
     std::string confdir;
 
     void appendSubnameEncode(std::string &subname, std::string &url_path);
- 
+
 public:
-    UrlPath(const char *confdir);
+    UrlPath();
     ~UrlPath();
 
     int  getBaseDir(std::string &basedir, std::string &dir_name);

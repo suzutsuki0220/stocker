@@ -139,7 +139,7 @@ int main (int argc, char **argv)
             return -1;
         }
 
-        UrlPath  *urlpath = new UrlPath(getenv("STOCKER_CONF"));
+        UrlPath  *urlpath = new UrlPath();
 
         std::string f_dir  = cgi->get_value("dir");
         std::string f_file = cgi->get_value("file");
