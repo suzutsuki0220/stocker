@@ -3,7 +3,7 @@
 include ./directory_defs.mk
 
 all:
-	make -C config
+	make -C config $(INSTALL_PARAM)
 	make -C exif_info
 	make -C get_dir
 	make -C get_file
@@ -18,7 +18,7 @@ clean:
 	make -C get_dir clean
 	make -C get_file clean
 	make -C movie_info clean
-	make -C perl-cgi
+	make -C perl-cgi clean
 	make -C status clean
 	make -C taginfo clean
 
@@ -28,8 +28,8 @@ install-bin:
 	make -C get_dir install
 	make -C get_file install
 	make -C movie_info install $(INSTALL_PARAM)
-	make -C status install $(INSTALL_PARAM)
-	make -C taginfo install
+	make -C status install CGI_DIR=$(CGI_DIR)
+	make -C taginfo install CGI_DIR=$(CGI_DIR)
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
 
 libcheck:
@@ -38,6 +38,7 @@ libcheck:
 make-directory:
 	mkdir -p $(CGI_DIR)
 	mkdir -p $(DOCS_DIR)
+	mkdir -p $(DATA_DIR)
 	mkdir -p $(BASE_DIR)
 	mkdir -p $(BIN_DIR)
 	mkdir -p $(LIBS_DIR)

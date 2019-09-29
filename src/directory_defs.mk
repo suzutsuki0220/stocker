@@ -6,6 +6,7 @@ CGI_DIR    = $(DESTDIR)/cgi-bin/stocker
 DOCS_DIR   = $(DESTDIR)/html$(HTDOCS_ROOT)
 BASE_DIR   = $(DESTDIR)/stocker
 BIN_DIR    = $(BASE_DIR)/bin
+DATA_DIR   = $(BASE_DIR)/data
 LIBS_DIR   = $(BASE_DIR)/lib
 CONF_DIR   = $(BASE_DIR)/conf
 CACHE_DIR  = $(BASE_DIR)/cache

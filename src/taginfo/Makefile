@@ -41,7 +41,7 @@ noimage.h: noimage/noimage.png make_noimage
 	./make_noimage $< $@
 
 clean:
-	$(RM) $(TARGET) $(OBJECTS) noimage.h make_noimage *~
+	$(RM) $(DEST_DIR)/$(TARGET) $(OBJECTS) noimage.h make_noimage *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
