@@ -4,9 +4,7 @@ use strict;
 use warnings;
 use utf8;
 
-use CGI;
 use Encode;
-use File::Path;
 
 use ParamPath;
 use HTML_Elem;
@@ -14,14 +12,11 @@ use HTML_Elem;
 our $BASE_DIR_CONF;
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
-my $form = eval{new CGI};
-
-my $first = 1;
-my @files = $form->multi_param('file');
-
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name('');
+
+  my $first = 1;
   for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
     my $lst = $ins->get_base_dir_column($i);
     my $name = $lst->{name};
@@ -42,5 +37,10 @@ eval {
     print "]";
   } else {
     print "Status: 400\n\n";
+    print "missing dirconf";
   }
 };
+if ($@) {
+  print "Status: 400\n\n";
+  print "$@";
+}

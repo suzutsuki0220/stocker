@@ -15,7 +15,7 @@ RUN sed -i 's/www-data/nginx/g' /etc/init.d/fcgiwrap \
     && ln -sf /var/www/stocker/repo/dist/cgi-bin /var/www/cgi-bin/stocker \
     && ln -sf /var/www/stocker/repo/src/perl-modules /var/www/stocker/lib
 ADD ./vhost.conf /etc/nginx/conf.d/default.conf
-WORKDIR /var/www
+WORKDIR /var/www/stocker/repo
 
 CMD /etc/init.d/fcgiwrap start \
     && nginx -g 'daemon off;'

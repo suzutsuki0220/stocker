@@ -11,5 +11,6 @@ services:
         volumes:
             - ./:/var/www/stocker/repo:z
             - ./container/log/nginx:/var/log/nginx/web:z
+            - ./dist/data:/var/www/stocker/data:z
         ports:
             - "8080:80"
