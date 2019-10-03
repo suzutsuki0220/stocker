@@ -10,6 +10,7 @@ my @libraries = (
  ,"File::Path"
  ,"File::Copy"
  ,"MIME::Base64"
+ ,"XML::Simple"
 );
 
 #####
