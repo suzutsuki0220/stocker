@@ -36,7 +36,6 @@ Config::parse(const char *conffile)
 {
     int ret = -1;
     FILE *fp = NULL;
-    char buf;
     std::string key;
     std::string value;
     bool keyget = false;
@@ -52,8 +51,9 @@ Config::parse(const char *conffile)
         err_message.append(conffile);
         goto end;
     }
- 
-    while ((buf = (char)fgetc(fp)) != EOF) {
+
+    while (!feof(fp)) {
+        char buf = (char)fgetc(fp);
         if (buf == '\r' || buf == '\n') {
             if (keyget) {
                 param[trim(key)] = trim(value);
