@@ -20,6 +20,7 @@ our $SUPPORT_TYPES  = "";
 our $CONV_OUT_DIR   = "";
 our $ENCBATCH_LIST  = "";
 our $HTDOCS_ROOT    = "";
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 require $ENV{'STOCKER_CONF'} . '/converter.conf';
 
 our @support_video_types;
