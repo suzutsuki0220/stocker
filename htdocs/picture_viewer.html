@@ -26,7 +26,6 @@
 
             const back = stockerConfig.uri.stocker + '?dir=' + params.dir + '&file=' + properties.up_path;
             document.getElementById('backAnchor').href = back;
-            document.getElementById('backBurgerAnchor').href = back;
         });
         ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
     }
@@ -38,8 +37,9 @@
 <body>
   <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand"> <!-- left side of the navbar -->
+      <a href="#" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
       <h1 class="navbar-item" id="fileNameArea"></h1>
-      <a role="button" class="navbar-burger is-active" aria-label="menu" id="backBurgerAnchor" href="#" aria-expanded="false">
+      <a role="button" class="navbar-burger" aria-label="menu" href="#" aria-expanded="false">
         <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -49,7 +49,7 @@
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
+        <a id="InfoLink" role="button" class="navbar-item" href="#"><i class="fas fa-info"></i></a>
       </div>
     </div>
   </nav>
@@ -58,7 +58,6 @@
 <div id="ContentArea">
   <div id="ExifLayer" style="display: none"></div>
   <div id="loadingText"><i class="fas fa-spinner fa-pulse"></i> loading...</div>
-  <span class="InfoLinkArea maruButton"><a href="" id="InfoLink">i</a></span>
   <img src="" name="ImageArea" id="ImageArea">
   <img src="" name="ThumbnailArea" id="ThumbnailArea">
 </div>
