@@ -15,7 +15,7 @@ our $BASE_DIR_CONF = "";
 our $SUPPORT_TYPES = "";
 our $TAGINFO_CGI   = "taginfo";
 our $HTDOCS_ROOT   = "";
-require $ENV{'STOCKER_CONF'} . '/music_player.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 our @support_audio_types;
 require $SUPPORT_TYPES;
