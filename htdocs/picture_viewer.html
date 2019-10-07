@@ -6,6 +6,7 @@
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta name="format-detection" content="telephone=no">
 <script type="text/javascript" src="bundle/stocker.js"></script>
+<script type="text/javascript" src="javascript/bulma_render.js"></script>
 <script type="text/javascript" src="javascript/get_directory_list.js"></script>
 <script type="text/javascript" src="javascript/picture_viewer.js"></script>
 <script type="text/javascript">
@@ -39,17 +40,26 @@
     <div class="navbar-brand"> <!-- left side of the navbar -->
       <a href="#" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
       <h1 class="navbar-item" id="fileNameArea"></h1>
-      <a role="button" class="navbar-burger" aria-label="menu" href="#" aria-expanded="false">
+      <a role="button" class="navbar-burger" aria-label="menu" href="#" aria-expanded="false" data-target="navMenu">
         <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
       </a>
     </div>
-    <div class="navbar-menu">
+    <div class="navbar-menu" id="navMenu">
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-        <a id="InfoLink" role="button" class="navbar-item" href="#"><i class="fas fa-info"></i></a>
+        <div class="navbar-item">
+          <div class="buttons">
+          <a id="InfoLink" class="button" href="#">
+            <span class="icon">
+              <i class="fas fa-info"></i>
+            </span>
+            <span>EXIF</span>
+          </a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
