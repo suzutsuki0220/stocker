@@ -13,7 +13,7 @@ $|=1;  # enable autofulsh
 our $BASE_DIR_CONF = "";
 our $AUDIO_CONVERTER_CMD = "/usr/bin/ffmpeg";
 our $AUDIO_CONVERT_BITRATE = "256k";
-require $ENV{'STOCKER_CONF'} . '/music_player.conf';
+require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 
