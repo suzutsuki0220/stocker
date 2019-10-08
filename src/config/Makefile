@@ -6,10 +6,12 @@ REPLACE_DEST = ../../dist/config
 CONF_FILES = $(wildcard *.conf)
 CGI_CONFIG = $(wildcard *.pl)
 
-all: $(addprefix $(REPLACE_DEST)/,$(CONF_FILES) $(CGI_CONFIG))
+DIST_FILES =  $(addprefix $(REPLACE_DEST)/,$(CONF_FILES) $(CGI_CONFIG))
+
+all: $(DIST_FILES)
 
 clean:
-	rm -f $(addprefix $(REPLACE_DEST)/,$(CONF_FILES) $(CGI_CONFIG))
+	rm -f $(DIST_FILES)
 
 $(REPLACE_DEST)/%.pl: %.pl
 	cp $^ $@
@@ -31,4 +33,4 @@ $(REPLACE_DEST)/%.conf: %.conf
 
 install:
 	mkdir -p $(CONF_DIR)
-	cp -r $(addprefix $(REPLACE_DEST)/,$(CONF_FILES)) $(CONF_DIR)
+	cp -r $(DIST_FILES) $(CONF_DIR)
