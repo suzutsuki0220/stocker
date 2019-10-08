@@ -13,10 +13,13 @@ clean:
 install-src:
 	make -C src install $(INSTALL_PARAM)
 
-install-htdocs:
-	cp dist/bundle/stocker.js $(DOCS_DIR)
+install-htdocs: $(DOCS_DIR)/bundle
+	cp dist/bundle/stocker.js $(DOCS_DIR)/bundle
 	cp -r htdocs/* $(DOCS_DIR)
 	find $(DOCS_DIR) -type f -exec chmod 644 {} \;
+
+$(DOCS_DIR)/bundle:
+	mkdir -p $@
 
 install: install-src install-htdocs
 
