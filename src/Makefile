@@ -36,7 +36,7 @@ libcheck:
 	./check_perllib.sh
 
 install-libs:
-	cp -r perl_modules/*.pm $(LIBS_DIR)
+	cp -r perl-modules/*.pm $(LIBS_DIR)
 
 make-directory:
 	mkdir -p $(CGI_DIR)
