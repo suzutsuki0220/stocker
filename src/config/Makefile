@@ -33,4 +33,4 @@ $(REPLACE_DEST)/%.conf: %.conf
 
 install:
 	mkdir -p $(CONF_DIR)
-	cp -r $(DIST_FILES) $(CONF_DIR)
+	cp -rn $(DIST_FILES) $(CONF_DIR)
