@@ -11,7 +11,7 @@ CC=g++
 
 include ../directory_defs.mk
 
-DEST_DIR = ../../dist/cgi-bin
+DIST_DIR = ../../dist/cgi-bin
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -23,24 +23,27 @@ CPPFLAGS=$(CFLAGS)
 
 .PHONY: all clean install
 
-all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
+all: $(DIST_DIR) $(LIBSTOCKER_COMMON) $(addprefix $(DIST_DIR)/,$(TARGET))
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) -o $@ -c $<
 
-$(DEST_DIR)/$(FS_STATUS): $(FS_STATUS).o $(LIBSTOCKER_COMMON)
+$(DIST_DIR):
+	mkdir -p $(DIST_DIR)
+
+$(DIST_DIR)/$(FS_STATUS): $(FS_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
-$(DEST_DIR)/$(MEM_STATUS): $(MEM_STATUS).o $(LIBSTOCKER_COMMON)
+$(DIST_DIR)/$(MEM_STATUS): $(MEM_STATUS).o $(LIBSTOCKER_COMMON)
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBFLAG)
 
 $(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 clean:
-	rm -f $(addprefix $(DEST_DIR)/,$(TARGET)) $(OBJS) *~
+	rm -f $(addprefix $(DIST_DIR)/,$(TARGET)) $(OBJS) *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)
-	cp $(addprefix $(DEST_DIR)/,$(TARGET)) $(CGI_DIR)
+	cp $(addprefix $(DIST_DIR)/,$(TARGET)) $(CGI_DIR)

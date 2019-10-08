@@ -24,16 +24,19 @@ clean:
 
 install-bin:
 	make -C config install $(INSTALL_PARAM)
-	make -C exif_info install
-	make -C get_dir install
-	make -C get_file install
-	make -C movie_info install $(INSTALL_PARAM)
+	make -C exif_info install $(CGI_DIR)
+	make -C get_dir install $(CGI_DIR)
+	make -C get_file install $(CGI_DIR)
+	make -C movie_info install $(CGI_DIR)
 	make -C status install CGI_DIR=$(CGI_DIR)
 	make -C taginfo install CGI_DIR=$(CGI_DIR)
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
 
 libcheck:
 	./check_perllib.sh
+
+install-libs:
+	cp -r perl_modules/*.pm $(LIBS_DIR)
 
 make-directory:
 	mkdir -p $(CGI_DIR)
@@ -45,4 +48,4 @@ make-directory:
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
 
-install: libcheck make-directory install-bin
+install: libcheck make-directory install-bin install-libs

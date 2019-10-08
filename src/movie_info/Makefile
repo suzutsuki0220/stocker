@@ -9,7 +9,7 @@ FFMPEG_LIBS=    libavdevice                        \
 
 include ../directory_defs.mk
 
-DEST_DIR = ../../dist/cgi-bin
+DIST_DIR = ../../dist/cgi-bin
 
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 
@@ -30,17 +30,20 @@ muxing:            LDLIBS += -lm
 
 .phony: all clean install
 
-all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
+all: $(DIST_DIR) $(LIBSTOCKER_COMMON) $(addprefix $(DIST_DIR)/,$(TARGET))
 
-$(DEST_DIR)/$(TARGET): $(OBJS) $(LIBSTOCKER_COMMON)
+$(DIST_DIR):
+	mkdir -p $(DIST_DIR)
+
+$(DIST_DIR)/$(TARGET): $(OBJS) $(LIBSTOCKER_COMMON)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
 
 $(LIBSTOCKER_COMMON):
 	make -C $(COMMON_MODULE_DIR)
 
 clean:
-	$(RM) $(DEST_DIR)/$(TARGET) $(OBJS)
+	$(RM) $(DIST_DIR)/$(TARGET) $(OBJS)
 
 install:
 	mkdir -p $(CGI_DIR)
-	cp -r $(DEST_DIR)/$(TARGET) $(CGI_DIR)
+	cp -r $(DIST_DIR)/$(TARGET) $(CGI_DIR)

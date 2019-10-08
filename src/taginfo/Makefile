@@ -10,7 +10,7 @@ LIBPARAM=-ltag
 
 include ../directory_defs.mk
 
-DEST_DIR = ../../dist/cgi-bin
+DIST_DIR = ../../dist/cgi-bin
 
 ifeq ($(debug), 1)
 	CFLAGS=-g -Wall
@@ -23,9 +23,12 @@ CPPFLAGS=$(CFLAGS)
 
 .phony: all clean install
 
-all: $(LIBSTOCKER_COMMON) $(addprefix $(DEST_DIR)/,$(TARGET))
+all: $(DIST_DIR) $(LIBSTOCKER_COMMON) $(addprefix $(DIST_DIR)/,$(TARGET))
 
-$(DEST_DIR)/$(TARGET): noimage.h $(OBJECTS) $(LIBSTOCKER_COMMON)
+$(DIST_DIR):
+	mkdir -p $(DIST_DIR)
+
+$(DIST_DIR)/$(TARGET): noimage.h $(OBJECTS) $(LIBSTOCKER_COMMON)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LIBPARAM)
 
 %.o: %.cpp $(INC)
@@ -41,9 +44,9 @@ noimage.h: noimage/noimage.png make_noimage
 	./make_noimage $< $@
 
 clean:
-	$(RM) $(DEST_DIR)/$(TARGET) $(OBJECTS) noimage.h make_noimage *~
+	$(RM) $(DIST_DIR)/$(TARGET) $(OBJECTS) noimage.h make_noimage *~
 	make -C $(COMMON_MODULE_DIR) clean
 
 install:
 	mkdir -p $(CGI_DIR)
-	cp -r $(DEST_DIR)/$(TARGET) $(CGI_DIR)
+	cp -r $(DIST_DIR)/$(TARGET) $(CGI_DIR)
