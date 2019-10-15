@@ -114,7 +114,11 @@ function jump_select(boxes) {
     document.file_check.submit();
 }
 
-function printIcon(i, box_width, box_height, path, name, size, last_modified, icon, action) {
+function printIcon(i, path, name, size, last_modified, icon, action) {
+    const box_width     = 120;   // 単位 px
+    const box_height    = 140;   // 単位 px
+//    const box_space     = 5;     // BOXの隙間 単位 px
+
     var html = "";
     var id = "icon_" + i;
 
