@@ -34,28 +34,3 @@
   "bmp",
   "tif", "tiff"
 );
-
-@support_gps_types = (
-  "kml", "kmz", "gpx", "nmea", "accel.csv"
-);
-
-@support_txt_types = (
-  "txt", "log"
-);
-
-@support_doc_types = (
-  "doc", "dot", "docx"
-);
-
-@support_excel_types = (
-  "xls", "xlsx"
-);
-
-@support_ppt_types = (
-  "ppt", "pptx"
-);
-
-@support_pdf_types = (
-  "pdf"
-);
-

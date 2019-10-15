@@ -10,14 +10,12 @@ use ParamPath;
 use HTML_Elem;
 use MimeTypes;
 use FileOperator;
-use FileTypes;
 
 our $BASE_DIR_CONF;
 our $BOX_WIDTH;
 our $BOX_HEIGHT;
 our $BOX_SPACE;
 our $MAX_DISPLAY_NAME;
-our $SUPPORT_TYPES;
 our $HTDOCS_ROOT;
 our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
@@ -25,17 +23,6 @@ our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
 our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
 our ($ICON_UNKNOWN, $ICON_DIRECTORY);
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
-
-our @support_video_types;
-our @support_audio_types;
-our @support_image_types;
-our @support_gps_types;
-our @support_txt_types;
-our @support_doc_types;
-our @support_excel_types;
-our @support_ppt_types;
-our @support_pdf_types;
-require $SUPPORT_TYPES;
 
 my $form = eval{new CGI};
 my $in_dir    = (scalar $form->param('dir'));
@@ -107,12 +94,8 @@ print "<span id=\"path_link\"></span>\n";
 print "<div style=\"clear: both\">";
 print "<span style=\"float: left\">\n";
 print "<input type=\"text\" name=\"search\" size=\"20\" maxlength=\"64\" value=\"${in_search}\">\n";
-print "<input type=\"submit\" value=\"表示絞込み\">\n";
-print "</span>\n";
-print "<span id=\"action_list\" style=\"float: right\">\n";
-##&print_action();
-print "</span></div>\n";
-
+print "<input type=\"submit\" value=\"表示絞込み\"></span>\n";
+print "<span id=\"action_list\" style=\"float: right\"></span></div>\n";
 print "<div id=\"uppath\"></div>\n";
 
 my @dir_list = ();
@@ -142,16 +125,6 @@ if($#dir_list > $cont_to - $cont_from || $#dir_list < $cont_from) {
   &show_prev_pagelink(@dir_list);
 }
 
-my $movie_pattern = FileTypes->makeSuffixPatternString(\@support_video_types);
-my $music_pattern = FileTypes->makeSuffixPatternString(\@support_audio_types);
-my $photo_pattern = FileTypes->makeSuffixPatternString(\@support_image_types);
-my $gps_pattern = FileTypes->makeSuffixPatternString(\@support_gps_types);
-my $txt_pattern = FileTypes->makeSuffixPatternString(\@support_txt_types);
-my $doc_pattern = FileTypes->makeSuffixPatternString(\@support_doc_types);
-my $excel_pattern = FileTypes->makeSuffixPatternString(\@support_excel_types);
-my $ppt_pattern = FileTypes->makeSuffixPatternString(\@support_ppt_types);
-my $pdf_pattern = FileTypes->makeSuffixPatternString(\@support_pdf_types);
-
 ### ディレクトリ内のentry表示
 print <<EOD;
 <p id="directoryListArea"></p>
@@ -164,17 +137,6 @@ makeActionList();
 reloadDirectoryList(encoded_dir, "${in_file}", ${cont_from}, ${cont_to});
 
 function printIcons(elements) {
-  // 拡張子判定
-  var movie_pattern = ${movie_pattern};
-  var music_pattern = ${music_pattern};
-  var photo_pattern = ${photo_pattern};
-  var gps_pattern = ${gps_pattern};
-  var txt_pattern = ${txt_pattern};
-  var doc_pattern = ${doc_pattern};
-  var excel_pattern = ${excel_pattern};
-  var ppt_pattern = ${ppt_pattern};
-  var pdf_pattern = ${pdf_pattern};
-
 //  try {
     document.getElementById('directoryListArea').innerHTML = "";
 
@@ -192,31 +154,31 @@ function printIcons(elements) {
             icon   = "${ICON_DIRECTORY}";
             action = "dir:" + path;
         } else {
-          if (music_pattern.test(name.toLowerCase())) {
+          if (stocker.supportTypes.pattern.audio.test(name)) {
             icon   = "${ICON_AUDIO}";
             action = "${MUSIC_PLAYER_CGI}?file=" + path + "&dir=" + encoded_dir;
-          } else if (movie_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.video.test(name)) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
             action = "${CONVERTER_CGI}?file=" + path + "&dir=" + encoded_dir;
-          } else if (photo_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.image.test(name)) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
             action = "${HTDOCS_ROOT}/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
-          } else if (gps_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.gps.test(name)) {
             icon   = "${ICON_MAP}";
             action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
-          } else if (txt_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.txt.test(name)) {
             icon   = "${ICON_TEXT}";
             action = "${HTDOCS_ROOT}/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
-          } else if (doc_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.doc.test(name)) {
             icon   = "${ICON_MS_WORD}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
-          } else if (excel_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.excel.test(name)) {
             icon   = "${ICON_MS_EXCEL}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-excel";
-          } else if (ppt_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.ppt.test(name)) {
             icon   = "${ICON_MS_POWERPOINT}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-powerpoint";
-          } else if (pdf_pattern.test(name.toLowerCase())) {
+          } else if (stocker.supportTypes.pattern.pdf.test(name)) {
             icon   = "${ICON_PDF}";
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/pdf";
           } else {
@@ -339,7 +301,7 @@ sub show_next_pagelink {
   print "</p>\n";
 }
 
-## 操作
+## 操作  TODO: remove
 sub print_action
 {
   print <<EOF;
