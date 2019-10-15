@@ -19,9 +19,6 @@ our $MAX_DISPLAY_NAME;
 our $HTDOCS_ROOT;
 our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
 our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
-our ($ICON_VIDEO, $ICON_PICTURE, $ICON_AUDIO, $ICON_TEXT, $ICON_PDF, $ICON_MAP);
-our ($ICON_MS_WORD, $ICON_MS_EXCEL, $ICON_MS_POWERPOINT);
-our ($ICON_UNKNOWN, $ICON_DIRECTORY);
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
@@ -151,11 +148,11 @@ function printIcons(elements) {
         var path = e.path;
 
         if (e.type === "DIRECTORY") {
-            icon   = "${ICON_DIRECTORY}";
+            icon   = stocker.uri.icon.directory;
             action = "dir:" + path;
         } else {
           if (stocker.supportTypes.pattern.audio.test(name)) {
-            icon   = "${ICON_AUDIO}";
+            icon   = stocker.uri.icon.audio;
             action = "${MUSIC_PLAYER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (stocker.supportTypes.pattern.video.test(name)) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
@@ -164,25 +161,25 @@ function printIcons(elements) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
             action = "${HTDOCS_ROOT}/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (stocker.supportTypes.pattern.gps.test(name)) {
-            icon   = "${ICON_MAP}";
+            icon   = stocker.uri.icon.gps;
             action = "${GPS_VIEWER_CGI}?file=" + path + "&dir=" + encoded_dir;
           } else if (stocker.supportTypes.pattern.txt.test(name)) {
-            icon   = "${ICON_TEXT}";
+            icon   = stocker.uri.icon.txt;
             action = "${HTDOCS_ROOT}/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
           } else if (stocker.supportTypes.pattern.doc.test(name)) {
-            icon   = "${ICON_MS_WORD}";
+            icon   = stocker.uri.icon.doc;
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
           } else if (stocker.supportTypes.pattern.excel.test(name)) {
-            icon   = "${ICON_MS_EXCEL}";
+            icon   = stocker.uri.icon.excel;
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-excel";
           } else if (stocker.supportTypes.pattern.ppt.test(name)) {
-            icon   = "${ICON_MS_POWERPOINT}";
+            icon   = stocker.uri.icon.ppt;
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-powerpoint";
           } else if (stocker.supportTypes.pattern.pdf.test(name)) {
-            icon   = "${ICON_PDF}";
+            icon   = stocker.uri.icon.pdf;
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/pdf";
           } else {
-            icon   = "${ICON_UNKNOWN}";
+            icon   = stocker.uri.icon.unknown;
             action = "${GETFILE_CGI}?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
           }
         }
