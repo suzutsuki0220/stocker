@@ -1,5 +1,5 @@
-const htdocs_root = "/stocker";
-const cgi_root = "/cgi-bin/stocker";
+const htdocs_root = "%htdocs_root%";
+const cgi_root = "%cgi_root%";
 
 const converter_uri = {
     selector: cgi_root + '/convertselect.cgi',
