@@ -1,7 +1,10 @@
 function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
-    var param = "";
+    let param = "";
 
-    param = "dir=" + encoded_dir + "&file=" + url_path;
+    param = "dir=" + encoded_dir;
+    if (url_path) {
+        param += "&file=" + url_path;
+    }
     if (from !== "" && from !== 0) {
         param += "&from=" + from;
     }

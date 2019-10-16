@@ -13,7 +13,7 @@ use FileOperator;
 
 our $BASE_DIR_CONF;
 our $HTDOCS_ROOT;
-our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $MUSIC_PLAYER_CGI, $GPS_VIEWER_CGI);
+our ($EDIT_CGI, $FILEFUNC_CGI, $CONVERTER_CGI, $GPS_VIEWER_CGI);
 our ($GET_THUMBNAIL_CGI, $GETFILE_CGI);
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
@@ -130,8 +130,8 @@ function printIcons(elements) {
         var icon;
         var action;
 
-        var name = e.name;
-        var path = e.path;
+        const name = e.name;
+        const path = e.path;
 
         if (e.type === "DIRECTORY") {
             icon   = stocker.uri.icon.directory;
@@ -139,7 +139,7 @@ function printIcons(elements) {
         } else {
           if (stocker.supportTypes.pattern.audio.test(name)) {
             icon   = stocker.uri.icon.audio;
-            action = "${MUSIC_PLAYER_CGI}?file=" + path + "&dir=" + encoded_dir;
+            action = "${HTDOCS_ROOT}/music_player.html?file=" + path + "&dir=" + encoded_dir;
           } else if (stocker.supportTypes.pattern.video.test(name)) {
             icon   = "${GET_THUMBNAIL_CGI}?file=" + path + "&dir=" + encoded_dir;
             action = "${CONVERTER_CGI}?file=" + path + "&dir=" + encoded_dir;
