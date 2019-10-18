@@ -1,6 +1,21 @@
 var trimWork = [];
 var elements = null;
 
+var boxes = 500;  // TODO: for Pagination (ページ分け)
+//my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
+let encoded_dir;
+
+window.addEventListener("load", function(event) {
+    encoded_dir = document.file_check.fm_dir.value;
+
+    const params = jsUtils.url.getRawParams();
+    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
+    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
+
+    makeActionList();
+    reloadDirectoryList(params.dir, params.path, cont_from, cont_to);
+}
+
 function setScreenSize() {
     var s_width = 640;
     var s_height = 480;
@@ -187,7 +202,7 @@ function trimThumbnail(id, imgUrl) {
 
 // 戻る操作で前のページとするURLを追加する
 function addBackHistory(encoded_dir, url_path) {
-    const url = stockerConfig.uri.stocker + '?dir=' + encoded_dir + '&file=' + url_path;
+    const url = stocker.uri.list + '?dir=' + encoded_dir + '&file=' + url_path;
     history.pushState({dir: encoded_dir, file: url_path}, '', url);
 }
 
@@ -232,6 +247,7 @@ function directoryList(data) {
     printIcons(elements);
 }
 
+// TODO: -> Breadcrumbs
 function makeSubdirectoryLink(encoded_dir, url_path) {
     const param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
 
@@ -240,7 +256,7 @@ function makeSubdirectoryLink(encoded_dir, url_path) {
     ajax.setOnSuccess(function(httpRequest) {
         addSubdirectoryLink(httpRequest.responseXML, encoded_dir, url_path);
     });
-    ajax.post(stockerConfig.uri.get_dir, param);
+    ajax.post(stocker.uri.cgi.get_dir, param);
 }
 
 function addSubdirectoryLink(data, encoded_dir, url_path) {
@@ -278,6 +294,6 @@ function downloadWork(dir) {
 }
 
 function handleDownload(dir, file, filename) {
-    const get_url = stockerConfig.uri.get_file + "?mime=application/force-download&dir=" + dir + "&file=" + file;
+    const get_url = stocker.uri.cgi.get_file + "?mime=application/force-download&dir=" + dir + "&file=" + file;
     jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
 }

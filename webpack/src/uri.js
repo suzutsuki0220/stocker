@@ -2,6 +2,7 @@ const htdocs_root = "%htdocs_root%";
 const cgi_root = "%cgi_root%";
 
 const converter_uri = {
+    form: cgi_root + '/converter.cgi',
     selector: cgi_root + '/convertselect.cgi',
     list: cgi_root + '/convertlist.cgi',
     movie_img: cgi_root + '/get_movieimg.cgi',
@@ -20,8 +21,10 @@ const music_player_uri = {
 
 module.exports.cgi_root = cgi_root;
 module.exports.htdocs_root = htdocs_root;
+module.exports.list = htdocs_root + '/list.html';
 
 module.exports.cgi = {
+    edit:  cgi_root + '/edit.cgi',
     filefunc: cgi_root + '/filefunc.cgi',
     stocker: cgi_root + '/stocker.cgi',
     get_dir: cgi_root + '/get_dir',

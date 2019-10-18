@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!--
+my $in_dir    = (scalar $form->param('dir'));
+my $in_file   = (scalar $form->param('file'));
+my $in_search = decode('utf-8', (scalar $form->param('search')));
+my $in_from   = (scalar $form->param('from'));
+my $in_to     = (scalar $form->param('to'));
+
+my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/";
+-->
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<script type="text/javascript" src="bundle/stocker.js"></script>
+<script type="text/javascript" src="javascript/print_icons.js"></script>
+<script type="text/javascript" src="javascript/list.js"></script>
+<script type="text/javascript" src="javascript/get_directory_list.js"></script>
+<script type="text/javascript" src="javascript/action.js"></script>
+<link rel="stylesheet" type="text/css" href="stylesheet/list.css">
+
+<form action="#" name="file_check" method="POST">
+<input type="hidden" name="mode" value="">
+<input type="hidden" name="target" value="${in_file}">
+<input type="hidden" name="dir" value="${encoded_dir}">
+<div id="editParam"></div>
+<i class="fas fa-home"></i> <select name="fm_dir" size="1" onChange="changeDirectory()">
+
+<!--
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
+  for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
+    my $lst = $ins->get_base_dir_column($i);
+    my $name = $lst->{name};
+    my $encoded_name = HTML_Elem->url_encode($name);
+    if ($encoded_dir eq $encoded_name) {
+      print "<option value="${encoded_name}" selected>".${name}."</option>
+    } else {
+      print "<option value="${encoded_name}">".${name}."</option>
+    }
+  }
+};
+-->
+
+</select>
+<span id="path_link"></span>
+
+<div style="clear: both">
+<span style="float: left">
+<input type="text" name="search" size="20" maxlength="64" value="">
+<input type="submit" value="表示絞込み"></span>
+<span id="action_list" style="float: right"></span></div>
+<div id="uppath"></div>
+
+<!--
+my @dir_list = ();
+#while (my $entry = decode('utf-8', readdir $DIR)) {
+#  if( length($entry) > 0 && $entry ne '..'  && $entry !~ /^\./ && $entry ne 'lost+found') {
+#    # 絞込みが指定された場合、マッチしない物はリストに入れない
+#    if( ${in_search} && $entry !~ /${in_search}/i ) {
+#      next;
+#    }
+#    push(@dir_list, $entry);
+#  }
+#}
+@dir_list = sort {$a cmp $b} @dir_list;
+
+my @un_visible_list = ();
+my @visible_list = ();
+my $cont_from = 0;
+
+my $cont_to = $#dir_list;
+if(length(${in_to}) > 0 && ${in_to} > 0) {
+  $cont_to = $in_to -1;
+}
+-->
+
+<p id="directoryListArea"></p>
+<p class="partition">&nbsp;</p>
+</form>
+
+<!--
+## 操作  TODO: remove
+
+操作:
+<select name="operation" size="1" onChange="act()">
+<option value="nop">-- 操作を選択 --</option>
+<optgroup label="選択">
+<option value="allCheck">全項目選択</option>
+<option value="allUnCheck">全ての選択を解除</option>
+</optgroup>
+<optgroup label="編集">
+<option value="resize">縮小版を作成</option>
+<option value="convert">変換</option>
+<option value="combine">画像/動画を結合</option>
+<option value="divide">画像を分離</option>
+</optgroup>
+<optgroup label="操作">
+<option value="newfolder">新規フォルダー作成</option>
+<option value="upload">アップロード</option>
+<option value="download">ダウンロード</option>
+<option value="delfile">削除</option>
+<option value="rename">名前の変更</option>
+<option value="move">移動</option>
+</optgroup>
+</select>
+
+-->
+<script type="text/javascript">
+<!--
+function act() {
+  var sw = document.file_check.operation.value;
+  document.file_check.dir.value = document.file_check.fm_dir.value;
+  document.file_check.operation.options[0].selected = true;  // 変更後はnopに
+  switch (sw) {
+    case "allCheck":
+      allCheck();
+      break;
+    case "allUnCheck":
+      allUnCheck();
+      break;
+    case "resize":
+      document.file_check.mode.value = "resize";
+      document.file_check.action = stocker.uri.cgi.edit;
+      document.file_check.submit();
+      break;
+    case "convert":
+      document.file_check.mode.value = "convert";
+      document.file_check.action = stocker.uri.cgi.converter.form;
+      document.file_check.submit();
+      break;
+    case "combine":
+      document.file_check.mode.value = "combine";
+      document.file_check.action = stocker.uri.cgi.edit;
+      document.file_check.submit();
+      break;
+    case "divide":
+      document.file_check.mode.value = "divide";
+      document.file_check.action = stocker.uri.cgi.edit;
+      document.file_check.submit();
+      break;
+    case "newfolder":
+      document.file_check.mode.value = "newfolder";
+      document.file_check.action = stocker.uri.cgi.filefunc;
+      document.file_check.submit();
+      break;
+    case "upload":
+      document.file_check.mode.value = "upload";
+      document.file_check.action = stocker.uri.cgi.filefunc;
+      document.file_check.submit();
+      break;
+    case "download":
+      downloadWork(params.dir);
+      break;
+    case "delfile":
+      document.file_check.mode.value = "delfile";
+      document.file_check.action = stocker.uri.cgi.filefunc;
+      document.file_check.submit();
+      break;
+    case "rename":
+      document.file_check.mode.value = "rename";
+      document.file_check.action = stocker.uri.cgi.filefunc;
+      document.file_check.submit();
+      break;
+    case "move":
+      var elem = document.createElement("f_dest");
+      elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_file}">'
+                     + '<input type="hidden" name="f_dest_dir" value="" + params.dir + "">';
+      document.getElementById("editParam").appendChild(elem);
+      document.file_check.mode.value = "move";
+      document.file_check.action = stocker.uri.cgi.filefunc;
+      document.file_check.submit();
+      break;
+  }
+}
+-->
+</script>
+
+</body>
+</html>
