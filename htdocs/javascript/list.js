@@ -9,11 +9,20 @@ window.addEventListener("load", function(event) {
     encoded_dir = document.file_check.fm_dir.value;
 
     const params = jsUtils.url.getRawParams();
-    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
-    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
+    const rootDir = params.dir || "";
+    const path = params.path || "";
+//    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
+//    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
+    initializeWindow(rootDir, path);
+});
+
+function initializeWindow(rootDir, path) {
     makeActionList();
-    reloadDirectoryList(params.dir, params.path, cont_from, cont_to);
+    getRootDirectories(function(data) {
+        makeDirectoryList(document.getElementById('fm_dir'), data, rootDir);
+        reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
+    });
 }
 
 function setScreenSize() {
@@ -208,11 +217,10 @@ function addBackHistory(encoded_dir, url_path) {
 
 window.onpopstate = function(event) {
     const s = event.state;
-    document.file_check.fm_dir.value = s.dir;
-    reloadDirectoryList(s.dir, s.file, 0, boxes, false);
+    initializeWindow(s.dir, s.file);
 };
 
-function reloadDirectoryList(encoded_dir, url_path, from, to, addHistory = true) {
+function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHistory = true) {
     if (addHistory === true) { // TODO: addHistory フラグを追加したのは綺麗ではないので、読み込み処理だけを別関数にしたい
         addBackHistory(encoded_dir, url_path);
     }

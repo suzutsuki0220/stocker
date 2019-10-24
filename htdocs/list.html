@@ -10,7 +10,6 @@ my $in_to     = (scalar $form->param('to'));
 
 my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/";
 -->
-
 <meta charset="utf-8" />
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
@@ -22,39 +21,25 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 <script type="text/javascript" src="javascript/get_directory_list.js"></script>
 <script type="text/javascript" src="javascript/action.js"></script>
 <link rel="stylesheet" type="text/css" href="stylesheet/list.css">
+</head>
 
+<body>
 <form action="#" name="file_check" method="POST">
 <input type="hidden" name="mode" value="">
 <input type="hidden" name="target" value="${in_file}">
 <input type="hidden" name="dir" value="${encoded_dir}">
 <div id="editParam"></div>
-<i class="fas fa-home"></i> <select name="fm_dir" size="1" onChange="changeDirectory()">
-
-<!--
-eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
-  for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
-    my $lst = $ins->get_base_dir_column($i);
-    my $name = $lst->{name};
-    my $encoded_name = HTML_Elem->url_encode($name);
-    if ($encoded_dir eq $encoded_name) {
-      print "<option value="${encoded_name}" selected>".${name}."</option>
-    } else {
-      print "<option value="${encoded_name}">".${name}."</option>
-    }
-  }
-};
--->
-
-</select>
+<i class="fas fa-home"></i>
+<select name="fm_dir" id="fm_dir" size="1" onChange="changeDirectory()"></select>
 <span id="path_link"></span>
 
 <div style="clear: both">
-<span style="float: left">
-<input type="text" name="search" size="20" maxlength="64" value="">
-<input type="submit" value="表示絞込み"></span>
-<span id="action_list" style="float: right"></span></div>
+  <span style="float: left">
+    <input type="text" name="search" size="20" maxlength="64" value="">
+    <input type="button" value="表示絞込み">
+  </span>
+  <span id="action_list" style="float: right"></span>
+</div>
 <div id="uppath"></div>
 
 <!--
