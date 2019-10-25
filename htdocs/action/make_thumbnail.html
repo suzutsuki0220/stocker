@@ -5,7 +5,8 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta name="format-detection" content="telephone=no">
-<script type="text/javascript" src="../bundle.js"></script>
+<script type="text/javascript" src="../bundle/stocker.js"></script>
+<script type="text/javascript" src="../javascript/get_directory_list.js"></script>
 <script type="text/javascript">
     const myQuery = jsUtils.url.getQueryInUrl();
     const params = new URLSearchParams(myQuery);
@@ -104,21 +105,22 @@ function getFilenames(param, callBack) {
     </div>
   </nav>
   <span id="warning"></span>
-    <section class="section">
-      <div class="container">
-        <h1 class="title is-5">出力先</h1>
-        <h2 class="subtitle is-6">ディレクトリ名: <span id="outputDirectoryArea"></span></h2>
-        <a class="button is-primary" href="javascript:execute()">実行</a>
-        <a class="button" id="cancelButton">キャンセル</a>
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-        <h1 class="title is-5">選択</h1>
-        <h2 class="subtitle is-6"><span id="filesCountArea"></span>ファイル</h2>
-        <table class="table" id="filesArea"></table>
-      </div>
-    </section>
+  <section class="section">
+    <div class="container">
+      <h1 class="title is-5">出力先</h1>
+      <h2 class="subtitle is-6">ディレクトリ名: <span id="outputDirectoryArea"></span></h2>
+      <select id="directorySelectorArea"></select>
+      <a class="button is-primary" href="javascript:execute()">実行</a>
+      <a class="button" id="cancelButton">キャンセル</a>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <h1 class="title is-5">選択</h1>
+      <h2 class="subtitle is-6"><span id="filesCountArea"></span>ファイル</h2>
+      <table class="table" id="filesArea"></table>
+    </div>
+  </section>
 
 <script>
     if (files.length === 0) {
@@ -126,9 +128,11 @@ function getFilenames(param, callBack) {
     }
 
     document.getElementById('filesCountArea').innerText = files.length;
-
     document.getElementById('filesArea').innerHTML = "読み込み中...";
     getFilenames(myQuery, filenameTable);
+    getRootDirectories(function(data) {
+        makeDirectoryList(document.getElementById('directorySelectorArea'), data);
+    });
 </script>
 </body>
 </html>

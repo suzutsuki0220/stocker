@@ -1001,5 +1001,16 @@ sub content_type
   }
 }
 
+sub getMimeType
+{
+  my $self = shift;
+  my $path = shift;
+
+  $path =~ /[^\/]+\.(.+)$/;
+  my $extention = $1;
+
+  return $self->content_type($extention);
+}
+
 1;
 __END__

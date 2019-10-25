@@ -1,61 +1,16 @@
-#!/usr/bin/perl
+<!DOCTYPE html>
+<html lang="ja" class="has-navbar-fixed-top">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="format-detection" content="telephone=no">
+<script type="text/javascript" src="bundle/stocker.js"></script>
+<script type="text/javascript" src="javascript/get_directory_list.js"></script>
+<script type="text/javascript" src="javascript/music_player.js"></script>
+</head>
 
-use strict;
-use warnings;
-use utf8;
-use Encode;
-use CGI;
-
-use ParamPath;
-use HTML_Elem;
-
-our $STOCKER_CGI   = "";
-our $GET_MEDIA_CGI = "";
-our $BASE_DIR_CONF = "";
-our $SUPPORT_TYPES = "";
-our $TAGINFO_CGI   = "taginfo";
-our $HTDOCS_ROOT   = "";
-require $ENV{'STOCKER_CONF'} . '/stocker.conf';
-
-our @support_audio_types;
-require $SUPPORT_TYPES;
-
-my $form = eval{new CGI};
-
-my $base_name = scalar($form->param('dir'));
-my $encoded_path = scalar($form->param('file'));
-eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode($base_name));
-};
-if ($@) {
-  HTML_Elem->header();
-  HTML_Elem->error($@);
-}
-
-$base_name = HTML_Elem->url_encode(scalar($form->param('dir')));
-
-my $graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-
-eval {
-  my @jslist = (
-      "${HTDOCS_ROOT}/bundle/stocker.js",
-      "${HTDOCS_ROOT}/javascript/get_directory_list.js",
-      "${HTDOCS_ROOT}/javascript/music_player.js",
-  );
-  my $html = HTML_Elem->new(
-      javascript => \@jslist
-  );
-  $html->header();
-};
-if ($@) {
-  HTML_Elem->header();
-  HTML_Elem->error($@);
-}
-
-my $music_pattern = makePatternString(\@support_audio_types);
-
-print <<EOF;
+<body>
 <script type="text/javascript">
 <!--
   var audio_player = new Audio();
@@ -81,8 +36,8 @@ print <<EOF;
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
 
-    document.coverart.src = "${TAGINFO_CGI}?mode=picture&dir=" + track[track_no].base_name + "&file=" + track[track_no].path;
-    audio_player.src = "${GET_MEDIA_CGI}?dir=" + track[track_no].base_name + "&file=" +track[track_no].path + "&type=" + play_type;
+    document.coverart.src = TAGINFO_CGI + "?mode=picture&dir=" + track[track_no].base_name + "&file=" + track[track_no].path;
+    audio_player.src = GET_MEDIA_CGI + "?dir=" + track[track_no].base_name + "&file=" +track[track_no].path + "&type=" + play_type;
     audio_player.play();
     document.controller.button_pause.value = "Pause";
 
@@ -162,14 +117,12 @@ print <<EOF;
   }
 -->
 </script>
-EOF
 
-print <<DATA;
 <a href="#" id="back_link">← 戻る</a>
 <hr>
 <h2 id="directory_name_area"></h2>
 <p>
-<img src="${graypad}" name="coverart" width="120" height="120">
+<img src="" name="coverart" width="120" height="120">
 <!-- <audio src="" id="player" autobuffer>
 お使いの環境では、プレイヤーを起動できません。
 </audio><br> -->
@@ -186,6 +139,7 @@ Type: <input type="radio" name="type" value="wav">wav <input type="radio" name="
 
 <script type="text/javascript">
 <!--
+errorCoverart();
 var player_timer = document.getElementById('AudioTimer');
 
 // 再生可能形式チェック
@@ -202,36 +156,9 @@ if (document.coverart.addEventListener) {
   document.coverart.attachEvent("onabort", errorCoverart);
 }
 
-function errorCoverart() {
-  document.coverart.src = "${graypad}";
-}
-
-const STOCKER_CGI = "${STOCKER_CGI}";
-const TAGINFO_CGI = "${TAGINFO_CGI}";
-const base_name = "${base_name}";
-const music_pattern = /\\.(${music_pattern})\$/;  // 拡張子判定
-getDirectoryList("${base_name}", "${encoded_path}", 0, 0, musicList);
+const params = jsUtils.url.getRawParams();
+getDirectoryList(params.dir, params.file, 0, 0, musicList);
 -->
 </script>
-DATA
-
-HTML_Elem->tail();
-
-exit(0);
-
-#####
-
-sub makePatternString
-{
-  my ($array_ref) = @_;
-  my $ret = "";
-
-  foreach my $type (@$array_ref) {
-    if (length($ret) != 0) {
-      $ret .= "|";
-    }
-    $ret .= $type;
-  }
-
-  return $ret;
-}
+</body>
+</html>

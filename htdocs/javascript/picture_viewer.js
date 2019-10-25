@@ -37,7 +37,7 @@ function getImageFiles(data) {
       var path = path_elem.item(0).firstChild.data;
       var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
-      if (stockerConfig.supportTypes.imagePattern.test(name.toLowerCase())) {
+      if (stocker.supportTypes.pattern.image.test(name)) {
         var img = new Object();
 
         img.name = name;

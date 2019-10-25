@@ -4,7 +4,7 @@ include ./src/directory_defs.mk
 
 all:
 	make -C src/ $(INSTALL_PARAM)
-	DESTDIR= npm run webpack
+	DESTDIR= npm run webpack -- --env.htdocs_root=$(HTDOCS_ROOT) --env.cgi_root=$(CGI_ROOT)
 
 clean:
 	make -C src/ clean

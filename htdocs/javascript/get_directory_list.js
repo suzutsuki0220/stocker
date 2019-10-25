@@ -1,7 +1,10 @@
 function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
-    var param = "";
+    let param = "";
 
-    param = "dir=" + encoded_dir + "&file=" + url_path;
+    param = "dir=" + encoded_dir;
+    if (url_path) {
+        param += "&file=" + url_path;
+    }
     if (from !== "" && from !== 0) {
         param += "&from=" + from;
     }
@@ -19,3 +22,37 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
 
     jsUtils.ajax.post(stockerConfig.uri.get_dir, param);
 }
+
+function getRootDirectories(callback) {
+    jsUtils.fetch.request(
+        {uri: stocker.uri.cgi_root + "/directory.cgi",
+         format: "json"
+        }, function(json) {
+            callback(json);
+        }, function(error) {
+            console.warn(error);
+        }
+    );
+}
+
+function makeDirectoryList(elem, directory, selected = '') {
+    const select = document.createElement('select');
+    select.name = "operation";
+    select.size = "1";
+//    select.addEventListener("change", checkedAction);
+
+    var fragment = document.createDocumentFragment();
+    for (var i=0; i<directory.length; i++) {
+        var directoryList = document.createElement('option');
+        if (directory[i].encoded === selected) {
+            directoryList.selected = true;
+        }
+        directoryList.value = directory[i].encoded;
+        directoryList.text = directory[i].name;
+        fragment.appendChild(directoryList);
+    }
+
+elem.appendChild(fragment);
+//    select.appendChild(fragment);
+//    elem.appendChild(select);
+};

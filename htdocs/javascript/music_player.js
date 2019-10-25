@@ -1,6 +1,16 @@
 var track = new Array();
 var music_count = 0;  // ajaxを読んだ数とcallbackが実行された数が一致した時にリスト内の情報を全て読み込んだと判断する
 
+const STOCKER_CGI = stocker.uri.cgi.stocker;
+const TAGINFO_CGI = stocker.uri.cgi.music_player.tag_info;
+const GET_MEDIA_CGI = stocker.uri.cgi.music_player.get_media;
+
+const graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+
+function errorCoverart() {
+  document.coverart.src = graypad;
+}
+
 function sortMusicListByTrackNumber() {
     for(i=track.length-1 ; i>0 ; i--) {
         for(j=0 ; j<i ; j++) {
@@ -79,8 +89,8 @@ function musicList(data) {
         const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
         const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
 
-        document.getElementById('back_link').href = STOCKER_CGI + "?dir=" + base_name + "&file=" + properties['up_path'];
-        getDirectoryList(base_name, properties['up_path'], 0, 0, getMusicFiles);
+        document.getElementById('back_link').href = STOCKER_CGI + "?dir=" + params.dir + "&file=" + properties['up_path'];
+        getDirectoryList(params.dir, properties['up_path'], 0, 0, getMusicFiles);
     } catch(e) {
         alert("ERROR: " + e.description);
     }
@@ -132,12 +142,12 @@ function getMusicFiles(data) {
 
     for (var i=0; i<elements.length; i++) {
         const e = elements[i];
-        if (music_pattern.test(e.name.toLowerCase())) {
+        if (stocker.supportTypes.pattern.audio.test(e.name)) {
             track.push({
                 "name": e.name,
                 "getProperty": false,
                 "num": !isNaN(e.num) ? e.num : 0,
-                "base_name": base_name,
+                "base_name": params.dir,
                 "path": e.path
             });
         }

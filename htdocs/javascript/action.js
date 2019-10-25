@@ -31,21 +31,15 @@ function makeActionList() {
     const action_list = document.getElementById('action_list');
     action_list.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 操作一覧取得中';
 
-    const init = {
-        method: 'GET',
-        credentials: 'same-origin'
-    };
-
-    fetch(stockerConfig.htdocs_root + "/action_param.json", init).then(function(response) {
-        if (response.ok) {
-            return response.json();
-        } else {
-            return Promise.reject(new Error("ERROR status: " + response.status));
-        }
-    }).then(function(json) {
+    jsUtils.fetch.request({
+        uri: stockerConfig.htdocs_root + "/action_param.json",
+        format: 'json',
+        method: 'GET'
+    }, function(json) {
         addFileCheckAction(json);
         actionParam = json;
-    }).catch(function(error) {
+    }, function(error) {
+        console.warn(error);
         action_list.innerHTML = 'error: ' + error.message;
     });
 }
