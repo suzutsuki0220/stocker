@@ -26,7 +26,6 @@ module.exports.list = htdocs_root + '/list.html';
 module.exports.cgi = {
     edit:  cgi_root + '/edit.cgi',
     filefunc: cgi_root + '/filefunc.cgi',
-    stocker: cgi_root + '/stocker.cgi',
     get_dir: cgi_root + '/get_dir',
     get_file: cgi_root + '/get_file',
     thumbnail: cgi_root + '/thumbnail.cgi',

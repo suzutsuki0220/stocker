@@ -1,23 +1,19 @@
 function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
-    let param = "";
-
-    param = "dir=" + encoded_dir;
-    if (url_path) {
-        param += "&file=" + url_path;
+    let option = new Object();
+    if (from) {
+        option.from = from;
     }
-    if (from !== "" && from !== 0) {
-        param += "&from=" + from;
+    if (to) {
+        option.to = to;
     }
-    if (to !== "" && to !== 0) {
-        param += "&to=" + to;
-    }
+    const param = stocker.components.makePathParams(encoded_dir, url_path, option);
 
     jsUtils.ajax.init();
     jsUtils.ajax.setOnSuccess(function(httpRequest) {
         receive_func(httpRequest.responseXML);
     });
     jsUtils.ajax.setOnError(function(httpRequest) {
-        alert("ERROR: " + stockerConfig.uri.get_dir + " param: " + param + " status: " + httpRequest.status);
+        console.warn("ERROR: " + stockerConfig.uri.get_dir + " param: " + param + " status: " + httpRequest.status);
     });
 
     jsUtils.ajax.post(stockerConfig.uri.get_dir, param);

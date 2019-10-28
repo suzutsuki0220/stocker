@@ -88,8 +88,6 @@ function musicList(data) {
     try {
         const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
         const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
-
-        document.getElementById('back_link').href = STOCKER_CGI + "?dir=" + params.dir + "&file=" + properties['up_path'];
         getDirectoryList(params.dir, properties['up_path'], 0, 0, getMusicFiles);
     } catch(e) {
         alert("ERROR: " + e.description);

@@ -11,6 +11,7 @@
 <script type="text/javascript" src="javascript/picture_viewer.js"></script>
 <script type="text/javascript">
     const params = jsUtils.url.getRawParams();
+    let rootDir, upPath;
 
     function getFileProperties() {
         const ajax = jsUtils.ajax;
@@ -25,8 +26,8 @@
             getImageList(params.dir, properties.up_path);
             imageLoading(params.file);
 
-            const back = stockerConfig.uri.stocker + '?dir=' + params.dir + '&file=' + properties.up_path;
-            document.getElementById('backAnchor').href = back;
+            rootDir = params.dir;
+            upPath  = properties.up_path;
         });
         ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
     }
@@ -38,7 +39,7 @@
 <body>
   <nav class="navbar is-link is-fixed-top" role="navigation">
     <div class="navbar-brand"> <!-- left side of the navbar -->
-      <a href="#" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
+      <a href="javascript:stocker.components.backToList(rootDir, upPath)" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
       <h1 class="navbar-item" id="fileNameArea"></h1>
       <a role="button" class="navbar-burger" href="#" data-target="navMenu">
         <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->

@@ -110,9 +110,6 @@ sub getBoolean() {
 
 ### エンコード
 sub perform_encode() {
-  HTML_Elem->header();
-  print "<h2>エンコードキューに入れました</h2>";
-
   if ($q->param('multi_editmode') eq "sameenc") {
     foreach (@files) {
       &add_encodejob("${base}" . $_);
@@ -127,8 +124,8 @@ sub perform_encode() {
     &add_encodejob("${base}${path}");
   }
 
-  print "<a href=\"${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}\">← フォルダーに戻る</a>";
-
+  HTML_Elem->header();
+  print "エンコードキューに入れました";
   HTML_Elem->tail();
 }
 
@@ -224,7 +221,7 @@ sub print_form() {
   $html->header();
 
   $mes = <<EOF;
-<a href="${STOCKER_CGI}?file=${encoded_up_path}&dir=${dir}">← 戻る</a><br>
+<a href="javascript:stocker.components.backToList('${dir}', '${encoded_up_path}')">← 戻る</a><br>
 EOF
   print encode('utf8', $mes);
 
