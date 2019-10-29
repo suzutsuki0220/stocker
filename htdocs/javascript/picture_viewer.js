@@ -3,9 +3,22 @@ var load_again = -1;
 var filename = "";
 var images = new Array();
 
-function setFileName(name) {
-    filename = name;
-}
+let params, rootDir, upPath;
+
+window.addEventListener("load", function(event) {
+    params = jsUtils.url.getRawParams();
+    imageLoading(params.file);
+
+    stocker.components.getFileProperties(params.dir, params.file, function(properties) {
+        document.title = properties.name;
+        document.getElementById('fileNameArea').textContent = properties.name;
+        filename = properties.name;
+        getImageList(params.dir, properties.up_path);
+
+        rootDir = params.dir;
+        upPath  = properties.up_path;
+    });
+});
 
 function getImageList(base_name, path) {
   try {

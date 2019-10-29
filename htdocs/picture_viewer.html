@@ -9,29 +9,6 @@
 <script type="text/javascript" src="javascript/bulma_render.js"></script>
 <script type="text/javascript" src="javascript/get_directory_list.js"></script>
 <script type="text/javascript" src="javascript/picture_viewer.js"></script>
-<script type="text/javascript">
-    const params = jsUtils.url.getRawParams();
-    let rootDir, upPath;
-
-    function getFileProperties() {
-        const ajax = jsUtils.ajax;
-        ajax.init();
-        ajax.setOnSuccess(function(xhr) {
-            const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
-            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-            document.title = properties.name;
-            document.getElementById('fileNameArea').textContent = properties.name;
-            setFileName(properties.name);
-
-            getImageList(params.dir, properties.up_path);
-            imageLoading(params.file);
-
-            rootDir = params.dir;
-            upPath  = properties.up_path;
-        });
-        ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
-    }
-</script>
 <link rel="stylesheet" type="text/css" href="stylesheet/stocker.css">
 <link rel="stylesheet" type="text/css" href="stylesheet/picture_viewer.css">
 <title></title>
@@ -65,7 +42,6 @@
     </div>
   </nav>
 
-<span id="control_field"></span>
 <div id="ContentArea">
   <div id="ExifLayer" style="display: none"></div>
   <div id="loadingText"><i class="fas fa-spinner fa-pulse"></i> loading...</div>
@@ -73,9 +49,6 @@
   <img src="" name="ThumbnailArea" id="ThumbnailArea">
 </div>
 
-<script type="text/javascript">
-    getFileProperties();
-</script>
-
+<span id="control_field"></span>
 </body>
 </html>
