@@ -43,8 +43,8 @@ module.exports.getFileProperties = function(root, path, onSuccess, onError = noW
          method: 'POST',
          format: 'text'
         }, function(text) {
-            const xhr = jsUtils.xml.getDom(text);
-            const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
+            const xml = jsUtils.xml.getDom(text);
+            const directory = jsUtils.xml.getFirstFoundChildNode(xml, 'directory');
             const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'elements', 'up_path', 'up_dir'])[0];
             onSuccess(properties);
         }, onError
