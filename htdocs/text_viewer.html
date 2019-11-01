@@ -9,22 +9,18 @@
 <script type="text/javascript">
     let rootDir, upPath;
     function getFileProperties() {
-        const ajax = jsUtils.ajax;
-        ajax.init();
-        ajax.setOnSuccess(function(xhr) {
-            const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
-            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-
+        const params = jsUtils.url.getRawParams();
+        stocker.components.getFileProperties(params.dir, params.file, function(properties) {
             document.title = properties.name;
             document.getElementById('fileNameArea').textContent = properties.name;
 
-            const params = jsUtils.url.getRawParams();
             rootDir = params.dir;
             upPath  = properties.up_path;
 
             getTextContents();
+        }, function(error) {
+            console.warn(error);
         });
-        ajax.post(stockerConfig.uri.get_dir, jsUtils.url.getQueryInUrl());
     }
 
     function getTextContents() {
@@ -61,7 +57,6 @@
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-
       </div>
     </div>
   </nav>
