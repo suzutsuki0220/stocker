@@ -17,6 +17,8 @@ window.addEventListener("load", function(event) {
 
         rootDir = params.dir;
         upPath  = properties.up_path;
+    }, function(error) {
+        console.warn(error);
     });
 });
 
