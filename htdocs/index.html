@@ -2,20 +2,22 @@
 <html lang="ja" class="has-navbar-fixed-top">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta name="format-detection" content="telephone=no">
 <script type="text/javascript" src="bundle/stocker.js"></script>
 <script type="text/javascript" src="javascript/get_directory_list.js"></script>
+<script type="text/javascript" src="javascript/base_list.js"></script>
 <link rel="stylesheet" type="text/css" href="stylesheet/stocker.css">
-<title></title>
+<title>stocker</title>
 </head>
 <body>
   <nav class="navbar is-link is-fixed-top" role="navigation">
     <div class="navbar-brand"> <!-- left side of the navbar -->
       <h1 class="navbar-item" id="fileNameArea">Stocker</h1>
-      <a role="button" class="navbar-burger is-active" id="backBurgerAnchor" href="#">
-        <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
+      <a role="button" class="navbar-burger" href="#">
+        <span aria-hidden="true"></span><!-- It has to contain three empty spans (bulma needs)-->
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
       </a>
@@ -24,15 +26,11 @@
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
+<!--        <a id="backAnchor" role="button" class="navbar-item" href="#"></a> -->
       </div>
     </div>
   </nav>
 
-<span id="control_field"></span>
-<div id="ContentArea">
-    content area
-</div>
-
+  <div class="container is-fluid" id="base_list"></div>
 </body>
 </html>

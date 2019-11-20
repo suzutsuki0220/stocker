@@ -67,3 +67,43 @@ module.exports.notification = function(elem, message) {
 module.exports.warning = function(elem, message) {
     elem.appendChild(textNode('div', message, {class: "notification is-danger"}));
 };
+
+module.exports.card = function(elem, cards) {
+    const columns = document.createElement('div');
+    columns.classList.add('columns');
+
+    for (let i=0; i<cards.length; i++) {
+        const column = document.createElement('div');
+        column.classList.add('column');
+        column.classList.add('is-one-fifth');
+
+        const card = document.createElement('div');
+        card.classList.add('card');
+
+        const c = cards[i];
+        if (c.image) {
+            card.appendChild(textNode('div', c.image, {class: 'card-image'}));
+        }
+        if (c.content) {
+            card.appendChild(textNode('div', c.content, {class: 'card-content'}));
+        }
+
+        column.appendChild(card);
+        columns.appendChild(column);
+    }
+
+    elem.appendChild(columns);
+};
+
+module.exports.media = function(elem, image, content, right = "") {
+    const media = document.createElement('div');
+    media.classList.add('media');
+
+    media.appendChild(textNode('div', image, {class: 'media-left'}));
+    media.appendChild(textNode('div', content, {class: 'media-content'}));
+    if (right) {
+        media.appendChild(textNode('div', right, {class: 'media-right'}));
+    }
+
+    elem.appendChild(media);
+};
