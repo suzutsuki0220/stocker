@@ -29,7 +29,7 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 <input type="hidden" name="target" value="${in_file}">
 <input type="hidden" name="dir" value="${encoded_dir}">
 <div id="editParam"></div>
-<i class="fas fa-home"></i>
+<a href="index.html"><i class="fas fa-home"></i></a>
 <select name="fm_dir" id="fm_dir" size="1" onChange="changeDirectory()"></select>
 <span id="path_link"></span>
 
