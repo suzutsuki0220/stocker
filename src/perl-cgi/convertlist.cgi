@@ -10,7 +10,6 @@ use CGI;
 use HTML_Elem;
 use ConverterJob;
 
-our $STOCKER_CGI    = "";
 our $ENCBATCH_LIST  = "";
 require $ENV{'STOCKER_CONF'} . '/converter.conf';
 

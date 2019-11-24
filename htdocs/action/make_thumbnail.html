@@ -6,9 +6,9 @@
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta name="format-detection" content="telephone=no">
 <script type="text/javascript" src="../bundle/stocker.js"></script>
+<script type="text/javascript" src="../javascript/action_form.js"></script>
 <script type="text/javascript" src="../javascript/get_directory_list.js"></script>
 <script type="text/javascript">
-    const myQuery = jsUtils.url.getQueryInUrl();
     const params = new URLSearchParams(myQuery);
     const files = params.getAll('file');
 
@@ -18,12 +18,6 @@ function execute() {
     changeStatus(2, "warning");
     changeStatus(3, "info");
     changeStatus(4, "loading");
-}
-
-function setBackToStocker(backUrl) {
-    document.getElementById('cancelButton').href = backUrl;
-    document.getElementById('backAnchor').href = backUrl;
-    document.getElementById('backBurgerAnchor').href = backUrl;
 }
 
 function getFileName(filenameObj, path) {
@@ -41,7 +35,7 @@ function filenameTable(filename) {
     document.getElementById('filesArea').innerHTML = "";
 
     if (filename.length !== 0) {
-        setBackToStocker(filename[0].back);
+        setBackToStocker(filename[0]);
     }
 
     var list = new Array();
@@ -79,7 +73,6 @@ function getFilenames(param, callBack) {
         }
     }).then(function(json) {
         callBack(json);
-        actionParam = json;
     }).catch(function(error) {
         console.log('error: ' + error.message);
     });
@@ -89,20 +82,17 @@ function getFilenames(param, callBack) {
 <body>
   <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand"> <!-- left side of the navbar -->
+      <a href="#" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
       <h1 class="navbar-item">縮小画像作成</h1>
-      <a role="button" class="navbar-burger is-active" aria-label="menu" id="backBurgerAnchor" href="#" aria-expanded="false">
-        <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-      </a>
     </div>
+<!--
     <div class="navbar-menu">
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-        <a id="backAnchor" role="button" class="navbar-item is-active" href="#"><i class="fas fa-times"></i></a>
       </div>
     </div>
+-->
   </nav>
   <span id="warning"></span>
   <section class="section">

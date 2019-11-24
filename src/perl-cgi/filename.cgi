@@ -24,7 +24,6 @@ my @files = $form->multi_param('file');
 foreach (@files) {
   my $path = $_;
   my $location = ParamPath->get_up_path(ParamPath->urlpath_decode($path));
-  my $back = "${STOCKER_CGI}?file=" . ParamPath->urlpath_encode(encode('utf-8', $location)) . "&dir=" . $encoded_dir;
   my $name = ParamPath->get_filename(ParamPath->urlpath_decode($path));
 
   if ($first == 1) {
@@ -35,7 +34,7 @@ foreach (@files) {
     print ",";
   }
 
-  print "{\"back\": \"" . $back . "\", \"path\": \"". $path . "\", \"location\": \"" . $location . "\", \"name\": \"". $name . "\"}";
+  print "{\"dir\": \"" . $encoded_dir . "\", \"path\": \"". $path . "\", \"location\": \"" . $location . "\", \"name\": \"". $name . "\"}";
 }
 
 if ($first == 0) {

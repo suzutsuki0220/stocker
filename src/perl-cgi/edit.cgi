@@ -22,7 +22,7 @@ require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode   = scalar($form->param('mode'));
-my @files = $form->param('file');
+my @files = $form->multi_param('file');
 my $out_dir   = scalar($form->param('out_dir'));
 
 my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));

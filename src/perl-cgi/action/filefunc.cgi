@@ -28,32 +28,12 @@ require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
 my $mode = scalar($form->param('mode'));
-my @files  = $form->param('file');
-my $target = scalar($form->param('target'));
+my @files = $form->multi_param('file');
 my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
 my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
 
+my $target = scalar($form->param('target'));
 my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
-
-eval {
-  my @jslist = (
-      "${HTDOCS_ROOT}/bundle/stocker.js",
-      "${HTDOCS_ROOT}/javascript/filefunc.js",
-      "${HTDOCS_ROOT}/javascript/get_directory_list.js",
-  );
-  my @csslist = (
-      "${HTDOCS_ROOT}/stylesheet/stocker.css",
-  );
-  my $html = HTML_Elem->new(
-      javascript => \@jslist,
-      css => \@csslist
-  );
-  $html->header();
-};
-if ($@) {
-  HTML_Elem->header();
-  HTML_Elem->error($@);
-}
 
 my $base;
 eval {
@@ -62,15 +42,13 @@ eval {
   $base = $ins->{base};
 };
 if ($@) {
-  HTML_Elem->error($@);
+  error($@);
 }
 
 if( ${mode} eq "delfile" ) {
   &form_delete();
 } elsif( ${mode} eq "do_delete" ) {
   &do_delete();
-} elsif( ${mode} eq "newfolder" ) {
-  &form_newfolder();
 } elsif( ${mode} eq "do_newfolder" ) {
   &do_newfolder();
 } elsif( ${mode} eq "upload" ) {
@@ -86,58 +64,51 @@ if( ${mode} eq "delfile" ) {
 } elsif( ${mode} eq "do_move" ) {
   &do_move();
 } else {
-  HTML_Elem->error("実装されていない機能です");
+  &error("実装されていない機能です");
 }
 
 exit(0);
 
+sub success() {
+  print "Content-Type: text/json\n\n";
+  print "{\"status\": \"ok\", \"message\": \"successful\"}\n";
+}
+
+sub error() {
+  my ($message) = @_;
+
+  my $output_message = encode('utf-8', $message);
+
+  print "Content-Type: text/json\n\n";
+  print "{\"status\": \"fail\", \"message\": \"${output_message}\"}\n";
+  exit(0);
+}
+
 ########################
 ### 新規フォルダ作成 ###
 ########################
-sub form_newfolder() {
-  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
-
-  print <<EOF;
-<h1>新規フォルダーの作成</h1>
-<form action="$ENV{'SCRIPT_NAME'}" name="f1" onSubmit="return confirm_act('フォルダーの作成')" method="POST">
-<input type="hidden" name="mode" value="do_newfolder">
-<input type="hidden" name="target" value="${target}">
-<input type="hidden" name="dir" value="${encoded_dir}">
-<p>
-作成先: $path<br>
-フォルダー名: <input type="text" name="foldername" class="fitWidth" value=""><br>
-<br>
-<input type="submit" name="b_submit" value="実行">
-<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
-</p>
-</form>
-EOF
-
-  HTML_Elem->tail();
-}
-
 sub do_newfolder() {
-  my $newname = decode('utf-8', scalar($form->param('foldername')));
-  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
+  my $newname = decode('utf-8', scalar($form->param('newname')));
+  my $path = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('file'))));
 
   # ファイル名チェック
   if (! FileOperator->isFilename("$newname")) {
-    HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
+    &error("指定された名前は使用できません。別の名前に変更してください");
   }
 
   my $newfolder = encode('utf-8', "${base}${path}/" . $newname);
 
   # 重複チェック
   if( -e "${newfolder}") {
-    HTML_Elem->error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
+    &error("指定された名前(".$newname.")は既に使われています。別の名前を指定してください");
   }
 
   if(! mkdir("${newfolder}")) {
-      my $reason = $!;
-      HTML_Elem->error("ディレクトリ作成に失敗しました($reason)");
+    my $reason = $!;
+    &error("ディレクトリ作成に失敗しました(${path} - $reason)");
   }
 
-  &redirect_to_stocker("完了", "新しいフォルダを作成しました");
+  &success();
 }
 
 ##############################
@@ -177,10 +148,10 @@ sub do_upload() {
     &save_upfile('file3');
     &save_upfile('file4');
     &save_upfile('file5');
-    &redirect_to_stocker("アップロード完了", "アップロードが完了しました");
+    &success();
   };
   if ($@) {
-    HTML_Elem->error("アップロードに失敗しました - $@");
+    &error("アップロードに失敗しました - $@");
   }
 }
 
@@ -210,7 +181,7 @@ sub save_upfile
 ################
 sub form_rename() {
   if (@files.length == 0) {
-    HTML_Elem->error("チェックが一つも選択されていません");
+    &error("チェックが一つも選択されていません");
   }
 
   @files = sort {$a cmp $b} @files;
@@ -256,21 +227,19 @@ sub do_rename() {
 
   # ファイル名チェック
   if (! FileOperator->isFilename($dest_name)) {
-    HTML_Elem->error("指定された名前は使用できません。別の名前に変更してください");
+    &error("指定された名前は使用できません。別の名前に変更してください");
   }
 
   # 既存ファイル名重複チェック
   if (-e "${dest_path}") {
-    HTML_Elem->error("指定された名前(".$dest_name.")は既に使われています。別の名前を指定してください");
+    &error("指定された名前(".$dest_name.")は既に使われています。別の名前を指定してください");
   }
 
   if(! rename("${orig_path}", "${dest_path}")) {
-    HTML_Elem->error("${dest_name} の名前変更に失敗しました($!)");
+    &error("${dest_name} の名前変更に失敗しました($!)");
   }
 
-  print encode('utf-8', "変更完了");
-
-  HTML_Elem->tail();
+  &success();
 }
 
 #############
@@ -345,7 +314,7 @@ sub do_move() {
   my $dest_dir = HTML_Elem->url_decode(scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
 
   if (@files.length == 0) {
-    HTML_Elem->error("チェックが一つも選択されていません");
+    &error("チェックが一つも選択されていません");
   }
 
   my $dest_path = "";
@@ -355,7 +324,7 @@ sub do_move() {
     $dest_path = $ins->{base} . $dest;
   };
   if ($@) {
-    HTML_Elem->error("不正なパスが指定されました");
+    &error("不正なパスが指定されました");
   }
 
   foreach my $file (@files) {
@@ -364,18 +333,18 @@ sub do_move() {
     my $filename = ParamPath->get_filename($entry);
 
     if(${entry} =~ /\/\./) {
-      HTML_Elem->error("移動先に移動できないパスが指定されています");
+      &error("移動先に移動できないパスが指定されています");
     }
     if( -e "${dest_path}/${filename}") {
-      HTML_Elem->error("既に同じ名前が存在するため移動できません($filename)");
+      &error("既に同じ名前が存在するため移動できません($filename)");
     }
     if(! move("${origin_path}", encode('utf-8', "${dest_path}"))) {
       my $reason = $!;
-      HTML_Elem->error("移動に失敗しました($reason)");
+      &error("移動に失敗しました($reason)");
     }
   }
 
-  &redirect_to_stocker("完了", "移動しました");
+  &success();
 }
 
 #############
@@ -414,7 +383,7 @@ EOF
 
 sub do_delete() {
   if (@files.length == 0) {
-    HTML_Elem->error("チェックが一つも選択されていません");
+    &error("チェックが一つも選択されていません");
   }
 
   foreach my $file (@files) {
@@ -423,11 +392,11 @@ sub do_delete() {
       &delete_work($entry);
     };
     if ($@) {
-      HTML_Elem->error("削除に失敗しました($@)。");
+      &error("削除に失敗しました($@)。");
     }
   }
 
-  &redirect_to_stocker("削除しました", "");
+  &success();
 }
 
 sub judgeMoveTrash {
@@ -496,33 +465,6 @@ sub delete_work {
   } else {
     die "存在しないパスが指定されていました";
   }
-}
-
-### 処理完了後のリダイレクト ###
-sub redirect_to_stocker
-{
-  my ($title, $note) = @_;
-  my $refresh = 1;  # リダイレクトを行うまでの待ち時間 (秒数)
-
-  print "Content-Type: text/html\n\n";
-  print <<EOD;
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<meta http-equiv="Refresh" content="${refresh}; url=${back_link}">
-<title>${title}</title>
-</head>
-<body>
-<p>
-${title}<br><small>${note}</small><br>
-<br>
-<a href="${back_link}">OK</a>
-</p>
-</body>
-</html>
-EOD
 }
 
 sub printFilesAndHiddenForm

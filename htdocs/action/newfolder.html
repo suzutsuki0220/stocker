@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja" class="has-navbar-fixed-top">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="format-detection" content="telephone=no">
+<script type="text/javascript" src="../bundle/stocker.js"></script>
+<script type="text/javascript" src="../javascript/action_form.js"></script>
+<title>stocker</title>
+<script type="text/javascript">
+    const params = jsUtils.url.getRawParams();
+
+    function execute() {
+        if (!confirm('フォルダーの作成をします')) {
+            return;
+        }
+
+        jsUtils.fetch.request(
+            {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
+             headers: {"Content-Type": "application/x-www-form-urlencoded"},
+             body: stocker.components.makeDirFileParam(params.dir, params.path, {mode: "do_newfolder", newname: document.f1.foldername.value}),
+             method: 'POST',
+             format: 'json'
+            }, function(json) {
+                if (json.status === 'ok') {
+                    stocker.components.backToList(params.dir, params.path);
+                } else {
+                    console.log(json.message);
+                }
+            }, function(error) {
+                console.log('error: ' + error.message);
+            }
+        );
+    }
+
+    function cancel() {
+        stocker.components.backToList(params.dir, params.path);
+    }
+</script>
+</head>
+<body>
+  <nav class="navbar is-link is-fixed-top" role="navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <h1 class="navbar-item">新規フォルダーの作成</h1>
+      <a role="button" class="navbar-burger" href="#">
+        <span aria-hidden="true"></span><!-- It has to contain three empty spans (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+      </div>
+      <div class="navbar-end">
+<!--        <a id="backAnchor" role="button" class="navbar-item" href="#"></a> -->
+      </div>
+    </div>
+  </nav>
+
+<form action="#" name="f1" method="POST">
+<p>
+作成先: $path<br>
+フォルダー名: <input type="text" name="foldername" value=""><br>
+<br>
+<input type="button" name="b_submit" value="実行" onClick="execute()">
+<input type="button" name="b_cancel" value="キャンセル" onClick="cancel()">
+</p>
+</form>
+</body>
+</html>

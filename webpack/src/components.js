@@ -26,6 +26,8 @@ function makeDirFileParam(root, path, option = {}) {
     return 'dir=' + root + '&file=' + path + (optionParam ? '&' + optionParam : '');
 }
 
+module.exports.makeDirFileParam = makeDirFileParam;
+
 module.exports.makePathParams = function(root, path, option) {
     const r = root || '';
     const p = path || '';
