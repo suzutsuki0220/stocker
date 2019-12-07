@@ -51,20 +51,11 @@ function getCheckedFiles() {
     return checked;
 }
 
-function allCheck() {
+function allCheck(flag = true) {
     var files = document.getElementsByName("file");
     if (files) {
         for (var i=0; i<files.length; i++) {
-            files[i].checked = true;
-        }
-    }
-}
-
-function allUnCheck() {
-    var files = document.getElementsByName("file");
-    if (files) {
-        for (var i=0; i<files.length; i++) {
-            files[i].checked = false;
+            files[i].checked = flag;
         }
     }
 }
