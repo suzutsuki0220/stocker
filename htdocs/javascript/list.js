@@ -5,22 +5,24 @@ var boxes = 500;  // TODO: for Pagination (ページ分け)
 //my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
 let encoded_dir;
 
+let root, path;
+
 window.addEventListener("load", function(event) {
     encoded_dir = document.file_check.fm_dir.value;
 
     const params = jsUtils.url.getRawParams();
-    const rootDir = params.dir || "";
-    const path = params.path || "";
+    root = params.dir || "";
+    path = params.path || "";
 //    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
 //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
-    initializeWindow(rootDir, path);
+    initializeWindow(root, path);
 });
 
-function initializeWindow(rootDir, path) {
+function initializeWindow(root, path) {
     makeActionList();
     getRootDirectories(function(data) {
-        makeDirectoryList(document.getElementById('fm_dir'), data, rootDir);
+        makeDirectoryList(document.getElementById('fm_dir'), data, root);
         reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
     });
 }
@@ -274,7 +276,7 @@ function addSubdirectoryLink(data, encoded_dir, url_path) {
     }
 }
 
-function downloadWork(dir) {
+function downloadWork() {
     var files = document.getElementsByName("file");
     if (files && elements) {
         for (var i=0; i<files.length; i++) {
@@ -284,7 +286,7 @@ function downloadWork(dir) {
 
             for (var j=0; j<elements.length; j++) {
                 if (files[i].value === elements[j].path) {
-                    handleDownload(dir, files[i].value, elements[j].name);
+                    handleDownload(files[i].value, elements[j].name);
                     break;
                 }
             }
@@ -292,7 +294,7 @@ function downloadWork(dir) {
     }
 }
 
-function handleDownload(dir, file, filename) {
-    const get_url = stocker.uri.cgi.get_file + "?mime=application/force-download&dir=" + dir + "&file=" + file;
+function handleDownload(filepath, filename) {
+    const get_url = stocker.uri.cgi.get_file + "?mime=application/force-download&dir=" + root + "&file=" + filepath;
     jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
 }
