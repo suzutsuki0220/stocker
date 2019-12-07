@@ -1,15 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="has-navbar-fixed-top">
 <head>
-<!--
-my $in_dir    = (scalar $form->param('dir'));
-my $in_file   = (scalar $form->param('file'));
-my $in_search = decode('utf-8', (scalar $form->param('search')));
-my $in_from   = (scalar $form->param('from'));
-my $in_to     = (scalar $form->param('to'));
-
-my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/";
--->
 <meta charset="utf-8" />
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
@@ -24,6 +15,44 @@ my $path = $in_file ? decode('utf-8', ParamPath->urlpath_decode($in_file)) : "/"
 </head>
 
 <body>
+  <nav class="navbar is-link is-fixed-top" role="navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <h1 class="navbar-item" id="fileNameArea">Stocker</h1>
+      <a role="button" class="navbar-burger" href="#">
+        <span aria-hidden="true"></span><!-- It has to contain three empty spans (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input class="input" type="text" placeholder="絞り込み">
+              <span class="icon is-small is-left">
+                <i class="fas fa-filter"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" title="新規フォルダー作成"><i class="fas fa-folder-plus" style="color: #ffffff"></i></a>
+        <a class="navbar-item" title="アップロード"><i class="fas fa-upload"></i></a>
+        <a class="navbar-item" title="ダウンロード"><i class="fas fa-download"></i></a>
+        <a class="navbar-item" title="削除"><i class="fas fa-trash"></i></a>
+        <a class="navbar-item" title="名前の変更"><i class="fas fa-file-signature"></i></a>
+        <a class="navbar-item" title="移動"><i class="fas fa-shipping-fast"></i></a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link is-arrowless"><i class="fas fa-ellipsis-v"></i></a>
+          <div class="navbar-dropdown is-right" id="action-drop-list"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <nav class="navbar is-light is-fixed-bottom" role="navigation">
+  </nav>
 <form action="#" name="file_check" method="POST">
 <input type="hidden" name="mode" value="">
 <input type="hidden" name="target" value="${in_file}">
@@ -68,6 +97,31 @@ if(length(${in_to}) > 0 && ${in_to} > 0) {
 <p id="directoryListArea"></p>
 <p class="partition">&nbsp;</p>
 </form>
+
+<div class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <!-- Any other Bulma elements you want -->
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<div class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Modal title</p>
+    </header>
+    <section class="modal-card-body">
+      <!-- Content ... -->
+     some contents
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-success">Save changes</button>
+      <button class="button">Cancel</button>
+    </footer>
+  </div>
+</div>
 
 <!--
 ## 操作  TODO: remove
