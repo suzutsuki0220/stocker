@@ -1,7 +1,19 @@
-function textNode(tagName, value, option = {}) {
+function active(elem, flag) {
+    if (flag) {
+        elem.classList.add('is-active');
+    } else {
+        elem.classList.remove('is-active');
+    }
+}
+
+function newNode(tagName, value, option = {}) {
     var elem = document.createElement(tagName);
-    elem.innerHTML = value;  // enable HTML tags
-//    elem.appendChild(document.createTextNode(value));
+
+    if (typeof value === 'string') {
+        elem.innerHTML = value;  // enable HTML tags
+    } else {
+        elem.appendChild(value);  // expects object HTML element
+    }
 
     for (var property in option) {
         elem.setAttribute(property, option[property]);
@@ -16,7 +28,7 @@ function tableHeader(names) {
 
     var fragment = document.createDocumentFragment();
     for (var i=0; i<names.length; i++) {
-        fragment.appendChild(textNode('th', names[i]));
+        fragment.appendChild(newNode('th', names[i]));
     }
 
     tr.appendChild(fragment);
@@ -34,10 +46,10 @@ function tableBody(values) {
         var tr = document.createElement('tr');
         if (Array.isArray(v)) {
             for (var j=0; j<v.length; j++) {
-                tr.appendChild(textNode('td', v[j]));
+                tr.appendChild(newNode('td', v[j]));
             }
         } else {
-            tr.appendChild(textNode('td', v));
+            tr.appendChild(newNode('td', v));
         }
         fragment.appendChild(tr);
     }
@@ -55,17 +67,31 @@ module.exports.statusIcon = {
     error: '<span class="icon is-medium has-text-danger"><i class="fas fa-exclamation-circle"></i></span>'
 };
 
+module.exports.active = active;
+
+module.exports.okButton = function(contents, onClick) {
+    const button = newNode("button", contents, {class: "button is-success"});
+    button.onclick = onClick;
+    return button;
+}
+
+module.exports.cancelButton = function(contents, onClick) {
+    const button = newNode("button", contents, {class: "button"});
+    button.onclick = onClick;
+    return button;
+}
+
 module.exports.makeTable = function(elem, names, values) {
     elem.appendChild(tableHeader(names));
     elem.appendChild(tableBody(values));
 }
 
 module.exports.notification = function(elem, message) {
-    elem.appendChild(textNode('div', message, {class: "notification is-info"}));
+    elem.appendChild(newNode('div', message, {class: "notification is-info"}));
 };
 
 module.exports.warning = function(elem, message) {
-    elem.appendChild(textNode('div', message, {class: "notification is-danger"}));
+    elem.appendChild(newNode('div', message, {class: "notification is-danger"}));
 };
 
 module.exports.card = function(elem, cards) {
@@ -82,10 +108,10 @@ module.exports.card = function(elem, cards) {
 
         const c = cards[i];
         if (c.image) {
-            card.appendChild(textNode('div', c.image, {class: 'card-image'}));
+            card.appendChild(newNode('div', c.image, {class: 'card-image'}));
         }
         if (c.content) {
-            card.appendChild(textNode('div', c.content, {class: 'card-content'}));
+            card.appendChild(newNode('div', c.content, {class: 'card-content'}));
         }
 
         column.appendChild(card);
@@ -99,11 +125,41 @@ module.exports.media = function(elem, image, content, right = "") {
     const media = document.createElement('div');
     media.classList.add('media');
 
-    media.appendChild(textNode('div', image, {class: 'media-left'}));
-    media.appendChild(textNode('div', content, {class: 'media-content'}));
+    media.appendChild(newNode('div', image, {class: 'media-left'}));
+    media.appendChild(newNode('div', content, {class: 'media-content'}));
     if (right) {
-        media.appendChild(textNode('div', right, {class: 'media-right'}));
+        media.appendChild(newNode('div', right, {class: 'media-right'}));
     }
 
     elem.appendChild(media);
+};
+
+module.exports.modal = function(content, showCloseButton=true) {
+    const modal = newNode('div', '', {class: 'modal'});
+    modal.appendChild(newNode('div', '', {class: 'modal-background'}));
+    modal.appendChild(newNode('div', content, {class: 'modal-content'}));
+
+    if (showCloseButton === true) {
+        const button = newNode('button', '', {class: 'modal-close is-large'});
+        button.onclick = function() {
+            active(modal, false);
+        };
+        modal.appendChild(button);
+    }
+
+    return modal;
+};
+
+module.exports.modalCard = function(title, content, footer = "") {
+    const modal = newNode('div', '', {class: 'modal'});
+    modal.appendChild(newNode('div', '', {class: 'modal-background'}));
+
+    const cardBody = newNode('div', '', {class: 'modal-card'});
+    cardBody.appendChild(newNode('header', '<p class="modal-card-title">' + title + '</p>', {class: 'modal-card-head'}));
+    cardBody.appendChild(newNode('section', content, {class: 'modal-card-body'}))+
+    cardBody.appendChild(newNode('footer', footer, {class: 'modal-card-foot'}));
+
+    modal.appendChild(cardBody);
+
+    return modal;
 };
