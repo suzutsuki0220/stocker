@@ -1,9 +1,22 @@
+document.addEventListener('DOMContentLoaded', () => {
+    (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+        $notification = $delete.parentNode;
+        $delete.addEventListener('click', () => {
+            $notification.parentNode.removeChild($notification);
+        });
+    });
+});
+
 function active(elem, flag) {
     if (flag) {
         elem.classList.add('is-active');
     } else {
         elem.classList.remove('is-active');
     }
+}
+
+function closeButton() {
+    return newNode('button', '', {class: 'delete'});
 }
 
 function newNode(tagName, value, option = {}) {
@@ -70,7 +83,7 @@ module.exports.statusIcon = {
 module.exports.active = active;
 
 module.exports.okButton = function(contents, onClick) {
-    const button = newNode("button", contents, {class: "button is-success"});
+    const button = newNode("button", contents, {class: "button is-link"});
     button.onclick = onClick;
     return button;
 }
@@ -86,12 +99,20 @@ module.exports.makeTable = function(elem, names, values) {
     elem.appendChild(tableBody(values));
 }
 
-module.exports.notification = function(elem, message) {
-    elem.appendChild(newNode('div', message, {class: "notification is-info"}));
+module.exports.notification = function(elem, message, showCloseButton=true) {
+    const notif =newNode('div', message, {class: "notification is-info"});
+    if (showCloseButton === true) {
+        notif.appendChild(closeButton());
+    }
+    elem.appendChild(notif);
 };
 
-module.exports.warning = function(elem, message) {
+module.exports.warning = function(elem, message, showCloseButton=true) {
     elem.appendChild(newNode('div', message, {class: "notification is-danger"}));
+    if (showCloseButton === true) {
+        notif.appendChild(closeButton());
+    }
+    elem.appendChild(notif);
 };
 
 module.exports.card = function(elem, cards) {
@@ -150,12 +171,20 @@ module.exports.modal = function(content, showCloseButton=true) {
     return modal;
 };
 
-module.exports.modalCard = function(title, content, footer = "") {
+module.exports.modalCard = function(title, content, footer = "", showCloseButton=true) {
     const modal = newNode('div', '', {class: 'modal'});
     modal.appendChild(newNode('div', '', {class: 'modal-background'}));
 
     const cardBody = newNode('div', '', {class: 'modal-card'});
-    cardBody.appendChild(newNode('header', '<p class="modal-card-title">' + title + '</p>', {class: 'modal-card-head'}));
+    const header = newNode('header', '<p class="modal-card-title">' + title + '</p>', {class: 'modal-card-head'});
+    if (showCloseButton === true) {
+        const button = newNode('button', '', {class: 'delete'});
+        button.onclick = function() {
+            active(modal, false);
+        }
+        header.appendChild(button);
+    }
+    cardBody.appendChild(header);
     cardBody.appendChild(newNode('section', content, {class: 'modal-card-body'}))+
     cardBody.appendChild(newNode('footer', footer, {class: 'modal-card-foot'}));
 
