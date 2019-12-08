@@ -4,7 +4,7 @@ sub isFilename {
   my $self = shift;
   my ($name) = @_;
 
-  if (! $name || length($name) >= 255) {
+  if (! $name || length($name) > 247) {  # Limitation of Windows Explorer
     return undef;
   }
   if ($name =~ /[\\\/:\?<>|\"\*]/) {

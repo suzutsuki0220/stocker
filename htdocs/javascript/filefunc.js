@@ -19,6 +19,27 @@ function confirm_act(action) {
     }
 }
 
+function doMkdir(name, onSuccess, onError) {
+    const params = jsUtils.url.getRawParams();
+
+    jsUtils.fetch.request(
+        {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
+         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+         body: stocker.components.makeDirFileParam(params.dir, params.file, {mode: "do_newfolder", newname: name}),
+         method: 'POST',
+         format: 'json'
+        }, function(json) {
+            if (json.status === 'ok') {
+                onSuccess();
+            } else {
+                onError(json.message);
+            }
+        }, function(error) {
+            onError(error.message);
+        }
+    );
+}
+
 function do_rename(rename_count) {
     if (confirm_act("名前の変更") === false) {
         return;

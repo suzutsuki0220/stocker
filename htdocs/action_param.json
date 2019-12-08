@@ -10,9 +10,9 @@
     "form": "make_thumbnail.html",
     "parameters": {}
   }, {
-    "id": "newfolder",
-    "title": "新規フォルダー作成",
-    "form": "newfolder.html",
-    "parameters": {}
+    "id": "convert",
+    "title": "変換",
+    "form": "XXXX.html",
+    "parameters": {"action": "XXXX.cgi"}
   }
 ]
