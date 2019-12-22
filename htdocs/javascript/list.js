@@ -131,13 +131,12 @@ function jump_select(boxes) {
     document.file_check.submit();
 }
 
-function printIcon(i, path, name, size, last_modified, icon, action) {
+function printIcon(id, path, name, size, last_modified, icon, action) {
     const box_width     = 120;   // 単位 px
     const box_height    = 140;   // 単位 px
 //    const box_space     = 5;     // BOXの隙間 単位 px
 
     var html = "";
-    var id = "icon_" + i;
 
     html += "<div class=\"imagebox\" style=\"width: " + box_width + "px; height: " + box_height + "px\">";
     html += "<p class=\"image\" style=\"width: " + box_width + "px; height: 75px\">";
@@ -154,8 +153,9 @@ function printIcon(i, path, name, size, last_modified, icon, action) {
     addTrimWork(id, icon);
 }
 
-function clearTrimWork() {
-    trimWork = [];
+function clearList() {
+    document.getElementById('directoryListArea').innerHTML = "";
+    trimWork = [];  // clear trimWork
 }
 
 function addTrimWork(id, imgUrl) {
@@ -213,6 +213,15 @@ window.onpopstate = function(event) {
     initializeWindow(s.dir, s.file);
 };
 
+function clearNarrowList() {
+    document.getElementById('narrow').value = "";
+    narrowList();  // reload
+}
+
+function narrowList() {
+    reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
+}
+
 function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHistory = true) {
     if (addHistory === true) { // TODO: addHistory フラグを追加したのは綺麗ではないので、読み込み処理だけを別関数にしたい
         addBackHistory(encoded_dir, url_path);
@@ -220,14 +229,23 @@ function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHi
     document.getElementById('directoryListArea').innerHTML = "読み込み中...";
     document.getElementById('path_link').innerHTML = "";
     document.file_check.target.value = url_path;  // for edit.cgi
+    path = url_path;
 
     getDirectoryList(encoded_dir, url_path, from, to, function(dir_xml) {
-        directoryList(dir_xml);
+        directoryList(dir_xml, document.getElementById('narrow').value);
         addSubdirectoryLink(dir_xml, encoded_dir, url_path);
     });
 }
 
-function directoryList(data) {
+function narrowMatch(name, key) {
+    if (!key) {
+        return true;
+    }
+
+    return (name.indexOf(key) >= 0) ? true : false;
+}
+
+function directoryList(data, narrowKey="") {
     encoded_dir = document.file_check.fm_dir.value;
 
     const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
@@ -245,7 +263,14 @@ function directoryList(data) {
       return;
     }
 
-    printIcons(elements);
+    clearList();
+    for (var i=0; i<elements.length; i++) {
+        const e = elements[i];
+        if (narrowMatch(e.name, narrowKey)) {
+            printIcons(i, e);
+        }
+    }
+    doTrimWork();
 }
 
 // TODO: -> Breadcrumbs
