@@ -9,9 +9,6 @@
 <script type="text/javascript" src="../javascript/action_form.js"></script>
 <script type="text/javascript" src="../javascript/get_directory_list.js"></script>
 <script type="text/javascript">
-    const params = new URLSearchParams(myQuery);
-    const files = params.getAll('file');
-
 function execute() {
     changeStatus(0, "done");
     changeStatus(1, "error");
@@ -20,31 +17,11 @@ function execute() {
     changeStatus(4, "loading");
 }
 
-function getFileName(filenameObj, path) {
-    for (var i=0; i<filenameObj.length; i++) {
-        const f = filenameObj[i];
-        if (path === f.path) {
-            return f.name;
-        }
+function onGetName(names) {
+    if (names.length !== 0) {
+        setBackToStocker(names[0]);
+        filenameTable(document.getElementById('filesArea'), names);
     }
-
-    return "";
-}
-
-function filenameTable(filename) {
-    document.getElementById('filesArea').innerHTML = "";
-
-    if (filename.length !== 0) {
-        setBackToStocker(filename[0]);
-    }
-
-    var list = new Array();
-    for (var i=0; i<files.length; i++) {
-        const num = i + 1;
-        list.push([num.toString(10), getFileName(filename, files[i]), '<span id="status_' + i + '">未実行</span>']);
-    }
-
-    bulmaRender.makeTable(document.getElementById('filesArea'), ['No', 'ファイル名', '実行結果'], list);
 }
 
 function changeStatus(listNumber, stat) {
@@ -89,13 +66,15 @@ function changeStatus(listNumber, stat) {
   </section>
 
 <script>
+    const files = stocker.components.getParamFile();
+
     if (files.length === 0) {
         bulmaRender.notification("error", "ファイルが選択されていません");
     }
 
     document.getElementById('filesCountArea').innerText = files.length;
     document.getElementById('filesArea').innerHTML = "読み込み中...";
-    stocker.components.getFilenames(filenameTable);
+    stocker.components.getFilenames(onGetName);
     getRootDirectories(function(data) {
         makeDirectoryList(document.getElementById('directorySelectorArea'), data);
     });

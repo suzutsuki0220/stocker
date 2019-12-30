@@ -72,3 +72,13 @@ module.exports.getFilenames = function(onSuccess, onError = noWork) {
 
     jsUtils.fetch.request(init , onSuccess, onError);
 };
+
+/**
+ * URIパラメータに指定されているpath値を取得します (複数全て)
+ **/
+module.exports.getParamFile = function() {
+    const myQuery = jsUtils.url.getQueryInUrl();
+    const params = new URLSearchParams(myQuery);
+
+    return params.getAll('file');
+};
