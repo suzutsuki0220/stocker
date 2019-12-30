@@ -52,3 +52,23 @@ module.exports.getFileProperties = function(root, path, onSuccess, onError = noW
         }, onError
     );
 };
+
+/**
+ * URIパラメータで指定されたfile/dirの実名を取得します
+ * サーバーに問い合わせてjson形式で返ります
+ **/
+module.exports.getFilenames = function(onSuccess, onError = noWork) {
+    const param = jsUtils.url.getQueryInUrl();  // it has root, path
+
+    const init = {
+        uri: uri.cgi.filename,
+        method: 'POST',
+        format: 'json',
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: param
+    };
+
+    jsUtils.fetch.request(init , onSuccess, onError);
+};
