@@ -1,12 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-    (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-        $notification = $delete.parentNode;
-        $delete.addEventListener('click', () => {
-            $notification.parentNode.removeChild($notification);
-        });
-    });
-});
-
 function active(elem, flag) {
     if (flag) {
         elem.classList.add('is-active');
@@ -15,8 +6,13 @@ function active(elem, flag) {
     }
 }
 
-function closeButton() {
-    return newNode('button', '', {class: 'delete'});
+function closeButton(elem) {
+    const button = newNode('button', '', {class: 'delete'});
+    button.onclick = function() {
+        elem.parentNode.removeChild(elem);
+    };
+
+    return button;
 }
 
 function newNode(tagName, value, option = {}) {
@@ -99,20 +95,19 @@ module.exports.makeTable = function(elem, names, values) {
     elem.appendChild(tableBody(values));
 }
 
-module.exports.notification = function(elem, message, showCloseButton=true) {
-    const notif =newNode('div', message, {class: "notification is-info"});
-    if (showCloseButton === true) {
-        notif.appendChild(closeButton());
-    }
-    elem.appendChild(notif);
-};
+module.exports.notification = function(level, message, showCloseButton=true) {
+    const c = {
+        info:    {class: "notification is-info"},
+        warning: {class: "notification is-warning"},
+        error:   {class: "notification is-danger"}
+    };
 
-module.exports.warning = function(elem, message, showCloseButton=true) {
-    elem.appendChild(newNode('div', message, {class: "notification is-danger"}));
+    const notif =newNode('div', message, c[level]);
     if (showCloseButton === true) {
-        notif.appendChild(closeButton());
+        notif.appendChild(closeButton(notif));
     }
-    elem.appendChild(notif);
+
+    return document.body.insertBefore(notif, document.body.firstChild);
 };
 
 module.exports.card = function(elem, cards) {
