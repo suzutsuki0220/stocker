@@ -6,6 +6,7 @@ var boxes = 500;  // TODO: for Pagination (ページ分け)
 let encoded_dir;
 
 let root, path;
+let modalContent;
 
 window.addEventListener("load", function(event) {
     encoded_dir = document.file_check.fm_dir.value;
@@ -17,6 +18,7 @@ window.addEventListener("load", function(event) {
 //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
     initializeWindow(root, path);
+    modalContent = new ModalContent();
 });
 
 function initializeWindow(root, path) {
