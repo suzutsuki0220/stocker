@@ -57,8 +57,8 @@ module.exports.getFileProperties = function(root, path, onSuccess, onError = noW
  * URIパラメータで指定されたfile/dirの実名を取得します
  * サーバーに問い合わせてjson形式で返ります
  **/
-module.exports.getFilenames = function(onSuccess, onError = noWork) {
-    const param = jsUtils.url.getQueryInUrl();  // it has root, path
+module.exports.getFilenames = function(root, paths, onSuccess, onError = noWork) {
+    const params = {dir: root, file: paths};
 
     const init = {
         uri: uri.cgi.filename,
@@ -67,10 +67,17 @@ module.exports.getFilenames = function(onSuccess, onError = noWork) {
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: param
+        body: jsUtils.url.makeQueryString(params)
     };
 
     jsUtils.fetch.request(init , onSuccess, onError);
+};
+
+module.exports.getParamRoot = function() {
+    const myQuery = jsUtils.url.getQueryInUrl();
+    const params = jsUtils.url.getRawParams(myQuery);
+
+    return params.dir;
 };
 
 /**

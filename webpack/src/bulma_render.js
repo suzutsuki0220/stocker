@@ -91,8 +91,13 @@ module.exports.cancelButton = function(contents, onClick) {
 }
 
 module.exports.makeTable = function(elem, names, values) {
-    elem.appendChild(tableHeader(names));
-    elem.appendChild(tableBody(values));
+    const table = document.createElement('table');
+    table.classList.add('table');
+
+    table.appendChild(tableHeader(names));
+    table.appendChild(tableBody(values));
+
+    elem.appendChild(table);
 }
 
 module.exports.notification = function(level, message, showCloseButton=true) {

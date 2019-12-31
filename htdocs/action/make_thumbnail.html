@@ -10,27 +10,12 @@
 <script type="text/javascript" src="../javascript/get_directory_list.js"></script>
 <script type="text/javascript">
 function execute() {
-    changeStatus(0, "done");
-    changeStatus(1, "error");
-    changeStatus(2, "warning");
-    changeStatus(3, "info");
-    changeStatus(4, "loading");
+    actionForm.changeStatus(0, "done");
+    actionForm.changeStatus(1, "error");
+    actionForm.changeStatus(2, "warning");
+    actionForm.changeStatus(3, "info");
+    actionForm.changeStatus(4, "loading");
 }
-
-function onGetName(names) {
-    if (names.length !== 0) {
-        setBackToStocker(names[0]);
-        filenameTable(document.getElementById('filesArea'), names);
-    }
-}
-
-function changeStatus(listNumber, stat) {
-    const elem = document.getElementById('status_' + listNumber);
-    if (elem) {
-        elem.innerHTML = bulmaRender.statusIcon[stat];
-    }
-}
-
 </script>
 </head>
 <body>
@@ -61,11 +46,12 @@ function changeStatus(listNumber, stat) {
     <div class="container">
       <h1 class="title is-5">選択</h1>
       <h2 class="subtitle is-6"><span id="filesCountArea"></span>ファイル</h2>
-      <table class="table" id="filesArea"></table>
+      <span id="filesArea"></span>
     </div>
   </section>
 
 <script>
+    const actionForm = new ActionForm();
     const files = stocker.components.getParamFile();
 
     if (files.length === 0) {
@@ -74,7 +60,17 @@ function changeStatus(listNumber, stat) {
 
     document.getElementById('filesCountArea').innerText = files.length;
     document.getElementById('filesArea').innerHTML = "読み込み中...";
-    stocker.components.getFilenames(onGetName);
+    stocker.components.getFilenames(
+        stocker.components.getParamRoot(),
+        files,
+        function(names) {
+            document.getElementById('filesArea').innerHTML = "";
+            if (names.length !== 0) {
+                actionForm.setBackToList(names[0]);
+                actionForm.filenameTable(document.getElementById('filesArea'), files, names);
+            }
+        }
+    );
     getRootDirectories(function(data) {
         makeDirectoryList(document.getElementById('directorySelectorArea'), data);
     });
