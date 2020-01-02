@@ -75,6 +75,7 @@ sub success() {
 sub error() {
   my ($message) = @_;
 
+  $message =~ s/[\r\n]//g;
   my $output_message = encode('utf-8', $message);
 
   print "Content-Type: text/json\n\n";
@@ -430,7 +431,7 @@ sub delete_work {
       die $!;
     }
   } else {
-    die "存在しないパスが指定されていました";
+    die "存在しないパスが指定されました";
   }
 }
 
