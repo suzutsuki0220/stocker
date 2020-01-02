@@ -40,6 +40,34 @@ function doMkdir(name, onSuccess, onError) {
     );
 }
 
+function doRemove(files, onSuccess, onError) {
+    const f = files.shift();
+    if (!f) {
+        onSuccess();
+        return;
+    }
+
+    f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
+    jsUtils.fetch.request(
+        {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
+         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+         body: stocker.components.makeDirFileParam(f.root, f.path, {mode: "do_delete"}),
+         method: 'POST',
+         format: 'json'
+        }, function(json) {
+            if (json.status === 'ok') {
+                f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
+                doRemove(files, onSuccess, onError);  // do recursively
+            } else {
+                f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
+                onError(json.message);
+            }
+        }, function(error) {
+            onError(error.message);
+        }
+    );
+}
+
 function do_rename(rename_count) {
     if (confirm_act("名前の変更") === false) {
         return;

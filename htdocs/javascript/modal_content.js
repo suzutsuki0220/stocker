@@ -47,7 +47,7 @@ class ModalContent {
         const self = this;
         const foot = document.createElement('span');
         foot.appendChild(bulmaRender.okButton('実行', function() {
-            doRemove(self.form.remove.foldername.value, function() {
+            doRemove(self._actionForm.filesList, function() {
                 const params = jsUtils.url.getRawParams();
                 bulmaRender.active(self.element.remove, false);
                 reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor

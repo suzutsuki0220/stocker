@@ -45,9 +45,7 @@ if ($@) {
   error($@);
 }
 
-if( ${mode} eq "delfile" ) {
-  &form_delete();
-} elsif( ${mode} eq "do_delete" ) {
+if( ${mode} eq "do_delete" ) {
   &do_delete();
 } elsif( ${mode} eq "do_newfolder" ) {
   &do_newfolder();
@@ -350,37 +348,6 @@ sub do_move() {
 #############
 ### 削 除 ###
 #############
-sub form_delete() {
-  if (@files.length == 0) {
-    HTML_Elem->error("チェックが一つも選択されていません");
-    return;
-  }
-
-  my $file_count = @files.length;
-
-  my $mes = <<EOF;
-<h1>削除</h1>
-<p>選択: ${file_count} ファイル/フォルダ</p>
-<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST" onSubmit="return confirm_act('削除');">
-EOF
-  print encode('utf-8', $mes);
-
-  &printFilesAndHiddenForm();
-
-  my $mes = <<EOF;
-<br>
-<input type="hidden" name="mode" value="do_delete">
-<input type="hidden" name="dir" value="${encoded_dir}">
-<br>
-<input type="submit" name="b_submit" value="実行">
-<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
-</form>
-EOF
-  print encode('utf-8', $mes);
-
-  HTML_Elem->tail();
-}
-
 sub do_delete() {
   if (@files.length == 0) {
     &error("チェックが一つも選択されていません");
@@ -467,6 +434,7 @@ sub delete_work {
   }
 }
 
+## TODO: delete
 sub printFilesAndHiddenForm
 {
   foreach my $file (@files) {
