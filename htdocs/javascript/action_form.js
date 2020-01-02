@@ -12,7 +12,7 @@ class ActionForm {
             }
         }
 
-        return "";
+        return null;
     }
 
     _statusIcon() {
@@ -22,18 +22,27 @@ class ActionForm {
         return icon;
     }
 
-    filenameTable(elem, files, reals) {
-        this.filesList = [];
+    makeFilesList(root, files, callback) {
+        const self = this;
+        stocker.components.getFilenames(root, files, function(reals) {
+            self.filesList = [];
+            for (let i=0; i<files.length; i++) {
+                const icon = self._statusIcon();
+                const real = self._getReal(reals, files[i]);
+                if (real) {
+                    self.filesList.push({name: real.name, root: real.dir, path: files[i], statusIcon: icon});
+                }
+            }
+            callback();
+        });
+    }
+
+    filenameTable(elem) {
         let list = new Array();
-        for (let i=0; i<files.length; i++) {
+        for (let i=0; i<this.filesList.length; i++) {
             const num = i + 1;
-            const icon = this._statusIcon();
-            const real = this._getReal(reals, files[i]);
-
-            this.filesList.push({name: real.name, root: real.dir, path: files[i], statusIcon: icon});
-            list.push([num.toString(10), real.name, icon]);
+            list.push([num.toString(10), this.filesList[i].name, this.filesList[i].statusIcon]);
         }
-
         bulmaRender.makeTable(elem, ['No', '名前', '実行結果'], list);
     }
 

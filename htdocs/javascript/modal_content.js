@@ -74,12 +74,9 @@ class ModalContent {
         const files = getCheckedFiles()
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('filesArea').innerHTML = "読み込み中...";
-        stocker.components.getFilenames(encoded_dir, files, function(names) {
+        this._actionForm.makeFilesList(encoded_dir, files, function() {
             document.getElementById('filesArea').innerHTML = "";
-
-            if (names.length !== 0) {
-                self._actionForm.filenameTable(document.getElementById('filesArea'), files, names);
-            }
+            self._actionForm.filenameTable(document.getElementById('filesArea'));
         });
     }
 }
