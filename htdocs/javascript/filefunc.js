@@ -74,7 +74,7 @@ function doRename(renameArray, onSuccess, onError) {
     }
 
     const f = r.list;
-    const newName = encodeURIComponent(r.form.value);
+    const newName = r.form.value;
 
     f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
     jsUtils.fetch.request(
@@ -86,7 +86,7 @@ function doRename(renameArray, onSuccess, onError) {
         }, function(json) {
             if (json.status === 'ok') {
                 f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
-                doRemove(renameArray, onSuccess, onError);  // do recursively
+                doRename(renameArray, onSuccess, onError);  // do recursively
             } else {
                 f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
                 onError(json.message);
