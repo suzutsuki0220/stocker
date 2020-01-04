@@ -4,7 +4,6 @@ class ModalContent {
         this.form = new Object();
 
         this._actionForm = new ActionForm();
-        this._renameWorkArray = new Array();
 
         // initialize sequence
         this._initNewFolder();
@@ -51,7 +50,13 @@ class ModalContent {
         const foot = document.createElement('span');
         foot.appendChild(bulmaRender.okButton('実行', function() {
             //disableActionButton();
-            doRemove(self._actionForm.filesList, function() {
+            let removeWorks = new Array();
+            const list = self._actionForm.filesList;
+            for (let i=0; i<list.length; i++) {
+                removeWorks.push({list: list[i], parameter: {mode: 'do_delete'}});
+            }
+
+            callFileFunc(removeWorks, function() {
                 const params = jsUtils.url.getRawParams();
                 bulmaRender.active(self.element.remove, false);
                 reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
@@ -92,7 +97,14 @@ class ModalContent {
         const foot = document.createElement('span');
         foot.appendChild(bulmaRender.okButton('実行', function() {
             //disableActionButton();
-            doRename(self._renameWorkArray, function() {
+            let renameWorks = new Array();
+            const list = self._actionForm.filesList;
+            for (let i=0; i<list.length; i++) {
+                const newName = document.getElementById('newName' + i).value;
+                renameWorks.push({list: list[i], parameter: {mode: 'do_rename', newname: newName}});
+            }
+
+            callFileFunc(renameWorks, function() {
                 const params = jsUtils.url.getRawParams();
                 bulmaRender.active(self.element.rename, false);
                 reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
@@ -122,16 +134,15 @@ class ModalContent {
         this._actionForm.makeFilesList(encoded_dir, files, function() {
             document.getElementById('renameFormArea').innerHTML = "";
 
-            self._renameWorkArray = [];
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
             //self._actionForm.filenameTable(document.getElementById('renameFormArea'));
                 const label = list[i].name;  // 変更前の名前
                 const control = document.createElement('input');
-                control.classList.add("input");
-                control.type = "text";
+                control.classList.add('input');
+                control.id = 'newName' + i;
+                control.type = 'text';
                 control.value = list[i].name;
-                self._renameWorkArray.push({list: list[i], form: control});
 
                 document.getElementById('renameFormArea').appendChild(bulmaRender.formField(label, control));
             }

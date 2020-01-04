@@ -38,60 +38,31 @@ function doMkdir(name, onSuccess, onError) {
     );
 }
 
-function doRemove(files, onSuccess, onError) {
-    const f = files.shift();
-    if (!f) {
+function callFileFunc(parameterList, onSuccess, onError) {
+    const p = parameterList.shift();
+    if (!p) {
         onSuccess();
         return;
     }
 
+    const f = p.list;
     f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
     jsUtils.fetch.request(
         {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
          headers: {"Content-Type": "application/x-www-form-urlencoded"},
-         body: stocker.components.makeDirFileParam(f.root, f.path, {mode: "do_delete"}),
+         body: stocker.components.makeDirFileParam(f.root, f.path, p.parameter),
          method: 'POST',
          format: 'json'
         }, function(json) {
             if (json.status === 'ok') {
                 f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
-                doRemove(files, onSuccess, onError);  // do recursively
+                callFileFunc(parameterList, onSuccess, onError);  // do recursively
             } else {
                 f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
                 onError(json.message);
             }
         }, function(error) {
-            onError(error.message);
-        }
-    );
-}
-
-function doRename(renameArray, onSuccess, onError) {
-    const r = renameArray.shift();
-    if (!r) {
-        onSuccess();
-        return;
-    }
-
-    const f = r.list;
-    const newName = r.form.value;
-
-    f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
-    jsUtils.fetch.request(
-        {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
-         headers: {"Content-Type": "application/x-www-form-urlencoded"},
-         body: stocker.components.makeDirFileParam(f.root, f.path, {mode: "do_rename", newname: newName}),
-         method: 'POST',
-         format: 'json'
-        }, function(json) {
-            if (json.status === 'ok') {
-                f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
-                doRename(renameArray, onSuccess, onError);  // do recursively
-            } else {
-                f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
-                onError(json.message);
-            }
-        }, function(error) {
+            f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
             onError(error.message);
         }
     );
