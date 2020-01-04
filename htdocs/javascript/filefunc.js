@@ -1,5 +1,3 @@
-var renameList = new Array();
-
 function jump(url) {
     location.href = url;
 }
@@ -68,38 +66,35 @@ function doRemove(files, onSuccess, onError) {
     );
 }
 
-function do_rename(rename_count) {
-    if (confirm_act("名前の変更") === false) {
+function doRename(renameArray, onSuccess, onError) {
+    const r = renameArray.shift();
+    if (!r) {
+        onSuccess();
         return;
     }
 
-    disableActionButton();
-    for (var i=0; i<rename_count; i++) {
-        var file = document.getElementsByName("file" + i)[0].value;
-        var newname = encodeURIComponent(document.getElementsByName("newname" + i)[0].value);
-        var param = "mode=do_rename&dir=" + document.f1.dir.value + "&file=" + file + "&newname=" + newname;
+    const f = r.list;
+    const newName = encodeURIComponent(r.form.value);
 
-        renameList.push(param);
-    }
-
-    popRenameWork();
-}
-
-function popRenameWork() {
-    var param = renameList.pop()
-    if (param) {
-        const ajax = jsUtils.ajax;
-        ajax.init();
-        ajax.setOnSuccess(function(httpRequest) {
-            popRenameWork();
-        });
-        ajax.setOnError(function(httpRequest) {
-            alert("ERROR: " + httpRequest.status);
-        });
-        ajax.post(stockerConfig.uri.filefunc, param);
-    } else {
-        location.href = document.f1.back.value;
-    }
+    f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
+    jsUtils.fetch.request(
+        {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
+         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+         body: stocker.components.makeDirFileParam(f.root, f.path, {mode: "do_rename", newname: newName}),
+         method: 'POST',
+         format: 'json'
+        }, function(json) {
+            if (json.status === 'ok') {
+                f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
+                doRemove(renameArray, onSuccess, onError);  // do recursively
+            } else {
+                f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
+                onError(json.message);
+            }
+        }, function(error) {
+            onError(error.message);
+        }
+    );
 }
 
 function refreshMoveDestination(encoded_dir, url_path) {
