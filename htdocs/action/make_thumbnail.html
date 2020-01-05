@@ -36,8 +36,7 @@ function execute() {
   <section class="section">
     <div class="container">
       <h1 class="title is-5">出力先</h1>
-      <h2 class="subtitle is-6">ディレクトリ名: <span id="outputDirectoryArea"></span></h2>
-      <select id="directorySelectorArea"></select>
+      <span id="destinationSelectorArea"></span>
       <a class="button is-primary" href="javascript:execute()">実行</a>
       <a class="button" id="cancelButton">キャンセル</a>
     </div>
@@ -71,9 +70,7 @@ function execute() {
             }
         }
     );
-    getRootDirectories(function(data) {
-        makeDirectoryList(document.getElementById('directorySelectorArea'), data);
-    });
+    makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 </script>
 </body>
 </html>

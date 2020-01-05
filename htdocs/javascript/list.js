@@ -9,8 +9,6 @@ let root, path;
 let modalContent;
 
 window.addEventListener("load", function(event) {
-    encoded_dir = document.file_check.fm_dir.value;
-
     const params = jsUtils.url.getRawParams();
     root = params.dir || "";
     path = params.path || "";
@@ -24,7 +22,8 @@ window.addEventListener("load", function(event) {
 function initializeWindow(root, path) {
     makeActionList();
     getRootDirectories(function(data) {
-        makeDirectoryList(document.getElementById('fm_dir'), data, root);
+        document.getElementById('root_selector').appendChild(makeRootSelector('fm_dir', data, changeDirectory, root));
+        encoded_dir = document.file_check.fm_dir.value;
         reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
     });
 }
