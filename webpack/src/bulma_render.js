@@ -120,6 +120,7 @@ module.exports.formHelp = function(type, message) {
 module.exports.makeTable = function(elem, names, values) {
     const table = document.createElement('table');
     table.classList.add('table');
+    table.classList.add('is-fullwidth');
 
     table.appendChild(tableHeader(names));
     table.appendChild(tableBody(values));
