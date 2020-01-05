@@ -53,12 +53,8 @@ if( ${mode} eq "do_delete" ) {
   &form_upload();
 } elsif( ${mode} eq "do_upload" ) {
   &do_upload();
-} elsif( ${mode} eq "rename" ) {
-  &form_rename();
 } elsif( ${mode} eq "do_rename" ) {
   &do_rename();
-} elsif( ${mode} eq "move" ) {
-  &form_move();
 } elsif( ${mode} eq "do_move" ) {
   &do_move();
 } else {
@@ -178,44 +174,6 @@ sub save_upfile
 ################
 ### 名前変更 ###
 ################
-sub form_rename() {
-  if (@files.length == 0) {
-    &error("チェックが一つも選択されていません");
-  }
-
-  @files = sort {$a cmp $b} @files;
-  my $file_count = @files.length;
-
-  my $mes = <<EOF;
-<h1>名前の変更</h1>
-<p>選択: ${file_count} ファイル/フォルダ</p>
-<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST">
-<ol>
-EOF
-  print encode('utf-8', $mes);
-
-  my $i = 0;
-  foreach my $file (@files) {
-    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
-    print "<li style=\"margin-bottom: 0.7em\"><input type=\"hidden\" name=\"file${i}\" value=\"${file}\">";
-    print encode('utf-8', $filename . "<br>");
-    print "<input type=\"text\" name=\"newname${i}\" class=\"fitWidth\" value=\"" . encode('utf-8', ${filename}) . "\"></li>\n";
-    $i++;
-  }
-
-  my $mes = <<EOF;
-</ol><br>
-<input type="hidden" name="dir" value="${encoded_dir}">
-<input type="hidden" name="back" value="${back_link}">
-<input type="button" value="実行" name="b_submit" class="submit_button" onClick="do_rename(${i})">
-<input type="button" value="キャンセル" name="b_cancel" onClick="jump('${back_link}')">
-</form>
-EOF
-  print encode('utf-8', $mes);
-
-  HTML_Elem->tail();
-}
-
 sub do_rename() {
   my $file = decode('utf-8', ParamPath->urlpath_decode($files[0]));
   my $orig_dir  = ${base} . "/" . ParamPath->get_up_path($file);
@@ -244,70 +202,6 @@ sub do_rename() {
 #############
 ### 移 動 ###
 #############
-sub form_move() {
-  my @lst_dest = ();
-  my $ins;
-
-  if (@files.length == 0) {
-    HTML_Elem->error("チェックが一つも選択されていません");
-  }
-
-  my $file = decode('utf-8', ParamPath->urlpath_decode($files[0]));
-  my $up_path = ParamPath->get_up_path($file);
-  my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
-
-  print "<h1>移動</h1>\n";
-  print "<p>選択: ". @files.length ."ファイル</p>\n";
-
-  print "<form action=\"$ENV{'SCRIPT_NAME'}\" name=\"f1\" method=\"POST\" onSubmit=\"return confirm_act('移動');\">\n";
-  &printFilesAndHiddenForm();
-  print "<br>\n";
-  print "<fieldset><legend>移動先</legend>\n";
-
-  print "ディレクトリ: ";
-  print "<select name=\"dest_dir\" size=\"1\" onChange=\"refreshMoveDestination(document.f1.dest_dir.value, '')\">\n";
-
-eval {
-  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-  $ins->init_by_base_name(HTML_Elem->url_decode(scalar($form->param('dir'))));
-  for (my $i=0; $i<$ins->base_dirs_count(); $i++) {
-    my $lst = $ins->get_base_dir_column($i);
-    my $name = $lst->{name};
-    my $encoded_name = HTML_Elem->url_encode($name);
-    if ($encoded_dir eq $encoded_name) {
-      print "<option value=\"${encoded_name}\" selected>".${name}."</option>\n";
-    } else {
-      print "<option value=\"${encoded_name}\">".${name}."</option>\n";
-    }
-  }
-};
-
-  print <<EOF;
-</select><br>
-パス [<span id="dest_path"></span>]<br>
-<select name="f_dest" size="10" class="fitWidth" onChange="refreshMoveDestination(document.f1.dest_dir.value, document.f1.f_dest.value)">
-</select>
-中身<br>
-<textarea rows="6" name="f_contents" class="fitWidth" style="resize: vertical" readonly disabled="disabled"></textarea>
-</fieldset>
-<br>
-<input type="hidden" name="mode" value="do_move">
-<input type="hidden" name="dir" value="${encoded_dir}">
-<input type="hidden" name="dest" value="">
-<br>
-<input type="submit" name="b_submit" value="実行">
-<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
-</form>
-<script type="text/javascript">
-<!--
-    refreshMoveDestination("${encoded_dir}", "${encoded_up_path}");
--->
-</script>
-EOF
-
-  HTML_Elem->tail();
-}
-
 sub do_move() {
   my $dest = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('dest'))));  # 移動先のパス
   my $dest_dir = HTML_Elem->url_decode(scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
