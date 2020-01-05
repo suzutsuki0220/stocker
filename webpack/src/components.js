@@ -3,23 +3,6 @@ const uri = require('./uri.js');
 
 function noWork() {}
 
-/*
-function filesList(elem, files) {
-    var textarea = document.createElement('textarea');
-    textarea.rows = "6";
-    textarea.name = "f_contents";
-    textarea.class = "fitWidth";
-    textarea.readonly = "true";
-    textarea.disabled = "disabled"
-
-    for (var i=0; i<files.length; i++) {
-        textarea.appendChild(document.createTextNode(files[i] + "\n"));
-    }
-
-    elem.appendChild(textarea);
-}
-*/
-
 function makeDirFileParam(root, path, option = {}) {
     const optionParam = jsUtils.url.makeQueryString(option);
 
