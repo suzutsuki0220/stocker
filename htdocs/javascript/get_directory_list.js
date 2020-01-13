@@ -1,3 +1,10 @@
+let selectedParam = new Object();
+
+function initSelectedParam() {
+    selectedParam.root = "";
+    selectedParam.path = "";
+}
+
 function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
     let option = new Object();
     if (from) {
@@ -59,27 +66,27 @@ function refreshDirectorySelector(div, root, path) {
         let filesArray = new Array();
         let directoriesArray = new Array();
 
+        selectedParam.root = root;
+        selectedParam.path = path;
+
+        //clear
+        div.innerHTML = "";
+
         const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-        if (!contents) {
-            return;
-        }
-        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-        const upPath = properties.up_path;
+        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path', 'up_dir'])[0];
 
-        const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
-        if (!elements) {
-            return;
-        }
+        const nameArea = document.createElement('div');
+        const upButton = document.createElement('a');
+        upButton.onclick = function() {
+            refreshDirectorySelector(div, root, properties.up_path);
+        };
+        upButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        nameArea.appendChild(upButton);
 
-        for (var i=0; i<elements.length; i++) {
-            const e = elements[i];
-            if (e.type === "DIRECTORY") {
-                directoriesArray.push(e.name);
-            } else {
-                filesArray.push(e.name);
-            }
-        }
+        const span = document.createElement('span');
+        span.innerHTML = properties.up_dir + "/" + properties.name;
+        nameArea.appendChild(span);
+        div.appendChild(nameArea);
 
         const container = document.createElement('div');
         container.style.display = "flex";
@@ -92,7 +99,6 @@ function refreshDirectorySelector(div, root, path) {
         dirList.style.borderStyle = "solid";
         dirList.style.borderWidth = "2px";
         dirList.style.borderColor = "hsl(0, 0%, 86%)";
-        bulmaRender.makeTable(dirList, ["フォルダー"], directoriesArray);
         container.appendChild(dirList);
 
         const fileList = document.createElement('div');
@@ -100,23 +106,52 @@ function refreshDirectorySelector(div, root, path) {
         fileList.style.borderStyle = "solid";
         fileList.style.borderWidth = "2px";
         fileList.style.borderColor = "hsl(0, 0%, 86%)";
-        bulmaRender.makeTable(fileList, ["中身"], filesArray);
         container.appendChild(fileList);
-
         div.appendChild(container);
+
+        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
+        if (!contents) {
+            return;
+        }
+
+        const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
+        if (!elements) {
+            return;
+        }
+
+        for (var i=0; i<elements.length; i++) {
+            const e = elements[i];
+            if (e.type === "DIRECTORY") {
+                const a = document.createElement('a');
+                a.onclick = function() {
+                    refreshDirectorySelector(div, root, e.path);
+                };
+                a.innerHTML = e.name;
+                directoriesArray.push(a);
+            } else {
+                filesArray.push(e.name);
+            }
+        }
+
+        bulmaRender.makeTable(dirList, ["フォルダー"], directoriesArray);
+        bulmaRender.makeTable(fileList, ["中身"], filesArray);
     });
 }
 
 function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", rows = 6) {
     const div = document.createElement('div');
+    const directorySelector = document.createElement('div');
 
+    initSelectedParam();
     elem.innerHTML = "";
     getRootDirectories(function(data) {
-        const rootSelector = makeRootSelector("", data, refreshDirectorySelector, selectedRoot);
+        const rootSelector = makeRootSelector("", data, function() {
+            refreshDirectorySelector(directorySelector, rootSelector.value, "")
+        }, selectedRoot);
         div.appendChild(rootSelector);
-
-        refreshDirectorySelector(div, rootSelector.value, selectedPath);
-
+        div.appendChild(directorySelector);
         elem.appendChild(div);
+
+        refreshDirectorySelector(directorySelector, rootSelector.value, selectedPath);
     });
 }

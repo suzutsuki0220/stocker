@@ -9,6 +9,7 @@ class ModalContent {
         this._initNewFolder();
         this._initRemove();
         this._initRename();
+        this._initMove();
     }
 
     _initNewFolder() {
@@ -146,6 +147,56 @@ class ModalContent {
 
                 document.getElementById('renameFormArea').appendChild(bulmaRender.formField(label, control));
             }
+        });
+    }
+
+    _initMove() {
+        this.form.move = document.createElement('div');
+        this.form.move.innerHTML =
+        '<h2 class="subtitle is-6">移動先:</h2>' +
+        '<span id="destinationSelectorArea"></span>' +
+        '<span id="moveFilesArea"></span>';
+
+        const self = this;
+        const foot = document.createElement('span');
+        foot.appendChild(bulmaRender.okButton('実行', function() {
+            //disableActionButton();
+            let moveWorks = new Array();
+            const list = self._actionForm.filesList;
+            for (let i=0; i<list.length; i++) {
+                moveWorks.push({list: list[i], parameter: {mode: 'do_move', dest_path: selectedParam.path, dest_root: selectedParam.root}});
+            }
+
+            callFileFunc(moveWorks, function() {
+                const params = jsUtils.url.getRawParams();
+                bulmaRender.active(self.element.move, false);
+                reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+            }, function(message) {
+                window.alert(message);
+            });
+        }));
+        foot.appendChild(bulmaRender.cancelButton('キャンセル', function() {
+            bulmaRender.active(self.element.move, false);
+        }));
+
+        this.element.move = bulmaRender.modalCard("移動", this.form.move, foot);
+        document.body.appendChild(this.element.move);
+    }
+
+    move() {
+        if (isAnyChecked() === false) {
+            bulmaRender.notification("error", "移動するファイル・フォルダーにチェックを入れてください");
+            return;
+        }
+        bulmaRender.active(this.element.move, true);
+        makeDirectorySelector(document.getElementById('destinationSelectorArea'));
+        const self = this;
+        const files = getCheckedFiles()
+        //document.getElementById('filesCountArea').innerText = files.length;
+        document.getElementById('moveFilesArea').innerHTML = "読み込み中...";
+        this._actionForm.makeFilesList(encoded_dir, files, function() {
+            document.getElementById('moveFilesArea').innerHTML = "";
+            self._actionForm.filenameTable(document.getElementById('moveFilesArea'));
         });
     }
 }

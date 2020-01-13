@@ -203,18 +203,18 @@ sub do_rename() {
 ### 移 動 ###
 #############
 sub do_move() {
-  my $dest = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('dest'))));  # 移動先のパス
-  my $dest_dir = HTML_Elem->url_decode(scalar($form->param('dest_dir')));  # 移動先のディレクトリ(base)
+  my $dest_path = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('dest_path'))));  # 移動先のパス
+  my $dest_root = HTML_Elem->url_decode(scalar($form->param('dest_root')));  # 移動先のディレクトリ(base)
 
   if (@files.length == 0) {
     &error("チェックが一つも選択されていません");
   }
 
-  my $dest_path = "";
+  my $move_dest = "";
   eval {
     my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
-    $ins->init_by_base_name(${dest_dir});
-    $dest_path = $ins->{base} . $dest;
+    $ins->init_by_base_name(${dest_root});
+    $move_dest = $ins->{base} . $dest_path;
   };
   if ($@) {
     &error("不正なパスが指定されました");
@@ -228,10 +228,10 @@ sub do_move() {
     if(${entry} =~ /\/\./) {
       &error("移動先に移動できないパスが指定されています");
     }
-    if( -e "${dest_path}/${filename}") {
+    if( -e "${move_dest}/${filename}") {
       &error("既に同じ名前が存在するため移動できません($filename)");
     }
-    if(! move("${origin_path}", encode('utf-8', "${dest_path}"))) {
+    if(! move("${origin_path}", encode('utf-8', "${move_dest}"))) {
       my $reason = $!;
       &error("移動に失敗しました($reason)");
     }
