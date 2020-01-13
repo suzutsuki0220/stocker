@@ -22,8 +22,6 @@ our $STOCKER_CGI;
 our $TRASH_PATH;
 our $TRASH_IGNORE_PATTERN;
 our $TRASH_IGNORE_SIZE;
-our $TMP_FILE;
-our $HTDOCS_ROOT;
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
 
 my $form = eval{new CGI};
@@ -326,16 +324,6 @@ sub delete_work {
     }
   } else {
     die "存在しないパスが指定されました";
-  }
-}
-
-## TODO: delete
-sub printFilesAndHiddenForm
-{
-  foreach my $file (@files) {
-    my $filename = ParamPath->get_filename(decode('utf-8', ParamPath->urlpath_decode($file)));
-    print "<input type=\"hidden\" name=\"file\" value=\"${file}\">";
-    print encode('utf-8', $filename) ."<br>\n";
   }
 }
 

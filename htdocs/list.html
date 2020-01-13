@@ -65,7 +65,6 @@
 <input type="hidden" name="mode" value="">
 <input type="hidden" name="target" value="${in_file}">
 <input type="hidden" name="dir" value="${encoded_dir}">
-<div id="editParam"></div>
 <a href="index.html"><i class="fas fa-home"></i></a>
 <span id="root_selector"></span>
 <span id="path_link"></span>
@@ -108,23 +107,11 @@ if(length(${in_to}) > 0 && ${in_to} > 0) {
 操作:
 <select name="operation" size="1" onChange="act()">
 <option value="nop">-- 操作を選択 --</option>
-<optgroup label="選択">
-<option value="allCheck">全項目選択</option>
-<option value="allUnCheck">全ての選択を解除</option>
-</optgroup>
 <optgroup label="編集">
 <option value="resize">縮小版を作成</option>
 <option value="convert">変換</option>
 <option value="combine">画像/動画を結合</option>
 <option value="divide">画像を分離</option>
-</optgroup>
-<optgroup label="操作">
-<option value="newfolder">新規フォルダー作成</option>
-<option value="upload">アップロード</option>
-<option value="download">ダウンロード</option>
-<option value="delfile">削除</option>
-<option value="rename">名前の変更</option>
-<option value="move">移動</option>
 </optgroup>
 </select>
 
@@ -136,12 +123,6 @@ function act() {
   document.file_check.dir.value = document.file_check.fm_dir.value;
   document.file_check.operation.options[0].selected = true;  // 変更後はnopに
   switch (sw) {
-    case "allCheck":
-      allCheck();
-      break;
-    case "allUnCheck":
-      allUnCheck();
-      break;
     case "resize":
       document.file_check.mode.value = "resize";
       document.file_check.action = stocker.uri.cgi.edit;
@@ -160,38 +141,6 @@ function act() {
     case "divide":
       document.file_check.mode.value = "divide";
       document.file_check.action = stocker.uri.cgi.edit;
-      document.file_check.submit();
-      break;
-    case "newfolder":
-      document.file_check.mode.value = "newfolder";
-      document.file_check.action = stocker.uri.cgi.filefunc;
-      document.file_check.submit();
-      break;
-    case "upload":
-      document.file_check.mode.value = "upload";
-      document.file_check.action = stocker.uri.cgi.filefunc;
-      document.file_check.submit();
-      break;
-    case "download":
-      downloadWork(params.dir);
-      break;
-    case "delfile":
-      document.file_check.mode.value = "delfile";
-      document.file_check.action = stocker.uri.cgi.filefunc;
-      document.file_check.submit();
-      break;
-    case "rename":
-      document.file_check.mode.value = "rename";
-      document.file_check.action = stocker.uri.cgi.filefunc;
-      document.file_check.submit();
-      break;
-    case "move":
-      var elem = document.createElement("f_dest");
-      elem.innerHTML = '<input type="hidden" name="f_dest" value="${in_file}">'
-                     + '<input type="hidden" name="f_dest_dir" value="" + params.dir + "">';
-      document.getElementById("editParam").appendChild(elem);
-      document.file_check.mode.value = "move";
-      document.file_check.action = stocker.uri.cgi.filefunc;
       document.file_check.submit();
       break;
   }
