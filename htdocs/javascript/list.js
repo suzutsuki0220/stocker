@@ -90,6 +90,11 @@ function toggleCheckFile(value) {
     }
 }
 
+function toggleNavBurger() {
+    document.getElementById('burger').classList.toggle('is-active');
+    document.getElementById('menu').classList.toggle('is-active');
+}
+
 function displayDirectoryProperty(directory) {
     const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
 
