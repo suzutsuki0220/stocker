@@ -60,7 +60,7 @@ module.exports.getParamRoot = function() {
     const myQuery = jsUtils.url.getQueryInUrl();
     const params = jsUtils.url.getRawParams(myQuery);
 
-    return params.dir;
+    return params.dir || "";
 };
 
 /**

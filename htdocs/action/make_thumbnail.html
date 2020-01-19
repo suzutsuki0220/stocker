@@ -59,17 +59,18 @@ function execute() {
 
     document.getElementById('filesCountArea').innerText = files.length;
     document.getElementById('filesArea').innerHTML = "読み込み中...";
-    stocker.components.getFilenames(
+    actionForm.makeFilesList(
         stocker.components.getParamRoot(),
         files,
-        function(names) {
+        function() {
             document.getElementById('filesArea').innerHTML = "";
-            if (names.length !== 0) {
-                actionForm.setBackToList(names[0]);
-                actionForm.filenameTable(document.getElementById('filesArea'), files, names);
+            if (actionForm.filesList.length !== 0) {
+                actionForm.setBackToList({dir: actionForm.filesList[0].root, location: actionForm.filesList[0].path});
+                actionForm.filenameTable(document.getElementById('filesArea'));
             }
         }
     );
+
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 </script>
 </body>
