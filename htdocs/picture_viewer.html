@@ -28,16 +28,9 @@
       <div class="navbar-start">
       </div>
       <div class="navbar-end">
-        <div class="navbar-item">
-          <div class="buttons">
-          <a id="InfoLink" class="button" href="#">
-            <span class="icon">
-              <i class="fas fa-info"></i>
-            </span>
-            <span>EXIF</span>
-          </a>
-          </div>
-        </div>
+        <a class="navbar-item" id="InfoLink" href="#">
+          <i class="fas fa-info"></i>&nbsp;EXIF
+        </a>
       </div>
     </div>
   </nav>
@@ -45,10 +38,15 @@
 <div id="ContentArea">
   <div id="ExifLayer" style="display: none"></div>
   <div id="loadingText"><i class="fas fa-spinner fa-pulse"></i> loading...</div>
-  <img src="" name="ImageArea" id="ImageArea">
+  <div style="display: flex; justify-content: center">
+    <img src="" name="ImageArea" id="ImageArea">
+  </div>
   <img src="" name="ThumbnailArea" id="ThumbnailArea">
+  <div class="bottomArea">
+    <a class="bottomArea" id="prevButton" href="#"><i class="fas fa-angle-left"></i></a>
+    <div id="control_field"></div>
+    <a class="bottomArea" id="nextButton" href="#"><i class="fas fa-angle-right"></i></a>
+  </div>
 </div>
-
-<span id="control_field"></span>
 </body>
 </html>

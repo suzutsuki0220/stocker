@@ -5,13 +5,19 @@ html, body {
 body {
     margin: 0;
     font-family: arial,sans-serif;
+    background-color: #000000;
 }
 
-#control_field {
-    float: right;
-    width: 30%;
-    height: 5%;
-    text-align: right;
+.bottomArea {
+    color: #efefef;
+    font-size: 14pt;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+div.bottomArea {
+    display: flex;
+    justify-content: space-between;
 }
 
 #ContentArea {
@@ -53,18 +59,6 @@ table.ExifTable th,td {
     word-break: break-all;
     text-align: left;
     padding: 5px;
-}
-
-.InfoLinkArea {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-/*    font-weight: bold; */
-/*    font-size: 100%; */
-}
-
-#InfoLink {
-    text-decoration: none;
 }
 
 #ThumbnailArea {

@@ -83,20 +83,22 @@ function renewControlField(index) {
     var prev_link = "＜";
     var next_link = "＞";
 
-    if (index != 0) {
-        var num = index - 1;
-        prev_link = "<a href=\"javascript:changeImage(" + num + ")\">＜</a>";
-    }
-    if (index < images.length -1) {
-        var num = index + 1;
-        next_link = "<a href=\"javascript:changeImage(" + num + ")\">＞</a>";
-    }
+    document.getElementById('prevButton').onclick = function() {
+        changeImage(index - 1);
+    };
+    document.getElementById('nextButton').onclick = function() {
+        changeImage(index + 1);
+    };
 
-    var disp_num = index + 1;
-    document.getElementById('control_field').innerHTML = prev_link + "&nbsp;" + disp_num + "/" + images.length + "&nbsp;" + next_link;
+    const disp_num = index + 1;
+    document.getElementById('control_field').innerHTML = disp_num + "/" + images.length;
 }
 
 function changeImage(index) {
+    if (index < 0 || images.length <= index) {
+        return;
+    }
+
     const img = images[index];
 
     if (load_flg === true) {
