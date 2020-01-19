@@ -6,7 +6,7 @@ var boxes = 500;  // TODO: for Pagination (ページ分け)
 let encoded_dir;
 
 let root, path;
-let modalContent;
+let actionList, modalContent;
 
 window.addEventListener("load", function(event) {
     const params = jsUtils.url.getRawParams();
@@ -15,18 +15,17 @@ window.addEventListener("load", function(event) {
 //    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
 //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
-    initializeWindow(root, path);
     modalContent = new ModalContent();
-});
 
-function initializeWindow(root, path) {
-    makeActionList();
+    actionList = new ActionList({element: document.getElementById('action-drop-list')});
+    actionList.make();
+
     getRootDirectories(function(data) {
         document.getElementById('root_selector').appendChild(makeRootSelector('fm_dir', data, changeDirectory, root));
         encoded_dir = document.file_check.fm_dir.value;
         reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
     });
-}
+});
 
 function setScreenSize() {
     var s_width = 640;
