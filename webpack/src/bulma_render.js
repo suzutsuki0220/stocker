@@ -6,10 +6,17 @@ function active(elem, flag) {
     }
 }
 
-function closeButton(elem) {
+function removeElement(elem) {
+    if (elem) {
+        elem.parentNode.removeChild(elem);
+    }
+}
+
+function closeButton(elem, closeTimerID) {
     const button = newNode('button', '', {class: 'delete'});
     button.onclick = function() {
-        elem.parentNode.removeChild(elem);
+        window.clearTimeout(closeTimerID);
+        removeElement(elem);
     };
 
     return button;
@@ -128,16 +135,21 @@ module.exports.makeTable = function(elem, names, values) {
     elem.appendChild(table);
 }
 
-module.exports.notification = function(level, message, showCloseButton=true) {
+module.exports.notification = function(level, message, autoClose=3000, showCloseButton=true) {
+    let closeTimerID = null;
     const c = {
         info:    {class: "notification is-info"},
         warning: {class: "notification is-warning"},
         error:   {class: "notification is-danger"}
     };
 
+    if (!isNaN(autoClose)) {
+        closeTimerID = setTimeout(function() { removeElement(notif); }, autoClose);
+    }
+
     const notif =newNode('div', message, c[level]);
     if (showCloseButton === true) {
-        notif.appendChild(closeButton(notif));
+        notif.appendChild(closeButton(notif, closeTimerID));
     }
 
     return document.body.insertBefore(notif, document.body.firstChild);
