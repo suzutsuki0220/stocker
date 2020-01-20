@@ -3,8 +3,7 @@ const MODE = 'development';  // 'production' or 'development'
 // development に設定するとソースマップ有効でJSファイルが出力される
 const enabledSourceMap = (MODE === 'development');
 
-var path = require('path'),
-ExtractTextPlugin = require('extract-text-webpack-plugin');
+const path = require('path');
 
 module.exports = env => {
     const HTDOCS_ROOT = (env && env.htdocs_root) ? env.htdocs_root : '/stocker';
