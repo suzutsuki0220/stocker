@@ -16,15 +16,15 @@ function printIcons(i, e) {
         if (stocker.supportTypes.pattern.audio.test(name)) {
             icon   = stocker.uri.icon.audio;
             action = HTDOCS_ROOT + "/music_player.html?file=" + path + "&dir=" + encoded_dir;
+        } else if (stocker.supportTypes.pattern.image.test(name) || stocker.supportTypes.browserPlayableMovie().test(name)) {
+            icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
+            action = HTDOCS_ROOT + "/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
         } else if (stocker.supportTypes.pattern.video.test(name)) {
             icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
             action = stocker.uri.cgi.converter.form + "?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.image.test(name)) {
-            icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
-            action = HTDOCS_ROOT + "/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
         } else if (stocker.supportTypes.pattern.gps.test(name)) {
             icon   = stocker.uri.icon.gps;
-            action = HTDOCS_ROOT + "gps_viewer.html?file=" + path + "&dir=" + encoded_dir;
+            action = HTDOCS_ROOT + "/gps_viewer.html?file=" + path + "&dir=" + encoded_dir;
         } else if (stocker.supportTypes.pattern.txt.test(name)) {
             icon   = stocker.uri.icon.txt;
             action = HTDOCS_ROOT + "/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
