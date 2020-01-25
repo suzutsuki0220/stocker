@@ -1,3 +1,5 @@
+/* global jsUtils, stockerConfig */
+
 var load_flg = false;
 var load_again = -1;
 var filename = "";
@@ -7,7 +9,6 @@ let params, rootDir, upPath;
 
 window.addEventListener("load", function(event) {
     params = jsUtils.url.getRawParams();
-    imageLoading(params.file);
 
     stocker.components.getFileProperties(params.dir, params.file, function(properties) {
         document.title = properties.name;
@@ -17,6 +18,12 @@ window.addEventListener("load", function(event) {
 
         rootDir = params.dir;
         upPath  = properties.up_path;
+
+        setSrc({
+            name: properties.name,
+            path: params.file,
+            video: stocker.supportTypes.browserPlayableMovie().test(properties.name) ? true : false
+        });
     }, function(error) {
         console.warn(error);
     });
@@ -46,18 +53,16 @@ function getImageFiles(data) {
   for (var i=0; i<elements.length; i++) {
     var name_elem = elements.item(i).getElementsByTagName('name');
     var path_elem = elements.item(i).getElementsByTagName('path');
-    var num_elem = elements.item(i).getElementsByTagName('num');
     if (name_elem != null && path_elem != null) {
       var name = name_elem.item(0).firstChild.data;
       var path = path_elem.item(0).firstChild.data;
-      var num  = num_elem != null ? num_elem.item(0).firstChild.data : 0;
 
-      if (stocker.supportTypes.pattern.image.test(name)) {
+      if (stocker.supportTypes.pattern.image.test(name) || stocker.supportTypes.browserPlayableMovie().test(name)) {
         var img = new Object();
 
         img.name = name;
         img.path = path;
-        img.num  = num;
+        img.video = stocker.supportTypes.browserPlayableMovie().test(name) ? true : false;
         images.push(img);
       }
     }
@@ -80,9 +85,6 @@ function reloadImageList() {
 }
 
 function renewControlField(index) {
-    var prev_link = "＜";
-    var next_link = "＞";
-
     document.getElementById('prevButton').onclick = function() {
         changeImage(index - 1);
     };
@@ -99,63 +101,69 @@ function changeImage(index) {
         return;
     }
 
-    const img = images[index];
-
     if (load_flg === true) {
         load_again = index;
         return;
     }
 
+    setSrc(images[index]);
+    renewControlField(index);
+}
+
+function setSrc(img) {
     document.getElementById('ExifLayer').style.display = "none";
 
     document.title = img.name;
     document.getElementById('fileNameArea').innerHTML = img.name;
-    imageLoading(img.path);
-    renewControlField(index);
-}
 
-function getPictureSrc(path) {
-    return stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640";
-}
+    const path = img.path;
+    const src = {
+        picture: stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640",
+        video: stockerConfig.uri.get_file + "?mime=video/mp4&file=" + path + "&dir=" + params.dir,
+        poster: stockerConfig.uri.converter.movie_img + "?size=640&file=" + path + "&dir=" + params.dir,
+        thumbnail: stockerConfig.uri.thumbnail + "?file=" + path + "&dir=" + params.dir,
+        exif: "javascript:toggleExifLayer('" + path + "')"
+    };
 
-function getThumbnailSrc(path) {
-    return stockerConfig.uri.thumbnail + "?file=" + path + "&dir=" + params.dir;
-}
-
-function getExifInfoHref(path) {
-    return "javascript:toggleExifLayer('" + path + "')";
-}
-
-function imageLoading(path) {
-    if (document.ImageArea.addEventListener) {
-      document.ImageArea.addEventListener("load", onImageLoad, false);
-      document.ImageArea.addEventListener("error", unsetLoading, false);
-      document.ImageArea.addEventListener("abort", unsetLoading, false);
-    } else if (document.ImageArea.attachEvent) {
-      document.ImageArea.attachEvent("onload", onImageLoad);
-      document.ImageArea.attachEvent("onerror", unsetLoading);
-      document.ImageArea.attachEvent("onabort", unsetLoading);
+    if (img.video) {
+        showVideoArea(src);
+    } else {
+        imageLoading(src);
     }
+}
+
+function showVideoArea(src) {
+    load_flg = false;
+
+    document.getElementById('VideoArea').style.display = "block";
+    document.getElementById('ImageArea').style.display = "none";
+
+    document.getElementById('VideoArea').src = src.video;
+    document.getElementById('VideoArea').poster = src.poster;
+    document.getElementById('VideoArea').type = "video/mp4";
+}
+
+function imageLoading(src) {
+    document.getElementById('VideoArea').style.display = "none";
+    document.getElementById('ImageArea').style.display = "block";
+
+    document.ImageArea.addEventListener("load", onImageLoad, false);
+    document.ImageArea.addEventListener("error", unsetLoading, false);
+    document.ImageArea.addEventListener("abort", unsetLoading, false);
 
     load_flg = true;
-    document.getElementById('ImageArea').src = getPictureSrc(path);
-    document.getElementById('ThumbnailArea').src = getThumbnailSrc(path);
-    document.getElementById('InfoLink').href = getExifInfoHref(path);
+    document.getElementById('ImageArea').src = src.picture;
+    document.getElementById('ThumbnailArea').src = src.thumbnail;
+    document.getElementById('InfoLink').href = src.exif;
     document.getElementById('loadingText').style.display = "block";
 
     toggleImageLayer(false);
 }
 
 function unsetLoading() {
-    if (document.ImageArea.removeEventListener) {
-        document.ImageArea.removeEventListener("load", unsetLoading, false);
-        document.ImageArea.removeEventListener("error", unsetLoading, false);
-        document.ImageArea.removeEventListener("abort", unsetLoading, false);
-    } else if (document.ImageArea.detachEvent) {
-        document.ImageArea.detachEvent("onload", unsetLoading);
-        document.ImageArea.detachEvent("onerror", unsetLoading);
-        document.ImageArea.detachEvent("onabort", unsetLoading);
-    }
+    document.ImageArea.removeEventListener("load", onImageLoad, false);
+    document.ImageArea.removeEventListener("error", unsetLoading, false);
+    document.ImageArea.removeEventListener("abort", unsetLoading, false);
 
     load_flg = false;
     document.getElementById('loadingText').style.display = "none";
@@ -174,6 +182,7 @@ function onImageLoad() {
     area.style.width  = String(fitSize.width) + "px";
     area.style.height = String(fitSize.height) + "px";
     toggleImageLayer(true);
+
     unsetLoading();
 }
 
