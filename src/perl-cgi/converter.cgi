@@ -27,26 +27,6 @@ our @support_video_types;
 our @support_audio_types;
 require $SUPPORT_TYPES;
 
-my @encode_video_types = (
-  ["H.264", "H.264 (mp4)"],
-  ["mts", "MPEG-TS"],
-  ["dvd", "DVD-VIDEO (MPEG2)"],
-  ["mpeg4", "MPEG4"],
-  ["webm", "WebM"],
-  ["ogv", "ogv"],
-  ["wmv", "Windows Media(WMVv8)"],
-  ["asf", "asf(WMVv7)"],
-  ["I-Frame", "Iフレーム(画像)"],
-  ["HighLight", "HighLight(画像)"]
-);
-
-my @encode_audio_types = (
-  ["wav", "Wave (Audio)"],
-  ["flac", "flac (Audio)"],
-  ["mp3", "mp3 (Audio)"],
-  ["aac", "aac (Audio)"],
-);
-
 my $q = eval{new CGI};
 my $mode = scalar($q->param('mode'));
 my $dir  = HTML_Elem->url_decode(scalar($q->param('dir')));
@@ -197,13 +177,8 @@ sub add_encodejob()
   $job->add();
 }
 
-
 ### 動画情報表示
 sub print_form() {
-  my $GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-
-  my $mp4_url = "${GETFILE_CGI}?file=${encoded_path}&dir=${dir}&mime=video/mp4";
-  my $thm_url = "${MOVIEIMG_CGI}?file=${encoded_path}&dir=${dir}&size=640";
   my $mes;
 
   my @jslist = (
@@ -221,34 +196,44 @@ sub print_form() {
   $html->header();
 
   $mes = <<EOF;
-<a href="javascript:stocker.components.backToList('${dir}', '${encoded_up_path}')">← 戻る</a><br>
-EOF
-  print encode('utf8', $mes);
-
-  if ($mtype eq "video") {
-    if (lc($path) =~ /\.mp4$/ || lc($path) =~ /\.m4v$/ || lc($path) =~ /\.mpg4$/) {
-      print "<h1>動画プレビュー</h1>";
-      print "<video src=\"$mp4_url\" id=\"video_preview\" type=\"video/mp4\" poster=\"$thm_url\" width=\"640\" controls></video>\n";
-    }
-    print "<img src=\"$thm_url\" id=\"vimg\" width=\"640\">\n";
-  }
-  print "<h1>ファイル変換</h1>";
-  print "<h2>変換元ファイル</h2>\n";
-
-  foreach (@files) {
-    print encode('utf-8', $_) . "<br>\n";
-  }
-
-  $mes = <<EOF;
-<h2>情報</h2>
-<form action="$ENV{'SCRIPT_NAME'}" name="enc_setting" method="POST" autocomplete="off">
-<div id="information_table"></div>
-
 <script type="text/javascript">
 <!--
-  getSceneListFilePath('$files[0]', '${dir}', '${encoded_up_path}', '${encoded_path}');
+    let filename, upPath, upRealPath;
+
+    const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+
+    const params = jsUtils.url.getRawParams();
+    const files = stocker.components.getParamFile();
+
+    if (files.length === 0) {
+        bulmaRender.notification("error", "ファイルが選択されていません");
+    }
+
+    stocker.components.getFileProperties(params.dir, params.file, function(properties) {
+        filename = properties.name;
+        upPath = properties.up_path;
+        upRealPath = properties.up_dir;
+
+        getSceneListFilePath(files[0], params.dir, upPath, params.file);
+    });
 -->
 </script>
+
+<a href="javascript:stocker.components.backToList(params.dir, upPath)">← 戻る</a><br>
+<img src="" id="vimg" width="640">
+
+<h1>ファイル変換</h1>
+<h2>変換元ファイル</h2>
+
+<script type="text/javascript">
+    for (let i=0; i<files.length; i++) {
+        document.write(files[i] + "<br>");
+    }
+</script>
+
+<h2>情報</h2>
+<form action="" name="enc_setting" method="POST" autocomplete="off">
+<div id="information_table"></div>
 EOF
   print encode('utf-8', $mes);
 
@@ -258,31 +243,26 @@ EOF
   my $default_bps  = 0;
   my $round_fps    = 0;
 
-  print "<h2>変換の設定</h2>\n";
-  if (@files.length() > 1) {
-    print "<p><b>複数のファイルが指定されています</b><br>\n";
-    print "変換方法: ";
-    print "<input type=\"radio\" name=\"multi_editmode\" value=\"combine\" checked> 複数の動画を結合してエンコード";
-    print "&nbsp;&nbsp;";
-    print "<input type=\"radio\" name=\"multi_editmode\" value=\"sameenc\"> 同じ設定でエンコード";
-    print "<br></p>\n";
+  $mes = <<EOF;
+<h2>変換の設定</h2>
+<script type="text/javascript">
+  if (files.length > 1) {
+    document.write("<p><b>複数のファイルが指定されています</b><br>");
+    document.write("変換方法: ");
+    document.write("<input type='radio' name='multi_editmode' value='combine' checked> 複数の動画を結合してエンコード");
+    document.write("&nbsp;&nbsp;");
+    document.write("<input type='radio' name='multi_editmode' value='sameenc'> 同じ設定でエンコード");
+    document.write("<br></p>");
   }
-  foreach (@files) {
-    my $e = ParamPath->urlpath_encode(encode('utf-8', $_));
-    print "<input type=\"hidden\" name=\"file\" value=\"${e}\">\n";
-  }
+</script>
 
-  $mes = <<EOD;
 ソースの場所: <span id="source_location"></span>
 <script type="text/javascript">
 <!--
-  writeSourceLocation("${path}");
-EOD
-  print encode('utf-8', $mes);
+  writeSourceLocation(upRealPath);
 
-  print <<EOD;
   function getPreviewUrl(width) {
-    var url = "${MOVIEIMG_CGI}?dir=${dir}&file=${encoded_path}&size=" + width;
+    var url = stockerConfig.uri.converter.movie_img + "?dir=" + params.dir +"&file=" + params.file + "&size=" + width;
     if (document.enc_setting.v_map.length !== 0) {
       url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
     }
@@ -325,7 +305,7 @@ EOD
     if(document.enc_setting.enable_adjust.checked == true) {
       adjust_preview();
     } else {
-      document.adjpreview.src = "${GRAY_PAD}";
+      document.adjpreview.src = GRAY_PAD;
     }
   }
 
@@ -500,7 +480,7 @@ EOD
     const tend = document.getElementsByName('tend' + f_num)[0].value;
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
-    const url = "${HTDOCS_ROOT}/convertselect.html?file=${encoded_path}&dir=${dir}"
+    const url = "${HTDOCS_ROOT}/convertselect.html?file=params.file&dir=params.dir"
               + "&scene_list=" + sceneListPath + "&clicked=" + clicked + "&v_map=" + vno
               + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 
@@ -527,13 +507,12 @@ EOD
   }
 -->
 </script>
-EOD
-
-  print <<EOF;
 <br>
 <div id="dirlist"></div>
 出力先: <input type="text" class="fit_width" name="out_dir" value="" size="50"><br>
 EOF
+  print encode('utf-8', $mes);
+
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
     while(my $entry = decode('utf-8', readdir(DIR))) {
@@ -549,7 +528,7 @@ EOF
 
   print <<EOF;
 <br><br>
-<input type="hidden" name="dir" value="${dir}">
+<input type="hidden" name="dir" value=params.dir>
 <input type="hidden" name="mode" value="encode">
 <fieldset>
 <legend>時間</legend>
@@ -563,19 +542,47 @@ EOF
 </div>
 </fieldset><br>
 ファイルフォーマット <select name="format" onchange="changeEncodeParameter()">
-EOF
-  print "<optgroup label=\"Video\">\n";
-  foreach my $etype (@encode_video_types) {
-    print "<option value=\"". @{$etype}[0] ."\">". @{$etype}[1] ."</option>\n";
+<optgroup label="Video">
+
+<script type="text/javascript">
+  const encode_video_types = [
+    ["H.264", "H.264 (mp4)"],
+    ["mts", "MPEG-TS"],
+    ["dvd", "DVD-VIDEO (MPEG2)"],
+    ["mpeg4", "MPEG4"],
+    ["webm", "WebM"],
+    ["ogv", "ogv"],
+    ["wmv", "Windows Media(WMVv8)"],
+    ["asf", "asf(WMVv7)"],
+    ["I-Frame", "Iフレーム(画像)"],
+    ["HighLight", "HighLight(画像)"]
+  ];
+
+  for (let i=0; i<encode_video_types.length; i++) {
+    const e = encode_video_types[i];
+    document.write("<option value='" + e[0] + "'>" + e[1] + "</option>");
   }
-  print "</optgroup>\n";
-  print "<optgroup label=\"Audio\">\n";
-  foreach my $etype (@encode_audio_types) {
-    print "<option value=\"". @{$etype}[0] ."\">". @{$etype}[1] ."</option>\n";
+</script>
+
+</optgroup>
+<optgroup label="Audio">
+
+<script type="text/javascript">
+  const encode_audio_types = [
+    ["wav", "Wave (Audio)"],
+    ["flac", "flac (Audio)"],
+    ["mp3", "mp3 (Audio)"],
+    ["aac", "aac (Audio)"]
+  ];
+
+  for (let i=0; i<encode_audio_types.length; i++) {
+    const e = encode_audio_types[i];
+    document.write("<option value='" + e[0] + "'>" + e[1] + "</option>");
   }
-  print "</optgroup>\n";
-  print "<option value=\"copy\">コピー (無変換)</option>\n";
-  print <<EOF;
+</script>
+
+</optgroup>
+<option value="copy">コピー (無変換)</option>
 </select><br>
 <input type="checkbox" name="pass2"> 2パスエンコード<br>
 <br>
@@ -622,7 +629,7 @@ EOF
 <fieldset><legend>画質調整</legend>
 <input type="checkbox" name="enable_adjust" onChange="actionAdjEnable(); showElem(getElementById('adjustForm'), document.enc_setting.enable_adjust)"> 画質調整する<br>
 <div id="adjustForm" style="display: none">
-<img src="${GRAY_PAD}" style="float: left; margin-right: 10px;" name="adjpreview" width="320" height="240">
+<img src="" style="float: left; margin-right: 10px;" name="adjpreview" width="320" height="240">
 明るさ
 <input type="button" name="bright_minus" value="&lt;" onClick="adj_brightness(-0.03)">
 <input type="text" name="brightness" size="5" value="0.0">
@@ -710,7 +717,10 @@ weight
 </form>
 
 <script type="text/javascript">
+    document.enc_setting.action = stockerConfig.uri.converter.form;
     document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
+    document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + params.file + "&dir=" + params.dir;
+    document.adjpreview.src = GRAY_PAD;
 </script>
 EOF
 
