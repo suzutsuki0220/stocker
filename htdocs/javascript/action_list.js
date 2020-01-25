@@ -41,7 +41,7 @@ class ActionList {
         for (var i=0; i<this.actionParam.length; i++) {
             const ap = this.actionParam[i];
             if (ap.id === sw) {
-                const params = Object.assign(ap.parameters, {
+                const params = Object.assign((ap.parameters || {}), {
                     dir: document.file_check.fm_dir.value,
                     path: document.file_check.target.value,
                     file: getCheckedFiles()  // stocker_list.js

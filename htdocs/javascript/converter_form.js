@@ -409,6 +409,10 @@ function vaildate_adjustment() {
 
 function writeSourceLocation(path)
 {
+    if (!path) {
+        return;
+    }
+
     var html = "";
 
     if( path.charAt(0) == "/" ) {

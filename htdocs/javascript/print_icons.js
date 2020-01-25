@@ -21,7 +21,7 @@ function printIcons(i, e) {
             action = HTDOCS_ROOT + "/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
         } else if (stocker.supportTypes.pattern.video.test(name)) {
             icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
-            action = stocker.uri.cgi.converter.form + "?file=" + path + "&dir=" + encoded_dir;
+            action = HTDOCS_ROOT + "/action/converter.html?file=" + path + "&dir=" + encoded_dir;
         } else if (stocker.supportTypes.pattern.gps.test(name)) {
             icon   = stocker.uri.icon.gps;
             action = HTDOCS_ROOT + "/gps_viewer.html?file=" + path + "&dir=" + encoded_dir;
