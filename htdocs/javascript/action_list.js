@@ -42,8 +42,8 @@ class ActionList {
             const ap = this.actionParam[i];
             if (ap.id === sw) {
                 const params = Object.assign((ap.parameters || {}), {
-                    dir: document.file_check.fm_dir.value,
-                    path: document.file_check.target.value,
+                    dir: decodeURIComponent(document.file_check.fm_dir.value),
+                    path: decodeURIComponent(document.file_check.target.value),
                     file: getCheckedFiles()  // stocker_list.js
                 });
                 location.href = stockerConfig.htdocs_root + "/action/" + ap.form + '?' + jsUtils.url.makeQueryString(params);
