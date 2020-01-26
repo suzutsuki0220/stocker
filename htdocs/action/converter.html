@@ -12,29 +12,6 @@
 <link rel="stylesheet" type="text/css" href="../stylesheet/stocker.css">
 <link rel="stylesheet" type="text/css" href="../stylesheet/converter_form.css">
 <title></title>
-
-<script type="text/javascript">
-<!--
-    let filename, upPath, upRealPath;
-
-    const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
-
-    const params = jsUtils.url.getRawParams();
-    const files = stocker.components.getParamFile();
-
-    if (files.length === 0) {
-        bulmaRender.notification("error", "ファイルが選択されていません");
-    }
-
-    stocker.components.getFileProperties(params.dir, params.file, function(properties) {
-        filename = properties.name;
-        upPath = properties.up_path;
-        upRealPath = properties.up_dir;
-
-        getSceneListFilePath(files[0], params.dir, upPath, params.file);
-    });
--->
-</script>
 </head>
 <body>
 <a href="javascript:stocker.components.backToList(params.dir, upPath)">← 戻る</a><br>
@@ -68,56 +45,6 @@
 ソースの場所: <span id="source_location"></span>
 <script type="text/javascript">
 <!--
-  writeSourceLocation(upRealPath);
-
-  function getPreviewUrl(width) {
-    var url = stockerConfig.uri.converter.movie_img + "?dir=" + params.dir +"&file=" + params.file + "&size=" + width;
-    if (document.enc_setting.v_map.length !== 0) {
-      url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
-    }
-    if (document.enc_setting.set_position.checked == true) {
-      url += "&set_position=1";
-      url += "&ss=" + document.enc_setting.ss0.value;
-    }
-    if (document.enc_setting.enable_crop.checked == true) {
-      url += "&enable_crop=1";
-      url += "&crop_w=" + document.enc_setting.crop_w.value;
-      url += "&crop_h=" + document.enc_setting.crop_h.value;
-      url += "&crop_x=" + document.enc_setting.crop_x.value;
-      url += "&crop_y=" + document.enc_setting.crop_y.value;
-    }
-    if (document.enc_setting.enable_pad.checked == true) {
-      url += "&enable_pad=1";
-      url += "&pad_w=" + document.enc_setting.pad_w.value;
-      url += "&pad_h=" + document.enc_setting.pad_h.value;
-      url += "&pad_x=" + document.enc_setting.pad_x.value;
-      url += "&pad_y=" + document.enc_setting.pad_y.value;
-      url += "&pad_color=" + document.enc_setting.pad_color.value;
-    }
-    if (document.enc_setting.enable_adjust.checked == true) {
-      url += "&enable_adjust=1";
-      url += "&brightness=" + document.enc_setting.brightness.value;
-      url += "&contrast=" + document.enc_setting.contrast.value;
-      url += "&gamma=" + document.enc_setting.gamma.value;
-      url += "&hue=" + document.enc_setting.hue.value;
-      url += "&saturation=" + document.enc_setting.saturation.value;
-      url += "&sharp=" + document.enc_setting.sharp.value;
-      url += "&rg=" + document.enc_setting.rg.value;
-      url += "&gg=" + document.enc_setting.gg.value;
-      url += "&bg=" + document.enc_setting.bg.value;
-      url += "&weight=" + document.enc_setting.weight.value;
-    }
-    return url;
-  }
-
-  function actionAdjEnable() {  // 画質調整する のチェックボックス
-    if(document.enc_setting.enable_adjust.checked == true) {
-      adjust_preview();
-    } else {
-      document.adjpreview.src = GRAY_PAD;
-    }
-  }
-
   function changeEncodeParameter() {
     var checked_format = "unknown";
     var i;
@@ -127,37 +54,6 @@
         break;
       }
     }
-
-/*
-    if ( checked_format == 'copy' ) {
-      document.enc_setting.save_aspect.disabled = true;
-      document.enc_setting.s_w.disabled = true;
-      document.enc_setting.s_h.disabled = true;
-      document.enc_setting.r.disabled = true;
-      document.enc_setting.b.disabled = true;
-      document.enc_setting.deinterlace.disabled = true;
-      document.enc_setting.ar.disabled= true;
-      document.enc_setting.ac[0].disabled = true;
-      document.enc_setting.ac[1].disabled = true;
-      document.enc_setting.ab.disabled = true;
-      document.enc_setting.cutoff.disabled = true;
-      document.enc_setting.pass2.checked = false;
-      document.enc_setting.pass2.disabled = true;
-    } else {
-      document.enc_setting.save_aspect.disabled = false;
-      document.enc_setting.s_w.disabled = false;
-      document.enc_setting.s_h.disabled = false;
-      document.enc_setting.r.disabled = false;
-      document.enc_setting.b.disabled = false;
-      document.enc_setting.deinterlace.disabled = false;
-      document.enc_setting.ar.disabled= false;
-      document.enc_setting.ac[0].disabled = false;
-      document.enc_setting.ac[1].disabled = false;
-      document.enc_setting.ab.disabled = false;
-      document.enc_setting.cutoff.disabled = false;
-      document.enc_setting.pass2.disabled = false;
-    }
-*/
 
     if( checked_format == 'mts' ) {
       document.enc_setting.v_copy.checked = true;
@@ -178,7 +74,6 @@
     document.enc_setting.s_h.value = 480;
     document.enc_setting.r.value = 29.97;
     document.enc_setting.b.value = 1500;
-    //document.enc_setting.deinterlace.checked = false;
   }
 
   function presetSdwide() {
@@ -187,7 +82,6 @@
     document.enc_setting.s_h.value = 360;
     document.enc_setting.r.value = 29.97;
     document.enc_setting.b.value = 1500;
-    //document.enc_setting.deinterlace.checked = false;
   }
 
   function preset720p() {
@@ -196,7 +90,6 @@
     document.enc_setting.s_h.value = 720;
     document.enc_setting.r.value = 29.97;
     document.enc_setting.b.value = 4000;
-    //document.enc_setting.deinterlace.checked = false;
   }
 
   function presetAudNormal() {
@@ -231,23 +124,6 @@
                 'width='+size_w+', height='+size_h+', left='+pos_l+', top='+pos_t+', menubar=no, toolbar=no, scrollbars=yes'
                 );
   }
-
-  function addJob() {
-    const ajax = jsUtils.ajax;
-
-    ajax.init();
-    ajax.setOnLoading(function() {
-      document.getElementById('sStatus').innerHTML = "登録中...";
-    });
-    ajax.setOnSuccess(function(httpRequest) {
-      document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
-    });
-    ajax.setOnError(function(httpRequest) {
-      document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
-    });
-
-    ajax.post(stockerConfig.uri.converter.form, makeEncodeQuery());
-  }
 -->
 </script>
 <br>
@@ -268,10 +144,7 @@
     print "</select>\n";
     closedir(DIR);
   }
-
 <br><br>
-<input type="hidden" name="dir" value=params.dir>
-<input type="hidden" name="mode" value="encode">
 <fieldset>
 <legend>時間</legend>
 <input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
@@ -458,11 +331,5 @@ weight
 </p>
 </form>
 
-<script type="text/javascript">
-    document.enc_setting.action = stockerConfig.uri.converter.form;
-    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
-    document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + params.file + "&dir=" + params.dir;
-    document.adjpreview.src = GRAY_PAD;
-</script>
 </body>
 </html>

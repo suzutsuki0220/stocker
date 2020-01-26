@@ -1,7 +1,39 @@
 var selectedVideo = new Object();
 var sceneListPath = "";
 
+let params = new Object();
+let files = new Array();
+let filename, upPath, upRealPath;
+
+const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
+
 const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'out_dir', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
+
+window.addEventListener("load", function(event) {
+    params = jsUtils.url.getRawParams();
+    files = stocker.components.getParamFile();
+
+    if (files.length === 0) {
+        bulmaRender.notification("error", "ファイルが選択されていません");
+    }
+
+    stocker.components.getFileProperties(params.dir, files[0], function(properties) {
+        filename = properties.name;
+        upPath = properties.up_path;
+        upRealPath = properties.up_dir;
+
+        writeSourceLocation(upRealPath);
+        getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
+        getSceneListFilePath(filename, params.dir, upPath);
+    }, function(e) {
+        console.log(e);
+    });
+
+    document.enc_setting.action = stockerConfig.uri.converter.form;
+    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
+    document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
+    document.adjpreview.src = GRAY_PAD;
+});
 
 function makeEncodeQuery() {
     const getNamedValue = function(key) {
@@ -25,9 +57,8 @@ function makeEncodeQuery() {
         return v;
     };
 
-    var query = "mode=encode&dir=" + getNamedValue('dir');
+    var query = "mode=encode&dir=" + params.dir;
 
-    const files = document.getElementsByName('file');
     for (var i=0; i<files.length; i++) {
         query += '&file=' + files[i].value;
     }
@@ -45,6 +76,23 @@ function makeEncodeQuery() {
     }
 
     return query;
+}
+
+function addJob() {
+    const ajax = jsUtils.ajax;
+
+    ajax.init();
+    ajax.setOnLoading(function() {
+        document.getElementById('sStatus').innerHTML = "登録中...";
+    });
+    ajax.setOnSuccess(function(httpRequest) {
+        document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
+    });
+    ajax.setOnError(function(httpRequest) {
+        document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
+    });
+
+    ajax.post(stockerConfig.uri.converter.form, makeEncodeQuery());
 }
 
 // 隠している部分を表示する
@@ -144,6 +192,54 @@ function select_existdir() {
 function openPreviewWindow() {
     var url = getPreviewUrl(640);
     window.open(url, 'preview', 'width=640, height=500, menubar=no, scrollbar=yes');
+}
+
+function getPreviewUrl(width) {
+    var url = stockerConfig.uri.converter.movie_img + "?dir=" + params.dir +"&file=" + files[0] + "&size=" + width;
+    if (document.enc_setting.v_map.length !== 0) {
+        url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
+    }
+    if (document.enc_setting.set_position.checked == true) {
+        url += "&set_position=1";
+        url += "&ss=" + document.enc_setting.ss0.value;
+    }
+    if (document.enc_setting.enable_crop.checked == true) {
+        url += "&enable_crop=1";
+        url += "&crop_w=" + document.enc_setting.crop_w.value;
+        url += "&crop_h=" + document.enc_setting.crop_h.value;
+        url += "&crop_x=" + document.enc_setting.crop_x.value;
+        url += "&crop_y=" + document.enc_setting.crop_y.value;
+    }
+    if (document.enc_setting.enable_pad.checked == true) {
+        url += "&enable_pad=1";
+        url += "&pad_w=" + document.enc_setting.pad_w.value;
+        url += "&pad_h=" + document.enc_setting.pad_h.value;
+        url += "&pad_x=" + document.enc_setting.pad_x.value;
+        url += "&pad_y=" + document.enc_setting.pad_y.value;
+        url += "&pad_color=" + document.enc_setting.pad_color.value;
+    }
+    if (document.enc_setting.enable_adjust.checked == true) {
+        url += "&enable_adjust=1";
+        url += "&brightness=" + document.enc_setting.brightness.value;
+        url += "&contrast=" + document.enc_setting.contrast.value;
+        url += "&gamma=" + document.enc_setting.gamma.value;
+        url += "&hue=" + document.enc_setting.hue.value;
+        url += "&saturation=" + document.enc_setting.saturation.value;
+        url += "&sharp=" + document.enc_setting.sharp.value;
+        url += "&rg=" + document.enc_setting.rg.value;
+        url += "&gg=" + document.enc_setting.gg.value;
+        url += "&bg=" + document.enc_setting.bg.value;
+        url += "&weight=" + document.enc_setting.weight.value;
+    }
+    return url;
+}
+
+function actionAdjEnable() {  // 画質調整する のチェックボックス
+    if(document.enc_setting.enable_adjust.checked == true) {
+        adjust_preview();
+    } else {
+        document.adjpreview.src = GRAY_PAD;
+    }
 }
 
 /*** 画質調整 ***/
@@ -430,13 +526,18 @@ function fillFolderName(pathText) {
     document.enc_setting.out_dir.value = pathText;
 }
 
-function getSceneListFilePath(file_name, base_name, dir_path, encoded_path) {
+function getSceneListFilePath(file_name, root, dirpath) {
     const list_file = file_name.replace(/.*\/([^\/]*)\.(.*?)$/, '$1.vdr');
 
-    const ajax = jsUtils.ajax;
-    ajax.init();
-    ajax.setOnSuccess(function(xhr) {
-        const directory = jsUtils.xml.getFirstFoundChildNode(xhr.responseXML, 'directory');
+    jsUtils.fetch.request({
+        uri: stockerConfig.uri.get_dir,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: stocker.components.makeDirFileParam(root, dirpath),
+        method: 'POST',
+        format: 'text'
+    }, function(text) {
+        const xml = jsUtils.xml.getDom(text);
+        const directory = jsUtils.xml.getFirstFoundChildNode(xml, 'directory');
         const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
         const elements = jsUtils.xml.getDataInElements(contents, 'element', ['name', 'path', 'type']);
 
@@ -448,40 +549,29 @@ function getSceneListFilePath(file_name, base_name, dir_path, encoded_path) {
                 break;
             }
         }
-
-        getMovieInfo(stockerConfig.uri.converter.movie_info, base_name, encoded_path);
     });
-    ajax.setOnError(function() {
-        getMovieInfo(stockerConfig.uri.converter.movie_info, base_name, encoded_path);
-    });
-
-    const query = "dir=" + base_name + "&file=" + dir_path;
-    ajax.post(stockerConfig.uri.get_dir, query);
 }
 
-function getMovieInfo(movie_info_url, base_name, path) {
-    const ajax = jsUtils.ajax;
-    ajax.init();
-    ajax.setOnSuccess(showInfoTable);
-    ajax.setOnLoading(function() {
-        document.getElementById('information_table').innerHTML = "読み込み中";
-    });
-    ajax.setOnError(function(httpRequest) {
-        document.getElementById('information_table').innerHTML = "動画ファイルの情報取得に失敗しました";
-    });
+function getMovieInfo(movie_info_url, root, path) {
+    document.getElementById('information_table').innerHTML = "読み込み中";
 
-    const query = "dir=" + base_name + "&file=" + path;
-    ajax.post(movie_info_url, query);
+    jsUtils.fetch.request({
+        uri: movie_info_url,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: stocker.components.makeDirFileParam(root, path),
+        method: 'POST',
+        format: 'text'
+    }, showInfoTable, function() {
+        bulmaRender.notification("error", "動画ファイルの情報取得に失敗しました");
+    });
 }
 
-function showInfoTable(httpRequest) {
-    var content;
-
-    var data = httpRequest.responseXML;
+function showInfoTable(text) {
     var video_table = "";
     var audio_table = "";
     var width, height;
 
+    const data = jsUtils.xml.getDom(text);
     const xml = jsUtils.xml;
     const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
     const properties = xml.getDataInElements(data, 'movie_info', ["filename", "filesize", "format", "duration"])[0];
