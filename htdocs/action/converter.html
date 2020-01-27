@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="has-navbar-fixed-top">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -14,11 +14,40 @@
 <title></title>
 </head>
 <body>
-<a href="javascript:stocker.components.backToList(params.dir, upPath)">← 戻る</a><br>
-<img src="" id="vimg" width="640">
+  <nav class="navbar is-link is-fixed-top" role="navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <a href="javascript:stocker.components.backToList(params.dir, upPath)" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="navbar-item" id="fileNameArea"></h1>
+      <a role="button" class="navbar-burger" href="#" data-target="navMenu">
+        <span aria-hidden="true"></span><!-- It has to contain three empty (bulma needs)-->
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu" id="navMenu">
+      <div class="navbar-start">
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" id="encodeListLink" href="#">
+          <i class="fas fa-list-ul"></i>&nbsp;エンコードリスト
+        </a>
+      </div>
+    </div>
+  </nav>
 
-<h1>ファイル変換</h1>
-<h2>変換元ファイル</h2>
+
+<div class="card">
+  <header class="card-header">
+    <h1 class="card-header-title">メディア変換</h1>
+  </header>
+  <div class="card-image">
+    <img src="" id="vimg" width="640">
+  </div>
+
+  <div class="content">
+    <h2>変換元ファイル</h2>
+  </div>
+</div>
 
 <script type="text/javascript">
     for (let i=0; i<files.length; i++) {

@@ -22,6 +22,7 @@ window.addEventListener("load", function(event) {
         upPath = properties.up_path;
         upRealPath = properties.up_dir;
 
+        document.getElementById('fileNameArea').textContent = filename;
         writeSourceLocation(upRealPath);
         getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
         getSceneListFilePath(filename, params.dir, upPath);
@@ -33,6 +34,7 @@ window.addEventListener("load", function(event) {
     document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
     document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
     document.adjpreview.src = GRAY_PAD;
+    document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
 });
 
 function makeEncodeQuery() {
