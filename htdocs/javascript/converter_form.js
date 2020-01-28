@@ -1,3 +1,5 @@
+/* global jsUtils, stocker, bulmaRender */
+
 var selectedVideo = new Object();
 var sceneListPath = "";
 
@@ -23,6 +25,7 @@ window.addEventListener("load", function(event) {
         upRealPath = properties.up_dir;
 
         document.getElementById('fileNameArea').textContent = filename;
+        sourceFileList(document.getElementById('source_file_list'));
         writeSourceLocation(upRealPath);
         getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
         getSceneListFilePath(filename, params.dir, upPath);
@@ -61,11 +64,11 @@ function makeEncodeQuery() {
 
     var query = "mode=encode&dir=" + params.dir;
 
-    for (var i=0; i<files.length; i++) {
+    for (let i=0; i<files.length; i++) {
         query += '&file=' + files[i].value;
     }
 
-    for (var i=0; i<=timeSelNum; i++) {
+    for (let i=0; i<=timeSelNum; i++) {
         const ss = 'ss' + i;
         const t = 't' + i;
 
@@ -73,7 +76,7 @@ function makeEncodeQuery() {
         query += '&' + t  + '=' + getNamedValue(t);
     }
 
-    for (var i=0; i<enc_params.length; i++) {
+    for (let i=0; i<enc_params.length; i++) {
         query += '&' + enc_params[i] + '=' + getNamedValue(enc_params[i]);
     }
 
@@ -87,7 +90,7 @@ function addJob() {
     ajax.setOnLoading(function() {
         document.getElementById('sStatus').innerHTML = "登録中...";
     });
-    ajax.setOnSuccess(function(httpRequest) {
+    ajax.setOnSuccess(function() {
         document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
     });
     ajax.setOnError(function(httpRequest) {
@@ -99,27 +102,23 @@ function addJob() {
 
 // 隠している部分を表示する
 function showElem(fElem, checkbox) {
-    if (checkbox.checked == true) {
-        fElem.style.display = "block";
-    } else {
-        fElem.style.display = "none";
-    }
+    fElem.style.display = checkbox.checked ? "block" : "none";
 }
 
 // 比率を表示する
 function print_aspect(location) {
     if (location == "crop") {
-        var aspect = get_video_aspect(document.enc_setting.crop_w.value, document.enc_setting.crop_h.value);
+        let aspect = get_video_aspect(document.enc_setting.crop_w.value, document.enc_setting.crop_h.value);
         document.getElementById('crop_aspect').innerHTML = aspect;
         return;
     }
     if (location == "padding") {
-        var aspect = get_video_aspect(document.enc_setting.pad_w.value, document.enc_setting.pad_h.value);
+        let aspect = get_video_aspect(document.enc_setting.pad_w.value, document.enc_setting.pad_h.value);
         document.getElementById('padding_aspect').innerHTML = aspect;
         return;
     }
     if (location == "ssize") {
-        var aspect = get_video_aspect(document.enc_setting.s_w.value, document.enc_setting.s_h.value);
+        let aspect = get_video_aspect(document.enc_setting.s_w.value, document.enc_setting.s_h.value);
         document.getElementById('s_aspect').innerHTML = aspect;
         return;
     }
@@ -517,7 +516,7 @@ function writeSourceLocation(path)
         path = path.substr(1,path.length);
     }
     var pathArray = path.split("/");
-    for( i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
+    for(let i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
         html += "/ <a href=\"javascript:fillFolderName('" + pathArray[i] + "')\">" + pathArray[i] + "</a>&nbsp;";
     }
 
@@ -898,6 +897,19 @@ function addTimeSel() {
     delArea.setAttribute("onClick", "deleteTimeSel("+timeSelNum+")");
     selectArea.appendChild(delArea);
     elm.appendChild(selectArea);
+}
+
+function sourceFileList(elem) {
+    stocker.components.getFilenames(params.dir, files, function(reals) {
+        const ul = document.createElement('ul');
+        for (let i=0; i<reals.length; i++) {
+            const li = document.createElement('li');
+            li.innerText = reals[i].name
+            ul.appendChild(li);
+        }
+
+        elem.appendChild(ul);
+    });
 }
 
 function deleteTimeSel(idx) {

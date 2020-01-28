@@ -44,16 +44,14 @@
     <img src="" id="vimg" width="640">
   </div>
 
-  <div class="content">
-    <h2>変換元ファイル</h2>
+  <div class="card-content">
+    <div class="content">
+      <h2>変換元ファイル</h2>
+
+      <p id="source_file_list"></p>
+    </div>
   </div>
 </div>
-
-<script type="text/javascript">
-    for (let i=0; i<files.length; i++) {
-        document.write(files[i] + "<br>");
-    }
-</script>
 
 <h2>情報</h2>
 <form action="" name="enc_setting" method="POST" autocomplete="off">
@@ -145,7 +143,7 @@
     const tend = document.getElementsByName('tend' + f_num)[0].value;
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
-    const url = "${HTDOCS_ROOT}/convertselect.html?file=params.file&dir=params.dir"
+    const url = stocker.uri.htdocs_root + "/convertselect.html?file=params.file&dir=params.dir"
               + "&scene_list=" + sceneListPath + "&clicked=" + clicked + "&v_map=" + vno
               + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 
@@ -158,8 +156,6 @@
 <br>
 <div id="dirlist"></div>
 出力先: <input type="text" class="fit_width" name="out_dir" value="" size="50"><br>
-
-  print encode('utf-8', $mes);
 
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
