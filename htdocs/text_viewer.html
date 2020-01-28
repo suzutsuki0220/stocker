@@ -8,7 +8,8 @@
 <script type="text/javascript" src="bundle/stocker.js"></script>
 <script type="text/javascript">
     let rootDir, upPath;
-    function getFileProperties() {
+
+    window.addEventListener("load", function(event) {
         const params = jsUtils.url.getRawParams();
         stocker.components.getFileProperties(params.dir, params.file, function(properties) {
             document.title = properties.name;
@@ -21,7 +22,7 @@
         }, function(error) {
             console.warn(error);
         });
-    }
+    });
 
     function getTextContents() {
         document.getElementById('textDataArea').textContent = "準備中";
@@ -62,10 +63,5 @@
   </nav>
 
   <pre id="textDataArea"></pre>
-
-<script type="text/javascript">
-    getFileProperties();
-</script>
-
 </body>
 </html>
