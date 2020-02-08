@@ -14,15 +14,14 @@ module.exports = env => {
 
     return {
         mode: MODE,
-        entry: [
-            './node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css',
-            './node_modules/@fortawesome/fontawesome-free/css/solid.min.css',
-            './webpack/assets/scss/bulma.scss',
-            './webpack/index.js'
-        ],
+        entry: {
+            font: './node_modules/html-render/dist/font.bundle.js',
+            bulma: './node_modules/html-render/dist/bulma.bundle.js',
+            stocker: './webpack/index.js'
+        },
         output: {
             path: path.join(__dirname, 'dist/bundle'),
-            filename: 'stocker.js'
+            filename: '[name].js'
         },
         module: {
             rules: [

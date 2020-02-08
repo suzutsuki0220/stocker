@@ -1,5 +1,5 @@
 window.jsUtils = require('js-utils');
-window.bulmaRender = require('./src/bulma_render.js');
+window.bulmaRender = require('html-render')('bulma');
 window.stocker = require('./src');
 
 // TODO: remove below
