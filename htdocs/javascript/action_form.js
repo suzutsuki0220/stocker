@@ -43,7 +43,7 @@ class ActionForm {
             const num = i + 1;
             list.push([num.toString(10), this.filesList[i].name, this.filesList[i].statusIcon]);
         }
-        bulmaRender.makeTable(elem, ['No', '名前', '実行結果'], list);
+        render.bulma.elements.table(elem, ['No', '名前', '実行結果'], list);
     }
 
     changeStatus(index, stat) {
@@ -51,7 +51,7 @@ class ActionForm {
 
         if (f) {
             const elem = f.statusIcon;
-            elem.innerHTML = bulmaRender.statusIcon[stat];
+            elem.innerHTML = render.bulma.statusIcon[stat];
         }
     }
 

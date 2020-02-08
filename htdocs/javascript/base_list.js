@@ -5,12 +5,12 @@ function baseCard(elem, dirs) {
         let a = document.createElement('a');
         a.href = "javascript:stocker.components.backToList('" + dirs[i].encoded + "', '')";
         const image = '<img src="icons/devices/drive-harddisk.png" alt="Placeholder image">';
-        bulmaRender.media(a, image, dirs[i].name);
+        render.bulma.layout.mediaObject(a, image, dirs[i].name);
 
         cards.push({content: a.outerHTML});
     }
 
-    bulmaRender.card(elem, cards);
+    render.bulma.components.card(elem, cards);
 }
 
 window.addEventListener("load", function(event) {

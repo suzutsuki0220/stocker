@@ -133,8 +133,8 @@ function refreshDirectorySelector(div, root, path) {
             }
         }
 
-        bulmaRender.makeTable(dirList, ["フォルダー"], directoriesArray);
-        bulmaRender.makeTable(fileList, ["中身"], filesArray);
+        render.bulma.elements.table(dirList, ["フォルダー"], directoriesArray);
+        render.bulma.elements.table(fileList, ["中身"], filesArray);
     });
 }
 

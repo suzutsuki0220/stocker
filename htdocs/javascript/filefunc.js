@@ -33,7 +33,7 @@ function callFileFunc(parameterList, onSuccess, onError) {
     }
 
     const f = p.list;
-    f.statusIcon.innerHTML = bulmaRender.statusIcon["loading"];
+    f.statusIcon.innerHTML = render.bulma.statusIcon["loading"];
     jsUtils.fetch.request(
         {uri: stockerConfig.cgi_root + "/action/filefunc.cgi",
          headers: {"Content-Type": "application/x-www-form-urlencoded"},
@@ -42,14 +42,14 @@ function callFileFunc(parameterList, onSuccess, onError) {
          format: 'json'
         }, function(json) {
             if (json.status === 'ok') {
-                f.statusIcon.innerHTML = bulmaRender.statusIcon["done"];
+                f.statusIcon.innerHTML = render.bulma.statusIcon["done"];
                 callFileFunc(parameterList, onSuccess, onError);  // do recursively
             } else {
-                f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
+                f.statusIcon.innerHTML = render.bulma.statusIcon["error"];
                 onError(json.message);
             }
         }, function(error) {
-            f.statusIcon.innerHTML = bulmaRender.statusIcon["error"];
+            f.statusIcon.innerHTML = render.bulma.statusIcon["error"];
             onError(error.message);
         }
     );

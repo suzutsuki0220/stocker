@@ -1,4 +1,4 @@
-/* global jsUtils, stocker, bulmaRender */
+/* global jsUtils, stocker, render.bulma */
 
 var selectedVideo = new Object();
 var sceneListPath = "";
@@ -16,7 +16,7 @@ window.addEventListener("load", function(event) {
     files = stocker.components.getParamFile();
 
     if (files.length === 0) {
-        bulmaRender.notification("error", "ファイルが選択されていません");
+        render.bulma.elements.notification("error", "ファイルが選択されていません");
     }
 
     stocker.components.getFileProperties(params.dir, files[0], function(properties) {
@@ -563,7 +563,7 @@ function getMovieInfo(movie_info_url, root, path) {
         method: 'POST',
         format: 'text'
     }, showInfoTable, function() {
-        bulmaRender.notification("error", "動画ファイルの情報取得に失敗しました");
+        render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
     });
 }
 
