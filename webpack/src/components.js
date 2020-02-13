@@ -53,7 +53,7 @@ module.exports.getFilenames = function(root, paths, onSuccess, onError = noWork)
         body: jsUtils.url.makeQueryString(params)
     };
 
-    jsUtils.fetch.request(init , onSuccess, onError);
+    jsUtils.fetch.request(init, onSuccess, onError);
 };
 
 module.exports.getParamRoot = function() {
