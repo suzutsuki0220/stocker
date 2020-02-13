@@ -25,12 +25,8 @@
     });
 
     function displayText(data, encoding = "") {
-        const fr = new FileReader();
-        fr.onload = eve => {
-          const content = jsUtils.value.fixNewLine(jsUtils.japanese.toUTF8(fr.result));
-          document.getElementById('textDataArea').textContent = content;
-        };
-        fr.readAsBinaryString(data);
+        const content = jsUtils.value.fixNewLine(jsUtils.japanese.toUTF8(data, encoding));
+        document.getElementById('textDataArea').textContent = content;
     }
 
     function getTextContents() {
@@ -42,7 +38,7 @@
              headers: {"Content-Type": "application/x-www-form-urlencoded"},
              body: stocker.components.makeDirFileParam(params.dir, params.file, {mime: "text/plain"}),
              method: 'POST',
-             format: 'blob'
+             format: 'arrayBuffer'
             }, displayText
             , function(error) {
                 document.getElementById('textDataArea').textContent = "読み込み失敗: " + error.message;
