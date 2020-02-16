@@ -137,8 +137,8 @@ function refreshDirectorySelector(div, root, path, height) {
             }
         }
 
-        render.bulma.elements.table(dirList, ["フォルダー"], directoriesArray);
-        render.bulma.elements.table(fileList, ["中身"], filesArray);
+        dirList.appendChild(render.bulma.elements.table(["フォルダー"], directoriesArray));
+        fileList.appendChild(render.bulma.elements.table(["中身"], filesArray));
     });
 }
 

@@ -4,64 +4,64 @@ class ModalContent {
     constructor() {
         this.element = new Object();
         this.form = new Object();
-
         this._actionForm = new ActionForm();
-
-        // initialize sequence
-        this._initNewFolder();
-        this._initRemove();
-        this._initRename();
-        this._initMove();
     }
 
-    _footerButtons(modalElem, okFunc) {
+    _footerButtons(okFunc, cancelFunc) {
         const foot = document.createElement('span');
         foot.appendChild(render.bulma.button.okButton('実行', function() {
             //disableActionButton();
             okFunc();
         }));
         foot.appendChild(render.bulma.button.cancelButton('キャンセル', function() {
-            render.bulma.active.switch(modalElem, false);
+            cancelFunc();
         }));
 
         return foot;
     }
 
-    _closeModal(modalElem) {
-        const params = jsUtils.url.getRawParams();
-        render.bulma.active.switch(modalElem, false);
-        reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+    _closeModal(modalElem, reload = true) {
+        render.basic.element.remove(modalElem);
+        if (reload === true) {
+            const params = jsUtils.url.getRawParams();
+            reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+        }
     }
 
-    _initNewFolder() {
+    newFolder() {
         this.form.newFolder = document.createElement('form');
         this.form.newFolder.innerHTML = 'フォルダー名: <input type="text" name="foldername" value="">';
 
         const self = this;
-        const foot = this._footerButtons(this.element.newFolder, function() {
+        const foot = this._footerButtons(function() {
             doMkdir(self.form.newFolder.foldername.value, function() {
                 self._closeModal(self.element.newFolder);
             }, function(message) {
                 window.alert(message);
             });
+        }, function() {
+            self._closeModal(self.element.newFolder, false);
         });
 
-        this.element.newFolder = render.bulma.components.modalCard("新規フォルダー作成", this.form.newFolder, foot);
+        this.element.newFolder = render.bulma.components.modalCard("新規フォルダー作成", this.form.newFolder, foot, false);
         document.body.appendChild(this.element.newFolder);
-    }
-
-    newFolder() {
         render.bulma.active.switch(this.element.newFolder, true);
+
         this.form.newFolder.foldername.value = "";
         this.form.newFolder.foldername.focus();
     }
 
-    _initRemove() {
+    remove() {
+        if (isAnyChecked() === false) {
+            render.bulma.elements.notification("error", "削除するファイル・フォルダーにチェックを入れてください");
+            return;
+        }
+
         this.form.remove = document.createElement('div');
         this.form.remove.innerHTML = '<span id="filesArea"></span>';
 
         const self = this;
-        const foot = this._footerButtons(self.element.remove, function() {
+        const foot = this._footerButtons(function() {
             let removeWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -73,35 +73,33 @@ class ModalContent {
             }, function(message) {
                 window.alert(message);
             });
+        }, function() {
+            self._closeModal(self.element.remove, false);
         });
 
-        this.element.remove = render.bulma.components.modalCard("削除", this.form.remove, foot);
+        this.element.remove = render.bulma.components.modalCard("削除", this.form.remove, foot, false);
         document.body.appendChild(this.element.remove);
-    }
-
-    remove() {
-        if (isAnyChecked() === false) {
-            render.bulma.elements.notification("error", "削除するファイル・フォルダーにチェックを入れてください");
-            return;
-        }
         render.bulma.active.switch(this.element.remove, true);
 
-        const self = this;
         const files = getCheckedFiles()
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('filesArea').innerHTML = "読み込み中...";
         this._actionForm.makeFilesList(encoded_dir, files, function() {
             document.getElementById('filesArea').innerHTML = "";
-            self._actionForm.filenameTable(document.getElementById('filesArea'));
+            document.getElementById('filesArea').appendChild(self._actionForm.filenameTable());
         });
     }
 
-    _initRename() {
+    rename() {
+        if (isAnyChecked() === false) {
+            render.bulma.elements.notification("error", "名前を変更するファイル・フォルダーにチェックを入れてください");
+            return;
+        }
         this.form.rename = document.createElement('div');
         this.form.rename.innerHTML = '<span id="renameFormArea"></span>';
 
         const self = this;
-        const foot = this._footerButtons(self.element.rename, function() {
+        const foot = this._footerButtons(function() {
             let renameWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -110,24 +108,18 @@ class ModalContent {
             }
 
             callFileFunc(renameWorks, function() {
-                this._closeModal(self.element.rename);
+                self._closeModal(self.element.rename);
             }, function(message) {
                 window.alert(message);
             });
+        }, function() {
+            self._closeModal(self.element.rename, false);
         });
 
-        this.element.rename = render.bulma.components.modalCard("名前の変更", this.form.rename, foot);
+        this.element.rename = render.bulma.components.modalCard("名前の変更", this.form.rename, foot, false);
         document.body.appendChild(this.element.rename);
-    }
-
-    rename() {
-        if (isAnyChecked() === false) {
-            render.bulma.elements.notification("error", "名前を変更するファイル・フォルダーにチェックを入れてください");
-            return;
-        }
         render.bulma.active.switch(this.element.rename, true);
 
-        const self = this;
         const files = getCheckedFiles()
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('renameFormArea').innerHTML = "読み込み中...";
@@ -149,7 +141,12 @@ class ModalContent {
         });
     }
 
-    _initMove() {
+    move() {
+        if (isAnyChecked() === false) {
+            render.bulma.elements.notification("error", "移動するファイル・フォルダーにチェックを入れてください");
+            return;
+        }
+
         this.form.move = document.createElement('div');
         this.form.move.innerHTML =
         '<h2 class="subtitle is-6">移動先:</h2>' +
@@ -157,7 +154,7 @@ class ModalContent {
         '<span id="moveFilesArea"></span>';
 
         const self = this;
-        const foot = this._footerButtons(self.element.move, function() {
+        const foot = this._footerButtons(function() {
             let moveWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -165,30 +162,25 @@ class ModalContent {
             }
 
             callFileFunc(moveWorks, function() {
-                this._closeModal(self.element.move);
+                self._closeModal(self.element.move);
             }, function(message) {
                 window.alert(message);
             });
+        }, function() {
+            self._closeModal(self.element.move, false);
         });
 
-        this.element.move = render.bulma.components.modalCard("移動", this.form.move, foot);
+        this.element.move = render.bulma.components.modalCard("移動", this.form.move, foot, false);
         document.body.appendChild(this.element.move);
-    }
-
-    move() {
-        if (isAnyChecked() === false) {
-            render.bulma.elements.notification("error", "移動するファイル・フォルダーにチェックを入れてください");
-            return;
-        }
         render.bulma.active.switch(this.element.move, true);
+
         makeDirectorySelector(document.getElementById('destinationSelectorArea'));
-        const self = this;
         const files = getCheckedFiles()
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('moveFilesArea').innerHTML = "読み込み中...";
         this._actionForm.makeFilesList(encoded_dir, files, function() {
-            document.getElementById('moveFilesArea').innerHTML = "";
-            self._actionForm.filenameTable(document.getElementById('moveFilesArea'));
+            document.getElementById('moveFilesArea').innerHTML = ""
+            document.getElementById('moveFilesArea').appendChild(self._actionForm.filenameTable());
         });
     }
 }

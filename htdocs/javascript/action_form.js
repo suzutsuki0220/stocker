@@ -1,3 +1,5 @@
+/* global jsUtils, render, stocker */
+
 class ActionForm {
     constructor() {
         this.query = jsUtils.url.getQueryInUrl();
@@ -37,13 +39,13 @@ class ActionForm {
         });
     }
 
-    filenameTable(elem) {
+    filenameTable() {
         let list = new Array();
         for (let i=0; i<this.filesList.length; i++) {
             const num = i + 1;
             list.push([num.toString(10), this.filesList[i].name, this.filesList[i].statusIcon]);
         }
-        render.bulma.elements.table(elem, ['No', '名前', '実行結果'], list);
+        return render.bulma.elements.table(['No', '名前', '実行結果'], list);
     }
 
     changeStatus(index, stat) {
