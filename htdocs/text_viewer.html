@@ -24,21 +24,26 @@
         });
     });
 
-    function getTextContents() {
-        document.getElementById('textDataArea').textContent = "準備中";
+    function displayText(data, encoding = "") {
+        const content = jsUtils.value.fixNewLine(jsUtils.japanese.toUTF8(data, encoding));
+        document.getElementById('textDataArea').textContent = content;
+    }
 
-        const ajax = jsUtils.ajax;
-        ajax.init();
-        ajax.setOnLoading(function() {
-            document.getElementById('textDataArea').innerHTML = '読み込み中 <i class="fas fa-spinner fa-pulse"></i>';
-        });
-        ajax.setOnSuccess(function(xhr) {
-            document.getElementById('textDataArea').textContent = jsUtils.value.fixNewLine(xhr.responseText);
-        });
-        ajax.setOnError(function(xhr) {
-            document.getElementById('textDataArea').textContent = "読み込み失敗: " + xhr.status + " " + xhr.statusText;
-        });
-        ajax.post(stockerConfig.uri.get_file, jsUtils.url.getQueryInUrl() + "&mime=text/plain");
+    function getTextContents() {
+        const params = jsUtils.url.getRawParams();
+        document.getElementById('textDataArea').innerHTML = '読み込み中 <i class="fas fa-spinner fa-pulse"></i>';
+
+        jsUtils.fetch.request(
+            {uri: stockerConfig.uri.get_file,
+             headers: {"Content-Type": "application/x-www-form-urlencoded"},
+             body: stocker.components.makeDirFileParam(params.dir, params.file, {mime: "text/plain"}),
+             method: 'POST',
+             format: 'arrayBuffer'
+            }, displayText
+            , function(error) {
+                document.getElementById('textDataArea').textContent = "読み込み失敗: " + error.message;
+            }
+        );
     }
 </script>
 <title></title>
