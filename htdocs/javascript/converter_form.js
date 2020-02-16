@@ -38,6 +38,9 @@ window.addEventListener("load", function(event) {
     document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
     document.adjpreview.src = GRAY_PAD;
     document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
+
+    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
+    makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
 
 function makeEncodeQuery() {

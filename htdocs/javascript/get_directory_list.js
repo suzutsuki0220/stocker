@@ -1,3 +1,4 @@
+/* global jsUtils, stocker, bulmaRender */
 let selectedParam = new Object();
 
 function initSelectedParam() {
@@ -59,9 +60,18 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
     select.appendChild(fragment);
 
     return select;
-};
+}
 
-function refreshDirectorySelector(div, root, path) {
+function directoryListStyleFactory(elem, height) {
+    elem.style.flexBasis = "50%";
+    elem.style.height = height + "px";
+    elem.style.overflow = "auto";
+    elem.style.borderStyle = "solid";
+    elem.style.borderWidth = "2px";
+    elem.style.borderColor = "hsl(0, 0%, 86%)";
+}
+
+function refreshDirectorySelector(div, root, path, height) {
     getDirectoryList(root, path, 0, 0, function(data) {
         let filesArray = new Array();
         let directoriesArray = new Array();
@@ -78,7 +88,7 @@ function refreshDirectorySelector(div, root, path) {
         const nameArea = document.createElement('div');
         const upButton = document.createElement('a');
         upButton.onclick = function() {
-            refreshDirectorySelector(div, root, properties.up_path);
+            refreshDirectorySelector(div, root, properties.up_path, height);
         };
         upButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
         nameArea.appendChild(upButton);
@@ -95,17 +105,11 @@ function refreshDirectorySelector(div, root, path) {
         container.style.justifyContent = "space-between";
 
         const dirList = document.createElement('div');
-        dirList.style.flexBasis = "50%";
-        dirList.style.borderStyle = "solid";
-        dirList.style.borderWidth = "2px";
-        dirList.style.borderColor = "hsl(0, 0%, 86%)";
+        directoryListStyleFactory(dirList, height);
         container.appendChild(dirList);
 
         const fileList = document.createElement('div');
-        fileList.style.flexBasis = "50%";
-        fileList.style.borderStyle = "solid";
-        fileList.style.borderWidth = "2px";
-        fileList.style.borderColor = "hsl(0, 0%, 86%)";
+        directoryListStyleFactory(fileList, height);
         container.appendChild(fileList);
         div.appendChild(container);
 
@@ -124,7 +128,7 @@ function refreshDirectorySelector(div, root, path) {
             if (e.type === "DIRECTORY") {
                 const a = document.createElement('a');
                 a.onclick = function() {
-                    refreshDirectorySelector(div, root, e.path);
+                    refreshDirectorySelector(div, root, e.path, height);
                 };
                 a.innerHTML = e.name;
                 directoriesArray.push(a);
@@ -138,7 +142,7 @@ function refreshDirectorySelector(div, root, path) {
     });
 }
 
-function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", rows = 6) {
+function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", height = 300) {
     const div = document.createElement('div');
     const directorySelector = document.createElement('div');
 
@@ -146,12 +150,12 @@ function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", rows 
     elem.innerHTML = "";
     getRootDirectories(function(data) {
         const rootSelector = makeRootSelector("", data, function() {
-            refreshDirectorySelector(directorySelector, rootSelector.value, "")
+            refreshDirectorySelector(directorySelector, rootSelector.value, "", height)
         }, selectedRoot);
         div.appendChild(rootSelector);
         div.appendChild(directorySelector);
         elem.appendChild(div);
 
-        refreshDirectorySelector(directorySelector, rootSelector.value, selectedPath);
+        refreshDirectorySelector(directorySelector, rootSelector.value, selectedPath, height);
     });
 }

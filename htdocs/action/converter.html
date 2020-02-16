@@ -9,6 +9,7 @@
 <script type="text/javascript" src="../bundle/stocker.js"></script>
 <script type="text/javascript" src="../javascript/converter_common.js"></script>
 <script type="text/javascript" src="../javascript/converter_form.js"></script>
+<script type="text/javascript" src="../javascript/get_directory_list.js"></script>
 <link rel="stylesheet" type="text/css" href="../stylesheet/stocker.css">
 <link rel="stylesheet" type="text/css" href="../stylesheet/converter_form.css">
 <title></title>
@@ -156,7 +157,9 @@
 <br>
 <div id="dirlist"></div>
 出力先: <input type="text" class="fit_width" name="out_dir" value="" size="50"><br>
+<span id="destinationSelectorArea"></span>
 
+<!--
   if(opendir(DIR, $CONV_OUT_DIR)) {
     print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
     while(my $entry = decode('utf-8', readdir(DIR))) {
@@ -169,6 +172,7 @@
     print "</select>\n";
     closedir(DIR);
   }
+-->
 <br><br>
 <fieldset>
 <legend>時間</legend>
@@ -351,9 +355,7 @@ weight
 <br>
 
 <div id="sStatus"></div>
-<p style="text-align: center">
-<input type="button" class="button is-primary" value="変換する" onClick="addJob()">
-</p>
+<button class="button is-primary" onClick="addJob()">変換する</button>
 </form>
 
 </body>
