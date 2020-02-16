@@ -33,7 +33,7 @@ class ActionList {
             self.actionParam = json;
         }, function(error) {
             console.warn(error);
-            bulmaRender.notification("error", 'error: ' + error.message);
+            render.bulma.elements.notification("error", 'error: ' + error.message);
         });
     }
 

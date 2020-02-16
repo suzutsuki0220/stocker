@@ -1,3 +1,5 @@
+/* global jsUtils, render, callFileFunc */
+
 class ModalContent {
     constructor() {
         this.element = new Object();
@@ -12,33 +14,44 @@ class ModalContent {
         this._initMove();
     }
 
+    _footerButtons(modalElem, okFunc) {
+        const foot = document.createElement('span');
+        foot.appendChild(render.bulma.button.okButton('実行', function() {
+            //disableActionButton();
+            okFunc();
+        }));
+        foot.appendChild(render.bulma.button.cancelButton('キャンセル', function() {
+            render.bulma.active.switch(modalElem, false);
+        }));
+
+        return foot;
+    }
+
+    _closeModal(modalElem) {
+        const params = jsUtils.url.getRawParams();
+        render.bulma.active.switch(modalElem, false);
+        reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+    }
+
     _initNewFolder() {
         this.form.newFolder = document.createElement('form');
         this.form.newFolder.innerHTML = 'フォルダー名: <input type="text" name="foldername" value="">';
 
         const self = this;
-        const foot = document.createElement('span');
-        foot.appendChild(bulmaRender.okButton('実行', function() {
-            //disableActionButton();
+        const foot = this._footerButtons(this.element.newFolder, function() {
             doMkdir(self.form.newFolder.foldername.value, function() {
-                const params = jsUtils.url.getRawParams();
-                bulmaRender.active(self.element.newFolder, false);
-                reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+                self._closeModal(self.element.newFolder);
             }, function(message) {
                 window.alert(message);
             });
-        }));
-        foot.appendChild(bulmaRender.cancelButton('キャンセル', function() {
-            bulmaRender.active(self.element.newFolder, false);
-        }));
+        });
 
-     //   _element.newFolder = bulmaRender.modal(content, true);
-        this.element.newFolder = bulmaRender.modalCard("新規フォルダー作成", this.form.newFolder, foot);
+        this.element.newFolder = render.bulma.components.modalCard("新規フォルダー作成", this.form.newFolder, foot);
         document.body.appendChild(this.element.newFolder);
     }
 
     newFolder() {
-        bulmaRender.active(this.element.newFolder, true);
+        render.bulma.active.switch(this.element.newFolder, true);
         this.form.newFolder.foldername.value = "";
         this.form.newFolder.foldername.focus();
     }
@@ -48,9 +61,7 @@ class ModalContent {
         this.form.remove.innerHTML = '<span id="filesArea"></span>';
 
         const self = this;
-        const foot = document.createElement('span');
-        foot.appendChild(bulmaRender.okButton('実行', function() {
-            //disableActionButton();
+        const foot = this._footerButtons(self.element.remove, function() {
             let removeWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -58,27 +69,22 @@ class ModalContent {
             }
 
             callFileFunc(removeWorks, function() {
-                const params = jsUtils.url.getRawParams();
-                bulmaRender.active(self.element.remove, false);
-                reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+                self._closeModal(self.element.remove);
             }, function(message) {
                 window.alert(message);
             });
-        }));
-        foot.appendChild(bulmaRender.cancelButton('キャンセル', function() {
-            bulmaRender.active(self.element.remove, false);
-        }));
+        });
 
-        this.element.remove = bulmaRender.modalCard("削除", this.form.remove, foot);
+        this.element.remove = render.bulma.components.modalCard("削除", this.form.remove, foot);
         document.body.appendChild(this.element.remove);
     }
 
     remove() {
         if (isAnyChecked() === false) {
-            bulmaRender.notification("error", "削除するファイル・フォルダーにチェックを入れてください");
+            render.bulma.elements.notification("error", "削除するファイル・フォルダーにチェックを入れてください");
             return;
         }
-        bulmaRender.active(this.element.remove, true);
+        render.bulma.active.switch(this.element.remove, true);
 
         const self = this;
         const files = getCheckedFiles()
@@ -95,9 +101,7 @@ class ModalContent {
         this.form.rename.innerHTML = '<span id="renameFormArea"></span>';
 
         const self = this;
-        const foot = document.createElement('span');
-        foot.appendChild(bulmaRender.okButton('実行', function() {
-            //disableActionButton();
+        const foot = this._footerButtons(self.element.rename, function() {
             let renameWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -106,27 +110,22 @@ class ModalContent {
             }
 
             callFileFunc(renameWorks, function() {
-                const params = jsUtils.url.getRawParams();
-                bulmaRender.active(self.element.rename, false);
-                reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+                this._closeModal(self.element.rename);
             }, function(message) {
                 window.alert(message);
             });
-        }));
-        foot.appendChild(bulmaRender.cancelButton('キャンセル', function() {
-            bulmaRender.active(self.element.rename, false);
-        }));
+        });
 
-        this.element.rename = bulmaRender.modalCard("名前の変更", this.form.rename, foot);
+        this.element.rename = render.bulma.components.modalCard("名前の変更", this.form.rename, foot);
         document.body.appendChild(this.element.rename);
     }
 
     rename() {
         if (isAnyChecked() === false) {
-            bulmaRender.notification("error", "名前を変更するファイル・フォルダーにチェックを入れてください");
+            render.bulma.elements.notification("error", "名前を変更するファイル・フォルダーにチェックを入れてください");
             return;
         }
-        bulmaRender.active(this.element.rename, true);
+        render.bulma.active.switch(this.element.rename, true);
 
         const self = this;
         const files = getCheckedFiles()
@@ -145,7 +144,7 @@ class ModalContent {
                 control.type = 'text';
                 control.value = list[i].name;
 
-                document.getElementById('renameFormArea').appendChild(bulmaRender.formField(label, control));
+                document.getElementById('renameFormArea').appendChild(render.bulma.form.formField(label, control));
             }
         });
     }
@@ -158,9 +157,7 @@ class ModalContent {
         '<span id="moveFilesArea"></span>';
 
         const self = this;
-        const foot = document.createElement('span');
-        foot.appendChild(bulmaRender.okButton('実行', function() {
-            //disableActionButton();
+        const foot = this._footerButtons(self.element.move, function() {
             let moveWorks = new Array();
             const list = self._actionForm.filesList;
             for (let i=0; i<list.length; i++) {
@@ -168,27 +165,22 @@ class ModalContent {
             }
 
             callFileFunc(moveWorks, function() {
-                const params = jsUtils.url.getRawParams();
-                bulmaRender.active(self.element.move, false);
-                reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+                this._closeModal(self.element.move);
             }, function(message) {
                 window.alert(message);
             });
-        }));
-        foot.appendChild(bulmaRender.cancelButton('キャンセル', function() {
-            bulmaRender.active(self.element.move, false);
-        }));
+        });
 
-        this.element.move = bulmaRender.modalCard("移動", this.form.move, foot);
+        this.element.move = render.bulma.components.modalCard("移動", this.form.move, foot);
         document.body.appendChild(this.element.move);
     }
 
     move() {
         if (isAnyChecked() === false) {
-            bulmaRender.notification("error", "移動するファイル・フォルダーにチェックを入れてください");
+            render.bulma.elements.notification("error", "移動するファイル・フォルダーにチェックを入れてください");
             return;
         }
-        bulmaRender.active(this.element.move, true);
+        render.bulma.active.switch(this.element.move, true);
         makeDirectorySelector(document.getElementById('destinationSelectorArea'));
         const self = this;
         const files = getCheckedFiles()

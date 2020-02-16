@@ -9,13 +9,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bulma": "^0.7.5",
+    "html-render": "git+https://github.com/suzutsuki0220/htmlRender.git",
     "js-utils": "git+https://github.com/suzutsuki0220/jsUtils.git"
   },
   "author": "suzutsuki0220",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.12.1",
     "css-loader": "^2.1.1",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^22.21.0",
