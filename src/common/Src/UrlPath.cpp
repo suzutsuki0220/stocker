@@ -53,9 +53,16 @@ UrlPath::getBaseDir(std::string &basedir, std::string &dir_name)
 
     basedir.clear();
 
-    confpath = getenv("STOCKER_CONF");
-    confpath.append("/basedirs.conf");
+    const char *env_conf = getenv("STOCKER_CONF");
+    if (env_conf == NULL) {
+        std::stringstream ss;
+        ss << "environment missing - " << conf->getErrorMessage();
+        err_message = ss.str();
+        goto end;
+    }
 
+    confpath = env_conf;
+    confpath.append("/basedirs.conf");
     if (conf->parse(confpath.c_str()) != 0) {
 	std::stringstream ss;
         ss << "failed to parse basedir - " << conf->getErrorMessage() << " " <<  confpath;
