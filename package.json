@@ -6,7 +6,8 @@
   "scripts": {
     "webpack": "npx webpack --mode production",
     "webpack-dev": "npx webpack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "get-update": "npm-check-updates -u && npm update && npm update --save-dev"
   },
   "dependencies": {
     "html-render": "git+https://github.com/suzutsuki0220/htmlRender.git",
@@ -15,14 +16,15 @@
   "author": "suzutsuki0220",
   "license": "Apache-2.0",
   "devDependencies": {
-    "css-loader": "^2.1.1",
+    "css-loader": "^3.4.2",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^22.21.0",
+    "eslint-plugin-jest": "^23.8.0",
     "node-sass": "^4.13.1",
-    "sass-loader": "^7.3.1",
+    "npm-check-updates": "^4.0.2",
+    "sass-loader": "^8.0.2",
     "string-replace-loader": "^2.2.0",
-    "style-loader": "^0.23.1",
-    "url-loader": "^1.1.2",
+    "style-loader": "^1.1.3",
+    "url-loader": "^3.0.0",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11"
   }
