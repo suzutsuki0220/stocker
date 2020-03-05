@@ -2,12 +2,14 @@
 
 include ./src/directory_defs.mk
 
-all:
+all: remove-dist
 	make -C src/ $(INSTALL_PARAM)
-	DESTDIR= npm run webpack -- --env.htdocs_root=$(HTDOCS_ROOT) --env.cgi_root=$(CGI_ROOT)
+	npm run webpack -- --env.htdocs_root=$(HTDOCS_ROOT) --env.cgi_root=$(CGI_ROOT)
 
-clean:
+clean: remove-dist
 	make -C src/ clean
+
+remove-dist:
 	rm -rf dist/
 
 install-src:
@@ -22,4 +24,3 @@ $(DOCS_DIR)/bundle:
 	mkdir -p $@
 
 install: install-src install-htdocs
-
