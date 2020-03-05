@@ -13,8 +13,7 @@
 <script type="text/javascript" src="javascript/convertselect.js"></script>
 <script type="text/javascript">
     const params = jsUtils.url.getRawParams();
-    const encoded_dir = params.dir;
-    const encoded_path = params.file;
+    const files = stocker.components.getParamFile();
     const scene_list_path = params.scene_list;
 
     function prepareForm() {
@@ -31,7 +30,7 @@
         }
         setLoading(document.f1.previewStart, document.getElementById("reloadingStart"), document.f1.selectedTimeStart);
         setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"), document.f1.selectedTimeEnd);
-        getMovieDuration(stockerConfig.uri.converter.movie_info, encoded_dir, encoded_path, params.v_map);
+        getMovieDuration(stockerConfig.uri.converter.movie_info, params.dir, files[0], params.v_map);
         document.f1.btnApply.focus();
 
         buildSkipOptions();

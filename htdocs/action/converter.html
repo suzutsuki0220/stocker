@@ -146,7 +146,7 @@
     const tend = document.getElementsByName('tend' + f_num)[0].value;
     const vno  = getRadioButtonValue(document.enc_setting.v_map);
     const clicked = elem.name.indexOf('ss') == 0 ? "start" : "end";
-    const url = stocker.uri.htdocs_root + "/convertselect.html?file=params.file&dir=params.dir"
+    const url = stocker.uri.htdocs_root + "/convertselect.html?file=" + params.file + "&dir=" + params.dir
               + "&scene_list=" + sceneListPath + "&clicked=" + clicked + "&v_map=" + vno
               + "&f_num=" + f_num + "&start=" + ss + "&end=" + tend;
 

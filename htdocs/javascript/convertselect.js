@@ -65,7 +65,7 @@ function setTime() {
 // durationが取得出来た時にシーンのデータを取得する
 function callGetSceneData() {
     if (scene_list_path) {
-        getSceneData(stockerConfig.uri.get_file, encoded_dir, scene_list_path);
+        getSceneData(stockerConfig.uri.get_file, params.dir, scene_list_path);
     }
 }
 
@@ -283,20 +283,20 @@ function addTime(num) {
     }
 }
 
-function getMovieDuration(movie_info_url, base_name, path, vno) {
-    const ajax = jsUtils.ajax;
-    ajax.init();
-
-    ajax.setOnSuccess(function(httpRequest) {
-        getMovieDurationResult(httpRequest.responseXML, vno);
+function getMovieDuration(movie_info_url, root, path, vno) {
+    jsUtils.fetch.request({
+        method: 'POST',
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        format: 'text',
+        uri: movie_info_url,
+        body: stocker.components.makeDirFileParam(root, path)
+    }, function(text) {
+        const responseXML = jsUtils.xml.getDom(text);
+        getMovieDurationResult(responseXML, vno);
         callGetSceneData();
+    }, function(message) {
+        alert("動画の長さ取得に失敗しました - " + message);
     });
-    ajax.setOnError(function(httpRequest) {
-        alert("動画の長さ取得に失敗しました");
-    });
-
-    const query = "dir=" + base_name + "&file=" + path;
-    ajax.post(movie_info_url, query);
 }
 
 function getMovieDurationResult(data, vno) {
