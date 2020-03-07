@@ -62,13 +62,6 @@ function setTime() {
     parent_window.getElementsByName('t' + f_num)[0].value = getFormatTimeFromSecond(jsUtils.value.normalize(duration, 0, duration));
 }
 
-// durationが取得出来た時にシーンのデータを取得する
-function callGetSceneData() {
-    if (scene_list_path) {
-        getSceneData(stockerConfig.uri.get_file, params.dir, scene_list_path);
-    }
-}
-
 function apply() {
     if (document.f1.btnApply.disabled === true) {
         return;
@@ -322,15 +315,19 @@ function getMovieDurationResult(data, vno) {
     }
 }
 
-function getSceneData(getfile_cgi, base_name, scene_path) {
+function callGetSceneData() {
+    if (!scene_list_path) {
+        return;
+    }
+
     const ajax = jsUtils.ajax;
     ajax.init();
 
     ajax.setOnSuccess(getSceneDataResult);
     ajax.setOnError(function(httpRequest) {});
 
-    const query = "dir=" + base_name + "&file=" + scene_path + "&mime=text/plain";
-    ajax.post(getfile_cgi, query);
+    const query = "dir=" + params.dir + "&file=" + scene_list_path + "&mime=text/plain";
+    ajax.post(stockerConfig.uri.get_file, query);
 }
 
 function getSceneDataResult(httpRequest) {

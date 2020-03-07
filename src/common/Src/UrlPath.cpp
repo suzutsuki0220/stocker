@@ -134,6 +134,11 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
         start_pos += 1;
     }
 
+    if (url_path == "/") {
+        file_path = "/";
+        return;
+    }
+
     try {
 	start_pos = 0;
         do {

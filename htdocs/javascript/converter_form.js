@@ -531,7 +531,8 @@ function fillFolderName(pathText) {
 }
 
 function getSceneListFilePath(file_name, root, dirpath) {
-    const list_file = file_name.replace(/.*\/([^\/]*)\.(.*?)$/, '$1.vdr');
+    const list_file = jsUtils.file.getNameFromPath(file_name).filename + '.vdr';
+    sceneListPath = "";
 
     jsUtils.fetch.request({
         uri: stockerConfig.uri.get_dir,
@@ -545,7 +546,6 @@ function getSceneListFilePath(file_name, root, dirpath) {
         const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
         const elements = jsUtils.xml.getDataInElements(contents, 'element', ['name', 'path', 'type']);
 
-        sceneListPath = "";
         for (var i=0; i<elements.length; i++) {
             const e = elements[i];
             if (e.type === 'FILE' && e.name === list_file) {
