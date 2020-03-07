@@ -147,7 +147,9 @@ int main (int argc, char **argv)
         f_dir = cgi->decodeFormURL(f_dir);
 
         if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
-            print_400_header("failed to determine filepath");
+            std::stringstream ss;
+            ss << "failed to determine filepath - " << urlpath->getErrorMessage();
+            print_400_header(ss.str().c_str());
             return -1;
         }
 

@@ -127,38 +127,32 @@ UrlPath::decode(std::string &file_path, std::string &url_path)
     std::string split_name;
     std::string::size_type start_pos, end_pos;
 
-    if (*url_path.c_str() == '/') {
-        file_path = "/";
-    } else {
-        file_path = "";
+    //replace '%2F' -> '/'
+    start_pos = 0;
+    while((start_pos = url_path.find("%2F", start_pos)) != std::string::npos) {
+        url_path.replace(start_pos, 3, "/");
+        start_pos += 1;
     }
 
     try {
 	start_pos = 0;
-	end_pos = url_path.find('/');
-	while (end_pos != std::string::npos) {
+        do {
+	    end_pos = url_path.find('/', start_pos);
 	    if (start_pos != end_pos) {
-		split_name = url_path.substr(start_pos, end_pos - start_pos);
+                if (end_pos == std::string::npos) {
+                    end_pos = url_path.length();
+                }
+                split_name = url_path.substr(start_pos, end_pos - start_pos);
 		if (cgi->decodeBase64URL(split_name) != 0) {
 		    err_message = "failed to decode file parameter";
 		    file_path.clear();
 		    return;
 		}
-		file_path.append(split_name);
 		file_path.append("/");
+		file_path.append(split_name);
 	    }
 	    start_pos = end_pos + 1;
-	    end_pos = url_path.find('/', start_pos);
-	}
-	if (start_pos != url_path.length()) {
-	    split_name = url_path.substr(start_pos);
-	    if (cgi->decodeBase64URL(split_name) == 0) {
-		file_path.append(split_name);
-	    } else {
-		err_message = "failed to decode file parameter";
-		file_path.clear();
-	    }
-	}
+	} while(start_pos < url_path.length());
     } catch (std::invalid_argument &e) {
 	err_message = e.what();
 	file_path.clear();
