@@ -13,11 +13,8 @@ use ConverterJob;
 use FileTypes;
 
 our $STOCKER_CGI    = "";
-our $MOVIEIMG_CGI   = "";
-our $GETFILE_CGI    = "";
 our $BASE_DIR_CONF  = "";
 our $SUPPORT_TYPES  = "";
-our $CONV_OUT_DIR   = "";
 our $ENCBATCH_LIST  = "";
 our $HTDOCS_ROOT    = "";
 require $ENV{'STOCKER_CONF'} . '/stocker.conf';
@@ -29,16 +26,18 @@ require $SUPPORT_TYPES;
 
 my $q = eval{new CGI};
 my $mode = scalar($q->param('mode'));
-my $dir  = HTML_Elem->url_decode(scalar($q->param('dir')));
-my $out_dir = scalar($q->param('out_dir'));
-my @files = $q->param('file');
+my $dir  = HTML_Elem->url_decode(scalar($q->param('root')));
+my $out_root = HTML_Elem->url_decode(scalar($q->param('out_root')));
+my $out_path = scalar($q->param('out_path'));
+my @files = $q->multi_param('path');
 
+my $encoded_path = $files[0];
 my $path;
 my $base;
 eval {
   my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
   $ins->init_by_base_name($dir);
-  $path =decode('utf-8', $ins->urlpath_decode($files[0]));
+  $path =decode('utf-8', $ins->urlpath_decode($encoded_path));
   $base = $ins->{base};
 };
 if ($@) {
@@ -46,11 +45,20 @@ if ($@) {
   HTML_Elem->error($@);
 }
 
-$dir = HTML_Elem->url_encode($dir);
-my $encoded_path = $files[0];
+my $encoded_out_root;
+my $encoded_out_path;
+eval {
+  my $ins = ParamPath->new(base_dir_conf => $BASE_DIR_CONF);
+  $ins->init_by_base_name($out_root);
+  $encoded_out_path = decode('utf-8', $ins->urlpath_decode($out_path));
+  $encoded_out_root = $ins->{base};
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error($@);
+}
 
-my $up_path = ParamPath->get_up_path($path);
-my $encoded_up_path = ParamPath->urlpath_encode(encode('utf-8', $up_path));
+$dir = HTML_Elem->url_encode($dir);
 
 if (@files.length == 0) {
   HTML_Elem->header();
@@ -70,11 +78,14 @@ if ($mtype eq "unsupported") {
   HTML_Elem->error("対応していない形式です: " . encode('utf-8', $encfile));
 }
 
-# エンコード出力先
-my $out_path = encode('utf-8', $CONV_OUT_DIR ."/". ${out_dir});
-
 if(${mode} eq "encode") {
-  &perform_encode();
+  eval {
+    &perform_encode();
+  };
+  if ($@) {
+    HTML_Elem->header();
+    HTML_Elem->error("登録に失敗しました: " . encode('utf-8', $@));
+  }
 }
 
 exit(0);
@@ -113,7 +124,7 @@ sub add_encodejob()
 
   my $job = ConverterJob->new(listfile => $ENCBATCH_LIST);
   $job->{source} = $source;
-  $job->{out_dir} = decode('utf-8', $q->param('out_dir'));
+  $job->{out_dir} = $encoded_out_root . $encoded_out_path;
   $job->{format} = $q->param('format');
   if (&getBoolean($q->param('set_position')) eq 'true') {
     $job->{set_position} = 'true';

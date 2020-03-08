@@ -9,7 +9,7 @@ let filename, upPath, upRealPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'out_dir', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
+const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
 
 window.addEventListener("load", function(event) {
     params = jsUtils.url.getRawParams();
@@ -26,7 +26,6 @@ window.addEventListener("load", function(event) {
 
         document.getElementById('fileNameArea').textContent = filename;
         sourceFileList(document.getElementById('source_file_list'));
-        writeSourceLocation(upRealPath);
         getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
         getSceneListFilePath(filename, params.dir, upPath);
     }, function(e) {
@@ -34,12 +33,10 @@ window.addEventListener("load", function(event) {
     });
 
     document.enc_setting.action = stockerConfig.uri.converter.form;
-    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
     document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
     document.adjpreview.src = GRAY_PAD;
     document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
 
-    document.enc_setting.out_dir.value = jsUtils.datetime.toPruneString(Date.now());
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
 
@@ -65,11 +62,13 @@ function makeEncodeQuery() {
         return v;
     };
 
-    var query = "mode=encode&dir=" + params.dir;
+    let query = "mode=encode&root=" + params.dir;
 
     for (let i=0; i<files.length; i++) {
-        query += '&file=' + files[i].value;
+        query += '&path=' + files[i];
     }
+
+    query += "&out_root=" + selectedParam.root + "&out_path=" + selectedParam.path;
 
     for (let i=0; i<=timeSelNum; i++) {
         const ss = 'ss' + i;
@@ -187,10 +186,6 @@ function calcBitrateAim() {
         low_bit  = Math.round(width * height * fps * 0.075 / 1000);
     }
     document.getElementById('aimed_bitrate').innerHTML = high_bit + "～" + low_bit + " kbps";
-}
-
-function select_existdir() {
-    fillFolderName(document.enc_setting.exist_dir.value);
 }
 
 function openPreviewWindow() {
@@ -505,29 +500,6 @@ function vaildate_adjustment() {
     }
 
     return true;
-}
-
-function writeSourceLocation(path)
-{
-    if (!path) {
-        return;
-    }
-
-    var html = "";
-
-    if( path.charAt(0) == "/" ) {
-        path = path.substr(1,path.length);
-    }
-    var pathArray = path.split("/");
-    for(let i=0; i<pathArray.length -1; i++ ) { /* 末尾の"/"の分-1する */
-        html += "/ <a href=\"javascript:fillFolderName('" + pathArray[i] + "')\">" + pathArray[i] + "</a>&nbsp;";
-    }
-
-    document.getElementById("source_location").innerHTML = html;
-}
-
-function fillFolderName(pathText) {
-    document.enc_setting.out_dir.value = pathText;
 }
 
 function getSceneListFilePath(file_name, root, dirpath) {

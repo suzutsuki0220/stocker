@@ -158,23 +158,9 @@
 </script>
 <br>
 <div id="dirlist"></div>
-出力先: <input type="text" class="fit_width" name="out_dir" value="" size="50"><br>
+出力先:<br>
 <span id="destinationSelectorArea"></span>
 
-<!--
-  if(opendir(DIR, $CONV_OUT_DIR)) {
-    print "<select name=\"exist_dir\" size=\"5\" class=\"fit_width\" onChange=\"select_existdir()\">\n";
-    while(my $entry = decode('utf-8', readdir(DIR))) {
-      if( length($entry) > 0 && $entry ne '..'  && $entry ne '.' &&
-          -d "$CONV_OUT_DIR/$entry" )
-      {
-        print "<option>".$entry."</option>\n";
-      }
-    }
-    print "</select>\n";
-    closedir(DIR);
-  }
--->
 <br><br>
 <fieldset>
 <legend>時間</legend>
@@ -355,10 +341,10 @@ weight
 音量 <input type="text" name="volume" value="1.0" size="10"> ※入力からの倍率<br>
 </fieldset>
 <br>
+</form>
 
 <div id="sStatus"></div>
 <button class="button is-primary" onClick="addJob()">変換する</button>
-</form>
 
 </body>
 </html>

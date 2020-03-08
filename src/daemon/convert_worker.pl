@@ -12,9 +12,6 @@ use ConverterJob;
 
 our $BASE_DIR_CONF  = "";
 our $FFMPEG_CMD     = "";
-our $TMP_PATH       = "";
-our $CONV_OUT_DIR   = "";
-our $ENCODE_BATCH   = "";
 our $ENCBATCH_LIST  = "";
 our $ENCODING_THREAD = "2";
 require $ENV{'STOCKER_CONF'} . '/converter.conf';
@@ -54,7 +51,7 @@ sub worker
   $$job->get($job_num);
   $$job->delete($job_num);
 
-  my $outdir = $CONV_OUT_DIR ."/". $$job->{'out_dir'};
+  my $outdir = $$job->{'out_dir'};
   if (! -d "$outdir") {
     mkpath ("$outdir");
   }
@@ -138,7 +135,7 @@ sub set_video_option
   }
   if($$job->{'v_deshake'} eq "true") {
 #    push(@vf_option, "deshake=rx=64:ry=64,crop=9/10*in_w:9/10*in_h");
-    my $analyze_result = $CONV_OUT_DIR ."/". $$job->{'out_dir'} . "/stabilize.trf";
+    my $analyze_result = $$job->{'out_dir'} . "/stabilize.trf";
     if ($pass == 1) {
       push(@vf_option, "vidstabdetect=shakiness=10:accuracy=15:result=\"${analyze_result}\"");
     } elsif ($pass == 2) {
@@ -300,11 +297,11 @@ sub make_cmd()
   my $option = "";
 
   if($$job->{'format'} eq "copy") {
-    $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
+    $$out_file = $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
     $option  = " -c copy ";
     $option .= &set_general_option($job);
   } elsif($$job->{'format'} eq "I-Frame") {
-    $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file ."-%03d.jpg";
+    $$out_file = $$job->{'out_dir'} ."/". $$out_file ."-%03d.jpg";
     if($$job->{'deinterlace'}) {
       $option .= " -vf \"yadif=0:-1\"";
     }
@@ -347,9 +344,9 @@ sub make_cmd()
     foreach my $lst (@CONVERT_PARAMS) {
       if($$job->{'format'} eq @{$lst}[0]) {
         if (length(@{$lst}[1]) > 0) {
-          $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". @{$lst}[1];
+          $$out_file = $$job->{'out_dir'} ."/". $$out_file .".". @{$lst}[1];
         } else {
-          $$out_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
+          $$out_file = $$job->{'out_dir'} ."/". $$out_file .".". $orig_ext;
         }
         $option .= &set_general_option($job);
         if (length(@{$lst}[2]) > 0) {
@@ -374,7 +371,7 @@ sub make_cmd()
     return;
   }
 
-  my $passlog_file = $CONV_OUT_DIR ."/". $$job->{'out_dir'} ."/passlog.dat";
+  my $passlog_file = $$job->{'out_dir'} ."/passlog.dat";
   my $pass_opt = "";
   if($pass == 1) {
     $pass_opt = " -pass 1 -passlogfile ${passlog_file}";
