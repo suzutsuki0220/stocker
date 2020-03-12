@@ -234,6 +234,7 @@ function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHi
     document.getElementById('directoryListArea').innerHTML = "読み込み中...";
     document.getElementById('path_link').innerHTML = "";
     document.file_check.target.value = url_path;  // for edit.cgi
+    root = encoded_dir;
     path = url_path;
 
     getDirectoryList(encoded_dir, url_path, from, to, function(dir_xml) {
