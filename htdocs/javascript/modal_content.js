@@ -1,4 +1,4 @@
-/* global jsUtils, render, callFileFunc */
+/* global stocker, jsUtils, render */
 
 class ModalContent {
     constructor() {
@@ -28,13 +28,55 @@ class ModalContent {
         }
     }
 
-    newFolder() {
+    _callFileFunc(parameterList, onSuccess, onError) {
+        const changeIcon = function(f, stat) {
+            if (!f || !f.statusIcon) {
+                return;
+            }
+            f.statusIcon.innerHTML = render.bulma.statusIcon[stat];
+        };
+
+        const p = parameterList.shift();
+        if (!p) {
+            onSuccess();
+            return;
+        }
+
+        const self = this;
+        const f = p.list;
+        changeIcon(f, "loading");
+        jsUtils.fetch.request(
+            {uri: stocker.uri.cgi_root + "/action/filefunc.cgi",
+             headers: {"Content-Type": "application/x-www-form-urlencoded"},
+             body: stocker.components.makeDirFileParam(f.root, f.path, p.parameter),
+             method: 'POST',
+             format: 'json'
+            }, function(json) {
+                if (json.status === 'ok') {
+                    changeIcon(f, "done");
+                    self._callFileFunc(parameterList, onSuccess, onError);  // do recursively
+                } else {
+                    changeIcon(f, "error");
+                    onError(json.message);
+                }
+            }, function(error) {
+                changeIcon(f, "error");
+                onError(error.message);
+            }
+        );
+    }
+
+    newFolder(root, path) {
         this.form.newFolder = document.createElement('form');
         this.form.newFolder.innerHTML = 'フォルダー名: <input type="text" name="foldername" value="">';
 
         const self = this;
         const foot = this._footerButtons(function() {
-            doMkdir(self.form.newFolder.foldername.value, function() {
+            const mkdirWork = [{
+                list: {root: root, path: path},
+                parameter: {mode: "do_newfolder", newname: self.form.newFolder.foldername.value}
+            }]
+            self._callFileFunc(mkdirWork, function() {
                 self._closeModal(self.element.newFolder);
             }, function(message) {
                 window.alert(message);
@@ -68,7 +110,7 @@ class ModalContent {
                 removeWorks.push({list: list[i], parameter: {mode: 'do_delete'}});
             }
 
-            callFileFunc(removeWorks, function() {
+            self._callFileFunc(removeWorks, function() {
                 self._closeModal(self.element.remove);
             }, function(message) {
                 window.alert(message);
@@ -107,7 +149,7 @@ class ModalContent {
                 renameWorks.push({list: list[i], parameter: {mode: 'do_rename', newname: newName}});
             }
 
-            callFileFunc(renameWorks, function() {
+            self._callFileFunc(renameWorks, function() {
                 self._closeModal(self.element.rename);
             }, function(message) {
                 window.alert(message);
@@ -161,7 +203,7 @@ class ModalContent {
                 moveWorks.push({list: list[i], parameter: {mode: 'do_move', dest_path: selectedParam.path, dest_root: selectedParam.root}});
             }
 
-            callFileFunc(moveWorks, function() {
+            self._callFileFunc(moveWorks, function() {
                 self._closeModal(self.element.move);
             }, function(message) {
                 window.alert(message);

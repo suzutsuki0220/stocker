@@ -1,4 +1,4 @@
-/* global jsUtils, stocker, bulmaRender */
+/* global jsUtils, stocker, render */
 let selectedParam = new Object();
 
 function initSelectedParam() {
@@ -21,10 +21,10 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
         receive_func(httpRequest.responseXML);
     });
     jsUtils.ajax.setOnError(function(httpRequest) {
-        console.warn("ERROR: " + stockerConfig.uri.get_dir + " param: " + param + " status: " + httpRequest.status);
+        console.warn("ERROR: " + stocker.uri.cgi.get_dir + " param: " + param + " status: " + httpRequest.status);
     });
 
-    jsUtils.ajax.post(stockerConfig.uri.get_dir, param);
+    jsUtils.ajax.post(stocker.uri.cgi.get_dir, param);
 }
 
 function getRootDirectories(callback) {
@@ -60,6 +60,22 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
     select.appendChild(fragment);
 
     return select;
+}
+
+function newDirectoryAnchor() {
+    const flexStyle = "display: flex; flex-direction: row; justify-content: space-between";
+    const div = render.basic.element.newNode('div', '', {style: flexStyle});
+    const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', {style: 'display: flex; align-items: center'});
+    anchor.onclick = function() {
+        const modalContent = new ModalContent();
+        modalContent.newFolder(selectedParam.root, selectedParam.path);
+    };
+    div.appendChild(
+        render.basic.element.newNode('div', 'フォルダー', {style: 'display: flex'})
+    );
+    div.appendChild(anchor);
+
+    return div;
 }
 
 function directoryListStyleFactory(elem, height) {
@@ -137,7 +153,7 @@ function refreshDirectorySelector(div, root, path, height) {
             }
         }
 
-        dirList.appendChild(render.bulma.elements.table(["フォルダー"], directoriesArray));
+        dirList.appendChild(render.bulma.elements.table([newDirectoryAnchor()], directoriesArray));
         fileList.appendChild(render.bulma.elements.table(["中身"], filesArray));
     });
 }
