@@ -1,4 +1,4 @@
-/* global jsUtils, stocker, render */
+/* global jsUtils, ModalContent, stocker, render */
 let selectedParam = new Object();
 
 function initSelectedParam() {
@@ -62,20 +62,22 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
     return select;
 }
 
-function newDirectoryAnchor() {
+function newDirectoryAnchor(div, height) {
     const flexStyle = "display: flex; flex-direction: row; justify-content: space-between";
-    const div = render.basic.element.newNode('div', '', {style: flexStyle});
+    const elm = render.basic.element.newNode('div', '', {style: flexStyle});
     const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', {style: 'display: flex; align-items: center'});
     anchor.onclick = function() {
-        const modalContent = new ModalContent();
+        const modalContent = new ModalContent(function() {
+            refreshDirectorySelector(div, selectedParam.root, selectedParam.path, height);
+        });
         modalContent.newFolder(selectedParam.root, selectedParam.path);
     };
-    div.appendChild(
+    elm.appendChild(
         render.basic.element.newNode('div', 'フォルダー', {style: 'display: flex'})
     );
-    div.appendChild(anchor);
+    elm.appendChild(anchor);
 
-    return div;
+    return elm;
 }
 
 function directoryListStyleFactory(elem, height) {
@@ -153,7 +155,8 @@ function refreshDirectorySelector(div, root, path, height) {
             }
         }
 
-        dirList.appendChild(render.bulma.elements.table([newDirectoryAnchor()], directoriesArray));
+        const anchor = newDirectoryAnchor(div, height);
+        dirList.appendChild(render.bulma.elements.table([anchor], directoriesArray));
         fileList.appendChild(render.bulma.elements.table(["中身"], filesArray));
     });
 }

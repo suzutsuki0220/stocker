@@ -1,9 +1,10 @@
 /* global stocker, jsUtils, render */
 
 class ModalContent {
-    constructor() {
+    constructor(onClose) {
         this.element = new Object();
         this.form = new Object();
+        this.onClose = onClose;
         this._actionForm = new ActionForm();
     }
 
@@ -20,11 +21,10 @@ class ModalContent {
         return foot;
     }
 
-    _closeModal(modalElem, reload = true) {
+    _closeModal(modalElem, onClose = null) {
         render.basic.element.remove(modalElem);
-        if (reload === true) {
-            const params = jsUtils.url.getRawParams();
-            reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+        if (onClose) {
+            onClose();
         }
     }
 
@@ -77,12 +77,12 @@ class ModalContent {
                 parameter: {mode: "do_newfolder", newname: self.form.newFolder.foldername.value}
             }]
             self._callFileFunc(mkdirWork, function() {
-                self._closeModal(self.element.newFolder);
+                self._closeModal(self.element.newFolder, self.onClose);
             }, function(message) {
                 window.alert(message);
             });
         }, function() {
-            self._closeModal(self.element.newFolder, false);
+            self._closeModal(self.element.newFolder);
         });
 
         this.element.newFolder = render.bulma.components.modalCard("新規フォルダー作成", this.form.newFolder, foot, false);
@@ -111,12 +111,12 @@ class ModalContent {
             }
 
             self._callFileFunc(removeWorks, function() {
-                self._closeModal(self.element.remove);
+                self._closeModal(self.element.remove, self.onClose);
             }, function(message) {
                 window.alert(message);
             });
         }, function() {
-            self._closeModal(self.element.remove, false);
+            self._closeModal(self.element.remove);
         });
 
         this.element.remove = render.bulma.components.modalCard("削除", this.form.remove, foot, false);
@@ -150,12 +150,12 @@ class ModalContent {
             }
 
             self._callFileFunc(renameWorks, function() {
-                self._closeModal(self.element.rename);
+                self._closeModal(self.element.rename, self.onClose);
             }, function(message) {
                 window.alert(message);
             });
         }, function() {
-            self._closeModal(self.element.rename, false);
+            self._closeModal(self.element.rename);
         });
 
         this.element.rename = render.bulma.components.modalCard("名前の変更", this.form.rename, foot, false);
@@ -204,12 +204,12 @@ class ModalContent {
             }
 
             self._callFileFunc(moveWorks, function() {
-                self._closeModal(self.element.move);
+                self._closeModal(self.element.move, self.onClose);
             }, function(message) {
                 window.alert(message);
             });
         }, function() {
-            self._closeModal(self.element.move, false);
+            self._closeModal(self.element.move);
         });
 
         this.element.move = render.bulma.components.modalCard("移動", this.form.move, foot, false);

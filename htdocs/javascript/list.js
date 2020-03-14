@@ -15,13 +15,16 @@ window.addEventListener("load", function(event) {
 //    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
 //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
-    modalContent = new ModalContent();
+    modalContent = new ModalContent(function() {
+        const params = jsUtils.url.getRawParams();
+        reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+    });
 
     actionList = new ActionList({element: document.getElementById('action-drop-list')});
     actionList.make();
 
     getRootDirectories(function(data) {
-        document.getElementById('root_selector').appendChild(makeRootSelector('fm_dir', data, changeDirectory, root));
+        document.getElementById('root_selector').appendChild(makeRootSelector('fm_dir', data, changeRoot, root));
         encoded_dir = document.file_check.fm_dir.value;
         reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
     });
@@ -29,18 +32,6 @@ window.addEventListener("load", function(event) {
 
 function closeBurger() {
     render.bulma.components.switchNavBurger(document.querySelectorAll('.navbar-burger')[0], false);
-}
-
-function setScreenSize() {
-    var s_width = 640;
-    var s_height = 480;
-
-    var in_width  = document.documentElement.clientWidth;
-    var in_height = document.documentElement.clientHeight;
-    if(in_width && in_height) {
-        s_width = in_width;
-        s_height = in_height;
-    }
 }
 
 function getCheckedFiles() {
@@ -119,7 +110,7 @@ function actionClickedIcon (action, clicked_path) {
     }
 }
 
-function changeDirectory() {
+function changeRoot() {
     reloadDirectoryList(document.file_check.fm_dir.value, "", 0, boxes);
 }
 
