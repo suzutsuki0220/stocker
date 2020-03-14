@@ -11,7 +11,7 @@ let actionList, modalContent;
 window.addEventListener("load", function(event) {
     const params = jsUtils.url.getRawParams();
     root = params.dir || "";
-    path = params.path || "";
+    path = params.file || "";
 //    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
 //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
@@ -205,7 +205,7 @@ function addBackHistory(encoded_dir, url_path) {
 
 window.onpopstate = function(event) {
     const s = event.state;
-    initializeWindow(s.dir, s.file);
+    reloadDirectoryList(s.dir, s.file, 0, 99999, false);  // TODO: refactor
 };
 
 function clearNarrowList() {
