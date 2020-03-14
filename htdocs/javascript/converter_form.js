@@ -18,6 +18,7 @@ window.addEventListener("load", function(event) {
     if (files.length === 0) {
         render.bulma.elements.notification("error", "ファイルが選択されていません");
     }
+    makeMultiEditForm();
 
     stocker.components.getFileProperties(params.dir, files[0], function(properties) {
         filename = properties.name;
@@ -39,6 +40,16 @@ window.addEventListener("load", function(event) {
 
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
+
+function makeMultiEditForm() {
+    if (files.length > 1) {
+        document.getElementById('multi_edit_form').innerHTML
+            = "<p><b>複数のファイルが指定されています</b><br>"
+            + "変換方法: "
+            + "<input type='radio' name='multi_editmode' value='combine' checked> 複数の動画を結合してエンコード&nbsp;&nbsp;"
+            + "<input type='radio' name='multi_editmode' value='sameenc'> 同じ設定でエンコード<br></p>";
+    }
+}
 
 function makeEncodeQuery() {
     const getNamedValue = function(key) {
@@ -62,7 +73,7 @@ function makeEncodeQuery() {
         return v;
     };
 
-    let query = "mode=encode&root=" + params.dir;
+    let query = "root=" + params.dir;
 
     for (let i=0; i<files.length; i++) {
         query += '&path=' + files[i];

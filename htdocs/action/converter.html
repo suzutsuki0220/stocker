@@ -62,16 +62,7 @@
 <div id="information_table"></div>
 
 <h2>変換の設定</h2>
-<script type="text/javascript">
-  if (files.length > 1) {
-    document.write("<p><b>複数のファイルが指定されています</b><br>");
-    document.write("変換方法: ");
-    document.write("<input type='radio' name='multi_editmode' value='combine' checked> 複数の動画を結合してエンコード");
-    document.write("&nbsp;&nbsp;");
-    document.write("<input type='radio' name='multi_editmode' value='sameenc'> 同じ設定でエンコード");
-    document.write("<br></p>");
-  }
-</script>
+<span id="multi_edit_form"></span>
 
 ソースの場所: <span id="source_location"></span>
 <script type="text/javascript">

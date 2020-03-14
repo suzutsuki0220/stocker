@@ -25,7 +25,6 @@ our @support_audio_types;
 require $SUPPORT_TYPES;
 
 my $q = eval{new CGI};
-my $mode = scalar($q->param('mode'));
 my $dir  = HTML_Elem->url_decode(scalar($q->param('root')));
 my $out_root = HTML_Elem->url_decode(scalar($q->param('out_root')));
 my $out_path = scalar($q->param('out_path'));
@@ -78,14 +77,12 @@ if ($mtype eq "unsupported") {
   HTML_Elem->error("対応していない形式です: " . encode('utf-8', $encfile));
 }
 
-if(${mode} eq "encode") {
-  eval {
-    &perform_encode();
-  };
-  if ($@) {
-    HTML_Elem->header();
-    HTML_Elem->error("登録に失敗しました: " . encode('utf-8', $@));
-  }
+eval {
+  &perform_encode();
+};
+if ($@) {
+  HTML_Elem->header();
+  HTML_Elem->error("登録に失敗しました: " . encode('utf-8', $@));
 }
 
 exit(0);
