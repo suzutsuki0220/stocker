@@ -7,6 +7,42 @@ const GET_MEDIA_CGI = stocker.uri.cgi.music_player.get_media;
 
 const graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
+let params, rootDir, upPath;
+
+window.addEventListener("load", function(event) {
+    params = jsUtils.url.getRawParams();
+    rootDir = params.dir;
+
+    errorCoverart();
+    var player_timer = document.getElementById('AudioTimer');
+
+    // 再生可能形式チェック
+    if      (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }
+    else if (support_ogg == 'maybe' || support_ogg == 'probably') { document.controller.type[2].checked = true; }
+    else if (support_wav == 'maybe' || support_wav == 'probably') { document.controller.type[0].checked = true; }
+
+    // CoverArt
+    if (document.coverart.addEventListener) {
+      document.coverart.addEventListener("error", errorCoverart, false);
+      document.coverart.addEventListener("abort", errorCoverart, false);
+    } else if (document.coverart.attachEvent) {  // for InternetExplorer
+      document.coverart.attachEvent("onerror", errorCoverart);
+      document.coverart.attachEvent("onabort", errorCoverart);
+    }
+
+    getDirectoryList(params.dir, params.file, 0, 0, function musicList(data) {
+        try {
+            const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
+            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
+            upPath  = properties.up_path;
+
+            getDirectoryList(params.dir, upPath, 0, 0, getMusicFiles);
+        } catch(e) {
+            alert("ERROR: " + e.description);
+        }
+    });
+});
+
 function errorCoverart() {
   document.coverart.src = graypad;
 }
@@ -82,16 +118,6 @@ function addEmptyInfoToTrack(idx) {
 
     music_count++;
     printMusicList();
-}
-
-function musicList(data) {
-    try {
-        const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
-        getDirectoryList(params.dir, properties['up_path'], 0, 0, getMusicFiles);
-    } catch(e) {
-        alert("ERROR: " + e.description);
-    }
 }
 
 function findNotGetPropertyTrack() {

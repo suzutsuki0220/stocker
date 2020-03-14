@@ -71,7 +71,7 @@
       var min = '0' + Math.floor(audio_player.currentTime / 60);
       sec = sec.substr(sec.length-2, 2);
       min = min.substr(min.length-2, 2);
-      player_timer.innerHTML = min +':'+ sec;
+      AudioTimer.innerHTML = min +':'+ sec;
       if(audio_player.ended) {
         if(document.controller.text_trnum.value < track.length) {
           playit(document.controller.text_trnum.value);
@@ -120,9 +120,13 @@
 -->
 </script>
 
-<a href="javascript:stocker.components.backToList()">← 戻る</a>
-<hr>
-<h2 id="directory_name_area"></h2>
+  <nav class="navbar is-link is-fixed-top" role="navigation">
+    <div class="navbar-brand"> <!-- left side of the navbar -->
+      <a href="javascript:stocker.components.backToList(rootDir, upPath)" id="backAnchor" class="navbar-item"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="navbar-item" id="directory_name_area"></h1>
+    </div>
+  </nav>
+
 <p>
 <img src="" name="coverart" width="120" height="120">
 <!-- <audio src="" id="player" autobuffer>
@@ -138,29 +142,5 @@ Type: <input type="radio" name="type" value="wav">wav <input type="radio" name="
 </p>
 
 <div id="music_list">音楽ファイルが見つかりません。</div>
-
-<script type="text/javascript">
-<!--
-errorCoverart();
-var player_timer = document.getElementById('AudioTimer');
-
-// 再生可能形式チェック
-if      (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }
-else if (support_ogg == 'maybe' || support_ogg == 'probably') { document.controller.type[2].checked = true; }
-else if (support_wav == 'maybe' || support_wav == 'probably') { document.controller.type[0].checked = true; }
-
-// CoverArt
-if (document.coverart.addEventListener) {
-  document.coverart.addEventListener("error", errorCoverart, false);
-  document.coverart.addEventListener("abort", errorCoverart, false);
-} else if (document.coverart.attachEvent) {  // for InternetExplorer
-  document.coverart.attachEvent("onerror", errorCoverart);
-  document.coverart.attachEvent("onabort", errorCoverart);
-}
-
-const params = jsUtils.url.getRawParams();
-getDirectoryList(params.dir, params.file, 0, 0, musicList);
--->
-</script>
 </body>
 </html>
