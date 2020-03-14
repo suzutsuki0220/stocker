@@ -27,6 +27,10 @@ window.addEventListener("load", function(event) {
     });
 });
 
+function closeBurger() {
+    render.bulma.components.switchNavBurger(document.querySelectorAll('.navbar-burger')[0], false);
+}
+
 function setScreenSize() {
     var s_width = 640;
     var s_height = 480;
@@ -87,11 +91,6 @@ function toggleCheckFile(value) {
             }
         }
     }
-}
-
-function toggleNavBurger() {
-    document.getElementById('burger').classList.toggle('is-active');
-    document.getElementById('menu').classList.toggle('is-active');
 }
 
 function displayDirectoryProperty(directory) {

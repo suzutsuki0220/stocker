@@ -22,7 +22,7 @@
   <nav class="navbar is-link is-fixed-top" role="navigation">
     <div class="navbar-brand"> <!-- left side of the navbar -->
       <h1 class="navbar-item" id="fileNameArea">Stocker</h1>
-      <a role="button" class="navbar-burger burger" aria-label="menu" data-target="menu" id="burger" href="javascript:toggleNavBurger()">
+      <a role="button" class="navbar-burger burger" aria-label="menu" data-target="menu" id="burger">
         <span aria-hidden="true"></span><!-- It has to contain three empty spans (bulma needs)-->
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -45,14 +45,14 @@
         </div>
       </div>
       <div class="navbar-end">
-        <a class="navbar-item" title="新規フォルダー作成" href="javascript:modalContent.newFolder(root, path)"><i class="fas fa-folder-plus"></i></a>
-        <a class="navbar-item" title="アップロード"><i class="fas fa-upload"></i></a>
-        <a class="navbar-item" title="ダウンロード" href="javascript:downloadWork()"><i class="fas fa-download"></i></a>
-        <a class="navbar-item" title="削除" href="javascript:modalContent.remove()"><i class="fas fa-trash"></i></a>
-        <a class="navbar-item" title="名前の変更" href="javascript:modalContent.rename()"><i class="fas fa-file-signature"></i></a>
-        <a class="navbar-item" title="移動" href="javascript:modalContent.move()"><i class="fas fa-shipping-fast"></i></a>
-        <a class="navbar-item" title="全て選択" href="javascript:allCheck(true)"><i class="fas fa-check-square"></i>ALL</a>
-        <a class="navbar-item" title="選択解除" href="javascript:allCheck(false)"><i class="fas fa-square"></i>CLEAR</a>
+        <a class="navbar-item" title="新規フォルダー作成" href="javascript:modalContent.newFolder(root, path)" onClick="closeBurger()"><i class="fas fa-folder-plus"></i></a>
+        <a class="navbar-item" title="アップロード" onClick="closeBurger()"><i class="fas fa-upload"></i></a>
+        <a class="navbar-item" title="ダウンロード" href="javascript:downloadWork()" onClick="closeBurger()"><i class="fas fa-download"></i></a>
+        <a class="navbar-item" title="削除" href="javascript:modalContent.remove()" onClick="closeBurger()"><i class="fas fa-trash"></i></a>
+        <a class="navbar-item" title="名前の変更" href="javascript:modalContent.rename()" onClick="closeBurger()"><i class="fas fa-file-signature"></i></a>
+        <a class="navbar-item" title="移動" href="javascript:modalContent.move()" onClick="closeBurger()"><i class="fas fa-shipping-fast"></i></a>
+        <a class="navbar-item" title="全て選択" href="javascript:allCheck(true)" onClick="closeBurger()"><i class="fas fa-check-square"></i>ALL</a>
+        <a class="navbar-item" title="選択解除" href="javascript:allCheck(false)" onClick="closeBurger()"><i class="fas fa-square"></i>CLEAR</a>
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link is-arrowless"><i class="fas fa-ellipsis-v"></i></a>
           <div class="navbar-dropdown is-right" id="action-drop-list"></div>

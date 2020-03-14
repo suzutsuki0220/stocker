@@ -1,4 +1,4 @@
-function baseCard(elem, dirs) {
+function baseCard(dirs) {
     let cards = new Array();
 
     for (let i=0; i<dirs.length; i++) {
@@ -10,11 +10,11 @@ function baseCard(elem, dirs) {
         cards.push({content: a.outerHTML});
     }
 
-    render.bulma.components.card(elem, cards);
+    return render.bulma.components.card(cards);
 }
 
 window.addEventListener("load", function(event) {
     getRootDirectories(function(directory) {
-        baseCard(document.getElementById('base_list'), directory);
+        document.getElementById('base_list').appendChild(baseCard(directory));
     });
 });
