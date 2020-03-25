@@ -15,7 +15,6 @@ use File::Basename;
 
 use ParamPath;
 use HTML_Elem;
-use FileOperator;
 
 our $BASE_DIR_CONF;
 our $STOCKER_CGI;
@@ -77,6 +76,20 @@ sub error() {
   exit(0);
 }
 
+sub isFilename {
+  my $self = shift;
+  my ($name) = @_;
+
+  if (! $name || length($name) > 247) {  # Limitation of Windows Explorer
+    return undef;
+  }
+  if ($name =~ /[\\\/:\?<>|\"\*]/) {
+    return undef;
+  }
+
+  return 1;
+}
+
 ########################
 ### 新規フォルダ作成 ###
 ########################
@@ -85,7 +98,7 @@ sub do_newfolder() {
   my $path = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('file'))));
 
   # ファイル名チェック
-  if (! FileOperator->isFilename("$newname")) {
+  if (! isFilename("$newname")) {
     &error("指定された名前は使用できません。別の名前に変更してください");
   }
 
@@ -155,7 +168,7 @@ sub save_upfile
 
   if ($form->param($formname)) {
     my $fname = basename(decode('utf-8', scalar($form->param($formname))));
-    if ($fname && FileOperator->isFilename($fname)) {
+    if ($fname && isFilename($fname)) {
       my $fh = $form->upload($formname);
       my $newfile = encode('utf-8', "${base}${path}/" . $fname);
       if (-e "${newfile}") {
@@ -181,7 +194,7 @@ sub do_rename() {
   my $dest_path = encode('utf-8', "${orig_dir}/${dest_name}");
 
   # ファイル名チェック
-  if (! FileOperator->isFilename($dest_name)) {
+  if (! isFilename($dest_name)) {
     &error("指定された名前は使用できません。別の名前に変更してください");
   }
 

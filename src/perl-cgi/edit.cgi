@@ -13,7 +13,6 @@ use File::Path;
 
 use ParamPath;
 use HTML_Elem;
-use FileOperator;
 
 our $BASE_DIR_CONF;
 our $STOCKER_CGI;
