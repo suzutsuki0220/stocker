@@ -9,7 +9,7 @@ class ModalContent {
     _footerButtons(okFunc, cancelFunc) {
         const foot = document.createElement('span');
         foot.appendChild(render.bulma.button.okButton('実行', function() {
-            //disableActionButton();
+            render.bulma.button.loading(this);
             okFunc();
         }));
         foot.appendChild(render.bulma.button.cancelButton('キャンセル', function() {
