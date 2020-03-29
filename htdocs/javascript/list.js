@@ -57,20 +57,6 @@ function allCheck(flag = true) {
     }
 }
 
-function isAnyChecked() {
-    var files = document.getElementsByName("file");
-
-    if (files) {
-        for (var i=0; i<files.length; i++) {
-            if (files[i].checked === true) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 function toggleCheckFile(value) {
     var files = document.getElementsByName("file");
     if (files) {
@@ -99,7 +85,7 @@ function displayDirectoryProperty(directory) {
 }
 
 function actionClickedIcon (action, clicked_path) {
-    if (isAnyChecked()) {
+    if (getCheckedFiles().length > 0) {
         toggleCheckFile(clicked_path);
     } else {
         if (action.indexOf('dir:') === 0) {
