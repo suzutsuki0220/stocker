@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "migrate": "mkdir -p db&&sequelize db:migrate",
+    "rollback": "sequelize db:migrate:undo",
     "test": "jest",
     "get-update": "npm-check-updates -u && npm update && npm update --save-dev"
   },
