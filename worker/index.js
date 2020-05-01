@@ -56,4 +56,7 @@ function fetchJob() {
     });
 }
 
+/*** start ***/
+
+fetchJob();
 setInterval(fetchJob, 60000);
