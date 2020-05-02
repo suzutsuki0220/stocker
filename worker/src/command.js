@@ -1,5 +1,6 @@
 const {execFile} = require('child_process');
 const jsUtils = require('js-utils');
+const jobStatus = require('./jobstatus.js');
 
 function errorWork(code, stderr) {
     console.log(stderr);
@@ -21,9 +22,12 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
 
     let stdout = "";
     let stderr = "";
+    let hasError = false;
 
     process.on('error', (err) => {
-        console.error(`Failed to start process - ${err}`);
+        hasError = true;
+        //console.error(`Failed to start process - ${err}`);
+        onError(jobStatus.canceled, JSON.stringify(err));
     });
 
     process.stdout.on('data', (data) => {
@@ -36,6 +40,10 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
     });
 
     process.on('close', (code) => {
+        if (hasError) {
+            return;
+        }
+
         if (code === 0) {
             onSuccess(stdout);
         } else {

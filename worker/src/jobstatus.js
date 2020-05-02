@@ -1,4 +1,5 @@
 module.exports = {
+    canceled: -4,
     pending: -3,
     queued: -2,
     running: -1,
