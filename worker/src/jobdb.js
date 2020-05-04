@@ -5,14 +5,33 @@ function onError(error) {
     console.warn(error);
 }
 
-module.exports.craete = function(command, options) {
-    db.jobs.create({
-        command: command,
-        options: options
+module.exports.create = function(jobs) {
+    if (!Array.isArray(jobs)) {
+        jobs = new Array(jobs);
+    }
+
+    jobs.forEach(job => {
+        db.jobs.create({
+            cmdgroup: job.cmdgroup,
+            command: job.command,
+            options: job.options,
+            queue: job.queue
+        });
     });
 };
 
-module.exports.get = function(onGet) {
+module.exports.get = function(onGet, id = NaN) {
+    db.jobs.findOne({
+        where: {
+            id: id
+        },
+        order: [['id', 'ASC']]
+    }).then(job => {
+        onGet(job ? job.get() : null);
+    }).catch(onError);
+};
+
+module.exports.fetch = function(onGet) {
     db.jobs.findOne({
         where: {
             status: jobStatus.queued

@@ -1,3 +1,5 @@
+const express = require('express');
+const http = require('http');
 const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 
@@ -11,6 +13,8 @@ if (! configPath) {
     process.exit(1);
 }
 */
+
+const port = 3030;
 
 function getArgArray(argString) {
     if (!argString) {
@@ -27,7 +31,7 @@ function fetchJob() {
     }
 
     console.debug("fetch job");
-    jobdb.get(function(result) {
+    jobdb.fetch(function(result) {
         if (!result) {
             console.debug("no jobs");
             return;
@@ -57,6 +61,11 @@ function fetchJob() {
 }
 
 /*** start ***/
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+require('./routes/converts.route.js')(app);
+http.createServer(app).listen(port);
 
+// child process
 fetchJob();
 setInterval(fetchJob, 60000);
