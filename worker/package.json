@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "js-utils": "git+https://github.com/suzutsuki0220/jsUtils.git",
     "nodaemon": "0.0.5",
     "sequelize": "^5.21.7",
     "sqlite3": "^4.2.0",
