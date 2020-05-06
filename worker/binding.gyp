@@ -1,10 +1,16 @@
 {
   "targets": [
     {
-      "target_name": "addon",
-      "sources": [ "native/addon.cpp" ],
+      "target_name": "stockerlib",
+      "cflags!": [ "-fno-exceptions" ],
+      "cflags_cc!": [ "-fno-exceptions" ],
+      "sources": [ "native/stockerlib.cpp" ],
       "defines" : [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
-      "include_dirs" : [ "<!@(node -p \"require( 'node-addon-api' ).include\")" ]
+      'libraries': [ "../../src/common/libstockercommon.a" ],
+      "include_dirs" : [
+        "<!@(node -p \"require('node-addon-api').include\")",
+        "../src/common/Inc"
+      ]
     }
   ]
 }

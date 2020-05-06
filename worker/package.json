@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "build:native": "node-gyp rebuild",
     "start": "node index.js",
@@ -14,15 +15,15 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
-    "express": "^4.17.1",
-    "jest": "^25.3.0",
-    "nodaemon": "0.0.5",
+    "jest": "^26.0.1",
     "npm-check-updates": "^4.1.2",
-    "sequelize": "^5.21.6",
-    "sequelize-cli": "^5.5.1",
-    "sqlite3": "^4.1.1"
+    "sequelize-cli": "^5.5.1"
   },
   "dependencies": {
-    "uuid": "^7.0.3"
+    "express": "^4.17.1",
+    "nodaemon": "0.0.5",
+    "sequelize": "^5.21.7",
+    "sqlite3": "^4.2.0",
+    "uuid": "^8.0.0"
   }
 }
