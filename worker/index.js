@@ -5,16 +5,17 @@ const jobdb = require('./src/jobdb.js');
 
 var running = false;
 
-/*
-const configPath = process.env.STOCKER_CONF;
+let config;
+try {
+    config = require('./src/config-file.js').load('/converter.conf');
 
-if (! configPath) {
-    console.warn("cannot get environment value STOCKER_CONF");
+    if (isNaN(config.worker_port)) {
+        throw new Error('worker port setting not found');
+    }
+} catch(error) {
+    console.warn(error.message);
     process.exit(1);
 }
-*/
-
-const port = 3030;
 
 function getArgArray(argString) {
     if (!argString) {
@@ -30,10 +31,10 @@ function fetchJob() {
         return;
     }
 
-    console.debug("fetch job");
+    //console.debug("fetch job");
     jobdb.fetch(function(result) {
         if (!result) {
-            console.debug("no jobs");
+            //console.debug("no jobs");
             return;
         }
 
@@ -64,7 +65,7 @@ function fetchJob() {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 require('./routes/converts.route.js')(app);
-http.createServer(app).listen(port);
+http.createServer(app).listen(config.worker_port);
 
 // child process
 fetchJob();

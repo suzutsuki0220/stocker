@@ -45,12 +45,12 @@ function loadConfig(data) {
     return ret;
 }
 
-module.exports.load = function() {
+module.exports.load = function(file) {
     if (!configPath) {
-        throw "failed to get STOCKER_CONF environment value";
+        throw new Error("failed to get STOCKER_CONF from environment value");
     }
 
-    const buffer = fs.readFileSync(configPath + '/converter.conf', 'utf8');
+    const buffer = fs.readFileSync(configPath + file, 'utf8');
 
-    console.log(loadConfig(buffer));
+    return loadConfig(buffer);
 };
