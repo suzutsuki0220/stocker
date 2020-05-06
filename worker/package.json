@@ -9,7 +9,7 @@
     "start": "node index.js",
     "migrate": "mkdir -p db&&sequelize db:migrate",
     "rollback": "sequelize db:migrate:undo",
-    "test": "jest",
+    "test": "STOCKER_CONF=./test/config jest",
     "get-update": "npm-check-updates -u && npm update && npm update --save-dev"
   },
   "author": "",
@@ -25,5 +25,8 @@
     "sequelize": "^5.21.7",
     "sqlite3": "^4.2.0",
     "uuid": "^8.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
