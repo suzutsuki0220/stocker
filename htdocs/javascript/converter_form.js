@@ -9,7 +9,25 @@ let filename, upPath, upRealPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_copy', 'v_map', 'volume', 'weight'];
+const enc_params = ['a_codec', 'a_option', 'a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_copy', 'v_map', 'volume', 'weight'];
+
+const encodeFormats = {
+    video: [
+        ["mts", "MPEG-TS (MPEG-2 Transport Stream)"],
+        ["mp4", "MPEG4 / QuickTime"],
+        ["dvd", "DVD-VIDEO (MPEG2)"],
+        ["webm", "WebM"],
+        ["ogv", "Ogg Video"],
+        ["wmv", "Windows Media(WMVv8)"],
+        ["asf", "ASF (Advanced / Active Streaming Format)"]
+    ],
+    audio: [
+        ["wav", "WAV / WAVE (Waveform Audio)"],
+        ["flac", "raw FLAC (Audio)"],
+        ["mp3", "MP3 (MPEG audio layer 3)"],
+        ["aac", "raw ADTS AAC (Advanced Audio Coding)"]
+    ]
+};
 
 window.addEventListener("load", function(event) {
     params = jsUtils.url.getRawParams();
@@ -40,6 +58,38 @@ window.addEventListener("load", function(event) {
 
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
+
+function setFormOption(options, value) {
+    for (let i=0; i<options.length; i++) {
+        if (options[i].value === value) {
+            options[i].selected = true;
+            return;
+        }
+    }
+}
+
+function resetForm() {
+    document.enc_setting.v_copy.checked = false;
+    document.enc_setting.a_copy.checked = false;
+
+    document.enc_setting.v_option.value = "";
+    document.enc_setting.a_option.value = "";
+
+    setFormOption(document.enc_setting.aspect_set.options, "none");
+    document.enc_setting.aspect_numerator.value = "";
+    document.enc_setting.aspect_denominator.value = "";
+
+    document.enc_setting.pass2.checked = false;
+    document.enc_setting.r.value = 29.97;
+    document.enc_setting.deinterlace.checked = true;
+}
+
+function presetAudio(bitrate) {
+    document.enc_setting.ac[0].checked = true;  // Stereo
+    document.enc_setting.cutoff.value = 0;
+    setFormOption(document.enc_setting.ar.options, "");  // Original
+    setFormOption(document.enc_setting.ab.options, String(bitrate));
+}
 
 function makeMultiEditForm() {
     if (files.length > 1) {
@@ -97,20 +147,22 @@ function makeEncodeQuery() {
 }
 
 function addJob() {
-    const ajax = jsUtils.ajax;
+    document.getElementById('sStatus').innerHTML = "登録中...";
+    const formUri = jsUtils.url.apart(window.location.href);
 
-    ajax.init();
-    ajax.setOnLoading(function() {
-        document.getElementById('sStatus').innerHTML = "登録中...";
-    });
-    ajax.setOnSuccess(function() {
-        document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
-    });
-    ajax.setOnError(function(httpRequest) {
-        document.getElementById('sStatus').innerHTML = "ERROR: " + httpRequest.status;
-    });
-
-    ajax.post(stockerConfig.uri.converter.form, makeEncodeQuery());
+    jsUtils.fetch.request(
+        {uri: formUri.scheme + "://" + formUri.host + stockerConfig.uri.converter.worker_api,
+         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+         body: makeEncodeQuery(),
+         mode: 'cors',
+         method: 'POST',
+         format: 'json'
+        }, function(data) {
+            document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
+        }, function(error) {
+            document.getElementById('sStatus').innerHTML = "ERROR: " + error.message;
+        }
+    );
 }
 
 // 隠している部分を表示する

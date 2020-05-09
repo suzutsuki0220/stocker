@@ -68,65 +68,57 @@
 ソースの場所: <span id="source_location"></span>
 <script type="text/javascript">
 <!--
-  function changeEncodeParameter() {
-    var checked_format = "unknown";
-    var i;
-    for(i=0;i<document.enc_setting.format.options.length;i++){
-      if( document.enc_setting.format.options[i].selected ) {
-        checked_format = document.enc_setting.format.options[i].value;
-        break;
-      }
-    }
+  function presetNoConvertMts() {
+    resetForm();
+    setFormOption(document.enc_setting.format.options, "mts");
 
-    if( checked_format == 'mts' ) {
-      document.enc_setting.v_copy.checked = true;
-      document.enc_setting.a_copy.checked = false;
-      document.enc_setting.ar.options[0].selected = true;  // Original
-      document.enc_setting.ab.options[1].selected = true;  // 256kbps
-    } else if ( checked_format == 'H.264' ) {
-      document.enc_setting.v_copy.checked = false;
-      document.enc_setting.a_copy.checked = false;
-      document.enc_setting.ar.options[0].selected = true;  // Original
-      document.enc_setting.ab.options[4].selected = true;  // 128kbps
-    }
+    document.enc_setting.v_copy.checked = true;
+
+    setFormOption(document.enc_setting.a_codec.options, "ac3");
+    document.enc_setting.a_option.value = "-strict experimental";
+    presetAudio(256);
+  }
+
+  function setH264() {
+    setFormOption(document.enc_setting.format.options, "mp4");
+    document.enc_setting.pass2.checked = true;
+
+    setFormOption(document.enc_setting.v_codec.options, "libx264");
+    document.enc_setting.v_option.value = "-nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
+
+    setFormOption(document.enc_setting.a_codec.options, "libfdk_aac");
+    document.enc_setting.a_option.value = "-profile:a aac_he -afterburner 1 -strict experimental";
+    presetAudio(128);
   }
 
   function presetVga() {
+    resetForm();
+    setH264();
     document.enc_setting.save_aspect.checked = false;
     document.enc_setting.s_w.value = 640;
     document.enc_setting.s_h.value = 480;
-    document.enc_setting.r.value = 29.97;
     document.enc_setting.b.value = 1500;
   }
 
   function presetSdwide() {
+    resetForm();
+    setH264();
     document.enc_setting.save_aspect.checked = false;
-    document.enc_setting.s_w.value = 640;
-    document.enc_setting.s_h.value = 360;
-    document.enc_setting.r.value = 29.97;
+    document.enc_setting.s_w.value = 720;
+    document.enc_setting.s_h.value = 480;
     document.enc_setting.b.value = 1500;
+    setFormOption(document.enc_setting.aspect_set.options, "setdar");
+    document.enc_setting.aspect_numerator.value = 16;
+    document.enc_setting.aspect_denominator.value = 9;
   }
 
   function preset720p() {
+    resetForm();
+    setH264();
     document.enc_setting.save_aspect.checked = false;
     document.enc_setting.s_w.value = 1280;
     document.enc_setting.s_h.value = 720;
-    document.enc_setting.r.value = 29.97;
     document.enc_setting.b.value = 4000;
-  }
-
-  function presetAudNormal() {
-    document.enc_setting.ac[0].checked = true;  // Stereo
-    document.enc_setting.ar.options[1].selected = true;  // Original
-    document.enc_setting.ab.options[4].selected = true;  // 128kbps
-    document.enc_setting.cutoff.value = 16000;
-  }
-
-  function presetAudHigh() {
-    document.enc_setting.ac[0].checked = true;  // Stereo
-    document.enc_setting.ar.options[0].selected = true;  // Original
-    document.enc_setting.ab.options[1].selected = true;  // 256kbps
-    document.enc_setting.cutoff.value = 0;
   }
 
   function openTimerSelector(elem, f_num) {
@@ -166,59 +158,74 @@
 <input type="button" name="add_time_sel" onClick="addTimeSel()" value="追加">
 </div>
 </fieldset><br>
-ファイルフォーマット <select name="format" onchange="changeEncodeParameter()">
-<optgroup label="Video">
 
+<div class="field is-horizontal">
+  <div class="field-label is-normal">
+    <label class="label">プリセット</label>
+  </div>
+  <div class="field-body">
+    <div class="field is-grouped">
+      <p class="control">
+        <a class="button" onClick="presetNoConvertMts()">MTS 無変換</a>
+      </p>
+      <p class="control">
+        <a class="button" onClick="presetVga()">H.264 SD(4:3)</a>
+      </p>
+      <p class="control">
+        <a class="button" onClick="presetSdwide()">H.264 SD(16:9)</a>
+      </p>
+      <p class="control">
+        <a class="button" onClick="preset720p()">H.264 720p</a>
+      </p>
+    </div>
+  </div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label is-normal">
+    <label class="label">ファイルフォーマット</label>
+  </div>
+  <div class="field-body">
+    <div class="select">
+      <select name="format" size=1>
+        <optgroup label="Video">
 <script type="text/javascript">
-  const encode_video_types = [
-    ["H.264", "H.264 (mp4)"],
-    ["mts", "MPEG-TS"],
-    ["dvd", "DVD-VIDEO (MPEG2)"],
-    ["mpeg4", "MPEG4"],
-    ["webm", "WebM"],
-    ["ogv", "ogv"],
-    ["wmv", "Windows Media(WMVv8)"],
-    ["asf", "asf(WMVv7)"],
-    ["I-Frame", "Iフレーム(画像)"],
-    ["HighLight", "HighLight(画像)"]
-  ];
-
-  for (let i=0; i<encode_video_types.length; i++) {
-    const e = encode_video_types[i];
-    document.write("<option value='" + e[0] + "'>" + e[1] + "</option>");
-  }
+  encodeFormats.video.forEach(format => {
+    document.write("<option value='" + format[0] + "'>" + format[1] + "</option>");
+  });
 </script>
-
-</optgroup>
-<optgroup label="Audio">
-
+    </optgroup>
+    <optgroup label="Audio">
 <script type="text/javascript">
-  const encode_audio_types = [
-    ["wav", "Wave (Audio)"],
-    ["flac", "flac (Audio)"],
-    ["mp3", "mp3 (Audio)"],
-    ["aac", "aac (Audio)"]
-  ];
-
-  for (let i=0; i<encode_audio_types.length; i++) {
-    const e = encode_audio_types[i];
-    document.write("<option value='" + e[0] + "'>" + e[1] + "</option>");
-  }
+  encodeFormats.audio.forEach(format => {
+    document.write("<option value='" + format[0] + "'>" + format[1] + "</option>");
+  });
 </script>
-
-</optgroup>
-<option value="copy">コピー (無変換)</option>
-</select><br>
-<input type="checkbox" name="pass2"> 2パスエンコード<br>
+        </optgroup>
+        <option value="copy">コピー (無変換)</option>
+      </select>
+    </div>
+  </div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label"></div>
+  <div class="field-body">
+    <label class="checkbox">
+      <input type="checkbox" name="pass2"> 2パスエンコード<br>
+    </label>
+  </div>
+</div>
 <br>
 <fieldset>
 <legend>映像設定</legend>
 <input type="checkbox" name="v_copy"> 変換しない<br>
-プリセット:
-<input type="button" name="preset_vga" value="SD(4:3)" onClick="presetVga()">
-<input type="button" name="preset_sdwide" value="SD(16:9)" onClick="presetSdwide()">
-<input type="button" name="preset_720p" value="720p" onClick="preset720p()">
-<br>
+コーデック <select name="v_codec" size=1>
+<option>libx264</option>
+<option>mpeg2video</option>
+<option>mpeg4</option>
+<option>vp8</option>
+<option>libtheora</option>
+</select><br>
+追加オプション <input type="text" name="v_option" size="50"><br>
 <input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
 <span id="TrimSel" style="display: none">
 <input type="button" name="preset_crop43" onClick="setPresetCrop43()" value="to 4:3">
@@ -323,10 +330,17 @@ weight
 <fieldset>
 <legend>音声設定</legend>
 <input type="checkbox" name="a_copy"> 変換しない<br>
-プリセット:
-<input type="button" name="preset_audio_high" value="高音質" onClick="presetAudHigh()">
-<input type="button" name="preset_audio_normal" value="標準" onClick="presetAudNormal()">
-<br>
+コーデック <select name="a_codec" size=1>
+  <option>ac3</option>
+  <option>libfdk_aac</option>
+  <option>libvorbis</option>
+  <option>flac</option>
+  <option>pcm_s16le</option>
+  <option>libmp3lame</option>
+  <option>wmav2</option>
+  <option>wmav1</option>
+</select><br>
+追加オプション <input type="text" name="a_option" size="50"><br>
 音声サンプリングレート <select name="ar"><option value="" selected>Original</option><option value="48000">48k</option><option value="44100">44.1k</option><option value="32000">32k</option><option value="24000">24k</option><option value="22050">22.05k</option></select>Hz<br>
 音声チャンネル <input type="radio" name="ac" value="2" checked>ステレオ <input type="radio" name="ac" value="1">モノラル<br>
 音声ビットレート <select name="ab"><option value="320">320</option><option value="256">256</option><option value="192">192</option><option value="160">160</option><option value="128" selected>128</option><option value="96">96</option><option value="64">64</option><option value="32">32</option></select>kbps<br>
