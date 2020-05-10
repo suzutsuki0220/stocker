@@ -72,7 +72,7 @@
     resetForm();
     setFormOption(document.enc_setting.format.options, "mts");
 
-    document.enc_setting.v_copy.checked = true;
+    document.enc_setting.v_convert[1].checked = true;  // 変換しない
 
     setFormOption(document.enc_setting.a_codec.options, "ac3");
     document.enc_setting.a_option.value = "-strict experimental";
@@ -201,7 +201,7 @@
   });
 </script>
         </optgroup>
-        <option value="copy">コピー (無変換)</option>
+        <!--<option value="copy">コピー (無変換)</option> -->
       </select>
     </div>
   </div>
@@ -217,7 +217,17 @@
 <br>
 <fieldset>
 <legend>映像設定</legend>
-<input type="checkbox" name="v_copy"> 変換しない<br>
+<div class="control">
+  <label class="radio">
+    <input type="radio" name="v_convert" value="convert" checked>変換する
+  </label>
+  <label class="radio">
+    <input type="radio" name="v_convert" value="copy">変換しない(Copy)
+  </label>
+  <label class="radio">
+    <input type="radio" name="v_convert" value="disable">映像なし
+  </label>
+</div>
 コーデック <select name="v_codec" size=1>
 <option>libx264</option>
 <option>mpeg2video</option>
@@ -329,7 +339,17 @@ weight
 </fieldset><br>
 <fieldset>
 <legend>音声設定</legend>
-<input type="checkbox" name="a_copy"> 変換しない<br>
+<div class="control">
+  <label class="radio">
+    <input type="radio" name="a_convert" value="convert" checked>変換する
+  </label>
+  <label class="radio">
+    <input type="radio" name="a_convert" value="copy">変換しない(Copy)
+  </label>
+  <label class="radio">
+    <input type="radio" name="a_convert" value="disable">音声なし
+  </label>
+</div>
 コーデック <select name="a_codec" size=1>
   <option>ac3</option>
   <option>libfdk_aac</option>

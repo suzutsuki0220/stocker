@@ -9,7 +9,7 @@ let filename, upPath, upRealPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_codec', 'a_option', 'a_copy', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_copy', 'v_map', 'volume', 'weight'];
+const enc_params = ['a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
 
 const encodeFormats = {
     video: [
@@ -69,8 +69,8 @@ function setFormOption(options, value) {
 }
 
 function resetForm() {
-    document.enc_setting.v_copy.checked = false;
-    document.enc_setting.a_copy.checked = false;
+    document.enc_setting.v_convert[0].checked = true;
+    document.enc_setting.a_convert[0].checked = true;
 
     document.enc_setting.v_option.value = "";
     document.enc_setting.a_option.value = "";
