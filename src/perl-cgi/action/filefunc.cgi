@@ -17,7 +17,6 @@ use ParamPath;
 use HTML_Elem;
 
 our $BASE_DIR_CONF;
-our $STOCKER_CGI;
 our $TRASH_PATH;
 our $TRASH_IGNORE_PATTERN;
 our $TRASH_IGNORE_SIZE;
@@ -27,10 +26,6 @@ my $form = eval{new CGI};
 my $mode = scalar($form->param('mode'));
 my @files = $form->multi_param('file');
 my $base_name = HTML_Elem->url_decode(scalar($form->param('dir')));
-my $encoded_dir = HTML_Elem->url_encode(encode('utf-8', $base_name));
-
-my $target = scalar($form->param('target'));
-my $back_link = "${STOCKER_CGI}?file=" . $target . "&dir=" . $encoded_dir;
 
 my $base;
 eval {
@@ -46,8 +41,6 @@ if( ${mode} eq "do_delete" ) {
   &do_delete();
 } elsif( ${mode} eq "do_newfolder" ) {
   &do_newfolder();
-} elsif( ${mode} eq "upload" ) {
-  &form_upload();
 } elsif( ${mode} eq "do_upload" ) {
   &do_upload();
 } elsif( ${mode} eq "do_rename" ) {
@@ -77,7 +70,6 @@ sub error() {
 }
 
 sub isFilename {
-  my $self = shift;
   my ($name) = @_;
 
   if (! $name || length($name) > 247) {  # Limitation of Windows Explorer
@@ -98,7 +90,7 @@ sub do_newfolder() {
   my $path = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('file'))));
 
   # ファイル名チェック
-  if (! isFilename("$newname")) {
+  if (! &isFilename("$newname")) {
     &error("指定された名前は使用できません。別の名前に変更してください");
   }
 
@@ -120,66 +112,29 @@ sub do_newfolder() {
 ##############################
 ### ファイルのアップロード ###
 ##############################
-sub form_upload() {
-  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
-
-  my $html = <<EOF;
-<h1>ファイルのアップロード</h1>
-作成先: $path<br>
-<form action="$ENV{'SCRIPT_NAME'}" name="f1" method="POST" onSubmit="return confirm_act('アップロード')" enctype="multipart/form-data">
-ファイル1: <input type="file" name="file1"><br>
-ファイル2: <input type="file" name="file2"><br>
-ファイル3: <input type="file" name="file3"><br>
-ファイル4: <input type="file" name="file4"><br>
-ファイル5: <input type="file" name="file5"><br>
-
-<input type="hidden" name="mode" value="do_upload">
-<input type="hidden" name="target" value="${target}">
-<input type="hidden" name="dir" value="${encoded_dir}">
-
-<br>
-<input type="submit" name="b_submit" value="実行">
-<input type="button" name="b_cancel" value="キャンセル" onClick="jump('${back_link}')">
-</form>
-EOF
-  print encode('utf-8', $html);
-
-  HTML_Elem->tail();
-}
-
 sub do_upload() {
-  eval {
-    &save_upfile('file1');
-    &save_upfile('file2');
-    &save_upfile('file3');
-    &save_upfile('file4');
-    &save_upfile('file5');
-    &success();
-  };
-  if ($@) {
-    &error("アップロードに失敗しました - $@");
-  }
-}
+  my $formname = "file";
 
-sub save_upfile
-{
-  my ($formname) = @_;
-  my $path = decode('utf-8', ParamPath->urlpath_decode($target));
-
-  if ($form->param($formname)) {
-    my $fname = basename(decode('utf-8', scalar($form->param($formname))));
-    if ($fname && isFilename($fname)) {
-      my $fh = $form->upload($formname);
-      my $newfile = encode('utf-8', "${base}${path}/" . $fname);
-      if (-e "${newfile}") {
-        die "[" . HTML_Elem->escape_html($fname) . "]は既に存在します";
-      } else {
-        copy ($fh, "${newfile}");
-      }
-    } else {
-      die "[" . HTML_Elem->escape_html($fname) . "]は不正なファイル名です";
-    }
+  if (! $form->param($formname)) {
+    &error("ファイルデータがありません");
   }
+
+  my $path = decode('utf-8', ParamPath->urlpath_decode(scalar($form->param('file'))));
+  my $new_name = basename(decode('utf-8', scalar($form->param($formname))));
+
+  if (! &isFilename($new_name)) {
+    &error("[" . HTML_Elem->escape_html($new_name) . "]は不正なファイル名です");
+  }
+
+  my $fh = $form->upload($formname);
+  my $new_path = encode('utf-8', "${base}${path}/" . $new_name);
+  if (-e "${new_path}") {
+    &error("[" . HTML_Elem->escape_html($new_name) . "]は既に存在します");
+  } else {
+    copy ($fh, "${new_path}");
+  }
+
+  &success();
 }
 
 ################
@@ -194,7 +149,7 @@ sub do_rename() {
   my $dest_path = encode('utf-8', "${orig_dir}/${dest_name}");
 
   # ファイル名チェック
-  if (! isFilename($dest_name)) {
+  if (! &isFilename($dest_name)) {
     &error("指定された名前は使用できません。別の名前に変更してください");
   }
 
