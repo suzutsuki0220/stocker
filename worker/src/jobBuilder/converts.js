@@ -27,11 +27,19 @@ const format = {
     }
 };
 
+function getFirstSourceName(params, source) {
+    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
+        return jsUtils.file.getNameFromPath(source.replace(/^concat:(.*?)\|.*?$/, '$1'));
+    } else {
+        return jsUtils.file.getNameFromPath(source);
+    }
+}
+
 function makeOutputName(source, params, pass ,ssIndex) {
     let ret = "";
 
     if (params.set_position === "true") {
-        ret += params['ss' + ssIndex].replace(/[:\.]g/, '');
+        ret += params['ss' + ssIndex].replace(/[:\.]/g, '');  // eslint-disable-line no-useless-escape
         ret += "_";
     }
 
@@ -39,7 +47,7 @@ function makeOutputName(source, params, pass ,ssIndex) {
         ret += pass + "pass_";
     }
 
-    const name = jsUtils.file.getNameFromPath(source);
+    const name = getFirstSourceName(params, source);
     ret += name.filename + '.' + format[params.format].extension;
 
     return ret;
@@ -302,8 +310,7 @@ function getSourcePath(stockerLib, params) {
 
 function destinationPath(stockerLib, params, source) {
     const destBase = stockerLib.decodeUrlPath(params.out_root, params.out_path);
-    const name = jsUtils.file.getNameFromPath(source);
-
+    const name = getFirstSourceName(params, source);
     return {
         converting: destBase + '/__CONVERTING__' + name.filename,
         done: destBase + '/' + name.filename
