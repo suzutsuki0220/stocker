@@ -1,22 +1,43 @@
 /* global stocker, jsUtils, render getCheckedFiles encoded_dir selectedParam makeDirectorySelector */
 
-class ModalContent {
+class ModalContent {  // eslint-disable-line no-unused-vars
     constructor(onClose) {
         this.onClose = onClose;
-        this._actionForm = new ActionForm();
+        this._actionForm = new ActionForm();  // eslint-disable-line no-undef
     }
 
     _footerButtons(okFunc, cancelFunc) {
         const foot = document.createElement('span');
-        foot.appendChild(render.bulma.button.okButton('実行', function() {
-            render.bulma.button.loading(this);
+        const self = this;
+
+        const okButton = render.bulma.button.okButton('実行', function() {
+            self._disableFooterButton(true);
             okFunc();
-        }));
-        foot.appendChild(render.bulma.button.cancelButton('キャンセル', function() {
+        });
+        okButton.id = 'footerOkButton';
+        foot.appendChild(okButton);
+
+        const cancelButton = render.bulma.button.cancelButton('キャンセル', function() {
+            self._disableFooterButton(false);
             cancelFunc();
-        }));
+        });
+        cancelButton.id = 'footerCancelButton';
+        foot.appendChild(cancelButton);
 
         return foot;
+    }
+
+    _disableFooterButton(flag = true) {
+        const okButton = document.getElementById('footerOkButton');
+        const cancelButton = document.getElementById('footerCancelButton');
+
+        render.bulma.button.loading(okButton, flag);
+        cancelButton.disabled = flag;
+    }
+
+    _openModal(modalElem) {
+        document.body.appendChild(modalElem);
+        render.bulma.active.switch(modalElem, true);
     }
 
     _closeModal(modalElem) {
@@ -68,10 +89,11 @@ class ModalContent {
 
     _onError(message) {
         window.alert(message);
+        this._disableFooterButton(false);
     }
 
     newFolder(root, path) {
-        var cardElement;
+        let cardElement;
         const cardContent = document.createElement('form');
         cardContent.innerHTML = 'フォルダー名: <input type="text" name="foldername" value="">';
 
@@ -87,11 +109,29 @@ class ModalContent {
         });
 
         cardElement = render.bulma.components.modalCard("新規フォルダー作成", cardContent, foot, false);
-        document.body.appendChild(cardElement);
-        render.bulma.active.switch(cardElement, true);
+        self._openModal(cardElement);
 
         cardContent.foldername.value = "";
         cardContent.foldername.focus();
+    }
+
+    upload() {
+        let cardElement;
+        const cardContent = document.createElement('form');
+        cardContent.innerHTML =
+            '<div class="field is-horizontal"><div class="field-label"><label class="label">ファイルを選択</label></div><div class="field-body"><div class="field"><p class="control"><input type="file" multiple /></p></div></div></div>' +
+            '<p>画像・動画を選択<input type="file" accept="image/*" multiple /></p>' +
+            '<p>カメラで撮影<input type="file" accept="image/*" capture="environment" /></p>';
+
+        const self = this;
+        const foot = this._footerButtons(function() {
+            //ok
+        }, function() {
+            self._closeModal(cardElement);
+        });
+
+        cardElement = render.bulma.components.modalCard("アップロード", cardContent, foot, false);
+        self._openModal(cardElement);
     }
 
     remove() {
@@ -101,7 +141,7 @@ class ModalContent {
             return;
         }
 
-        var cardElement;
+        let cardElement;
         const cardContent = document.createElement('div');
         cardContent.innerHTML = '<span id="filesArea"></span>';
 
@@ -118,8 +158,7 @@ class ModalContent {
         });
 
         cardElement = render.bulma.components.modalCard("削除", cardContent, foot, false);
-        document.body.appendChild(cardElement);
-        render.bulma.active.switch(cardElement, true);
+        self._openModal(cardElement);
 
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('filesArea').innerHTML = "読み込み中...";
@@ -138,7 +177,7 @@ class ModalContent {
         const cardContent = document.createElement('div');
         cardContent.innerHTML = '<span id="renameFormArea"></span>';
 
-        var cardElement;
+        let cardElement;
         const self = this;
         const foot = this._footerButtons(function() {
             let renameWorks = new Array();
@@ -153,8 +192,7 @@ class ModalContent {
         });
 
         cardElement = render.bulma.components.modalCard("名前の変更", cardContent, foot, false);
-        document.body.appendChild(cardElement);
-        render.bulma.active.switch(cardElement, true);
+        self._openModal(cardElement);
 
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('renameFormArea').innerHTML = "読み込み中...";
@@ -183,7 +221,7 @@ class ModalContent {
             return;
         }
 
-        var cardElement;
+        let cardElement;
         const cardContent = document.createElement('div');
         cardContent.innerHTML =
         '<h2 class="subtitle is-6">移動先:</h2>' +
@@ -203,8 +241,7 @@ class ModalContent {
         });
 
         cardElement = render.bulma.components.modalCard("移動", cardContent, foot, false);
-        document.body.appendChild(cardElement);
-        render.bulma.active.switch(cardElement, true);
+        self._openModal(cardElement);
 
         makeDirectorySelector(document.getElementById('destinationSelectorArea'));
         //document.getElementById('filesCountArea').innerText = files.length;
