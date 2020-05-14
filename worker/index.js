@@ -42,17 +42,17 @@ function fetchJob() {
         jobdb.setRunning(result.id);
 
         command.exec(result.command, getArgArray(result.options),
-            function(stdout) {
+            function(stdout, stderr) {
                 jobdb.setFinish(result.id, {
                     code: 0,
                     stdout: stdout,
-                    stderr: ""
+                    stderr: stderr
                 });
                 running = false;
-            }, function(code, stderr) {
+            }, function(code, stdout, stderr) {
                 jobdb.setFinish(result.id, {
                     code: code,
-                    stdout: "",
+                    stdout: stdout,
                     stderr: stderr
                 });
                 running = false;

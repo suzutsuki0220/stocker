@@ -45,9 +45,9 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
         }
 
         if (code === 0) {
-            onSuccess(stdout);
+            onSuccess(stdout, stderr);
         } else {
-            onError(code, stderr);
+            onError(code, stdout, stderr);
         }
     });
 };
