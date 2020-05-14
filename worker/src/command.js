@@ -27,7 +27,7 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
     process.on('error', (err) => {
         hasError = true;
         //console.error(`Failed to start process - ${err}`);
-        onError(jobStatus.canceled, JSON.stringify(err));
+        onError(jobStatus.canceled, JSON.stringify(err), stderr);
     });
 
     process.stdout.on('data', (data) => {
@@ -47,7 +47,7 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
         if (code === 0) {
             onSuccess(stdout, stderr);
         } else {
-            onError(code, stdout, stderr);
+            onError(isNaN(code) ? jobStatus.canceled :  code, stdout, stderr);
         }
     });
 };
