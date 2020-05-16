@@ -9,7 +9,7 @@ let filename, upPath, upRealPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
+const enc_params = ['a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crf', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'encode_type', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'preset', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
 
 const encodeFormats = {
     video: [
@@ -69,19 +69,24 @@ function setFormOption(options, value) {
 }
 
 function resetForm() {
-    document.enc_setting.v_convert[0].checked = true;
-    document.enc_setting.a_convert[0].checked = true;
+    const form = document.enc_setting;
+    form.v_convert[0].checked = true;
+    form.a_convert[0].checked = true;
 
-    document.enc_setting.v_option.value = "";
-    document.enc_setting.a_option.value = "";
+    form.v_option.value = "";
+    form.a_option.value = "";
 
-    setFormOption(document.enc_setting.aspect_set.options, "none");
-    document.enc_setting.aspect_numerator.value = "";
-    document.enc_setting.aspect_denominator.value = "";
+    setFormOption(form.aspect_set.options, "none");
+    form.aspect_numerator.value = "";
+    form.aspect_denominator.value = "";
 
-    document.enc_setting.pass2.checked = false;
-    document.enc_setting.r.value = 29.97;
-    document.enc_setting.deinterlace.checked = true;
+    form.pass2.checked = false;
+    form.save_aspect.checked = false;
+    form.encode_type[0].checked = true;
+    setFormOption(form.preset.options, "medium");
+    form.crf.value = "";
+    form.r.value = "29.97";
+    form.deinterlace.checked = true;
 }
 
 function presetAudio(bitrate) {

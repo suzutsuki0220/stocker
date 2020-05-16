@@ -144,8 +144,16 @@ function setVideoOption(params) {
         } else {
             ret.push(params.v_codec);
 
-            ret.push('-b:v');
-            ret.push(params.b + 'k');
+            if (params.encode_type === 'crf') {
+                ret.push('-crf');
+                ret.push(params.crf);
+                ret.push('-preset');
+                ret.push(params.preset);
+            } else {
+                // bitrate
+                ret.push('-b:v');
+                ret.push(params.b + 'k');
+            }
             ret.push('-r');
             ret.push(params.r);
 

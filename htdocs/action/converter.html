@@ -91,10 +91,24 @@
     presetAudio(128);
   }
 
+  function setH265() {
+    setFormOption(document.enc_setting.format.options, "mp4");
+    document.enc_setting.pass2.checked = false;
+
+    setFormOption(document.enc_setting.v_codec.options, "libx265");
+    document.enc_setting.encode_type[1].checked = true;
+    document.enc_setting.crf.value = "22";
+    setFormOption(document.enc_setting.preset.options, "slow");
+    document.enc_setting.v_option.value = "-pix_fmt yuv420p -tag:v hvc1";
+
+    setFormOption(document.enc_setting.a_codec.options, "libfdk_aac");
+    document.enc_setting.a_option.value = "-profile:a aac_he -afterburner 1";
+    presetAudio(128);
+  }
+
   function presetVga() {
     resetForm();
     setH264();
-    document.enc_setting.save_aspect.checked = false;
     document.enc_setting.s_w.value = 640;
     document.enc_setting.s_h.value = 480;
     document.enc_setting.b.value = 1500;
@@ -103,7 +117,6 @@
   function presetSdwide() {
     resetForm();
     setH264();
-    document.enc_setting.save_aspect.checked = false;
     document.enc_setting.s_w.value = 720;
     document.enc_setting.s_h.value = 480;
     document.enc_setting.b.value = 1500;
@@ -114,11 +127,9 @@
 
   function preset720p() {
     resetForm();
-    setH264();
-    document.enc_setting.save_aspect.checked = false;
+    setH265();
     document.enc_setting.s_w.value = 1280;
     document.enc_setting.s_h.value = 720;
-    document.enc_setting.b.value = 4000;
   }
 
   function openTimerSelector(elem, f_num) {
@@ -175,7 +186,7 @@
         <a class="button" onClick="presetSdwide()">H.264 SD(16:9)</a>
       </p>
       <p class="control">
-        <a class="button" onClick="preset720p()">H.264 720p</a>
+        <a class="button" onClick="preset720p()">HEVC 720p</a>
       </p>
     </div>
   </div>
@@ -206,15 +217,6 @@
     </div>
   </div>
 </div>
-<div class="field is-horizontal">
-  <div class="field-label"></div>
-  <div class="field-body">
-    <label class="checkbox">
-      <input type="checkbox" name="pass2"> 2パスエンコード<br>
-    </label>
-  </div>
-</div>
-<br>
 <fieldset>
 <legend>映像設定</legend>
 <div class="control">
@@ -230,6 +232,7 @@
 </div>
 コーデック <select name="v_codec" size=1>
 <option>libx264</option>
+<option>libx265</option>
 <option>mpeg2video</option>
 <option>mpeg4</option>
 <option>vp8</option>
@@ -261,13 +264,23 @@
 <input type="checkbox" name="save_aspect" value="1" checked>比率を保持する<br>
 縦横比 <select name="aspect_set"><option value="none">設定しない</option><option value="setsar">SAR</option><option value="setdar">DAR</option></select> 比率<input type="text" name="aspect_numerator" size="4">/<input type="text" name="aspect_denominator" size="4"><br>
 フレームレート <input type="text" name="r"><br>
-動画ビットレート <input type="text" name="b" size="30">kbps&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="radio" name="encode_type" value="bitrate" checked>ビットレート <input type="text" name="b" size="30">kbps&nbsp;&nbsp;
+<input type="checkbox" name="pass2"> 2パスエンコード&nbsp;&nbsp;&nbsp;&nbsp;
 (ビットレートの目安: <span id="aimed_bitrate">---- kbps</span>
-&nbsp;&nbsp;動作:
-<input type="radio" name="move_freq" value="high">高度
-<input type="radio" name="move_freq" value="middle" checked>中度
-<input type="radio" name="move_freq" value="low">低度
-<input type="button" name="btn_calc_bitrate_aim" value="算出" onClick="calcBitrateAim()">)<br>
+&nbsp;&nbsp;動作: <input type="radio" name="move_freq" value="high">高度 <input type="radio" name="move_freq" value="middle" checked>中度 <input type="radio" name="move_freq" value="low">低度 <input type="button" name="btn_calc_bitrate_aim" value="算出" onClick="calcBitrateAim()">)<br>
+<input type="radio" name="encode_type" value="crf">CRF <input type="text" name="crf" size="10">&nbsp&nbsp
+プリセット <select name="preset" size="1">
+  <option>ultrafast</option>
+  <option>superfast</option>
+  <option>veryfast</option>
+  <option>faster</option>
+  <option>fast</option>
+  <option selected>medium</option>
+  <option>slow</option>
+  <option>slower</option>
+  <option>veryslow</option>
+  <option>placebo</option>
+</select>
 <fieldset><legend>画質調整</legend>
 <input type="checkbox" name="enable_adjust" onChange="actionAdjEnable(); showElem(getElementById('adjustForm'), document.enc_setting.enable_adjust)"> 画質調整する<br>
 <div id="adjustForm" style="display: none">

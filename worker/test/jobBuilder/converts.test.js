@@ -32,6 +32,7 @@ describe('jobBuilder/converts', () => {
         enable_adjust: 'false',
         enable_crop: 'false',
         enable_pad: 'false',
+        encode_type: 'bitrate',
         format: 'mts',
         gamma: '1.0',
         gg: '1.0',
@@ -134,6 +135,17 @@ describe('jobBuilder/converts', () => {
                 expect(job[2].command).toBe('/path/to/ffmpeg');
                 expect(job[2].options).toBe("[\"-i\",\"/path/to/cache/bb/日本語ディレクトリ/新しい動画.mp4\",\"-y\",\"-threads\",\"2\",\"-pass\",\"2\",\"-passlogfile\",\"/output/share/__CONVERTING__新しい動画/passlog.dat\",\"-map\",\"0:0\",\"-c:v\",\"libx264\",\"-b:v\",\"15536k\",\"-r\",\"29.97\",\"-vf\",\"yadif=0:-1,scale=1920:1080\",\"-map\",\"0:1\",\"-c:a\",\"ac3\",\"-ac\",\"2\",\"-b:a\",\"128k\",\"-f\",\"mpegts\",\"/output/share/__CONVERTING__新しい動画/2pass_新しい動画.mts\"]");
                 expect(job[2].queue).toBe(0);
+            });
+        });
+        test('crf encoding', () => {
+            const params = Object.assign({}, basicParams);
+            params.format = 'mp4';
+            params.encode_type = 'crf';
+            params.crf = '28';
+            params.preset = 'veryfast';
+            return jobBuilder.converts(params).then(job => {
+                expect(job[1].command).toBe('/path/to/ffmpeg');
+                expect(job[1].options).toBe("[\"-i\",\"/path/to/cache/bb/日本語ディレクトリ/新しい動画.mp4\",\"-y\",\"-threads\",\"2\",\"-map\",\"0:0\",\"-c:v\",\"libx264\",\"-crf\",\"28\",\"-preset\",\"veryfast\",\"-r\",\"29.97\",\"-vf\",\"yadif=0:-1,scale=1920:1080\",\"-map\",\"0:1\",\"-c:a\",\"ac3\",\"-ac\",\"2\",\"-b:a\",\"128k\",\"-f\",\"mp4\",\"/output/share/__CONVERTING__新しい動画/新しい動画.mp4\"]");
             });
         });
         test('no encoding video', () => {
