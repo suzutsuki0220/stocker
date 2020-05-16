@@ -236,6 +236,9 @@ function converterCommand(cmdgroup, options, params, output) {
     opt.push(format[params.format].format);
     opt.push(output);
 
+    opt.push('</dev/null');
+    opt.push('2>' + output + '.output.txt');
+
     return {
         cmdgroup: cmdgroup,
         command: config.ffmpeg_cmd,

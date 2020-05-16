@@ -1,4 +1,4 @@
-const {execFile} = require('child_process');
+const {spawn} = require('child_process');
 const jsUtils = require('js-utils');
 const jobStatus = require('./jobstatus.js');
 
@@ -14,11 +14,12 @@ function isWindows() {
 module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
     const encoding = isWindows() ? 'Shift-JIS' : 'utf-8';
     let option = {
-        encoding: encoding
+        encoding: encoding,
+        shell: true
     };
 //    option.uid = 80;
 //    option.gid = 80;
-    const process = execFile(command, args, option);
+    const process = spawn(command, args, option);
 
     let stdout = "";
     let stderr = "";
@@ -32,11 +33,11 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
 
     process.stdout.on('data', (data) => {
         //console.log('stdout >> ' + data);
-        stdout = jsUtils.japanese.toUTF8(data);
+        stdout += jsUtils.japanese.toUTF8(data.toString());
     });
 
     process.stderr.on('data', (data) => {
-        stderr = jsUtils.japanese.toUTF8(data);
+        stderr += jsUtils.japanese.toUTF8(data.toString());
     });
 
     process.on('close', (code) => {
