@@ -63,7 +63,7 @@ module.exports.setFinish = function(id, commandResults) {
     }
 
     db.jobs.update({
-        status: commandResults.code,
+        status: isNaN(commandResults.code) ? jobStatus.canceled : commandResults.code,
         stdout: commandResults.stdout,
         stderr: commandResults.stderr
     }, {

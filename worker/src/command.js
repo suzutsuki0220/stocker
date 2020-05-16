@@ -48,7 +48,7 @@ module.exports.exec = function(command, args, onSuccess, onError = errorWork) {
         if (code === 0) {
             onSuccess(stdout, stderr);
         } else {
-            onError(isNaN(code) ? jobStatus.canceled :  code, stdout, stderr);
+            onError(code, stdout, stderr);
         }
     });
 };
