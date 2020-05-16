@@ -274,6 +274,9 @@ function composeEncodeCommand(cmdgroup, source, dest, params) {
             options.push(config.encoding_thread);
         }
 
+        options.push('-progress');
+        options.push(dest + '/_progress.txt');
+
         if (params.set_position === "true") {
             options.push('-t');
             options.push(params['t' + ssIndex]);
