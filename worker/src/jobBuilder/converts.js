@@ -1,3 +1,4 @@
+const fs = require('fs');
 const uuid = require('uuid');
 const jsUtils = require('js-utils');
 
@@ -28,11 +29,11 @@ const format = {
 };
 
 function getFirstSourceName(params, source) {
-    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
-        return jsUtils.file.getNameFromPath(source.replace(/^concat:(.*?)\|.*?$/, '$1'));
-    } else {
+//    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
+//        return jsUtils.file.getNameFromPath(source.replace(/^concat:(.*?)\|.*?$/, '$1'));
+//    } else {
         return jsUtils.file.getNameFromPath(source);
-    }
+//    }
 }
 
 function makeOutputName(source, params, pass ,ssIndex) {
@@ -258,6 +259,12 @@ function composeEncodeCommand(cmdgroup, source, dest, params) {
             options.push('-ss');
             options.push(params['ss' + ssIndex]);
         }
+        if (params.multi_editmode === 'combine') {
+            options.push('-f');
+            options.push('concat');
+            options.push('-safe');
+            options.push('0');
+        }
         options.push('-i');
         options.push(source);
         options.push('-y');
@@ -305,15 +312,15 @@ function getSourcePath(stockerLib, params) {
     });
     decoded.sort();
 
-    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
-        // 選択された複数のファイルを連結するケース
-        let ret = "concat:";
-        for (let i=0; i<decoded.length; i++) {
-            ret += (i !== 0) ? '|' : '';
-            ret += decoded[i];
-        }
+    if (params.multi_editmode === 'combine') {
+        const listFile = '/tmp/' + jsUtils.file.getNameFromPath(decoded[0]).filename + '.txt';
+        let data = "";
+        decoded.forEach(file => {
+            data += 'file \'' + file + '\'\n';
+        });
 
-        return [ret];
+        fs.writeFileSync(listFile, data, {encoding: 'utf8', flag: 'w'});
+        return [listFile];
     }
 
     return decoded;
@@ -353,6 +360,15 @@ module.exports = function(params) {
             });
 
             ret = ret.concat(composeEncodeCommand(cmdgroup, source, dest.converting, params));
+
+            if (params.multi_editmode === 'combine') {
+                ret.push({
+                    cmdgroup: cmdgroup,
+                    command: "/usr/bin/rm",
+                    options: "['-f', '" + source + "']",
+                    queue: 0
+                });
+            }
 
             // rename temporary to destination file
             ret.push({
