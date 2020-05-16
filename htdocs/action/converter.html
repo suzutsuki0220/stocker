@@ -81,9 +81,10 @@
 
   function setH264() {
     setFormOption(document.enc_setting.format.options, "mp4");
-    document.enc_setting.pass2.checked = true;
 
     setFormOption(document.enc_setting.v_codec.options, "libx264");
+    document.enc_setting.encode_type[1].checked = true;
+    document.enc_setting.crf.value = "20";
     document.enc_setting.v_option.value = "-nr 600 -mbd 2 -coder 0 -bufsize 1024k -g 15 -qmin 12";
 
     setFormOption(document.enc_setting.a_codec.options, "libfdk_aac");
@@ -93,7 +94,6 @@
 
   function setH265() {
     setFormOption(document.enc_setting.format.options, "mp4");
-    document.enc_setting.pass2.checked = false;
 
     setFormOption(document.enc_setting.v_codec.options, "libx265");
     document.enc_setting.encode_type[1].checked = true;
@@ -111,7 +111,6 @@
     setH264();
     document.enc_setting.s_w.value = 640;
     document.enc_setting.s_h.value = 480;
-    document.enc_setting.b.value = 1500;
   }
 
   function presetSdwide() {
@@ -119,7 +118,6 @@
     setH264();
     document.enc_setting.s_w.value = 720;
     document.enc_setting.s_h.value = 480;
-    document.enc_setting.b.value = 1500;
     setFormOption(document.enc_setting.aspect_set.options, "setdar");
     document.enc_setting.aspect_numerator.value = 16;
     document.enc_setting.aspect_denominator.value = 9;
