@@ -1,4 +1,6 @@
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const uuid = require('uuid');
 const jsUtils = require('js-utils');
 
@@ -307,16 +309,17 @@ function isMultipleChoice(params) {
 }
 
 function getSourcePath(stockerLib, params) {
-    const path = Array.isArray(params.path) ? params.path : [params.path];
+    const pathArray = Array.isArray(params.path) ? params.path : [params.path];
 
     const decoded = new Array();
-    path.forEach(p => {
+    pathArray.forEach(p => {
         decoded.push(stockerLib.decodeUrlPath(params.root, p));
     });
     decoded.sort();
 
     if (params.multi_editmode === 'combine') {
-        const listFile = '/tmp/' + jsUtils.file.getNameFromPath(decoded[0]).filename + '.txt';
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stockerWorker-'));
+        const listFile = path.join(tmpDir, jsUtils.file.getNameFromPath(decoded[0]).filename + '.txt');
         let data = "";
         decoded.forEach(file => {
             data += 'file \'' + file + '\'\n';
@@ -365,10 +368,11 @@ module.exports = function(params) {
             ret = ret.concat(composeEncodeCommand(cmdgroup, source, dest.converting, params));
 
             if (params.multi_editmode === 'combine') {
+                const tmpDir = jsUtils.file.getNameFromPath(source).dirname;
                 ret.push({
                     cmdgroup: cmdgroup,
                     command: "/usr/bin/rm",
-                    options: "['-f', '" + source + "']",
+                    options: "['-rf', '" + tmpDir + "']",
                     queue: 0
                 });
             }
