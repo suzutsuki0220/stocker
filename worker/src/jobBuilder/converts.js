@@ -206,8 +206,10 @@ function setAudioOption(params) {
         } else {
             ret.push(params.a_codec);
 
-            ret.push('-ac');
-            ret.push(params.ac);
+            if (params.ac) {
+                ret.push('-ac');
+                ret.push(params.ac);
+            }
             if (params.ar) {
                 ret.push('-ar');
                 ret.push(params.ar);

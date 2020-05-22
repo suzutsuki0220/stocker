@@ -90,8 +90,7 @@ function resetForm() {
 }
 
 function presetAudio(bitrate) {
-    document.enc_setting.ac[0].checked = true;  // Stereo
-    document.enc_setting.cutoff.value = 0;
+    document.enc_setting.ac[1].checked = true;  // Stereo
     setFormOption(document.enc_setting.ar.options, "");  // Original
     setFormOption(document.enc_setting.ab.options, String(bitrate));
 }
