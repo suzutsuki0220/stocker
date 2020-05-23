@@ -1,7 +1,8 @@
 {
   "development": {
     "dialect": "sqlite",
-    "storage": "db/encodejob.sqlite3"
+    "storage": "db/encodejob.sqlite3",
+    "logging": false
   },
   "test": {
     "dialect": "sqlite",
