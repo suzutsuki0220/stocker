@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build:native": "node-gyp rebuild",
-    "start": "STOCKER_CONF=/var/www/stocker/conf node index.js",
+    "start": "STOCKER_CONF=/var/www/stocker/conf nodemon index.js",
     "migrate": "mkdir -p db&&sequelize db:migrate",
     "rollback": "sequelize db:migrate:undo",
     "test": "STOCKER_CONF=./test/config jest",
@@ -23,7 +23,8 @@
     "express": "^4.17.1",
     "js-utils": "git+https://github.com/suzutsuki0220/jsUtils.git",
     "nodaemon": "0.0.5",
-    "sequelize": "^5.21.7",
+    "nodemon": "^2.0.4",
+    "sequelize": "^5.21.9",
     "sqlite3": "^4.2.0",
     "uuid": "^8.0.0"
   },
