@@ -57,6 +57,7 @@ function fetchJob() {
                         stdout: stdout,
                         stderr: stderr
                     });
+                    jobdb.setCancel(result.cmdgroup);
                     running = false;
                 }
             );
