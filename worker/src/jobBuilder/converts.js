@@ -241,13 +241,10 @@ function converterCommand(cmdgroup, options, params, output) {
     opt.push(format[params.format].format);
     opt.push(output);
 
-    opt.push('</dev/null');
-    opt.push('2>' + output + '.output.txt');
-
     return {
         cmdgroup: cmdgroup,
         command: config.ffmpeg_cmd,
-        options: JSON.stringify(opt),
+        options: opt,
         queue: (params.v_convert === 'copy') ? 1 : 0
     };
 }
@@ -363,7 +360,7 @@ module.exports = function(params) {
             ret.push({
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mkdir",
-                options: "['-p', '" +  dest.converting + "']",
+                options: ['-p', dest.converting],
                 queue: 0
             });
 
@@ -374,7 +371,7 @@ module.exports = function(params) {
                 ret.push({
                     cmdgroup: cmdgroup,
                     command: "/usr/bin/rm",
-                    options: "['-rf', '" + tmpDir + "']",
+                    options: ['-rf', tmpDir],
                     queue: 0
                 });
             }
@@ -383,7 +380,7 @@ module.exports = function(params) {
             ret.push({
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mv",
-                options: "['" + dest.converting + "', '" + dest.done + "']",
+                options: [dest.converting, dest.done],
                 queue: 0
             });
         });

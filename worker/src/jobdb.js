@@ -5,6 +5,27 @@ function onError(error) {
     console.warn(error);
 }
 
+function escapeSingleQuote(string) {
+    return string.replace(/'/, "\\'");
+}
+
+function getArrayString(array) {
+    if (array.length === 0) {
+        return '';
+    }
+
+    let ret = '';
+    for (const str of array) {
+        if (ret) {
+            ret += ', ';
+        }
+
+        ret += '\'"' + escapeSingleQuote(str) + '"\'';
+    }
+
+    return '[' + ret + ']';
+}
+
 module.exports.create = function(jobs) {
     if (!Array.isArray(jobs)) {
         jobs = new Array(jobs);
@@ -14,7 +35,7 @@ module.exports.create = function(jobs) {
         db.jobs.create({
             cmdgroup: job.cmdgroup,
             command: job.command,
-            options: job.options,
+            options: getArrayString(job.options),
             queue: job.queue
         });
     });
