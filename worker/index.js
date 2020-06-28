@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
+const jobStatus = require('./src/jobstatus.js');
 
 var running = false;
 
@@ -41,23 +42,32 @@ function fetchJob() {
         running = true;
         jobdb.setRunning(result.id);
 
-        command.exec(result.command, getArgArray(result.options),
-            function(stdout, stderr) {
-                jobdb.setFinish(result.id, {
-                    code: 0,
-                    stdout: stdout,
-                    stderr: stderr
-                });
-                running = false;
-            }, function(code, stdout, stderr) {
-                jobdb.setFinish(result.id, {
-                    code: code,
-                    stdout: stdout,
-                    stderr: stderr
-                });
-                running = false;
-            }
-        );
+        try {
+            command.exec(result.command, getArgArray(result.options),
+                function(stdout, stderr) {
+                    jobdb.setFinish(result.id, {
+                        code: jobStatus.exitSuccess,
+                        stdout: stdout,
+                        stderr: stderr
+                    });
+                    running = false;
+                }, function(code, stdout, stderr) {
+                    jobdb.setFinish(result.id, {
+                        code: code,
+                        stdout: stdout,
+                        stderr: stderr
+                    });
+                    running = false;
+                }
+            );
+        } catch(error) {
+            jobdb.setFinish(result.id, {
+                code: jobStatus.canceled,
+                stderr: error.message
+            });
+            jobdb.setCancel(result.cmdgroup);
+            running = false;
+        }
     });
 }
 

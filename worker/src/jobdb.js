@@ -74,6 +74,18 @@ module.exports.setFinish = function(id, commandResults) {
     }).catch(onError);
 };
 
+module.exports.setCancel = function(groupId) {
+    db.jobs.update({
+        status: jobStatus.canceled,
+    }, {
+        where: {
+            cmdgroup: groupId,
+            status: jobStatus.queued
+        }
+    }).then(() => {
+    }).catch(onError);
+}
+
 module.exports.cleanup = function() {
     db.jobs.destroy({
         where: {
