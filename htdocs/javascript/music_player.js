@@ -86,6 +86,14 @@ function printMusicList() {
     document.getElementById('music_list').innerHTML = content;
 }
 
+function getTrackNumber(t) {
+    if (!t.track) {
+        return t.num; // tagにtrack noがなければファイル名順の番号を使う
+    }
+
+    return t.disc_number ? parseInt(t.disc_number) * 100 + parseInt(t.track) : parseInt(t.track);
+}
+
 function addTagInfoToTrack(data, idx) {
     const get_names = [
         "title",
@@ -95,6 +103,7 @@ function addTagInfoToTrack(data, idx) {
         "comment",
         "track",
         "genre",
+        "disc_number",
         "bitrate",
         "sample_rate",
         "channels",
@@ -104,7 +113,7 @@ function addTagInfoToTrack(data, idx) {
     track[idx] = Object.assign(track[idx], jsUtils.xml.getDataInElements(data, "tag", get_names)[0]);
 
     track[idx].title    = track[idx].title || track[idx].name;  // tagにtitleがなければファイル名を使う
-    track[idx].track_no = track[idx].track || track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
+    track[idx].track_no = getTrackNumber(track[idx]);
     track[idx].getProperty = true;
 
     music_count++;
