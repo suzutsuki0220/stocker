@@ -94,19 +94,3 @@ stockerで扱うディレクトリとcacheディレクトリ、trashディレク
 * /var/www/stocker  (/var/www はDESTDIR)
 * /var/www/html/stocker  (DOCS_DIRに指定したディレクトリ)
 * /var/www/cgi-bin/stocker  (CGI_DIRに指定したディレクトリ)
-
-# 使用ライブラリ
-
-* [ccchart](https://github.com/toshirot/ccchart)
-* [Font Awesome](https://fontawesome.com/)
-* [Oxygen-icons](http://www.oxygen-icons.org)
-
-# ライセンス表示
-
-* Bulma by Jeremy Thomas.  
-  Code copyright 2019 Jeremy Thomas. Code released under the MIT license.
-* Font Awesome is licensed under the SIL OFL 1.1 License
-* Icons made by [Start](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
-* Icons made by [goal](https://www.flaticon.com/authors/prettycons) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
-* Icons made by [car](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
-* Icons made by [caution](https://www.flaticon.com/authors/vignesh-oviyan) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
