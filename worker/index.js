@@ -26,8 +26,8 @@ function getArgArray(argString) {
     return Function('"use strict"; return(' + argString + ')')();
 }
 
-function fetchJob() {
-    if (running === true) {
+function fetchJob(forceRunning = false) {
+    if (forceRunning === false && running === true) {
         console.debug("skip fetch during another job running");
         return;
     }
@@ -36,6 +36,7 @@ function fetchJob() {
     jobdb.fetch(function(result) {
         if (!result) {
             //console.debug("no jobs");
+            running = false;
             return;
         }
 
@@ -50,7 +51,7 @@ function fetchJob() {
                         stdout: stdout,
                         stderr: stderr
                     });
-                    running = false;
+                    fetchJob(true);
                 }, function(code, stdout, stderr) {
                     jobdb.setFinish(result.id, {
                         code: code,
@@ -58,7 +59,7 @@ function fetchJob() {
                         stderr: stderr
                     });
                     jobdb.setCancel(result.cmdgroup);
-                    running = false;
+                    fetchJob(true);
                 }
             );
         } catch(error) {
@@ -67,7 +68,7 @@ function fetchJob() {
                 stderr: error.message
             });
             jobdb.setCancel(result.cmdgroup);
-            running = false;
+            fetchJob(true);
         }
     });
 }
