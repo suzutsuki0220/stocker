@@ -69,20 +69,16 @@ conv(string &str)
     str = ptr_out;
 }
 
-const char*
-extractFileProperty(TagLib::File *file) {
-    std::stringstream ss;
-
+const void
+extractFileProperty(std::stringstream &ss, TagLib::File *file) {
     if (!file || file->properties().isEmpty()) {
-        return "";
+        return;
     }
 
     const TagLib::PropertyMap prop = file->properties();
     if (prop.contains("DISCNUMBER")) {
         ss << "  <disc_number>" << prop["DISCNUMBER"].toString() << "</disc_number>"   << endl;
     }
-
-    return ss.str().c_str();
 }
 
 int
@@ -116,7 +112,7 @@ outputAudioTags(cgi_util *cgi, TagLib::FileRef &f)
     ss << "  <track>"   << tag->track()             << "</track>"   << endl;
     ss << "  <genre>"   << cgi->escapeHtml(genre)   << "</genre>"   << endl;
 
-    ss << extractFileProperty(f.file());
+    extractFileProperty(ss, f.file());
 
     if (f.audioProperties()) {
         TagLib::AudioProperties *properties = f.audioProperties();
