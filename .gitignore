@@ -49,3 +49,4 @@ pids
 *.pid.lock
 
 dist/
+worker/build/
