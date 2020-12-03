@@ -5,9 +5,16 @@ const enabledSourceMap = (MODE === 'development');
 
 const path = require('path');
 
+const contentBase = [
+    path.join(__dirname, 'htdocs'),
+    path.join(__dirname, 'dist')
+];
+const outPath = path.resolve(__dirname, 'dist/bundle');
+
 module.exports = env => {
     const HTDOCS_ROOT = (env && env.htdocs_root) ? env.htdocs_root : '/stocker';
     const CGI_ROOT = (env && env.cgi_root) ? env.cgi_root : '/cgi-bin/stocker';
+    const API_DUMMY = (env && env.api_dummy) ? env.api_dummy : 'no';
 
     console.log("webpack config: htdocs_root -> " + HTDOCS_ROOT);
     console.log("webpack config: cgi_root -> " + CGI_ROOT);
@@ -20,7 +27,7 @@ module.exports = env => {
             stocker: './webpack/index.js'
         },
         output: {
-            path: path.join(__dirname, 'dist/bundle'),
+            path: outPath,
             filename: '[name].js'
         },
         module: {
@@ -53,9 +60,13 @@ module.exports = env => {
                     options: {
                         multiple: [
                             { search: '%htdocs_root%', replace: HTDOCS_ROOT },
-                            { search: '%cgi_root%', replace: CGI_ROOT }
+                            { search: '%cgi_root%', replace: CGI_ROOT },
+                            { search: '%api_dummy%', replace: API_DUMMY },
                         ]
                     }
+                }, {
+                    test: /\.ts$/,
+                    use: 'ts-loader'
                 }, {
                     // 画像など
                     test: /\.(gif|png|jpg)$/,
@@ -66,9 +77,20 @@ module.exports = env => {
                 }
             ],
         },
+        devServer: {
+            contentBase: contentBase,
+            watchContentBase: true,
+            inline: true,
+            hot: true
+        },
         externals: [
             'fs',
             'xmlhttprequest'
         ],
+        resolve: {
+            extensions: [
+                '.ts', '.js'
+            ]
+        }
     };
 };
