@@ -78,7 +78,7 @@ function fetchJob(forceRunning = false) {
 /*** start ***/
 const app = express();
 app.use(express.urlencoded({ extended: true }));
-require('./routes/filer.route.js')(app);
+require('./routes/storage.route.js')(app);
 require('./routes/converts.route.js')(app);
 
 // static contents

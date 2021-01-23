@@ -30,7 +30,7 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
 function getRootDirectories(callback) {
     jsUtils.fetch.request(
         {
-            uri: "/api/v1/filer/root-paths",
+            uri: "/api/v1/storage/root-paths",
             format: "json"
         }, function (json) {
             callback(json);
