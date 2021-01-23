@@ -29,7 +29,7 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
 
 function getRootDirectories(callback) {
     jsUtils.fetch.request(
-        {uri: stocker.uri.cgi_root + "/directory.cgi",
+        {uri: "/api/v1/filer/roots",
          format: "json"
         }, function(json) {
             callback(json);

@@ -78,7 +78,13 @@ function fetchJob(forceRunning = false) {
 /*** start ***/
 const app = express();
 app.use(express.urlencoded({ extended: true }));
+require('./routes/filer.route.js')(app);
 require('./routes/converts.route.js')(app);
+
+// static contents
+app.use(express.static('../htdocs'));
+app.use('/bundle', express.static('../dist/bundle'));
+
 http.createServer(app).listen(config.worker_port);
 
 // child process
