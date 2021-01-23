@@ -15,7 +15,6 @@
     "bindings": "^1.5.0",
     "html-render": "git+https://github.com/suzutsuki0220/htmlRender.git",
     "js-utils": "git+https://github.com/suzutsuki0220/jsUtils.git",
-    "log4js": "^6.3.0",
     "node-addon-api": "^3.0.2"
   },
   "author": "suzutsuki0220",
