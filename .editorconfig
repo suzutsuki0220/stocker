@@ -16,7 +16,7 @@ spaces_around_operators = true
 spaces_around_brackets = outside
 indent_brace_style = K&R
 
-[*.{htm,html,js,json,py}]
+[*.{css,htm,html,js,json,py}]
 indent_style = space
 indent_size = 4
 
