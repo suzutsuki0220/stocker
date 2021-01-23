@@ -17,10 +17,10 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
     const param = stocker.components.makePathParams(encoded_dir, url_path, option);
 
     jsUtils.ajax.init();
-    jsUtils.ajax.setOnSuccess(function(httpRequest) {
+    jsUtils.ajax.setOnSuccess(function (httpRequest) {
         receive_func(httpRequest.responseXML);
     });
-    jsUtils.ajax.setOnError(function(httpRequest) {
+    jsUtils.ajax.setOnError(function (httpRequest) {
         console.warn("ERROR: " + stocker.uri.cgi.get_dir + " param: " + param + " status: " + httpRequest.status);
     });
 
@@ -29,11 +29,12 @@ function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
 
 function getRootDirectories(callback) {
     jsUtils.fetch.request(
-        {uri: "/api/v1/filer/roots",
-         format: "json"
-        }, function(json) {
+        {
+            uri: "/api/v1/filer/root-paths",
+            format: "json"
+        }, function (json) {
             callback(json);
-        }, function(error) {
+        }, function (error) {
             console.warn(error);
         }
     );
@@ -47,7 +48,7 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
     select.addEventListener("change", onChanged);
 
     var fragment = document.createDocumentFragment();
-    for (var i=0; i<directory.length; i++) {
+    for (var i = 0; i < directory.length; i++) {
         var directoryList = document.createElement('option');
         if (directory[i].encoded === selected) {
             directoryList.selected = true;
@@ -64,16 +65,16 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
 
 function newDirectoryAnchor(div, height) {
     const flexStyle = "display: flex; flex-direction: row; justify-content: space-between";
-    const elm = render.basic.element.newNode('div', '', {style: flexStyle});
-    const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', {style: 'display: flex; align-items: center'});
-    anchor.onclick = function() {
-        const modalContent = new ModalContent(function() {
+    const elm = render.basic.element.newNode('div', '', { style: flexStyle });
+    const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', { style: 'display: flex; align-items: center' });
+    anchor.onclick = function () {
+        const modalContent = new ModalContent(function () {
             refreshDirectorySelector(div, selectedParam.root, selectedParam.path, height);
         });
         modalContent.newFolder(selectedParam.root, selectedParam.path);
     };
     elm.appendChild(
-        render.basic.element.newNode('div', 'フォルダー', {style: 'display: flex'})
+        render.basic.element.newNode('div', 'フォルダー', { style: 'display: flex' })
     );
     elm.appendChild(anchor);
 
@@ -90,7 +91,7 @@ function directoryListStyleFactory(elem, height) {
 }
 
 function refreshDirectorySelector(div, root, path, height) {
-    getDirectoryList(root, path, 0, 0, function(data) {
+    getDirectoryList(root, path, 0, 0, function (data) {
         let filesArray = new Array();
         let directoriesArray = new Array();
 
@@ -105,7 +106,7 @@ function refreshDirectorySelector(div, root, path, height) {
 
         const nameArea = document.createElement('div');
         const upButton = document.createElement('a');
-        upButton.onclick = function() {
+        upButton.onclick = function () {
             refreshDirectorySelector(div, root, properties.up_path, height);
         };
         upButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
@@ -141,11 +142,11 @@ function refreshDirectorySelector(div, root, path, height) {
             return;
         }
 
-        for (var i=0; i<elements.length; i++) {
+        for (var i = 0; i < elements.length; i++) {
             const e = elements[i];
             if (e.type === "DIRECTORY") {
                 const a = document.createElement('a');
-                a.onclick = function() {
+                a.onclick = function () {
                     refreshDirectorySelector(div, root, e.path, height);
                 };
                 a.innerHTML = e.name;
@@ -167,8 +168,8 @@ function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", heigh
 
     initSelectedParam();
     elem.innerHTML = "";
-    getRootDirectories(function(data) {
-        const rootSelector = makeRootSelector("", data, function() {
+    getRootDirectories(function (data) {
+        const rootSelector = makeRootSelector("", data, function () {
             refreshDirectorySelector(directorySelector, rootSelector.value, "", height)
         }, selectedRoot);
         div.appendChild(rootSelector);
