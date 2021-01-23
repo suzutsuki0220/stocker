@@ -1,10 +1,12 @@
 const express = require('express');
 const http = require('http');
+const log4js = require('log4js');
 const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 const jobStatus = require('./src/jobstatus.js');
 
-var running = false;
+let running = false;
+const logger = log4js.getLogger("stocker");
 
 let config;
 try {
@@ -13,8 +15,8 @@ try {
     if (isNaN(config.worker_port)) {
         throw new Error('worker port setting not found');
     }
-} catch(error) {
-    console.warn(error.message);
+} catch (error) {
+    logger.warn(error.message);
     process.exit(1);
 }
 
@@ -28,14 +30,14 @@ function getArgArray(argString) {
 
 function fetchJob(forceRunning = false) {
     if (forceRunning === false && running === true) {
-        console.debug("skip fetch during another job running");
+        logger.debug("skip fetch during another job running");
         return;
     }
 
-    //console.debug("fetch job");
-    jobdb.fetch(function(result) {
+    //logger.debug("fetch job");
+    jobdb.fetch(function (result) {
         if (!result) {
-            //console.debug("no jobs");
+            //logger.debug("no jobs");
             running = false;
             return;
         }
@@ -45,14 +47,14 @@ function fetchJob(forceRunning = false) {
 
         try {
             command.exec(result.command, getArgArray(result.options),
-                function(stdout, stderr) {
+                function (stdout, stderr) {
                     jobdb.setFinish(result.id, {
                         code: jobStatus.exitSuccess,
                         stdout: stdout,
                         stderr: stderr
                     });
                     fetchJob(true);
-                }, function(code, stdout, stderr) {
+                }, function (code, stdout, stderr) {
                     jobdb.setFinish(result.id, {
                         code: code,
                         stdout: stdout,
@@ -62,7 +64,7 @@ function fetchJob(forceRunning = false) {
                     fetchJob(true);
                 }
             );
-        } catch(error) {
+        } catch (error) {
             jobdb.setFinish(result.id, {
                 code: jobStatus.canceled,
                 stderr: error.message
