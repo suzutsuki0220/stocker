@@ -51,18 +51,20 @@ function getProperties(root, path, query) {
         up_path: path ? stockerLib.encodeUrlPath(root, fname.dirname) : ''
     };
 
-    const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
-    const from = Number(query.from) || 0;
-    const to = jsUtils.value.getMin(entries.length - 1, Number(query.to));
+    if (fs.statSync(decodedPath).isDirectory()) {
+        const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
+        const from = Number(query.from) || 0;
+        const to = jsUtils.value.getMin(entries.length - 1, Number(query.to));
 
-    for (let i = from; i <= to; i++) {
-        const childPath = decodedPath + '/' + entries[i].name;
-        elements.push(Object.assign({
-            name: entries[i].name,
-            path: stockerLib.encodeUrlPath(root, childPath),
-            type: getType(entries[i]),
-            num: i
-        }, getStats(childPath)));
+        for (let i = from; i <= to; i++) {
+            const childPath = decodedPath + '/' + entries[i].name;
+            elements.push(Object.assign({
+                name: entries[i].name,
+                path: stockerLib.encodeUrlPath(root, childPath),
+                type: getType(entries[i]),
+                num: i
+            }, getStats(childPath)));
+        }
     }
 
     return { properties: properties, elements: elements };
