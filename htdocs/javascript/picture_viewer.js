@@ -7,88 +7,75 @@ var images = new Array();
 
 let params, rootDir, upPath;
 
-window.addEventListener("load", function(event) {
+window.addEventListener("load", function (event) {
     params = jsUtils.url.getRawParams();
 
-    stocker.components.getFileProperties(params.dir, params.file, function(properties) {
+    stocker.components.getFileProperties(params.dir, params.file, function (properties) {
         document.title = properties.name;
         document.getElementById('fileNameArea').textContent = properties.name;
         filename = properties.name;
         getImageList(params.dir, properties.up_path);
 
         rootDir = params.dir;
-        upPath  = properties.up_path;
+        upPath = properties.up_path;
 
         setSrc({
             name: properties.name,
             path: params.file,
             video: stocker.supportTypes.browserPlayableMovie().test(properties.name) ? true : false
         });
-    }, function(error) {
+    }, function (error) {
         console.warn(error);
     });
 });
 
 function getImageList(base_name, path) {
-  try {
-    getDirectoryList(base_name, path, 0, 0, getImageFiles);
-  } catch(e) {
-     alert("ERROR: " + e.description);
-  }
+    try {
+        getDirectoryProperties(base_name, path, 0, 0, getImageFiles);
+    } catch (e) {
+        alert("ERROR: " + e.description);
+    }
 }
 
 function getImageFiles(data) {
-  const contents = data.getElementsByTagName('contents').item(0);
-  if (contents == null) {
-    alert("ERROR: image files list is NULL");
-    return;
-  }
-
-  const elements = contents.getElementsByTagName('element');
-  if (elements == null) {
-    alert("ERROR: mage list has no elements");
-    return;
-  }
-
-  for (var i=0; i<elements.length; i++) {
-    var name_elem = elements.item(i).getElementsByTagName('name');
-    var path_elem = elements.item(i).getElementsByTagName('path');
-    if (name_elem != null && path_elem != null) {
-      var name = name_elem.item(0).firstChild.data;
-      var path = path_elem.item(0).firstChild.data;
-
-      if (stocker.supportTypes.pattern.image.test(name) || stocker.supportTypes.browserPlayableMovie().test(name)) {
-        var img = new Object();
-
-        img.name = name;
-        img.path = path;
-        img.video = stocker.supportTypes.browserPlayableMovie().test(name) ? true : false;
-        images.push(img);
-      }
+    const elements = data.elements;
+    if (elements == null) {
+        alert("ERROR: mage list has no elements");
+        return;
     }
-  }
 
-  reloadImageList();
+    elements.forEach(function (e) {
+        const playable = stocker.supportTypes.browserPlayableMovie().test(e.name) ? true : false
+        if (stocker.supportTypes.pattern.image.test(e.name) || playable) {
+            images.push({
+                name: e.name,
+                path: e.path,
+                video: playable
+            });
+        }
+    });
+
+    reloadImageList();
 }
 
 function reloadImageList() {
-  var elm_num = 0;
+    var elm_num = 0;
 
-  for (var i=0; i<images.length; i++) {
-    const img = images[i];
-    if (img.name === filename) {
-      elm_num = i;
+    for (var i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (img.name === filename) {
+            elm_num = i;
+        }
     }
-  }
 
-  renewControlField(elm_num);
+    renewControlField(elm_num);
 }
 
 function renewControlField(index) {
-    document.getElementById('prevButton').onclick = function() {
+    document.getElementById('prevButton').onclick = function () {
         changeImage(index - 1);
     };
-    document.getElementById('nextButton').onclick = function() {
+    document.getElementById('nextButton').onclick = function () {
         changeImage(index + 1);
     };
 
@@ -177,9 +164,9 @@ function unsetLoading() {
 function onImageLoad() {
     const contentArea = document.getElementById('ContentArea');
     const area = document.getElementById('ImageArea');
-    const imageSize = {width: area.naturalWidth, height: area.naturalHeight};
-    const fitSize = jsUtils.image.getMaximumFitSize(imageSize, {width: contentArea.clientWidth, height: contentArea.clientHeight});
-    area.style.width  = String(fitSize.width) + "px";
+    const imageSize = { width: area.naturalWidth, height: area.naturalHeight };
+    const fitSize = jsUtils.image.getMaximumFitSize(imageSize, { width: contentArea.clientWidth, height: contentArea.clientHeight });
+    area.style.width = String(fitSize.width) + "px";
     area.style.height = String(fitSize.height) + "px";
     toggleImageLayer(true);
 
@@ -203,13 +190,13 @@ function toggleExifLayer(path) {
 function requestExifData(path) {
     const ajax = jsUtils.ajax;
     ajax.init();
-    ajax.setOnLoading(function(httpRequest) {
+    ajax.setOnLoading(function (httpRequest) {
         document.getElementById('ExifLayer').innerHTML = "loading...";
     });
-    ajax.setOnSuccess(function(httpRequest) {
+    ajax.setOnSuccess(function (httpRequest) {
         showExif(httpRequest)
     });
-    ajax.setOnError(function(httpRequest) {
+    ajax.setOnError(function (httpRequest) {
         document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";
     });
 
@@ -223,12 +210,12 @@ function showExif(httpRequest) {
     const exif_info = xml.getFirstFoundChildNode(httpRequest.responseXML, "exif_info");
     const groups = xml.getChildNodes(exif_info, "group");
 
-    for (var i=0; i<groups.length; i++) {
+    for (var i = 0; i < groups.length; i++) {
         const group_name = xml.getAttributes(groups[i]).name;
         if (group_name === "0") {
             const data = xml.getChildNodes(groups[i], "data");
             if (data) {
-                for (var j=0; j<data.length; j++) {
+                for (var j = 0; j < data.length; j++) {
                     const name = xml.getAttributes(data[j]).name;
                     if (name === "Manufacturer") {
                         exif.maker = data[j].textContent;
@@ -240,7 +227,7 @@ function showExif(httpRequest) {
         } else if (group_name === "EXIF") {
             const data = xml.getChildNodes(groups[i], "data");
             if (data) {
-                for (var j=0; j<data.length; j++) {
+                for (var j = 0; j < data.length; j++) {
                     const name = xml.getAttributes(data[j]).name;
                     if (name === "Exif_Version") {
                         exif.version = data[j].textContent;

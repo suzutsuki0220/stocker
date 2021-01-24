@@ -30,25 +30,36 @@ function getType(dirent) {
     return "ERROR";
 }
 
+function removeRootPath(root, path) {
+    const rootPath = stockerLib.decodeUrlPath(root, '');
+    if (path.indexOf(rootPath) !== 0) {
+        return '';
+    }
+
+    return path.substring(rootPath.length);
+}
+
 function getProperties(root, path, query) {
     let elements = new Array();
     const decodedPath = stockerLib.decodeUrlPath(root, path);
+
     const fname = jsUtils.file.getNameFromPath(decodedPath);
     const properties = {
-        name: fname.basename,
-        up_path: stockerLib.encodeUrlPath(fname.dirname),
-        up_dir: fname.dirname
+        name: path ? fname.basename : '',
+        dirname: path ? removeRootPath(root, fname.dirname) : '',
+        root: root,
+        up_path: path ? stockerLib.encodeUrlPath(root, fname.dirname) : ''
     };
 
     const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
     const from = Number(query.from) || 0;
-    const to = Number(query.to) || entries.length - 1;
+    const to = jsUtils.value.getMin(entries.length - 1, Number(query.to));
 
     for (let i = from; i <= to; i++) {
         const childPath = decodedPath + '/' + entries[i].name;
         elements.push(Object.assign({
             name: entries[i].name,
-            path: stockerLib.encodeUrlPath(childPath),
+            path: stockerLib.encodeUrlPath(root, childPath),
             type: getType(entries[i]),
             num: i
         }, getStats(childPath)));
@@ -74,7 +85,7 @@ module.exports = function (app) {
         try {
             res.json(getProperties(req.params.root, req.params.path, req.query));
         } catch (e) {
-            logger.warn(e);
+            console.warn(e);
             res.sendStatus(404);
         }
     });

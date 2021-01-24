@@ -12,7 +12,7 @@ const contentBase = [
 const outPath = path.resolve(__dirname, 'dist/bundle');
 
 module.exports = env => {
-    const HTDOCS_ROOT = (env && env.htdocs_root) ? env.htdocs_root : '/stocker';
+    const HTDOCS_ROOT = (env && env.htdocs_root) ? env.htdocs_root : '';
     const CGI_ROOT = (env && env.cgi_root) ? env.cgi_root : '/cgi-bin/stocker';
     const API_DUMMY = (env && env.api_dummy) ? env.api_dummy : 'no';
 

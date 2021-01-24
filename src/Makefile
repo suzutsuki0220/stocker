@@ -5,7 +5,6 @@ include ./directory_defs.mk
 all:
 	make -C config $(INSTALL_PARAM)
 	make -C exif_info
-	make -C get_dir
 	make -C get_file
 	make -C movie_info
 	make -C perl-cgi
@@ -15,7 +14,6 @@ all:
 clean:
 	make -C config clean
 	make -C exif_info clean
-	make -C get_dir clean
 	make -C get_file clean
 	make -C movie_info clean
 	make -C perl-cgi clean
@@ -25,7 +23,6 @@ clean:
 install-bin:
 	make -C config install $(INSTALL_PARAM)
 	make -C exif_info install $(CGI_DIR)
-	make -C get_dir install $(CGI_DIR)
 	make -C get_file install $(CGI_DIR)
 	make -C movie_info install $(CGI_DIR)
 	make -C status install CGI_DIR=$(CGI_DIR)

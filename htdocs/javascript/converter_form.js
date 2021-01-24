@@ -5,7 +5,7 @@ var sceneListPath = "";
 
 let params = new Object();
 let files = new Array();
-let filename, upPath, upRealPath;
+let filename, upPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
@@ -41,7 +41,6 @@ window.addEventListener("load", function(event) {
     stocker.components.getFileProperties(params.dir, files[0], function(properties) {
         filename = properties.name;
         upPath = properties.up_path;
-        upRealPath = properties.up_dir;
 
         document.getElementById('fileNameArea').textContent = filename;
         sourceFileList(document.getElementById('source_file_list'));

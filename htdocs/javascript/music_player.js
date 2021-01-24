@@ -9,7 +9,7 @@ const graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuK
 
 let params, rootDir, upPath;
 
-window.addEventListener("load", function(event) {
+window.addEventListener("load", function (event) {
     params = jsUtils.url.getRawParams();
     rootDir = params.dir;
 
@@ -17,42 +17,39 @@ window.addEventListener("load", function(event) {
     var player_timer = document.getElementById('AudioTimer');
 
     // 再生可能形式チェック
-    if      (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }
+    if (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }
     else if (support_ogg == 'maybe' || support_ogg == 'probably') { document.controller.type[2].checked = true; }
     else if (support_wav == 'maybe' || support_wav == 'probably') { document.controller.type[0].checked = true; }
 
     // CoverArt
     if (document.coverart.addEventListener) {
-      document.coverart.addEventListener("error", errorCoverart, false);
-      document.coverart.addEventListener("abort", errorCoverart, false);
+        document.coverart.addEventListener("error", errorCoverart, false);
+        document.coverart.addEventListener("abort", errorCoverart, false);
     } else if (document.coverart.attachEvent) {  // for InternetExplorer
-      document.coverart.attachEvent("onerror", errorCoverart);
-      document.coverart.attachEvent("onabort", errorCoverart);
+        document.coverart.attachEvent("onerror", errorCoverart);
+        document.coverart.attachEvent("onabort", errorCoverart);
     }
 
-    getDirectoryList(params.dir, params.file, 0, 0, function musicList(data) {
+    getDirectoryProperties(params.dir, params.file, 0, 0, function musicList(data) {
         try {
-            const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['up_path'])[0];
-            upPath  = properties.up_path;
-
-            getDirectoryList(params.dir, upPath, 0, 0, getMusicFiles);
-        } catch(e) {
+            const upPath = data.properties.up_path;
+            getDirectoryProperties(params.dir, upPath, 0, 0, getMusicFiles);
+        } catch (e) {
             alert("ERROR: " + e.description);
         }
     });
 });
 
 function errorCoverart() {
-  document.coverart.src = graypad;
+    document.coverart.src = graypad;
 }
 
 function sortMusicListByTrackNumber() {
-    for(i=track.length-1 ; i>0 ; i--) {
-        for(j=0 ; j<i ; j++) {
-            if(parseInt(track[j].track_no) > parseInt(track[j+1].track_no)) {
-                var temp = track[j+1];
-                track[j+1] = track[j];
+    for (i = track.length - 1; i > 0; i--) {
+        for (j = 0; j < i; j++) {
+            if (parseInt(track[j].track_no) > parseInt(track[j + 1].track_no)) {
+                var temp = track[j + 1];
+                track[j + 1] = track[j];
                 track[j] = temp;
             }
         }
@@ -65,17 +62,17 @@ function printMusicList() {
     if (music_count === track.length) {
         sortMusicListByTrackNumber();
 
-        content  = "<table border=1>";
+        content = "<table border=1>";
         content += "<tr><th>No.</th><th>title</th><th>time</th><th>artist</th><th>album</th><th>year</th></tr>";
-        for(i=0 ; i<track.length ; i++) {
-            const num = i+1;
+        for (i = 0; i < track.length; i++) {
+            const num = i + 1;
             content += "<tr id='track" + i + "'>";
-            content += "<td>"+ num +"</td>";
-            content += "<td><a href=\"javascript:playit('"+ i +"')\">"+ track[i].title +"</a></td>";
-            content += "<td>"+ track[i].time +"</td>";
-            content += "<td>"+ track[i].artist +"</td>";
-            content += "<td>"+ track[i].album +"</td>";
-            content += "<td>"+ track[i].year +"</td>";
+            content += "<td>" + num + "</td>";
+            content += "<td><a href=\"javascript:playit('" + i + "')\">" + track[i].title + "</a></td>";
+            content += "<td>" + track[i].time + "</td>";
+            content += "<td>" + track[i].artist + "</td>";
+            content += "<td>" + track[i].album + "</td>";
+            content += "<td>" + track[i].year + "</td>";
             content += "</tr>";
         }
         content += "</table>";
@@ -112,7 +109,7 @@ function addTagInfoToTrack(data, idx) {
     ];
     track[idx] = Object.assign(track[idx], jsUtils.xml.getDataInElements(data, "tag", get_names)[0]);
 
-    track[idx].title    = track[idx].title || track[idx].name;  // tagにtitleがなければファイル名を使う
+    track[idx].title = track[idx].title || track[idx].name;  // tagにtitleがなければファイル名を使う
     track[idx].track_no = getTrackNumber(track[idx]);
     track[idx].getProperty = true;
 
@@ -121,7 +118,7 @@ function addTagInfoToTrack(data, idx) {
 }
 
 function addEmptyInfoToTrack(idx) {
-    track[idx].title    = track[idx].name;  // tagにtitleがなければファイル名を使う
+    track[idx].title = track[idx].name;  // tagにtitleがなければファイル名を使う
     track[idx].track_no = track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
     track[idx].getProperty = true;
 
@@ -130,7 +127,7 @@ function addEmptyInfoToTrack(idx) {
 }
 
 function findNotGetPropertyTrack() {
-    for (var i=0; i<track.length; i++) {
+    for (var i = 0; i < track.length; i++) {
         if (track[i].getProperty === false) {
             return i;
         }
@@ -148,11 +145,11 @@ function getMusicProperties() {
     }
 
     ajax.init();
-    ajax.setOnSuccess(function(httpRequest) {
+    ajax.setOnSuccess(function (httpRequest) {
         addTagInfoToTrack(httpRequest.responseXML, idx);
         getMusicProperties();
     });
-    ajax.setOnError(function(httpRequest) {
+    ajax.setOnError(function (httpRequest) {
         console.log("failed to get property: " + track[idx].name + ' (' + httpRequest.status + ' ' + httpRequest.statusText + ')');
         addEmptyInfoToTrack(idx);
         getMusicProperties();
@@ -161,20 +158,16 @@ function getMusicProperties() {
 }
 
 function getMusicFiles(data) {
-    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-    const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name'])[0];
-    document.title = properties.name;
-    document.getElementById('directory_name_area').innerHTML = properties.name;
+    document.title = data.properties.name;
+    document.getElementById('directory_name_area').innerHTML = data.properties.name;
 
-    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-    const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "num"]);
+    const elements = data.elements;
     if (elements === null) {
         alert("ERROR: music list has no elements");
         return;
     }
 
-    for (var i=0; i<elements.length; i++) {
-        const e = elements[i];
+    elements.forEach(function (e) {
         if (stocker.supportTypes.pattern.audio.test(e.name)) {
             track.push({
                 "name": e.name,
@@ -184,6 +177,6 @@ function getMusicFiles(data) {
                 "path": e.path
             });
         }
-    }
+    });
     getMusicProperties();
 }

@@ -6,7 +6,8 @@
 #include "FileUtil.h"
 #include "cgi_util.h"
 
-class UrlPath {
+class UrlPath
+{
 private:
     cgi_util *cgi;
     FileUtil *futil;
@@ -19,12 +20,13 @@ public:
     UrlPath();
     ~UrlPath();
 
-    int  getBaseDir(std::string &basedir, std::string &dir_name);
+    int getBaseDir(std::string &basedir, std::string &dir_name);
     void encode(std::string &url_path, std::string &file_path);
+    int getEncodedPath(std::string &encoded_path, std::string &root, std::string &url_path);
     void decode(std::string &file_path, std::string &url_path);
-    int  getDecodedPath(std::string &decoded_path, std::string &basedir_name, std::string &url_path);
+    int getDecodedPath(std::string &decoded_path, std::string &root, std::string &url_path);
 
-    const char* getErrorMessage(void);
+    const char *getErrorMessage(void);
 };
 
-#endif  // __URLPATH_CLASS_H__
+#endif // __URLPATH_CLASS_H__

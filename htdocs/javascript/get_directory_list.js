@@ -6,25 +6,30 @@ function initSelectedParam() {
     selectedParam.path = "";
 }
 
-function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
-    let option = new Object();
+function getDirectoryProperties(root, url_path, from, to, receive_func) {
+    const option = new Object();
     if (from) {
         option.from = from;
     }
     if (to) {
         option.to = to;
     }
-    const param = stocker.components.makePathParams(encoded_dir, url_path, option);
+    const optionParam = jsUtils.url.makeQueryString(option);
 
-    jsUtils.ajax.init();
-    jsUtils.ajax.setOnSuccess(function (httpRequest) {
-        receive_func(httpRequest.responseXML);
-    });
-    jsUtils.ajax.setOnError(function (httpRequest) {
-        console.warn("ERROR: " + stocker.uri.cgi.get_dir + " param: " + param + " status: " + httpRequest.status);
-    });
-
-    jsUtils.ajax.post(stocker.uri.cgi.get_dir, param);
+    fetch('/api/v1/storage/' + root + '/' + url_path + '/properties' + (optionParam ? '?' + optionParam : ''), {
+        method: 'GET',
+        mode: 'same-origin',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer'
+    }).then(function (response) {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return Promise.reject(new Error(response.status + ' ' + response.statusText));
+        }
+    }).then(receive_func);
 }
 
 function getRootDirectories(callback) {
@@ -91,7 +96,7 @@ function directoryListStyleFactory(elem, height) {
 }
 
 function refreshDirectorySelector(div, root, path, height) {
-    getDirectoryList(root, path, 0, 0, function (data) {
+    getDirectoryProperties(root, path, NaN, NaN, function (data) {
         let filesArray = new Array();
         let directoriesArray = new Array();
 
