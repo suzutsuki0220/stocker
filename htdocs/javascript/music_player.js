@@ -30,9 +30,9 @@ window.addEventListener("load", function (event) {
         document.coverart.attachEvent("onabort", errorCoverart);
     }
 
-    getDirectoryProperties(params.dir, params.file, 0, 0, function musicList(data) {
+    getDirectoryProperties(params.dir, params.file, 0, 0, function (data) {
         try {
-            const upPath = data.properties.up_path;
+            upPath = data.properties.up_path;
             getDirectoryProperties(params.dir, upPath, 0, 0, getMusicFiles);
         } catch (e) {
             alert("ERROR: " + e.description);
