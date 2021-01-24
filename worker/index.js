@@ -78,6 +78,7 @@ function fetchJob(forceRunning = false) {
 /*** start ***/
 const app = express();
 app.use(express.urlencoded({ extended: true }));
+app.set('query parser', 'extended');
 require('./routes/storage.route.js')(app);
 require('./routes/converts.route.js')(app);
 

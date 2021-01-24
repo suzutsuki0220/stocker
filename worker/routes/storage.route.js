@@ -30,7 +30,7 @@ function getType(dirent) {
     return "ERROR";
 }
 
-function getProperties(root, path) {
+function getProperties(root, path, query) {
     let elements = new Array();
     const decodedPath = stockerLib.decodeUrlPath(root, path);
     const fname = jsUtils.file.getNameFromPath(decodedPath);
@@ -40,15 +40,19 @@ function getProperties(root, path) {
         up_dir: fname.dirname
     };
 
-    fs.readdirSync(decodedPath, { withFileTypes: true }).forEach((entry, index) => {
-        const childPath = decodedPath + '/' + entry.name;
+    const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
+    const from = Number(query.from) || 0;
+    const to = Number(query.to) || entries.length - 1;
+
+    for (let i = from; i <= to; i++) {
+        const childPath = decodedPath + '/' + entries[i].name;
         elements.push(Object.assign({
-            name: entry.name,
+            name: entries[i].name,
             path: stockerLib.encodeUrlPath(childPath),
-            type: getType(entry),
-            num: index
+            type: getType(entries[i]),
+            num: i
         }, getStats(childPath)));
-    });
+    }
 
     return { properties: properties, elements: elements };
 }
@@ -68,7 +72,7 @@ module.exports = function (app) {
 
     app.get(apiRest + '/:root/:path(*)/properties', function (req, res) {
         try {
-            res.json(getProperties(req.params.root, req.params.path));
+            res.json(getProperties(req.params.root, req.params.path, req.query));
         } catch (e) {
             logger.warn(e);
             res.sendStatus(404);
