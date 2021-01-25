@@ -105,7 +105,7 @@ function setSrc(img) {
 
     const path = img.path;
     const src = {
-        picture: stockerConfig.uri.picture_viewer.get_picture + "?file=" + path + "&dir=" + params.dir + "&size=640",
+        picture: "/api/v1/media/" + params.dir + "/" + path + "/vga",
         video: stockerConfig.uri.get_file + "?mime=video/mp4&file=" + path + "&dir=" + params.dir,
         poster: stockerConfig.uri.converter.movie_img + "?size=640&file=" + path + "&dir=" + params.dir,
         thumbnail: "/api/v1/media/" + params.dir + "/" + path + "/thumbnail",

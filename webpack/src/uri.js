@@ -10,7 +10,6 @@ const converter_uri = {
 };
 
 const picture_viewer_uri = {
-    get_picture: cgi_root + '/get_picture.cgi',
     exif_info: cgi_root + '/exif_info'
 };
 

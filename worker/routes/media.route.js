@@ -66,23 +66,29 @@ function makeCache(width, origPath, cachePath) {
     }
 }
 
+function sendCacheImage(width, req, res) {
+    try {
+        const cachePath = getCachePath(width, req.params.root, req.params.path);
+        const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
+
+        if (isCacheAvailable(cachePath, decoded) === false) {
+            makeCache(width, decoded, cachePath);
+        }
+        res.type('image/jpeg');
+        res.sendFile(cachePath, { dotfiles: 'deny' });
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(404);
+    }
+}
+
 module.exports = function (app) {
     const apiRest = '/api/v1/media';
 
     app.get(apiRest + '/:root/:path(*)/thumbnail', function (req, res) {
-        try {
-            const width = thumbnailConf['thumb_size'];
-            const cachePath = getCachePath(width, req.params.root, req.params.path);
-            const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
-
-            if (isCacheAvailable(cachePath, decoded) === false) {
-                makeCache(width, decoded, cachePath);
-            }
-            res.type('image/jpeg');
-            res.sendFile(cachePath, { dotfiles: 'deny' });
-        } catch (e) {
-            console.warn(e);
-            res.sendStatus(404);
-        }
+        sendCacheImage(thumbnailConf['thumb_size'], req, res)
+    });
+    app.get(apiRest + '/:root/:path(*)/vga', function (req, res) {
+        sendCacheImage(640, req, res)
     });
 };
