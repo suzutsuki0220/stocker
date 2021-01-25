@@ -81,6 +81,7 @@ app.use(express.urlencoded({ extended: true }));
 app.set('query parser', 'extended');
 require('./routes/storage.route.js')(app);
 require('./routes/converts.route.js')(app);
+require('./routes/media.route.js')(app);
 
 // static contents
 app.use(express.static('../htdocs'));
