@@ -61,6 +61,7 @@ function getProperties(root, path, query) {
                 const childPath = decodedPath + '/' + entries[i].name;
                 elements.push(Object.assign({
                     name: entries[i].name,
+                    root: root,
                     path: stockerLib.encodeUrlPath(root, childPath),
                     type: getType(entries[i]),
                     num: i
