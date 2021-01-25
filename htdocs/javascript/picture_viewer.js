@@ -10,32 +10,26 @@ let params, rootDir, upPath;
 window.addEventListener("load", function (event) {
     params = jsUtils.url.getRawParams();
 
-    stocker.components.getFileProperties(params.dir, params.file, function (properties) {
-        document.title = properties.name;
-        document.getElementById('fileNameArea').textContent = properties.name;
-        filename = properties.name;
-        getImageList(params.dir, properties.up_path);
+    getDirectoryProperties(params.dir, params.file, NaN, NaN, function (data) {
+        filename = data.properties.name;
+        rootDir = data.properties.root;
+        upPath = data.properties.up_path;
 
-        rootDir = params.dir;
-        upPath = properties.up_path;
+        try {
+            getDirectoryProperties(rootDir, upPath, NaN, NaN, getImageFiles);
+        } catch (e) {
+            alert("ERROR: " + e.description);
+        }
 
         setSrc({
-            name: properties.name,
+            name: filename,
             path: params.file,
-            video: stocker.supportTypes.browserPlayableMovie().test(properties.name) ? true : false
+            video: stocker.supportTypes.browserPlayableMovie().test(filename) ? true : false
         });
     }, function (error) {
         console.warn(error);
     });
 });
-
-function getImageList(base_name, path) {
-    try {
-        getDirectoryProperties(base_name, path, 0, 0, getImageFiles);
-    } catch (e) {
-        alert("ERROR: " + e.description);
-    }
-}
 
 function getImageFiles(data) {
     const elements = data.elements;
@@ -101,13 +95,12 @@ function setSrc(img) {
     document.getElementById('ExifLayer').style.display = "none";
 
     document.title = img.name;
-    document.getElementById('fileNameArea').innerHTML = img.name;
+    document.getElementById('fileNameArea').textContent = img.name;
 
     const path = img.path;
     const src = {
-        picture: "/api/v1/media/" + params.dir + "/" + path + "/vga",
+        vgaImage: "/api/v1/media/" + params.dir + "/" + path + "/vga",
         video: stockerConfig.uri.get_file + "?mime=video/mp4&file=" + path + "&dir=" + params.dir,
-        poster: stockerConfig.uri.converter.movie_img + "?size=640&file=" + path + "&dir=" + params.dir,
         thumbnail: "/api/v1/media/" + params.dir + "/" + path + "/thumbnail",
         exif: "javascript:toggleExifLayer('" + path + "')"
     };
@@ -126,7 +119,7 @@ function showVideoArea(src) {
     document.getElementById('ImageArea').style.display = "none";
 
     document.getElementById('VideoArea').src = src.video;
-    document.getElementById('VideoArea').poster = src.poster;
+    document.getElementById('VideoArea').poster = src.vgaImage;
     document.getElementById('VideoArea').type = "video/mp4";
 }
 
@@ -139,7 +132,7 @@ function imageLoading(src) {
     document.ImageArea.addEventListener("abort", unsetLoading, false);
 
     load_flg = true;
-    document.getElementById('ImageArea').src = src.picture;
+    document.getElementById('ImageArea').src = src.vgaImage;
     document.getElementById('ThumbnailArea').src = src.thumbnail;
     document.getElementById('InfoLink').href = src.exif;
     document.getElementById('loadingText').style.display = "block";
