@@ -51,7 +51,7 @@ window.addEventListener("load", function (event) {
     });
 
     document.enc_setting.action = stockerConfig.uri.converter.form;
-    document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
+    document.getElementById('vimg').src = getPreviewUrl(640);
     document.adjpreview.src = GRAY_PAD;
     document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
 
@@ -261,8 +261,8 @@ function openPreviewWindow() {
 }
 
 function getPreviewUrl(width) {
-    var url = stockerConfig.uri.converter.movie_img + "?dir=" + params.dir + "&file=" + files[0] + "&size=" + width;
-    if (document.enc_setting.v_map.length !== 0) {
+    let url = '/api/v1/media/' + params.dir + "/" + files[0] + "/videoimage?size=" + width;
+    if (document.enc_setting.v_map && document.enc_setting.v_map.length !== 0) {
         url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
     }
     if (document.enc_setting.set_position.checked == true) {

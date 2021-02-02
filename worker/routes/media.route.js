@@ -1,15 +1,17 @@
 const fs = require('fs');
+const path = require('path');
 const jsUtils = require('js-utils');
 const { execFileSync } = require('child_process');
 const supportTypes = require('../../webpack/src/support_types.js');
 const thumbnailConf = require('../src/config-file.js').load('/thumbnail.conf');
+const FFmpegOption = require('../src/ffmpeg-option.js');
 
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
 const stockerLib = new StockerLib();
 
-function composeMovieImageOptions(size, input, output) {
-    // FFMpegのオプション
-    return ["-i", input, "-y", "-loglevel", "quiet", "-vf", "scale=" + size + ":-1", "-r", "1", "-vframes", "1", "-f", "image2", output];
+// FFMpegのオプション
+function composeMovieImageOptions(size, input, output, params = {}) {
+    return new FFmpegOption().compose(input, output, { ...params, s_w: size, s_h: '-1', frames: '1', nolog: true, r: '1', format: 'jpeg' }, 0);
 }
 
 function composeThumbnailImageOptions(size, input, output) {
@@ -82,6 +84,27 @@ function sendCacheImage(width, req, res) {
     }
 }
 
+function sendTemporaryFile(type, temporary, res) {
+    try {
+        res.type(type);
+        res.sendFile(temporary, { dotfiles: 'deny' }, function (err) {
+            // 送った後に消す
+            const tempdir = jsUtils.file.getNameFromPath(temporary).dirname;
+            fs.rmdirSync(tempdir, { recursive: true });
+        });
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(404);
+    }
+}
+
+function makeVideoImage(req, output) {
+    const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
+
+    const width = req.query.size || 640;
+    execFileSync(thumbnailConf['ffmpeg_cmd'], composeMovieImageOptions(width, decoded, output, req.query));
+}
+
 module.exports = function (app) {
     const apiRest = '/api/v1/media';
 
@@ -90,5 +113,11 @@ module.exports = function (app) {
     });
     app.get(apiRest + '/:root/:path(*)/vga', function (req, res) {
         sendCacheImage(640, req, res)
+    });
+    app.get(apiRest + '/:root/:path(*)/videoimage', function (req, res) {
+        const tempdir = fs.mkdtempSync(path.join(thumbnailConf['temporary_dir'], 'stocker-'));
+        const tempfile = path.join(tempdir, 'videoimage.jpg');
+        makeVideoImage(req, tempfile);
+        sendTemporaryFile('image/jpeg', tempfile, res);
     });
 };

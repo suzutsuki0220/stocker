@@ -106,19 +106,16 @@ function refreshDirectorySelector(div, root, path, height) {
         //clear
         div.innerHTML = "";
 
-        const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path', 'up_dir'])[0];
-
         const nameArea = document.createElement('div');
         const upButton = document.createElement('a');
         upButton.onclick = function () {
-            refreshDirectorySelector(div, root, properties.up_path, height);
+            refreshDirectorySelector(div, root, data.properties.up_path, height);
         };
         upButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
         nameArea.appendChild(upButton);
 
         const span = document.createElement('span');
-        span.innerHTML = properties.up_dir + "/" + properties.name;
+        span.innerHTML = data.properties.dirname + "/" + data.properties.name;
         nameArea.appendChild(span);
         div.appendChild(nameArea);
 
@@ -137,27 +134,19 @@ function refreshDirectorySelector(div, root, path, height) {
         container.appendChild(fileList);
         div.appendChild(container);
 
-        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-        if (!contents) {
-            return;
-        }
-
-        const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
-        if (!elements) {
-            return;
-        }
-
-        for (var i = 0; i < elements.length; i++) {
-            const e = elements[i];
-            if (e.type === "DIRECTORY") {
-                const a = document.createElement('a');
-                a.onclick = function () {
-                    refreshDirectorySelector(div, root, e.path, height);
-                };
-                a.innerHTML = e.name;
-                directoriesArray.push(a);
-            } else {
-                filesArray.push(e.name);
+        if (data.elements) {
+            for (var i = 0; i < data.elements.length; i++) {
+                const e = data.elements[i];
+                if (e.type === "DIRECTORY") {
+                    const a = document.createElement('a');
+                    a.onclick = function () {
+                        refreshDirectorySelector(div, root, e.path, height);
+                    };
+                    a.innerHTML = e.name;
+                    directoriesArray.push(a);
+                } else {
+                    filesArray.push(e.name);
+                }
             }
         }
 

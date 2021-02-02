@@ -2,9 +2,7 @@ const htdocs_root = "%htdocs_root%";
 const cgi_root = "%cgi_root%";
 
 const converter_uri = {
-    form: cgi_root + '/action/converter.cgi',
     list: cgi_root + '/action/convertlist.cgi',
-    movie_img: cgi_root + '/get_movieimg.cgi',
     movie_info: cgi_root + '/movie_info',
     worker_api: ':3030/api/v1/converts'
 };
