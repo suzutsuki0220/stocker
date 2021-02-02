@@ -7,7 +7,7 @@ class ActionForm {
     }
 
     _getReal(filenameObj, path) {
-        for (let i=0; i<filenameObj.length; i++) {
+        for (let i = 0; i < filenameObj.length; i++) {
             const f = filenameObj[i];
             if (path === f.path) {
                 return f;
@@ -26,22 +26,25 @@ class ActionForm {
 
     makeFilesList(root, files, callback) {
         const self = this;
-        stocker.components.getFilenames(root, files, function(reals) {
-            self.filesList = [];
-            for (let i=0; i<files.length; i++) {
-                const icon = self._statusIcon();
-                const real = self._getReal(reals, files[i]);
-                if (real) {
-                    self.filesList.push({name: real.name, root: real.dir, path: files[i], statusIcon: icon});
+        getDirectoryProperties(root, upPath, NaN, NaN, function (data) {
+
+            stocker.components.getFilenames(root, files, function (reals) {
+                self.filesList = [];
+                for (let i = 0; i < files.length; i++) {
+                    const icon = self._statusIcon();
+                    const real = self._getReal(reals, files[i]);
+                    if (real) {
+                        self.filesList.push({ name: real.name, root: real.dir, path: files[i], statusIcon: icon });
+                    }
                 }
-            }
-            callback();
+                callback();
+            });
         });
     }
 
     filenameTable() {
         let list = new Array();
-        for (let i=0; i<this.filesList.length; i++) {
+        for (let i = 0; i < this.filesList.length; i++) {
             const num = i + 1;
             list.push([num.toString(10), this.filesList[i].name, this.filesList[i].statusIcon]);
         }
@@ -58,7 +61,7 @@ class ActionForm {
     }
 
     setBackToList(f) {
-        document.getElementById('cancelButton').onclick = function() {stocker.components.backToList(f.dir, f.location)};
-        document.getElementById('backAnchor').onclick = function() {stocker.components.backToList(f.dir, f.location)};
+        document.getElementById('cancelButton').onclick = function () { stocker.components.backToList(f.dir, f.location) };
+        document.getElementById('backAnchor').onclick = function () { stocker.components.backToList(f.dir, f.location) };
     }
 }

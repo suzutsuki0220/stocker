@@ -4,7 +4,7 @@ include ./src/directory_defs.mk
 
 all: remove-dist
 	make -C src/ $(INSTALL_PARAM)
-	npm run webpack -- --env.htdocs_root=$(HTDOCS_ROOT) --env.cgi_root=$(CGI_ROOT)
+	npm run webpack -- --env htdocs_root=$(HTDOCS_ROOT) --env cgi_root=$(CGI_ROOT)
 
 clean: remove-dist
 	make -C src/ clean

@@ -1,4 +1,4 @@
-HTDOCS_ROOT = /stocker
+HTDOCS_ROOT = /
 CGI_ROOT    = /cgi-bin/stocker
 
 DESTDIR    = /var/www
