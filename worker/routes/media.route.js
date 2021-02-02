@@ -89,7 +89,8 @@ function sendCacheImage(width, req, res) {
 function sendTemporaryFile(type, temporary, res) {
     try {
         res.type(type);
-        res.sendFile(temporary, { dotfiles: 'deny' }, function (err) {
+        // 部分的な転送を許可すると変換処理が増えてしまうために acceptRanges は無効にする
+        res.sendFile(temporary, { dotfiles: 'deny', acceptRanges: false }, function (err) {
             // 送った後に消す
             const tempdir = jsUtils.file.getNameFromPath(temporary).dirname;
             fs.rmdirSync(tempdir, { recursive: true });
