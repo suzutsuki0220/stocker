@@ -21,22 +21,6 @@ module.exports.backToList = function (root, path) {
     window.location.href = uri.htdocs_root + '/list.html' + '?' + makeDirFileParam(root, path);
 };
 
-module.exports.getFileProperties = function (root, path, onSuccess, onError = noWork) {
-    jsUtils.fetch.request(
-        {
-            uri: uri.cgi.get_dir,
-            body: makeDirFileParam(root, path),
-            method: 'POST',
-            format: 'text'
-        }, function (text) {
-            const xml = jsUtils.xml.getDom(text);
-            const directory = jsUtils.xml.getFirstFoundChildNode(xml, 'directory');
-            const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'elements', 'up_path', 'up_dir'])[0];
-            onSuccess(properties);
-        }, onError
-    );
-};
-
 /**
  * URIパラメータで指定されたfile/dirの実名を取得します
  * サーバーに問い合わせてjson形式で返ります

@@ -100,7 +100,7 @@ function setSrc(img) {
     const path = img.path;
     const src = {
         vgaImage: "/api/v1/media/" + params.dir + "/" + path + "/vga",
-        video: stockerConfig.uri.get_file + "?mime=video/mp4&file=" + path + "&dir=" + params.dir,
+        video: "/api/v1/storage/" + params.dir + "/" + path + "/raw",
         thumbnail: "/api/v1/media/" + params.dir + "/" + path + "/thumbnail",
         exif: "javascript:toggleExifLayer('" + path + "')"
     };

@@ -281,6 +281,5 @@ function downloadWork() {
 }
 
 function handleDownload(filepath, filename) {
-    const get_url = stocker.uri.cgi.get_file + "?mime=application/force-download&dir=" + root + "&file=" + filepath;
-    jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
+    jsUtils.file.DownloadWithDummyAnchor('/api/v1/storage/' + root + '/' + filepath + '/raw', filename);
 }

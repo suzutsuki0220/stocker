@@ -12,7 +12,6 @@ const picture_viewer_uri = {
 };
 
 const music_player_uri = {
-    get_media: cgi_root + '/get_media.cgi',
     tag_info: cgi_root + '/taginfo'
 };
 
@@ -22,7 +21,6 @@ module.exports.list = htdocs_root + '/list.html';
 
 module.exports.cgi = {
     edit: cgi_root + '/edit.cgi',
-    get_file: cgi_root + '/get_file',
     converter: converter_uri,
     picture_viewer: picture_viewer_uri,
     music_player: music_player_uri

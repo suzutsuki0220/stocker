@@ -96,4 +96,16 @@ module.exports = function (app) {
             res.sendStatus(404);
         }
     });
+
+    app.get(apiRest + '/:root/:path(*)/raw', function (req, res) {
+        try {
+            const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
+            const name = jsUtils.file.getNameFromPath(decoded);
+            res.attachment(name.basename);
+            res.sendFile(decoded, { dotfiles: 'deny', acceptRanges: true });
+        } catch (e) {
+            console.warn(e);
+            res.sendStatus(404);
+        }
+    });
 };
