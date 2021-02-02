@@ -1,9 +1,7 @@
 var track = new Array();
 var music_count = 0;  // ajaxを読んだ数とcallbackが実行された数が一致した時にリスト内の情報を全て読み込んだと判断する
 
-const STOCKER_CGI = stocker.uri.cgi.stocker;
 const TAGINFO_CGI = stocker.uri.cgi.music_player.tag_info;
-const GET_MEDIA_CGI = stocker.uri.cgi.music_player.get_media;
 
 const graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
@@ -14,7 +12,6 @@ window.addEventListener("load", function (event) {
     rootDir = params.dir;
 
     errorCoverart();
-    var player_timer = document.getElementById('AudioTimer');
 
     // 再生可能形式チェック
     if (support_mp3 == 'maybe' || support_mp3 == 'probably') { document.controller.type[1].checked = true; }

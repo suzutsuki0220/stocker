@@ -39,7 +39,7 @@
     }
 
     document.coverart.src = TAGINFO_CGI + "?mode=picture&dir=" + track[track_no].base_name + "&file=" + track[track_no].path;
-    audio_player.src = GET_MEDIA_CGI + "?dir=" + track[track_no].base_name + "&file=" +track[track_no].path + "&type=" + play_type;
+    audio_player.src = "/api/v1/media/" + track[track_no].base_name + "/" +track[track_no].path + "/" + play_type;
     audio_player.play();
     document.controller.button_pause.value = "Pause";
 

@@ -31,7 +31,7 @@ function makeOutputPath(source, dest, params, pass, ssIndex) {
     }
 
     const name = getFirstSourceName(params, source);
-    ret += name.filename + '.' + FFmpegOption.getExtension(params);
+    ret += name.filename + '.' + FFmpegOption.getExtension(params.format);
 
     return dest + '/' + ret;
 }

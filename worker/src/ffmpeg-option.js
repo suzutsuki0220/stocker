@@ -19,9 +19,28 @@ const format = {
         "extension": "ogv",
         "format": "ogg"
     },
+    "mp3": {
+        "extension": "mp3",
+        "format": "mp3",
+        "noVideo": true,
+        "defaultAcodec": "libmp3lame"
+    },
+    "ogg": {
+        "extension": "ogg",
+        "format": "ogg",
+        "noVideo": true,
+        "defaultAcodec": "libvorbis"
+    },
+    "wav": {
+        "extension": "wav",
+        "format": "wav",
+        "noVideo": true,
+        "defaultAcodec": "pcm_s16le"
+    },
     "jpeg": {
-        "extension": ".jpg",
-        "format": "image2"
+        "extension": "jpg",
+        "format": "image2",
+        "noAudio": true
     }
 };
 
@@ -96,6 +115,10 @@ function composeVideoFilterOption(params) {
 
 function setVideoOptions(params) {
     const ret = new Array();
+
+    if (format[params.format].noVideo === true) {
+        return ret;
+    }
 
     if (params.v_convert === 'none') {
         ret.push('-vn');
@@ -173,6 +196,10 @@ function setAudioFilter(options, params) {
 function setAudioOptions(params) {
     const ret = new Array();
 
+    if (format[params.format].noAudio === true) {
+        return ret;
+    }
+
     if (params.a_convert === 'none') {
         ret.push('-an');
     } else {
@@ -185,9 +212,11 @@ function setAudioOptions(params) {
             ret.push('-c:a');
             ret.push('copy');
         } else {
-            if (params.a_codec) {
+            const codec = params.a_codec || format[params.format].defaultAcodec;
+
+            if (codec) {
                 ret.push('-c:a');
-                ret.push(params.a_codec);
+                ret.push(codec);
             }
 
             if (params.ac) {
@@ -199,7 +228,7 @@ function setAudioOptions(params) {
                 ret.push(params.ar);
             }
 
-            if (params.ab && !isLossLessCodec(params.a_codec)) {
+            if (params.ab && !isLossLessCodec(codec)) {
                 ret.push('-b:a');
                 ret.push(params.ab + 'k');
             }
@@ -263,6 +292,10 @@ module.exports = class FFmpegOption {
     }
 
     compose(source, output, params, ssIndex = 0, passOptions = []) {
+        if (!params.format) {
+            throw new Error('unable format');
+        }
+
         return [
             ...setInputOptions(source, this.encodingThread, params, ssIndex),
             ...passOptions,
@@ -274,7 +307,7 @@ module.exports = class FFmpegOption {
         ];
     }
 
-    static getExtension(params) {
-        return format[params.format].extension
+    static getExtension(type) {
+        return format[type].extension;
     }
 }
