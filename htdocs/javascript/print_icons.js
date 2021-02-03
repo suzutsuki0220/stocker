@@ -27,19 +27,19 @@ function printIcons(i, e) {
             action = HTDOCS_ROOT + "/text_viewer.html?file=" + e.path + "&dir=" + e.root;
         } else if (stocker.supportTypes.pattern.doc.test(e.name)) {
             icon = stocker.uri.icon.doc;
-            action = stocker.uri.cgi.get_file + "?file=" + e.path + "&dir=" + e.root + "&mime=application/msword";
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         } else if (stocker.supportTypes.pattern.excel.test(e.name)) {
             icon = stocker.uri.icon.excel;
-            action = stocker.uri.cgi.get_file + "?file=" + e.path + "&dir=" + e.root + "&mime=application/vnd.ms-excel";
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         } else if (stocker.supportTypes.pattern.ppt.test(e.name)) {
             icon = stocker.uri.icon.ppt;
-            action = stocker.uri.cgi.get_file + "?file=" + e.path + "&dir=" + e.root + "&mime=application/vnd.ms-powerpoint";
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         } else if (stocker.supportTypes.pattern.pdf.test(e.name)) {
             icon = stocker.uri.icon.pdf;
-            action = stocker.uri.cgi.get_file + "?file=" + e.path + "&dir=" + e.root + "&mime=application/pdf";
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         } else {
             icon = stocker.uri.icon.unknown;
-            action = stocker.uri.cgi.get_file + "?file=" + e.path + "&dir=" + e.root + "&mime=application/octet-stream";
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         }
     }
 
