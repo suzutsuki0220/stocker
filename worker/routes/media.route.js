@@ -6,6 +6,7 @@ const contentTypes = require('../../webpack/src/content-types.js');
 const supportTypes = require('../../webpack/src/support_types.js');
 const stockerConf = require('../src/config-file.js').load('/stocker.conf');
 const FFmpegOption = require('../src/ffmpeg-option.js');
+const mediaLib = require('../build/Release/medialib');
 
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
 const { createEmitAndSemanticDiagnosticsBuilderProgram } = require('typescript');
@@ -146,5 +147,8 @@ module.exports = function (app) {
         const tempfile = path.join(tempdir, 'videoimage.jpg');
         makeVideoImage(req, tempfile);
         sendTemporaryFile('image/jpeg', tempfile, res);
+    });
+    app.get(apiRest + '/:root/:path(*)/movieInfo', function (req, res) {
+        res.send(mediaLib.getMovieInfo(req.params.root, req.params.path));
     });
 };

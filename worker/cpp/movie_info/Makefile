@@ -9,18 +9,17 @@ FFMPEG_LIBS=    libavdevice                        \
 
 include ../directory_defs.mk
 
-DIST_DIR = ../../dist/cgi-bin
-
 CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
+CFLAGS+=-I../include
 
-CFLAGS += -Wall -O2 -g
+CFLAGS += -Wall -O2 -g -fPIC
 CFLAGS := $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(FFMPEG_LIBS)) $(LDLIBS)
 CPPFLAGS=$(CFLAGS)
 
 CPP=g++
 
-TARGET = movie_info
+TARGET = movie_info.a
 SRC=$(wildcard *.cpp)
 OBJS=$(subst .cpp,.o,$(SRC))
 
@@ -28,22 +27,16 @@ OBJS=$(subst .cpp,.o,$(SRC))
 decoding_encoding: LDLIBS += -lm
 muxing:            LDLIBS += -lm
 
-.phony: all clean install
+.phony: all clean
 
-all: $(DIST_DIR) $(LIBSTOCKER_COMMON) $(addprefix $(DIST_DIR)/,$(TARGET))
+all: $(TARGET)
 
-$(DIST_DIR):
-	mkdir -p $(DIST_DIR)
+%.o: %.cpp $(INC)
+	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LDLIBS)
 
-$(DIST_DIR)/$(TARGET): $(OBJS) $(LIBSTOCKER_COMMON)
-	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
 
-$(LIBSTOCKER_COMMON):
-	make -C $(COMMON_MODULE_DIR)
+$(TARGET): $(OBJS)
+	ar rv $@ $^
 
 clean:
-	$(RM) $(DIST_DIR)/$(TARGET) $(OBJS)
-
-install:
-	mkdir -p $(CGI_DIR)
-	cp -r $(DIST_DIR)/$(TARGET) $(CGI_DIR)
+	$(RM) $(OBJS) $(TARGET)
