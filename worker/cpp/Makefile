@@ -26,12 +26,6 @@ install-bin:
 	make -C taginfo install CGI_DIR=$(CGI_DIR)
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
 
-libcheck:
-	./check_perllib.sh
-
-install-libs:
-	cp -r perl-modules/*.pm $(LIBS_DIR)
-
 make-directory:
 	mkdir -p $(CGI_DIR)
 	mkdir -p $(DOCS_DIR)
@@ -42,4 +36,4 @@ make-directory:
 	mkdir -p $(CONF_DIR)
 	mkdir -m 1777 -p $(CACHE_DIR)
 
-install: libcheck make-directory install-bin install-libs
+install: make-directory install-bin

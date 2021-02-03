@@ -38,13 +38,13 @@ window.addEventListener("load", function (event) {
     }
     makeMultiEditForm();
 
-    getDirectoryProperties(params.dir, files[0], function (properties) {
-        filename = properties.name;
-        upPath = properties.up_path;
+    getDirectoryProperties(params.dir, files[0], NaN, NaN, function (data) {
+        filename = data.properties.name;
+        upPath = data.properties.up_path;
 
         document.getElementById('fileNameArea').textContent = filename;
         sourceFileList(document.getElementById('source_file_list'));
-        getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
+        getMovieInfo(params.dir, files[0]);
         getSceneListFilePath(filename, params.dir, upPath);
     }, function (e) {
         console.log(e);
@@ -155,7 +155,7 @@ function addJob() {
 
     jsUtils.fetch.request(
         {
-            uri: formUri.scheme + "://" + formUri.host + stockerConfig.uri.converter.worker_api,
+            uri: '/api/v1/converts',
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: makeEncodeQuery(),
             mode: 'cors',
@@ -595,66 +595,48 @@ function getSceneListFilePath(file_name, root, dirpath) {
     });
 }
 
-function getMovieInfo(movie_info_url, root, path) {
+function getMovieInfo(root, path) {
     document.getElementById('information_table').innerHTML = "読み込み中";
 
     jsUtils.fetch.request({
-        uri: movie_info_url,
+        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: stocker.components.makeDirFileParam(root, path),
-        method: 'POST',
-        format: 'text'
+        method: 'GET',
+        format: 'json'
     }, showInfoTable, function () {
         render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
     });
 }
 
-function showInfoTable(text) {
+function showInfoTable(data) {
     var video_table = "";
     var audio_table = "";
-    var width, height;
 
-    const data = jsUtils.xml.getDom(text);
-    const xml = jsUtils.xml;
-    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
-    const properties = xml.getDataInElements(data, 'movie_info', ["filename", "filesize", "format", "duration"])[0];
-
-    if (!properties) {
-        document.getElementById('information_table').innerHTML = "予期しないデータを受け取りました";
-        return;
-    }
-
-    const videos = xml.getDataInElements(movie_info, 'video', ["no", "bitrate", "codec", "fps", "fps_average", "width", "height", "disp_width", "disp_height", "disp_aspect", "sar", "gop_size"]);
-    const audios = xml.getDataInElements(movie_info, 'audio', ['no', 'sample_rate', 'channel', 'bitrate', 'sample_fmt', 'codec']);
-
-    if (videos.length > 0) {
-        for (var i = 0; i < videos.length; i++) {
-            if (i === 0) {
+    for (const st of data.streams) {
+        if (st.type === 'video') {
+            if (video_table.length === 0) {
                 video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
             }
-            video_table += makeVideoTable(videos[i]);
-        }
-    }
-
-    if (audios.length > 0) {
-        for (var i = 0; i < audios.length; i++) {
-            if (i === 0) {
+            video_table += makeVideoTable(st);
+        } else if (st.type === 'audio') {
+            if (audio_table.length === 0) {
                 audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
             }
-            audio_table += makeAudioTable(audios[i]);
+            audio_table += makeAudioTable(st);
         }
     }
 
     document.getElementById('information_table').innerHTML
         = "<table border=\"3\">"
         + "<tr><th colspan=\"3\">全般</th></tr>"
-        + "<tr><th colspan=\"2\">ファイル名</th><td>" + properties.filename + "</td></tr>"
-        + "<tr><th colspan=\"2\">ファイルサイズ</th><td>" + properties.filesize + " Byte</td></tr>"
-        + "<tr><th colspan=\"2\">時間</th><td>" + properties.duration + "</td></tr>"
-        + "<tr><th colspan=\"2\">フォーマット</th><td>" + properties.format + "</td></tr>"
+        + "<tr><th colspan=\"2\">ファイル名</th><td>" + filename + "</td></tr>"
+        //        + "<tr><th colspan=\"2\">ファイルサイズ</th><td>" + "properties.filesize" + " Byte</td></tr>"
+        + "<tr><th colspan=\"2\">時間</th><td>" + data.duration + "</td></tr>"
+        + "<tr><th colspan=\"2\">フォーマット</th><td>" + data.format + "</td></tr>"
         + video_table + audio_table + "</table>";
 
-    const best_stream = getBestStream(videos, audios);
+    const best_stream = getBestStream(data.streams);
 
     // check radio button
     if (isNaN(best_stream.video.index) === false) {
@@ -694,7 +676,18 @@ function makeAudioTable(aud) {
 `;
 }
 
-function getBestStream(videos, audios) {
+function getBestStream(streams) {
+    const videos = new Array();
+    const audios = new Array();
+
+    for (const st of streams) {
+        if (st.type === 'video') {
+            videos.push(st);
+        } else if (st.type === 'audio') {
+            audios.push(st);
+        }
+    }
+
     if (videos.length === 0) {
         return {
             video: { no: NaN, index: NaN },
@@ -945,10 +938,12 @@ function sourceFileList(elem) {
     getDirectoryProperties(params.dir, upPath, NaN, NaN, function (data) {
         const ul = document.createElement('ul');
         data.elements.forEach(function (e) {
-            if (files.find(e.path)) {
-                const li = document.createElement('li');
-                li.innerText = e.name
-                ul.appendChild(li);
+            for (const f of files) {
+                if (f === e.path) {
+                    const li = document.createElement('li');
+                    li.innerText = e.name
+                    ul.appendChild(li);
+                }
             }
         })
         elem.appendChild(ul);

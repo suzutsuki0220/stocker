@@ -1,12 +1,6 @@
 const htdocs_root = "%htdocs_root%";
 const cgi_root = "%cgi_root%";
 
-const converter_uri = {
-    list: cgi_root + '/action/convertlist.cgi',
-    movie_info: cgi_root + '/movie_info',
-    worker_api: ':3030/api/v1/converts'
-};
-
 const picture_viewer_uri = {
     exif_info: cgi_root + '/exif_info'
 };
@@ -21,7 +15,6 @@ module.exports.list = htdocs_root + '/list.html';
 
 module.exports.cgi = {
     edit: cgi_root + '/edit.cgi',
-    converter: converter_uri,
     picture_viewer: picture_viewer_uri,
     music_player: music_player_uri
 };
