@@ -30,7 +30,7 @@
         }
         setLoading(document.f1.previewStart, document.getElementById("reloadingStart"), document.f1.selectedTimeStart);
         setLoading(document.f1.previewEnd, document.getElementById("reloadingEnd"), document.f1.selectedTimeEnd);
-        getMovieDuration(stockerConfig.uri.converter.movie_info, params.dir, files[0], params.v_map);
+        getMovieDuration(params.dir, files[0], params.v_map);
         document.f1.btnApply.focus();
 
         buildSkipOptions();

@@ -50,10 +50,9 @@ window.addEventListener("load", function (event) {
         console.log(e);
     });
 
-    document.enc_setting.action = stockerConfig.uri.converter.form;
     document.getElementById('vimg').src = getPreviewUrl(640);
     document.adjpreview.src = GRAY_PAD;
-    document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
+    //document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
 
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
@@ -574,19 +573,11 @@ function getSceneListFilePath(file_name, root, dirpath) {
     sceneListPath = "";
 
     jsUtils.fetch.request({
-        uri: stockerConfig.uri.get_dir,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: stocker.components.makeDirFileParam(root, dirpath),
-        method: 'POST',
-        format: 'text'
-    }, function (text) {
-        const xml = jsUtils.xml.getDom(text);
-        const directory = jsUtils.xml.getFirstFoundChildNode(xml, 'directory');
-        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-        const elements = jsUtils.xml.getDataInElements(contents, 'element', ['name', 'path', 'type']);
-
-        for (var i = 0; i < elements.length; i++) {
-            const e = elements[i];
+        uri: '/api/v1/storage/' + root + '/' + dirpath + '/properties',
+        method: 'GET',
+        format: 'json'
+    }, function (json) {
+        for (const e of json.elements) {
             if (e.type === 'FILE' && e.name === list_file) {
                 sceneListPath = e.path;
                 break;
@@ -600,8 +591,6 @@ function getMovieInfo(root, path) {
 
     jsUtils.fetch.request({
         uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: stocker.components.makeDirFileParam(root, path),
         method: 'GET',
         format: 'json'
     }, showInfoTable, function () {

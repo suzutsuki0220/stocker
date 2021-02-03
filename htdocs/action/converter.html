@@ -52,7 +52,6 @@
   <div class="card-content">
     <div class="content">
       <h2>変換元ファイル</h2>
-
       <p id="source_file_list"></p>
     </div>
   </div>
@@ -158,7 +157,7 @@
 <br><br>
 <fieldset>
 <legend>時間</legend>
-<input type="checkbox" name="set_position" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
+<input type="checkbox" name="set_position" value="true" onChange="showElem(getElementById('TimeSel'), document.enc_setting.set_position)"> 出力する範囲を指定<br>
 <div id="TimeSel" style="display: none">
 1.位置 <input type="text" name="ss0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, '0')">
  ～ <input type="text" name="tend0" class="hhmmssxxx" value="00:00:00.000" onClick="openTimerSelector(this, '0')">
@@ -237,7 +236,7 @@
 <option>libtheora</option>
 </select><br>
 追加オプション <input type="text" name="v_option" size="50"><br>
-<input type="checkbox" name="enable_crop" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
+<input type="checkbox" name="enable_crop" value="true" onChange="showElem(getElementById('TrimSel'), document.enc_setting.enable_crop)"> トリミング&nbsp;&nbsp;
 <span id="TrimSel" style="display: none">
 <input type="button" name="preset_crop43" onClick="setPresetCrop43()" value="to 4:3">
 <br>
@@ -247,7 +246,7 @@
 <input type="button" onClick="openPreviewWindow()" value="preview">
 </span>
 <br>
-<input type="checkbox" name="enable_pad" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp;
+<input type="checkbox" name="enable_pad" value="true" onChange="showElem(getElementById('PaddingSel'), document.enc_setting.enable_pad)"> Padding&nbsp;&nbsp;
 <span id="PaddingSel" style="display: none">
 サイズ <input type="text" name="pad_w" onChange="print_aspect('padding')" size="5">x<input type="text" name="pad_h" onChange="print_aspect('padding')" size="5">
 (比率 <span id="padding_aspect">-----</span>)
@@ -259,11 +258,11 @@
 <br>
 解像度 <input type="text" name="s_w" size="5" onChange="fixHeight()">x<input type="text" name="s_h" size="5" onChange="fixWidth()">
 (比率 <span id="s_aspect">-----</span>)
-<input type="checkbox" name="save_aspect" value="1" checked>比率を保持する<br>
+<input type="checkbox" name="save_aspect" value="true" value="1" checked>比率を保持する<br>
 縦横比 <select name="aspect_set"><option value="none">設定しない</option><option value="setsar">SAR</option><option value="setdar">DAR</option></select> 比率<input type="text" name="aspect_numerator" size="4">/<input type="text" name="aspect_denominator" size="4"><br>
 フレームレート <input type="text" name="r"><br>
 <input type="radio" name="encode_type" value="bitrate" checked>ビットレート <input type="text" name="b" size="30">kbps&nbsp;&nbsp;
-<input type="checkbox" name="pass2"> 2パスエンコード&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="checkbox" name="pass2" value="true"> 2パスエンコード&nbsp;&nbsp;&nbsp;&nbsp;
 (ビットレートの目安: <span id="aimed_bitrate">---- kbps</span>
 &nbsp;&nbsp;動作: <input type="radio" name="move_freq" value="high">高度 <input type="radio" name="move_freq" value="middle" checked>中度 <input type="radio" name="move_freq" value="low">低度 <input type="button" name="btn_calc_bitrate_aim" value="算出" onClick="calcBitrateAim()">)<br>
 <input type="radio" name="encode_type" value="crf">CRF <input type="text" name="crf" size="10">&nbsp&nbsp
@@ -280,7 +279,7 @@
   <option>placebo</option>
 </select>
 <fieldset><legend>画質調整</legend>
-<input type="checkbox" name="enable_adjust" onChange="actionAdjEnable(); showElem(getElementById('adjustForm'), document.enc_setting.enable_adjust)"> 画質調整する<br>
+<input type="checkbox" name="enable_adjust" value="true" onChange="actionAdjEnable(); showElem(getElementById('adjustForm'), document.enc_setting.enable_adjust)"> 画質調整する<br>
 <div id="adjustForm" style="display: none">
 <img src="" style="float: left; margin-right: 10px;" name="adjpreview" width="320" height="240">
 明るさ
@@ -345,8 +344,8 @@ weight
 <input type="button" onClick="openPreviewWindow()" value="preview"><br>
 </div>
 </fieldset>
-<input type="checkbox" name="deinterlace" checked> インタレース解除<br>
-<input type="checkbox" name="deshake"> 手振れ低減<br>
+<input type="checkbox" name="deinterlace" value="true" checked> インタレース解除<br>
+<input type="checkbox" name="deshake" value="true"> 手振れ低減<br>
 </fieldset><br>
 <fieldset>
 <legend>音声設定</legend>

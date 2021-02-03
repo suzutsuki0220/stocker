@@ -77,7 +77,7 @@ function closeWindow() {
 
 function getImageURL(elem) {
     var ss = elem.value;
-    return stockerConfig.uri.converter.movie_img + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=1&ss=" + ss;
+    return '/api/v1/media/' + params.dir + '/' + params.file + '/videoImage' + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=true&ss0=" + ss;
 }
 
 function reloadImage() {
@@ -276,16 +276,14 @@ function addTime(num) {
     }
 }
 
-function getMovieDuration(movie_info_url, root, path, vno) {
+function getMovieDuration(root, path, vno) {
     jsUtils.fetch.request({
-        method: 'POST',
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        format: 'text',
-        uri: movie_info_url,
+        method: 'GET',
+        format: 'json',
+        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
         body: stocker.components.makeDirFileParam(root, path)
-    }, function (text) {
-        const responseXML = jsUtils.xml.getDom(text);
-        getMovieDurationResult(responseXML, vno);
+    }, function (json) {
+        getMovieDurationResult(json, Number(vno));
         callGetSceneData();
     }, function (message) {
         alert("動画の長さ取得に失敗しました - " + message);
@@ -293,19 +291,15 @@ function getMovieDuration(movie_info_url, root, path, vno) {
 }
 
 function getMovieDurationResult(data, vno) {
-    const xml = jsUtils.xml;
-    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
-    const hhmmssxxx = xml.getFirstFoundTagData(movie_info.childNodes, 'duration');
+    const hhmmssxxx = data.duration;
     if (hhmmssxxx) {
         duration = getSecondFromFormatTime(hhmmssxxx);
         moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
 
-        const videos = xml.getDataInElements(movie_info, 'video', ["no", "disp_width", "disp_height"]);
-        for (var i = 0; i < videos.length; i++) {
-            const v = videos[i];
-            if (vno === v.no) {
-                const disp_width = parseInt(v.disp_width);
-                const disp_height = parseInt(v.disp_height);
+        for (const st of data.streams) {
+            if (vno === st.no) {
+                const disp_width = parseInt(st.disp_width);
+                const disp_height = parseInt(st.disp_height);
                 if (disp_width.length !== 0 && disp_height !== 0) {
                     setPreviewSize(document.getElementById('startPreviewArea'), disp_width, disp_height);
                     setPreviewSize(document.getElementById('endPreviewArea'), disp_width, disp_height);
