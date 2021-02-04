@@ -20,8 +20,6 @@ clean:
 
 install-bin:
 	make -C config install $(INSTALL_PARAM)
-	make -C exif_info install $(CGI_DIR)
-	make -C movie_info install $(CGI_DIR)
 	make -C status install CGI_DIR=$(CGI_DIR)
 	make -C taginfo install CGI_DIR=$(CGI_DIR)
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
