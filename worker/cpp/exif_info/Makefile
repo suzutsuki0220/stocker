@@ -1,41 +1,29 @@
 # use pkg-config for getting CFLAGS and LDLIBS
 EXIF_LIBS=libexif
-TARGET=exif_info
+TARGET=exif_info.a
 CPP=g++
 
-DIST_DIR = ../../dist/cgi-bin
-
-CFLAGS += -Wall -O2 -g
+CFLAGS += -Wall -O2 -g -fPIC
 CFLAGS := $(shell pkg-config --cflags $(EXIF_LIBS)) $(CFLAGS)
 LDLIBS := $(shell pkg-config --libs $(EXIF_LIBS)) $(LDLIBS)
 
 include ../directory_defs.mk
 
-CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
+CFLAGS+=-I../include
 CPPFLAGS=$(CFLAGS)
 
 SRC=$(wildcard *.cpp)
 OBJS=$(subst .cpp,.o,$(SRC))
 
-.phony: all clean install
+.phony: all clean
 
-all: $(DIST_DIR) $(LIBSTOCKER_COMMON) $(addprefix $(DIST_DIR)/,$(TARGET))
+all: $(TARGET)
 
 .cpp.o:
 	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LDLIBS)
 
-$(DIST_DIR):
-	mkdir -p $(DIST_DIR)
-
-$(DIST_DIR)/$(TARGET): $(OBJS) $(LIBSTOCKER_COMMON)
-	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
-
-$(LIBSTOCKER_COMMON):
-	make -C $(COMMON_MODULE_DIR)
+$(TARGET): $(OBJS)
+	ar rv $@ $^
 
 clean:
-	$(RM) $(DIST_DIR)/$(TARGET) $(OBJS)
-
-install:
-	mkdir -p $(CGI_DIR)
-	cp -r $(DIST_DIR)/$(TARGET) $(CGI_DIR)
+	$(RM) $(TARGET) $(OBJS)

@@ -3,6 +3,7 @@
 #include "UrlPath.h"
 
 #include "path.h"
+#include "exif_info.h"
 #include "movie_info.h"
 
 static bool getPathArgument(napi_env env, napi_callback_info info, Path_t &decodedPath)
@@ -45,6 +46,30 @@ static bool getPathArgument(napi_env env, napi_callback_info info, Path_t &decod
     }
 
     return true;
+}
+
+napi_value
+getExif(napi_env env, napi_callback_info info)
+{
+    Path_t path;
+    std::string result_json;
+
+    if (getPathArgument(env, info, path) == false) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return nullptr;
+    }
+
+    try {
+        get_exif(path, result_json);
+    } catch(std::invalid_argument &e) {
+        napi_throw_type_error(env, NULL, e.what());
+        return nullptr;
+    }
+
+    napi_value string;
+    napi_create_string_utf8(env, result_json.c_str(), result_json.length(), &string);
+
+    return string;
 }
 
 napi_value
@@ -94,6 +119,9 @@ Init(napi_env env, napi_value exports)
     if (status != napi_ok) return NULL;
     status = napi_set_named_property(env, exports, "getMediaTag", fn);
     if (status != napi_ok) return NULL;
+
+    status = napi_create_function(env, NULL, NAPI_AUTO_LENGTH, getExif, NULL, &fn);
+    status = napi_set_named_property(env, exports, "getExif", fn);
 
     status = napi_create_function(env, NULL, NAPI_AUTO_LENGTH, getMovieInfo, NULL, &fn);
     status = napi_set_named_property(env, exports, "getMovieInfo", fn);

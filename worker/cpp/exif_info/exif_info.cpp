@@ -5,129 +5,108 @@
 #include <libexif/exif-data.h>
 #include <libexif/exif-loader.h>
 
-#include "htmlutil.h"
-#include "cgi_util.h"
-#include "UrlPath.h"
-#include "Config.h"
+#include "exif_info.h"
 
 #define TAG_VALUE_BUF 1024
+
+std::stringstream entry_ss;
 
 static inline void
 remove_bad_chars(char *s)
 {
-    while (*s) {
-        if ((*s == '(') || (*s == ')') || (*s == ' '))
+    while (*s)
+    {
+        if (*s == '"')
             *s = '_';
         ++s;
     }
 }
 
 static void
-show_entry_xml(ExifEntry *e, void *data)
+get_entry(ExifEntry *e, void *data)
 {
-    char v[TAG_VALUE_BUF], t[TAG_VALUE_BUF];
+    char v[TAG_VALUE_BUF], t[TAG_VALUE_BUF], tagbuf[32];
 
     strncpy(t, exif_tag_get_title_in_ifd(e->tag, exif_entry_get_ifd(e)), sizeof(t) - 1);
 
     /* Remove invalid characters from tag eg. (, ), space */
     remove_bad_chars(t);
 
-    fprintf(stdout, "\t<data id=\"0x%04x\" name=\"%s\">", e->tag, t);
-    fprintf(stdout, "%s", exif_entry_get_value (e, v, sizeof (v)));
-    fprintf(stdout, "</data>\n");
+    sprintf(tagbuf, "0x%04x", e->tag);
+    if (entry_ss.str().length() != 0) {
+        entry_ss << ", ";
+    }
+    entry_ss << "{\"id\": \"" << tagbuf << "\", \"name\": \"" << t << "\", \"value\": \"" << exif_entry_get_value(e, v, sizeof(v)) << "\"}";
 }
 
 static void
-show_xml(ExifData *data)
+show_xml(ExifData *data, std::string &result)
 {
     int i;
+    std::stringstream ss;
 
-    fprintf(stdout, "Content-Type: application/xml\n\n");
-    fprintf(stdout, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    fprintf(stdout, "<exif_info>\n");
-    for(i=0; i<EXIF_IFD_COUNT; i++) {
-        fprintf(stdout, "<group name=\"%s\">\n", exif_ifd_get_name((ExifIfd)i));
-        exif_content_foreach_entry(data->ifd[i], show_entry_xml, NULL);
-        fprintf(stdout, "</group>\n");
+    ss.str("");  // stream clear
+    ss << "{";
+    for (i = 0; i < EXIF_IFD_COUNT; i++)
+    {
+        if (i != 0) {
+            ss << ", ";
+        }
+
+        entry_ss.str("");
+        ss << "\"" << exif_ifd_get_name((ExifIfd)i) << "\": [";
+        exif_content_foreach_entry(data->ifd[i], get_entry, NULL);
+        ss << entry_ss.str() << "]";
     }
-    fprintf(stdout, "<thumbnail>\n");
-    fprintf(stdout, "\t<size>%u</size>\n", data->size);
-    fprintf(stdout, "</thumbnail>\n");
-    fprintf(stdout, "</exif_info>\n");
+    ss << ", \"thumbnail\": {";
+    ss << "\"size\": " << data->size;
+    ss << "}";
+
+    ss << "}";
+
+    result = ss.str();
 }
 
+/*
 static void
 output_thumbnail(ExifData *data)
 {
-    if (data->size == 0) {
+    if (data->size == 0)
+    {
         print_400_header("This image does not seem to contain thumbnail");
-    } else {
+    }
+    else
+    {
         fprintf(stdout, "Content-Type: image/jpeg\n");
         fprintf(stdout, "Content-Length: %u\n\n", data->size);
 
         fwrite(data->data, (size_t)data->size, 1, stdout);
     }
 }
+*/
 
-static void
-exif_load(std::string &mode, const char *path)
+void
+get_exif(Path_t &decodedPath, std::string &result)
 {
     ExifData *ed = NULL;
     ExifLoader *l;
 
     l = exif_loader_new();
 
-    exif_loader_write_file(l, path);
+    exif_loader_write_file(l, decodedPath.path.c_str());
     ed = exif_loader_get_data(l);
-    if(ed == NULL) {
+    if (ed == NULL)
+    {
         exif_loader_unref(l);
         throw std::invalid_argument("This image does not seem to contain EXIF data");
     }
 
-    if (mode.empty() || mode == "exif") {
-        show_xml(ed);
-    } else if (mode == "thumbnail") {
-        output_thumbnail(ed);
-    }
+    show_xml(ed, result);
+
+    //else if (mode == "thumbnail")
+    //{
+    //    output_thumbnail(ed);
+    //}
 
     exif_loader_unref(l);
-}
-
-int
-main(int argc, char **argv)
-{
-    int ret = -1;
-
-    try {
-        cgi_util *cgi = new cgi_util();
-        if (cgi->parse_param() != 0) {
-            throw std::invalid_argument(cgi->get_err_message().c_str());
-        }
-
-        UrlPath *urlpath = new UrlPath();
-
-        std::string f_dir  = cgi->get_value("dir");
-        std::string f_file = cgi->get_value("file");
-        std::string f_mode = cgi->get_value("mode");
-
-        f_dir = cgi->decodeFormURL(f_dir);
-
-        std::string filepath;
-        if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
-            throw std::invalid_argument("failed to determine filepath");
-        }
-
-        f_mode = cgi->decodeFormURL(f_mode);
-        exif_load(f_mode, filepath.c_str());
-
-        ret = 0;
-    } catch (std::bad_alloc &ex) {
-        fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
-    } catch (std::invalid_argument &e) {
-        std::stringstream ss;
-        ss << "Exception: " << e.what();
-        print_400_header(ss.str().c_str());
-    }
-
-    return ret;
 }

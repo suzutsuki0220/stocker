@@ -9,7 +9,6 @@ FFMPEG_LIBS=    libavdevice                        \
 
 include ../directory_defs.mk
 
-CFLAGS+=-I$(COMMON_MODULE_DIR)/Inc
 CFLAGS+=-I../include
 
 CFLAGS += -Wall -O2 -g -fPIC
@@ -31,9 +30,8 @@ muxing:            LDLIBS += -lm
 
 all: $(TARGET)
 
-%.o: %.cpp $(INC)
+%.o: %.cpp
 	$(CPP) $(CPPFLAGS) -o $@ -c $< $(LDLIBS)
-
 
 $(TARGET): $(OBJS)
 	ar rv $@ $^

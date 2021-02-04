@@ -30,6 +30,7 @@
       "defines" : [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
       "libraries": [
         "../cpp/common/libstockercommon.a",
+        "../cpp/exif_info/exif_info.a",
         "../cpp/movie_info/movie_info.a"
       ],
       "include_dirs" : [

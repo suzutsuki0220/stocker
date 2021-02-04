@@ -148,7 +148,12 @@ module.exports = function (app) {
         makeVideoImage(req, tempfile);
         sendTemporaryFile('image/jpeg', tempfile, res);
     });
+    app.get(apiRest + '/:root/:path(*)/exif', function (req, res) {
+        res.type('application/json');
+        res.send(mediaLib.getExif(req.params.root, req.params.path));
+    })
     app.get(apiRest + '/:root/:path(*)/movieInfo', function (req, res) {
+        res.type('application/json');
         res.send(mediaLib.getMovieInfo(req.params.root, req.params.path));
     });
 };
