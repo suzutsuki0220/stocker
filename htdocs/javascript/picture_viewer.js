@@ -181,67 +181,63 @@ function toggleExifLayer(path) {
 }
 
 function requestExifData(path) {
-    const ajax = jsUtils.ajax;
-    ajax.init();
-    ajax.setOnLoading(function (httpRequest) {
-        document.getElementById('ExifLayer').innerHTML = "loading...";
-    });
-    ajax.setOnSuccess(function (httpRequest) {
-        showExif(httpRequest)
-    });
-    ajax.setOnError(function (httpRequest) {
-        document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";
-    });
+    document.getElementById('ExifLayer').innerHTML = "loading...";
 
-    const query = "mode=exif&dir=" + params.dir + "&file=" + path;
-    ajax.post(stockerConfig.uri.picture_viewer.exif_info, query);
+    fetch('/api/v1/media/' + params.dir + '/' + path + '/exif', {
+        method: 'GET',
+        mode: 'same-origin',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer'
+    }).then(function (response) {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return Promise.reject(new Error(response.status + ' ' + response.statusText));
+        }
+    }).then(showExif)
+        .catch(function (error) {
+            console.warn(error);
+            document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";
+        });
 }
 
-function showExif(httpRequest) {
-    var exif = new Object();
-    const xml = jsUtils.xml;
-    const exif_info = xml.getFirstFoundChildNode(httpRequest.responseXML, "exif_info");
-    const groups = xml.getChildNodes(exif_info, "group");
-
-    for (var i = 0; i < groups.length; i++) {
-        const group_name = xml.getAttributes(groups[i]).name;
-        if (group_name === "0") {
-            const data = xml.getChildNodes(groups[i], "data");
-            if (data) {
-                for (var j = 0; j < data.length; j++) {
-                    const name = xml.getAttributes(data[j]).name;
-                    if (name === "Manufacturer") {
-                        exif.maker = data[j].textContent;
-                    } else if (name === "Model") {
-                        exif.model = data[j].textContent;
-                    }
-                }
+function showExif(json) {
+    let exif = new Object();
+    if (json['0']) {
+        for (const data of json['0']) {
+            if (data.name === "Manufacturer") {
+                exif.maker = data.value;
+            } else if (data.name === "Model") {
+                exif.model = data.value;
+            } else if (data.id === "0x0100") {
+                exif.width = data.value;
+            } else if (data.id === "0x0101") {
+                exif.height = data.value;
             }
-        } else if (group_name === "EXIF") {
-            const data = xml.getChildNodes(groups[i], "data");
-            if (data) {
-                for (var j = 0; j < data.length; j++) {
-                    const name = xml.getAttributes(data[j]).name;
-                    if (name === "Exif_Version") {
-                        exif.version = data[j].textContent;
-                    } else if (name === "Pixel_X_Dimension") {
-                        exif.width = data[j].textContent;
-                    } else if (name === "Pixel_Y_Dimension") {
-                        exif.height = data[j].textContent;
-                    } else if (name === "Date_and_Time__Original_") {
-                        exif.created_at = data[j].textContent;
-                    } else if (name === "F-Number") {
-                        exif.f = data[j].textContent;
-                    } else if (name === "Exposure_Time") {
-                        exif.exposure_time = data[j].textContent;
-                    } else if (name === "ISO_Speed_Ratings") {
-                        exif.iso = data[j].textContent;
-                    } else if (name === "Exposure_Bias") {
-                        exif.exposure_bias = data[j].textContent;
-                    } else if (name === "Focal_Length") {
-                        exif.focal = data[j].textContent;
-                    }
-                }
+        }
+    }
+    if (json['EXIF']) {
+        for (const data of json['EXIF']) {
+            if (data.name === "Exif Version") {
+                exif.version = data.value;
+            } else if (!exif.width && data.name === "Pixel X Dimension") {
+                exif.width = data.value;
+            } else if (!exif.height && data.name === "Pixel Y Dimension") {
+                exif.height = data.value;
+            } else if (data.name === "Date and Time (Original)") {
+                exif.created_at = data.value;
+            } else if (data.name === "F-Number") {
+                exif.f = data.value;
+            } else if (data.name === "Exposure Time") {
+                exif.exposure_time = data.value;
+            } else if (data.name === "ISO Speed Ratings") {
+                exif.iso = data.value;
+            } else if (data.name === "Exposure Bias") {
+                exif.exposure_bias = data.value;
+            } else if (data.name === "Focal Length") {
+                exif.focal = data.value;
             }
         }
     }

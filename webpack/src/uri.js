@@ -1,10 +1,6 @@
 const htdocs_root = "%htdocs_root%";
 const cgi_root = "%cgi_root%";
 
-const picture_viewer_uri = {
-    exif_info: cgi_root + '/exif_info'
-};
-
 const music_player_uri = {
     tag_info: cgi_root + '/taginfo'
 };
@@ -15,7 +11,6 @@ module.exports.list = htdocs_root + '/list.html';
 
 module.exports.cgi = {
     edit: cgi_root + '/edit.cgi',
-    picture_viewer: picture_viewer_uri,
     music_player: music_player_uri
 };
 
