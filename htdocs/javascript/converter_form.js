@@ -9,7 +9,7 @@ let filename, upPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crf', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'encode_type', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'preset', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
+const enc_params = ['after_combine_them', 'a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crf', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'encode_type', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'preset', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
 
 const encodeFormats = {
     video: [

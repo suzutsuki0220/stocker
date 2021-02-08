@@ -45,11 +45,28 @@ function setPassOption(params, pass, dest) {
     return [];
 }
 
+// 複数のファイルを結合するにはパスを書き出したファイルをffmpegに渡す
+function makeCombineListfile(files) {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stockerWorker-'));
+    const listFile = path.join(tmpDir, jsUtils.file.getNameFromPath(files[0]).filename + '.txt');
+    let data = "";
+    files.forEach(file => {
+        data += 'file \'' + file + '\'\n';
+    });
+
+    fs.writeFileSync(listFile, data, { encoding: 'utf8', flag: 'w' });
+
+    return listFile;
+}
+
 function composeConvertCommand(cmdgroup, source, dest, params) {
     let ssIndex = 0;
     const ret = new Array();
+    const outputs = new Array();
 
     do {
+        outputs.push(makeOutputPath(source, dest, params, params.pass2 === "true" ? 1 : 2, ssIndex));
+
         // 1pass encoding
         ret.push({
             cmdgroup: cmdgroup,
@@ -71,6 +88,35 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
         ssIndex++;
     } while (params['ss' + ssIndex]);
 
+    if (params.set_position === 'true' && params.after_combine_them === 'true') {
+        const listFile = makeCombineListfile(outputs);
+        const concatOutput = dest + '/concat_' + jsUtils.file.getNameFromPath(outputs[0]).filename + '.' + FFmpegOption.getExtension(params.format);
+        const concatParams = {
+            ...params,
+            set_position: false,
+            multi_editmode: 'combine',
+            v_convert: 'copy',
+            v_map: '',
+            frames: '',
+            a_convert: 'copy',
+            a_map: ''
+        };
+        ret.push({
+            cmdgroup: cmdgroup,
+            command: stockerConf.ffmpeg_cmd,
+            options: ffmpegOption.compose(listFile, concatOutput, concatParams),
+            queue: (params.v_convert === 'copy') ? 1 : 0
+        });
+
+        const tmpDir = jsUtils.file.getNameFromPath(listFile).dirname;
+        ret.push({
+            cmdgroup: cmdgroup,
+            command: "/usr/bin/rm",
+            options: ['-rf', tmpDir],
+            queue: (params.v_convert === 'copy') ? 1 : 0
+        });
+    }
+
     return ret;
 }
 
@@ -88,15 +134,7 @@ function getSourcePath(stockerLib, params) {
     decoded.sort();
 
     if (params.multi_editmode === 'combine') {
-        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stockerWorker-'));
-        const listFile = path.join(tmpDir, jsUtils.file.getNameFromPath(decoded[0]).filename + '.txt');
-        let data = "";
-        decoded.forEach(file => {
-            data += 'file \'' + file + '\'\n';
-        });
-
-        fs.writeFileSync(listFile, data, { encoding: 'utf8', flag: 'w' });
-        return [listFile];
+        return [makeCombineListfile(decoded)];
     }
 
     return decoded;
@@ -133,7 +171,7 @@ module.exports = function (params) {
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mkdir",
                 options: ['-p', dest.converting],
-                queue: 0
+                queue: (params.v_convert === 'copy') ? 1 : 0
             });
 
             ret = ret.concat(composeConvertCommand(cmdgroup, source, dest.converting, params));
@@ -144,7 +182,7 @@ module.exports = function (params) {
                     cmdgroup: cmdgroup,
                     command: "/usr/bin/rm",
                     options: ['-rf', tmpDir],
-                    queue: 0
+                    queue: (params.v_convert === 'copy') ? 1 : 0
                 });
             }
 
@@ -153,7 +191,7 @@ module.exports = function (params) {
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mv",
                 options: [dest.converting, dest.done],
-                queue: 0
+                queue: (params.v_convert === 'copy') ? 1 : 0
             });
         });
 
