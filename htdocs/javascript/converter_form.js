@@ -593,7 +593,8 @@ function getMovieInfo(root, path) {
         uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
         method: 'GET',
         format: 'json'
-    }, showInfoTable, function () {
+    }, showInfoTable, function (e) {
+        console.warn(e);
         render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
     });
 }

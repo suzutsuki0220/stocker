@@ -78,8 +78,8 @@ static void print_video_tag(std::stringstream &ss, AVStream *vst, const int stre
     ss << "\"bitrate\": " << vst->codec->bit_rate << ", " << std::endl;
     //ss << "  <codec_name>" << vst->codec->codec_name << " </codec_name> << std::endl; // ffmpeg-1.0
     ss << "\"codec\": \"" << avcodec_get_name(vst->codec->codec_id) << "\", " << std::endl;
-    ss << "\"fps\": " << (double)vst->r_frame_rate.num / (double)vst->r_frame_rate.den << ", " << std::endl;
-    ss << "\"fps_average\": " << (double)vst->avg_frame_rate.num / (double)vst->avg_frame_rate.den << ", " << std::endl;
+    ss << "\"fps\": " << ((vst->r_frame_rate.num && vst->r_frame_rate.den) ? (double)vst->r_frame_rate.num / (double)vst->r_frame_rate.den : NULL) << ", " << std::endl;
+    ss << "\"fps_average\": " << ((vst->avg_frame_rate.num && vst->avg_frame_rate.den) ? (double)vst->avg_frame_rate.num / (double)vst->avg_frame_rate.den : NULL) << ", " << std::endl;
     ss << "\"width\": " << vst->codec->width << ", " << std::endl;
     ss << "\"height\": " << vst->codec->height << ", " << std::endl;
 
