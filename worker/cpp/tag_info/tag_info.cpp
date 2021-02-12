@@ -39,17 +39,10 @@
 #include <taglib/mp4file.h>
 #include <taglib/id3v2tag.h>
 
+#include "tag_info.h"
 #include "noimage.h"
-#include "htmlutil.h"
-#include "cgi_util.h"
-#include "UrlPath.h"
-#include "Config.h"
 
 using namespace std;
-
-#ifndef CONFDIR
-#define CONFDIR "/var/www/stocker/conf"
-#endif
 
 #define MYBUFSZ 1024
 void
@@ -57,7 +50,7 @@ conv(string &str)
 {
     iconv_t ic;
     char    str_out[MYBUFSZ+1];
-    char *ptr_in  = (char*)str.c_str();
+    char    *ptr_in  = (char*)str.c_str();
     size_t  ptr_in_size = str.size();
     char    *ptr_out = str_out;
     size_t  mybufsz = (size_t) MYBUFSZ;
@@ -77,41 +70,24 @@ extractFileProperty(std::stringstream &ss, TagLib::File *file) {
 
     const TagLib::PropertyMap prop = file->properties();
     if (prop.contains("DISCNUMBER")) {
-        ss << "  <disc_number>" << prop["DISCNUMBER"].toString() << "</disc_number>"   << endl;
+        ss << "\"disc_number\": \"" << prop["DISCNUMBER"].toString() << "\", ";
     }
 }
 
-int
-outputAudioTags(cgi_util *cgi, TagLib::FileRef &f)
+void
+outputAudioTags(std::string &result, TagLib::FileRef &f)
 {
     if (f.isNull() || !f.tag()) {
-        print_400_header("invalid file reference");
-        return -1;
+        throw std::runtime_error("invalid file reference");
     }
 
     std::stringstream ss;
     TagLib::Tag *tag = f.tag();
 
-    std::string title, artist, album, comment, genre;
-    title   = tag->title().to8Bit(true);
-    artist  = tag->artist().to8Bit(true);
-    album   = tag->album().to8Bit(true);
-    comment = tag->comment().to8Bit(true);
-    genre   = tag->genre().to8Bit(true);
+    //string title = tag->title().toCString();
+    //conv(title);
 
-     //string title = tag->title().toCString();
-     //conv(title);
-
-    ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
-    ss << "<tag>" << endl;
-    ss << "  <title>"   << cgi->escapeHtml(title)   << "</title>"   << endl;
-    ss << "  <artist>"  << cgi->escapeHtml(artist)  << "</artist>"  << endl;
-    ss << "  <album>"   << cgi->escapeHtml(album)   << "</album>"   << endl;
-    ss << "  <year>"    << tag->year()              << "</year>"    << endl;
-    ss << "  <comment>" << cgi->escapeHtml(comment) << "</comment>" << endl;
-    ss << "  <track>"   << tag->track()             << "</track>"   << endl;
-    ss << "  <genre>"   << cgi->escapeHtml(genre)   << "</genre>"   << endl;
-
+    ss << "{ ";
     extractFileProperty(ss, f.file());
 
     if (f.audioProperties()) {
@@ -119,35 +95,33 @@ outputAudioTags(cgi_util *cgi, TagLib::FileRef &f)
         int seconds = properties->length() % 60;
         int minutes = (properties->length() - seconds) / 60;
 
-        ss << "  <bitrate>"     << properties->bitrate()    << "</bitrate>"     << endl;
-        ss << "  <sample_rate>" << properties->sampleRate() << "</sample_rate>" << endl;
-        ss << "  <channels>"    << properties->channels()   << "</channels>"    << endl;
-        ss << "  <duration>" << properties->length() << "</duration>"    << endl;
-        ss << "  <time>" << minutes << ":" << setfill('0') << setw(2) << seconds << "</time>" << endl;
+        ss << "\"bitrate\": "     << properties->bitrate()    << ", ";
+        ss << "\"sample_rate\": " << properties->sampleRate() << ", ";
+        ss << "\"channels\": "    << properties->channels()   << ", ";
+        ss << "\"duration\": "    << properties->length()     << ", ";
+        ss << "\"time\": \"" << minutes << ":" << setfill('0') << setw(2) << seconds << "\", ";
     }
 
-    ss << "</tag>" << endl;
+    ss << "\"title\": \""   << tag->title().to8Bit(true)   << "\", ";
+    ss << "\"artist\": \""  << tag->artist().to8Bit(true)  << "\", ";
+    ss << "\"album\": \""   << tag->album().to8Bit(true)   << "\", ";
+    ss << "\"comment\": \"" << tag->comment().to8Bit(true) << "\", ";
+    ss << "\"genre\": \""   << tag->genre().to8Bit(true)   << "\", ";
+    ss << "\"year\": "    << tag->year()                 << ", ";
+    ss << "\"track\": "   << tag->track();
+    ss << "}";
 
-    if (ss.str().empty()) {
-        print_400_header("failed to get tag properties");
-        return -1;
-    } else {
-        print_200_header("application/xml", ss.str().length());
-        fwrite(ss.str().c_str(), ss.str().length(), sizeof(char), stdout);
-    }
-
-    return 0;
+    result = ss.str();
 }
 
-int
-outputPicture(TagLib::FileRef &f)
+void
+outputPicture(std::string &result, TagLib::FileRef &f)
 {
     const char *mimetype;
     TagLib::ByteVector bytevector;
 
     if(f.isNull()) {
-        print_400_header("invalid file reference");
-        return -1;
+        throw std::runtime_error("invalid file reference");
     }
 
     if(dynamic_cast<TagLib::FLAC::File*>(f.file())) {
@@ -216,6 +190,7 @@ outputPicture(TagLib::FileRef &f)
         }
     }
 
+/* todo output buffer
     if (bytevector.isNull() || bytevector.size() == 0) {
         mimetype = "image/png";
         print_200_header(mimetype, sizeof(noimage_data));
@@ -224,55 +199,44 @@ outputPicture(TagLib::FileRef &f)
         print_200_header(mimetype, (size_t)bytevector.size());
         fwrite(bytevector.data(), (size_t)bytevector.size(), sizeof(char), stdout);
     }
-
-    return 0;
+*/
 }
 
 int
-main(int argc, char *argv[])
+tag_info(Path_t &decodedPath, std::string &result)
 {
     int ret = -1;
 
     try {
-        cgi_util *cgi = new cgi_util();
-        if (cgi->parse_param() != 0) {
-            print_400_header(cgi->get_err_message().c_str());
-            return -1;
-        }
-
-        UrlPath *urlpath = new UrlPath();
-
-        std::string filepath;
-        std::string f_dir  = cgi->get_value("dir");
-        std::string f_file = cgi->get_value("file");
-        std::string f_mode = cgi->get_value("mode");
-
-        f_dir = cgi->decodeFormURL(f_dir);
-
-        if (urlpath->getDecodedPath(filepath, f_dir, f_file) != 0) {
-            print_400_header("failed to determine filepath");
-            return -1;
-        }
-
-        f_mode = cgi->decodeFormURL(f_mode);
-
-        //fprintf(stderr, "DEBUG: file [%s]\n", filepath.c_str());
-
-        TagLib::FileRef f(filepath.c_str());
-
-        if (f_mode.empty() || f_mode == "tag") {
-            outputAudioTags(cgi, f);
-        } else if (f_mode == "picture") {
-            outputPicture(f);
-        }
-
+        TagLib::FileRef f(decodedPath.path.c_str());
+        outputAudioTags(result, f);
         ret = 0;
     } catch (std::bad_alloc &ex) {
-        fprintf(stderr, "Error: allocation failed : %s\n", ex.what());
+        decodedPath.error_message = ex.what();
     } catch (std::invalid_argument &e) {
         std::stringstream ss;
         ss << "Exception: " << e.what();
-        print_400_header(ss.str().c_str());
+        decodedPath.error_message = ss.str();
+    }
+
+    return ret;
+}
+
+int
+tag_image(Path_t &decodedPath, std::string &result)
+{
+    int ret = -1;
+
+    try {
+        TagLib::FileRef f(decodedPath.path.c_str());
+        outputPicture(result, f);
+        ret = 0;
+    } catch (std::bad_alloc &ex) {
+        decodedPath.error_message = ex.what();
+    } catch (std::invalid_argument &e) {
+        std::stringstream ss;
+        ss << "Exception: " << e.what();
+        decodedPath.error_message = ss.str();
     }
 
     return ret;

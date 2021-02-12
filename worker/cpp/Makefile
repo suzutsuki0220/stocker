@@ -8,7 +8,7 @@ all:
 	make -C movie_info
 	make -C perl-cgi
 	make -C status
-	make -C taginfo
+	make -C tag_info
 
 clean:
 	make -C config clean
@@ -16,12 +16,11 @@ clean:
 	make -C movie_info clean
 	make -C perl-cgi clean
 	make -C status clean
-	make -C taginfo clean
+	make -C tag_info clean
 
 install-bin:
 	make -C config install $(INSTALL_PARAM)
 	make -C status install CGI_DIR=$(CGI_DIR)
-	make -C taginfo install CGI_DIR=$(CGI_DIR)
 	cp -r ../dist/cgi-bin/* $(CGI_DIR)
 
 make-directory:

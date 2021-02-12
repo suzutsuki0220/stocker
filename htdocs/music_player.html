@@ -38,8 +38,8 @@
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
 
-    document.coverart.src = TAGINFO_CGI + "?mode=picture&dir=" + track[track_no].base_name + "&file=" + track[track_no].path;
-    audio_player.src = "/api/v1/media/" + track[track_no].base_name + "/" +track[track_no].path + "/" + play_type;
+    document.coverart.src = "/api/v1/media/" + tracks[track_no].root + "/" + tracks[track_no].path + "/tagImage";
+    audio_player.src = "/api/v1/media/" + tracks[track_no].root + "/" +tracks[track_no].path + "/" + play_type;
     audio_player.play();
     document.controller.button_pause.value = "Pause";
 
@@ -64,7 +64,7 @@
     }
     fill_color(track_no);
     document.controller.text_trnum.value = parseInt(track_no) + 1;
-    document.controller.text_title.value = track[track_no].title;
+    document.controller.text_title.value = tracks[track_no].title;
     audio_player.addEventListener('timeupdate', function() {
       audio_player.removeEventListener('timeupdate', arguments.callee, false);
       var sec = '0' + Math.floor(audio_player.currentTime % 60);
@@ -73,7 +73,7 @@
       min = min.substr(min.length-2, 2);
       AudioTimer.innerHTML = min +':'+ sec;
       if(audio_player.ended) {
-        if(document.controller.text_trnum.value < track.length) {
+        if(document.controller.text_trnum.value < tracks.length) {
           playit(document.controller.text_trnum.value);
         } else {
           fill_color(-1);
@@ -88,12 +88,11 @@
   }
 
   function play_pause() {
-    //var audio_player = document.getElementById("player");
     if( !audio_player.error && !audio_player.paused && !audio_player.ended ) {
       audio_player.pause();
       document.controller.button_pause.value = "Play";
     } else {
-      if( document.controller.text_trnum.value <= 0 || document.controller.text_trnum.value > track.length) {
+      if( document.controller.text_trnum.value <= 0 || document.controller.text_trnum.value > tracks.length) {
         playit(0);
         return;
       }
@@ -104,12 +103,12 @@
 
   function fill_color(track_no) {
     var i=0;
-    for(i=0 ; i<track.length ; i++) {
+    for(i=0 ; i<tracks.length ; i++) {
       var elem1 = document.getElementById('track' + i);
       elem1.style.color = "#000000";
       elem1.style.backgroundColor = "#ffffff";
     }
-    if( track_no == NaN || track_no < 0 || track_no > track.length) {
+    if( track_no == NaN || track_no < 0 || track_no > tracks.length) {
       return;
     }
 

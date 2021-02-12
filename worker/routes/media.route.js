@@ -156,4 +156,8 @@ module.exports = function (app) {
         res.type('application/json');
         res.send(mediaLib.getMovieInfo(req.params.root, req.params.path));
     });
+    app.get(apiRest + '/:root/:path(*)/mediaTag', function (req, res) {
+        res.type('application/json');
+        res.send(mediaLib.getMediaTag(req.params.root, req.params.path));
+    });
 };

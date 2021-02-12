@@ -1,7 +1,4 @@
-var track = new Array();
-var music_count = 0;  // ajaxを読んだ数とcallbackが実行された数が一致した時にリスト内の情報を全て読み込んだと判断する
-
-const TAGINFO_CGI = stocker.uri.cgi.music_player.tag_info;
+var tracks = new Array();
 
 const graypad = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
@@ -41,117 +38,81 @@ function errorCoverart() {
     document.coverart.src = graypad;
 }
 
-function sortMusicListByTrackNumber() {
-    for (i = track.length - 1; i > 0; i--) {
+function sortMusicListByOrder() {
+    for (i = tracks.length - 1; i > 0; i--) {
         for (j = 0; j < i; j++) {
-            if (parseInt(track[j].track_no) > parseInt(track[j + 1].track_no)) {
-                var temp = track[j + 1];
-                track[j + 1] = track[j];
-                track[j] = temp;
+            if (parseInt(tracks[j].playOrder) > parseInt(tracks[j + 1].playOrder)) {
+                var temp = tracks[j + 1];
+                tracks[j + 1] = tracks[j];
+                tracks[j] = temp;
             }
         }
     }
 }
 
 function printMusicList() {
-    var content;
+    let content;
 
-    if (music_count === track.length) {
-        sortMusicListByTrackNumber();
+    sortMusicListByOrder();
 
-        content = "<table border=1>";
-        content += "<tr><th>No.</th><th>title</th><th>time</th><th>artist</th><th>album</th><th>year</th></tr>";
-        for (i = 0; i < track.length; i++) {
-            const num = i + 1;
-            content += "<tr id='track" + i + "'>";
-            content += "<td>" + num + "</td>";
-            content += "<td><a href=\"javascript:playit('" + i + "')\">" + track[i].title + "</a></td>";
-            content += "<td>" + track[i].time + "</td>";
-            content += "<td>" + track[i].artist + "</td>";
-            content += "<td>" + track[i].album + "</td>";
-            content += "<td>" + track[i].year + "</td>";
-            content += "</tr>";
-        }
-        content += "</table>";
-    } else {
-        content = "タグを読み込み中 " + music_count + "/" + track.length;
+    content = "<table border=1>";
+    content += "<tr><th>No.</th><th>title</th><th>time</th><th>artist</th><th>album</th><th>year</th></tr>";
+    for (i = 0; i < tracks.length; i++) {
+        const num = i + 1;
+        content += "<tr id='track" + i + "'>";
+        content += "<td>" + num + "</td>";
+        content += "<td><a href=\"javascript:playit('" + i + "')\">" + tracks[i].title + "</a></td>";
+        content += "<td>" + tracks[i].time + "</td>";
+        content += "<td>" + tracks[i].artist + "</td>";
+        content += "<td>" + tracks[i].album + "</td>";
+        content += "<td>" + tracks[i].year + "</td>";
+        content += "</tr>";
     }
+    content += "</table>";
 
     document.getElementById('music_list').innerHTML = content;
 }
 
-function getTrackNumber(t) {
+function getTrackOrder(t, element) {
     if (!t.track) {
-        return t.num; // tagにtrack noがなければファイル名順の番号を使う
+        return element.num; // tagにtrack noがなければファイル名順の番号を使う
     }
 
     return t.disc_number ? parseInt(t.disc_number) * 100 + parseInt(t.track) : parseInt(t.track);
 }
 
-function addTagInfoToTrack(data, idx) {
-    const get_names = [
-        "title",
-        "artist",
-        "album",
-        "year",
-        "comment",
-        "track",
-        "genre",
-        "disc_number",
-        "bitrate",
-        "sample_rate",
-        "channels",
-        "duration",
-        "time"
-    ];
-    track[idx] = Object.assign(track[idx], jsUtils.xml.getDataInElements(data, "tag", get_names)[0]);
-
-    track[idx].title = track[idx].title || track[idx].name;  // tagにtitleがなければファイル名を使う
-    track[idx].track_no = getTrackNumber(track[idx]);
-    track[idx].getProperty = true;
-
-    music_count++;
-    printMusicList();
-}
-
-function addEmptyInfoToTrack(idx) {
-    track[idx].title = track[idx].name;  // tagにtitleがなければファイル名を使う
-    track[idx].track_no = track[idx].num; // tagにtrack noがなければファイル名順の番号を使う
-    track[idx].getProperty = true;
-
-    music_count++;
-    printMusicList();
-}
-
-function findNotGetPropertyTrack() {
-    for (var i = 0; i < track.length; i++) {
-        if (track[i].getProperty === false) {
-            return i;
-        }
-    }
-
-    return NaN;
-}
-
-function getMusicProperties() {
-    const ajax = jsUtils.ajax;
-
-    const idx = findNotGetPropertyTrack();
-    if (isNaN(idx) === true) {
-        return;
-    }
-
-    ajax.init();
-    ajax.setOnSuccess(function (httpRequest) {
-        addTagInfoToTrack(httpRequest.responseXML, idx);
-        getMusicProperties();
+function getMediaTag(element) {
+    return new Promise(function (resolve) {
+        fetch("/api/v1/media/" + params.dir + "/" + element.path + "/mediaTag", {
+            method: 'GET',
+            mode: 'same-origin',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            redirect: 'error',
+            referrerPolicy: 'no-referrer'
+        }).then(function (response) {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return Promise.reject(new Error(response.status + ' ' + response.statusText));
+            }
+        }).then(function (json) {
+            resolve({
+                ...json,
+                root: params.dir,
+                path: element.path,
+                title: json.title || element.name,  // tagのtitleが無ければファイル名をタイトルとする
+                playOrder: getTrackOrder(json, element)
+            });
+        }).catch(function (e) {
+            resolve({
+                root: params.dir,
+                path: element.path,
+                title: element.name, // ファイル名をタイトルとする
+                playOrder: element.num   // ファイル名順で番号を振る
+            });
+        });
     });
-    ajax.setOnError(function (httpRequest) {
-        console.log("failed to get property: " + track[idx].name + ' (' + httpRequest.status + ' ' + httpRequest.statusText + ')');
-        addEmptyInfoToTrack(idx);
-        getMusicProperties();
-    });
-    ajax.post(TAGINFO_CGI, "dir=" + track[idx].base_name + "&file=" + track[idx].path + "&mode=tag");
 }
 
 function getMusicFiles(data) {
@@ -164,16 +125,12 @@ function getMusicFiles(data) {
         return;
     }
 
-    elements.forEach(function (e) {
+    tracks = [];
+    elements.forEach(async function (e) {
         if (stocker.supportTypes.pattern.audio.test(e.name)) {
-            track.push({
-                "name": e.name,
-                "getProperty": false,
-                "num": !isNaN(e.num) ? e.num : 0,
-                "base_name": params.dir,
-                "path": e.path
-            });
+            const tagData = await getMediaTag(e);
+            tracks.push(tagData);
+            printMusicList();
         }
     });
-    getMusicProperties();
 }

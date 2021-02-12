@@ -5,6 +5,7 @@
 #include "path.h"
 #include "exif_info.h"
 #include "movie_info.h"
+#include "tag_info.h"
 
 static bool getPathArgument(napi_env env, napi_callback_info info, Path_t &decodedPath)
 {
@@ -76,14 +77,19 @@ napi_value
 getMediaTag(napi_env env, napi_callback_info info)
 {
     Path_t path;
+    std::string result_json;
 
     if (getPathArgument(env, info, path) == false) {
         napi_throw_type_error(env, NULL, "Wrong arguments");
         return nullptr;
     }
 
+    if (tag_info(path, result_json) != 0) {
+        napi_throw_type_error(env, NULL, path.error_message.c_str());
+    }
+
     napi_value string;
-    napi_create_string_utf8(env, "media tag is not implement", NAPI_AUTO_LENGTH, &string);
+    napi_create_string_utf8(env, result_json.c_str(), NAPI_AUTO_LENGTH, &string);
 
     return string;
 }

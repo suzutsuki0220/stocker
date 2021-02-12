@@ -31,7 +31,8 @@
       "libraries": [
         "../cpp/common/libstockercommon.a",
         "../cpp/exif_info/exif_info.a",
-        "../cpp/movie_info/movie_info.a"
+        "../cpp/movie_info/movie_info.a",
+        "../cpp/tag_info/tag_info.a"
       ],
       "include_dirs" : [
         "<!@(node -p \"require('node-addon-api').include\")",
