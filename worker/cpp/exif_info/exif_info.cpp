@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
@@ -40,7 +41,7 @@ get_entry(ExifEntry *e, void *data)
 }
 
 static void
-show_xml(ExifData *data, std::string &result)
+set_result(ExifData *data, std::string &result)
 {
     int i;
     std::stringstream ss;
@@ -67,24 +68,6 @@ show_xml(ExifData *data, std::string &result)
     result = ss.str();
 }
 
-/*
-static void
-output_thumbnail(ExifData *data)
-{
-    if (data->size == 0)
-    {
-        print_400_header("This image does not seem to contain thumbnail");
-    }
-    else
-    {
-        fprintf(stdout, "Content-Type: image/jpeg\n");
-        fprintf(stdout, "Content-Length: %u\n\n", data->size);
-
-        fwrite(data->data, (size_t)data->size, 1, stdout);
-    }
-}
-*/
-
 void
 get_exif(Path_t &decodedPath, std::string &result)
 {
@@ -101,12 +84,38 @@ get_exif(Path_t &decodedPath, std::string &result)
         throw std::invalid_argument("This image does not seem to contain EXIF data");
     }
 
-    show_xml(ed, result);
+    set_result(ed, result);
 
-    //else if (mode == "thumbnail")
-    //{
-    //    output_thumbnail(ed);
-    //}
+    exif_loader_unref(l);
+}
+
+void
+get_exif_thumbnail(Path_t &decodedPath, response_buffer_t &result)
+{
+    ExifData *ed = NULL;
+    ExifLoader *l;
+
+    l = exif_loader_new();
+
+    exif_loader_write_file(l, decodedPath.path.c_str());
+    ed = exif_loader_get_data(l);
+    if (ed == NULL)
+    {
+        exif_loader_unref(l);
+        throw std::invalid_argument("This image does not seem to contain EXIF data");
+    }
+
+    result.size = (uint32_t)ed->size;
+    strcpy(result.mime_type, "image/jpeg");
+    if (result.size != 0) {
+        result.byte = (char*)malloc((size_t)ed->size);
+        if (result.byte == NULL) {
+            throw std::bad_alloc();
+        }
+        memcpy(result.byte, ed->data, (size_t)ed->size);
+    } else {
+        result.byte = NULL;
+    }
 
     exif_loader_unref(l);
 }

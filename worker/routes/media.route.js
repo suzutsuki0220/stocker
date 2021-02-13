@@ -103,6 +103,11 @@ function sendTemporaryFile(type, temporary, res) {
 }
 
 function sendResponseBuffer(arrayBuffer, res) {
+    if (!arrayBuffer) {
+        res.sendStatus(404);
+        return;
+    }
+
     let mimeType = "";
     for (let i = 0; i < 32; i++) {
         const code = new Int8Array(arrayBuffer.slice(i, i + 1))[0];
@@ -165,6 +170,10 @@ module.exports = function (app) {
     app.get(apiRest + '/:root/:path(*)/exif', function (req, res) {
         res.type('application/json');
         res.send(mediaLib.getExif(req.params.root, req.params.path));
+    })
+    app.get(apiRest + '/:root/:path(*)/exifThumbnail', function (req, res) {
+        const arrayBuffer = mediaLib.getExifThumbnail(req.params.root, req.params.path);
+        sendResponseBuffer(arrayBuffer, res);
     })
     app.get(apiRest + '/:root/:path(*)/movieInfo', function (req, res) {
         res.type('application/json');

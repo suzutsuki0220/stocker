@@ -91,6 +91,33 @@ getExif(napi_env env, napi_callback_info info)
 }
 
 napi_value
+getExifThumbnail(napi_env env, napi_callback_info info)
+{
+    Path_t path;
+    response_buffer_t result;
+
+    if (getPathArgument(env, info, path) == false) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return nullptr;
+    }
+
+    try {
+        get_exif_thumbnail(path, result);
+        if (result.byte != NULL) {
+            napi_value image = getResponseBuffer(env, result);
+            free(result.byte);
+            return image;
+        }
+    } catch(std::invalid_argument &e) {
+        if (result.byte != NULL) free(result.byte);
+        napi_throw_type_error(env, NULL, e.what());
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+napi_value
 getCoverArt(napi_env env, napi_callback_info info)
 {
     Path_t path;
@@ -171,6 +198,9 @@ Init(napi_env env, napi_value exports)
 
     status = napi_create_function(env, NULL, NAPI_AUTO_LENGTH, getExif, NULL, &fn);
     status = napi_set_named_property(env, exports, "getExif", fn);
+
+    status = napi_create_function(env, NULL, NAPI_AUTO_LENGTH, getExifThumbnail, NULL, &fn);
+    status = napi_set_named_property(env, exports, "getExifThumbnail", fn);
 
     status = napi_create_function(env, NULL, NAPI_AUTO_LENGTH, getMovieInfo, NULL, &fn);
     status = napi_set_named_property(env, exports, "getMovieInfo", fn);
