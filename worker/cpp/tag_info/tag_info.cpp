@@ -152,9 +152,8 @@ get_cover_art(response_buffer_t &result, TagLib::FileRef &f)
             const TagLib::ID3v2::FrameList l = file->ID3v2Tag()->frameListMap()["APIC"];
             if (! l.isEmpty()) {
                 TagLib::ID3v2::Frame *f = l.front();
-                TagLib::ByteVector d = f->render();
-                if (! d.isNull()) {
-                    TagLib::ID3v2::AttachedPictureFrame *apf = new TagLib::ID3v2::AttachedPictureFrame(d);
+                if (f != NULL) {
+                    TagLib::ID3v2::AttachedPictureFrame *apf = static_cast<TagLib::ID3v2::AttachedPictureFrame *>(f);
                     mimetype   = apf->mimeType().toCString(false);
                     bytevector = apf->picture();
                 }
