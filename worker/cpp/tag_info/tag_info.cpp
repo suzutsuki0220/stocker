@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <iconv.h>
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <sstream>
 #include <stdexcept>  // invalid argument
@@ -75,7 +76,7 @@ extractFileProperty(std::stringstream &ss, TagLib::File *file) {
 }
 
 void
-outputAudioTags(std::string &result, TagLib::FileRef &f)
+get_media_tag(std::string &result, TagLib::FileRef &f)
 {
     if (f.isNull() || !f.tag()) {
         throw std::runtime_error("invalid file reference");
@@ -115,7 +116,7 @@ outputAudioTags(std::string &result, TagLib::FileRef &f)
 }
 
 void
-outputPicture(std::string &result, TagLib::FileRef &f)
+get_cover_art(response_buffer_t &result, TagLib::FileRef &f)
 {
     const char *mimetype;
     TagLib::ByteVector bytevector;
@@ -190,26 +191,35 @@ outputPicture(std::string &result, TagLib::FileRef &f)
         }
     }
 
-/* todo output buffer
     if (bytevector.isNull() || bytevector.size() == 0) {
-        mimetype = "image/png";
-        print_200_header(mimetype, sizeof(noimage_data));
-        fwrite(noimage_data, sizeof(noimage_data), sizeof(char), stdout);
+        strcpy(result.mime_type, "image/png");
+        result.size = (uint32_t)sizeof(noimage_data);
+        result.byte = (char *)calloc(sizeof(noimage_data), sizeof(char));
+        if (result.byte == NULL) {
+            result.size = 0;
+            throw std::bad_alloc();
+        }
+        memcpy(result.byte, noimage_data, sizeof(noimage_data));
     } else {
-        print_200_header(mimetype, (size_t)bytevector.size());
-        fwrite(bytevector.data(), (size_t)bytevector.size(), sizeof(char), stdout);
+        strncpy(result.mime_type, mimetype, sizeof(result.mime_type) - 1);
+        result.size = (uint32_t)bytevector.size();
+        result.byte = (char *)calloc(bytevector.size(), sizeof(char));
+        if (result.byte == NULL) {
+            result.size = 0;
+            throw std::bad_alloc();
+        }
+        memcpy(result.byte, bytevector.data(), (size_t)bytevector.size());
     }
-*/
 }
 
 int
-tag_info(Path_t &decodedPath, std::string &result)
+media_tag(Path_t &decodedPath, std::string &result)
 {
     int ret = -1;
 
     try {
         TagLib::FileRef f(decodedPath.path.c_str());
-        outputAudioTags(result, f);
+        get_media_tag(result, f);
         ret = 0;
     } catch (std::bad_alloc &ex) {
         decodedPath.error_message = ex.what();
@@ -223,13 +233,13 @@ tag_info(Path_t &decodedPath, std::string &result)
 }
 
 int
-tag_image(Path_t &decodedPath, std::string &result)
+cover_art(Path_t &decodedPath, response_buffer_t &result)
 {
     int ret = -1;
 
     try {
         TagLib::FileRef f(decodedPath.path.c_str());
-        outputPicture(result, f);
+        get_cover_art(result, f);
         ret = 0;
     } catch (std::bad_alloc &ex) {
         decodedPath.error_message = ex.what();

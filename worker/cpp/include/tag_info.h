@@ -2,6 +2,7 @@
 
 #include <string>
 #include "path.h"
+#include "response_buffer.h"
 
-int tag_info(Path_t &decodedPath, std::string &result);
-int tag_image(Path_t &decodedPath, std::string &result);
+int media_tag(Path_t &decodedPath, std::string &result);
+int cover_art(Path_t &decodedPath, response_buffer_t &result);

@@ -102,6 +102,20 @@ function sendTemporaryFile(type, temporary, res) {
     }
 }
 
+function sendResponseBuffer(arrayBuffer, res) {
+    let mimeType = "";
+    for (let i = 0; i < 32; i++) {
+        const code = new Int8Array(arrayBuffer.slice(i, i + 1))[0];
+        if (code === 0) {
+            break;
+        }
+        mimeType += String.fromCharCode(new Int8Array(arrayBuffer.slice(i, i + 1))[0]);
+    }
+    const size = new Uint32Array(arrayBuffer.slice(32, 36));
+    res.type(mimeType);
+    res.send(Buffer.from(arrayBuffer, 36, size));
+}
+
 function makeVideoImage(req, output) {
     const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
 
@@ -155,6 +169,10 @@ module.exports = function (app) {
     app.get(apiRest + '/:root/:path(*)/movieInfo', function (req, res) {
         res.type('application/json');
         res.send(mediaLib.getMovieInfo(req.params.root, req.params.path));
+    });
+    app.get(apiRest + '/:root/:path(*)/coverArt', function (req, res) {
+        const arrayBuffer = mediaLib.getCoverArt(req.params.root, req.params.path);
+        sendResponseBuffer(arrayBuffer, res);
     });
     app.get(apiRest + '/:root/:path(*)/mediaTag', function (req, res) {
         res.type('application/json');
