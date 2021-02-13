@@ -187,7 +187,7 @@ int movie_info(Path_t &decodedPath, std::string &result)
     }
     ss << "]," << std::endl;
 
-    ss << "\"tags\": [";
+    ss << "\"tags\": {";
     first = true;
     while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
         if (first == true) {
@@ -197,7 +197,7 @@ int movie_info(Path_t &decodedPath, std::string &result)
         }
         ss << "\"" << tag->key << "\": \"" << tag->value << "\"";
     }
-    ss << "]" << std::endl;
+    ss << "}" << std::endl;
 
     ss << "}" << std::endl;
     avformat_close_input(&fmt_ctx);
