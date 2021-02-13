@@ -65,7 +65,9 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
     const outputs = new Array();
 
     do {
-        outputs.push(makeOutputPath(source, dest, params, params.pass2 === "true" ? 1 : 2, ssIndex));
+        if (params.set_position === 'true' && params.after_combine_them === 'true') {
+            outputs.push(makeOutputPath(source, dest, params, params.pass2 === "true" ? 1 : 2, ssIndex));
+        }
 
         // 1pass encoding
         ret.push({
@@ -88,7 +90,7 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
         ssIndex++;
     } while (params['ss' + ssIndex]);
 
-    if (params.set_position === 'true' && params.after_combine_them === 'true') {
+    if (outputs.length > 1) {
         const listFile = makeCombineListfile(outputs);
         const concatOutput = dest + '/concat_' + jsUtils.file.getNameFromPath(outputs[0]).filename + '.' + FFmpegOption.getExtension(params.format);
         const concatParams = {
