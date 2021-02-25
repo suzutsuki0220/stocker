@@ -1,12 +1,12 @@
 const express = require('express');
 const http = require('http');
-const log4js = require('log4js');
+//const log4js = require('log4js');
 const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 const jobStatus = require('./src/jobstatus.js');
 
 let running = false;
-const logger = log4js.getLogger("stocker");
+//const logger = log4js.getLogger("stocker");
 
 let config;
 try {
@@ -16,7 +16,7 @@ try {
         throw new Error('worker port setting not found');
     }
 } catch (error) {
-    logger.warn(error.message);
+    //    logger.warn(error.message);
     process.exit(1);
 }
 
@@ -30,7 +30,7 @@ function getArgArray(argString) {
 
 function fetchJob(forceRunning = false) {
     if (forceRunning === false && running === true) {
-        logger.debug("skip fetch during another job running");
+        //        logger.debug("skip fetch during another job running");
         return;
     }
 
@@ -84,8 +84,8 @@ require('./routes/converts.route.js')(app);
 require('./routes/media.route.js')(app);
 
 // static contents
-app.use(express.static('../htdocs'));
-app.use('/bundle', express.static('../dist/bundle'));
+app.use(express.static('./htdocs'));
+app.use('/bundle', express.static('./dist/bundle'));
 
 http.createServer(app).listen(config.worker_port);
 

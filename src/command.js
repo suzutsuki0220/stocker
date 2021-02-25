@@ -1,13 +1,13 @@
-const log4js = require('log4js');
+//const log4js = require('log4js');
 const { spawn } = require('child_process');
 const jsUtils = require('js-utils');
 const jobStatus = require('./jobstatus.js');
 
-const logger = log4js.getLogger("stocker");
+//const logger = log4js.getLogger("stocker");
 
 function errorWork(code, stderr) {
-    logger.info(stderr);
-    logger.error(`process exited with code ${code}`);
+    //    logger.info(stderr);
+    //    logger.error(`process exited with code ${code}`);
 }
 
 function isWindows() {
@@ -30,12 +30,12 @@ module.exports.exec = function (command, args, onSuccess, onError = errorWork) {
 
     process.on('error', (err) => {
         hasError = true;
-        logger.error(`Failed to start process - ${err}`);
+        //        logger.error(`Failed to start process - ${err}`);
         onError(jobStatus.canceled, JSON.stringify(err), stderr);
     });
 
     process.stdout.on('data', (data) => {
-        logger.info('stdout >> ' + data);
+        //        logger.info('stdout >> ' + data);
         stdout += jsUtils.japanese.toUTF8(data.toString());
     });
 

@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const jsUtils = require('js-utils');
 const { execFileSync } = require('child_process');
-const contentTypes = require('../../webpack/src/content-types.js');
-const supportTypes = require('../../webpack/src/support_types.js');
+const contentTypes = require('../webpack/src/content-types.js');
+const supportTypes = require('../webpack/src/support_types.js');
 const stockerConf = require('../src/config-file.js').load('/stocker.conf');
 const FFmpegOption = require('../src/ffmpeg-option.js');
 const mediaLib = require('../build/Release/medialib');
@@ -17,7 +17,7 @@ function composeMovieImageOptions(size, input, output, params = {}) {
     return new FFmpegOption().compose(input, output, { ...params, s_w: size, s_h: '-1', frames: '1', nolog: true, r: '1', format: 'jpeg' }, 0);
 }
 
-// convert (ImageMagick)のオプション 
+// convert (ImageMagick)のオプション
 function composeThumbnailImageOptions(size, input, output) {
     return [input, "-thumbnail", size, "-strip", output];
 }

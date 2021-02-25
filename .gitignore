@@ -50,4 +50,5 @@ pids
 *.pid.lock
 
 dist/
-worker/build/
+build/
+db/

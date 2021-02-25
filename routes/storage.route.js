@@ -2,7 +2,6 @@ const fs = require('fs');
 const jsUtils = require('js-utils');
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
 const roots = require('../src/config-file.js').load('/basedirs.conf');
-const logger = require('log4js').getLogger("stocker");
 
 const stockerLib = new StockerLib();
 
