@@ -113,7 +113,7 @@ sub do_newfolder() {
 ### ファイルのアップロード ###
 ##############################
 sub do_upload() {
-  my $formname = "file";
+  my $formname = $form->param("formname");
 
   if (! $form->param($formname)) {
     &error("ファイルデータがありません");

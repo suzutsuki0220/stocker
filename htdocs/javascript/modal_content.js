@@ -115,17 +115,21 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         cardContent.foldername.focus();
     }
 
-    upload() {
+    upload(root, path) {
         let cardElement;
         const cardContent = document.createElement('form');
         cardContent.innerHTML =
-            '<div class="field is-horizontal"><div class="field-label"><label class="label">ファイルを選択</label></div><div class="field-body"><div class="field"><p class="control"><input type="file" multiple /></p></div></div></div>' +
-            '<p>画像・動画を選択<input type="file" accept="image/*" multiple /></p>' +
-            '<p>カメラで撮影<input type="file" accept="image/*" capture="environment" /></p>';
+            '<div class="field is-horizontal"><div class="field-label"><label class="label">ファイルを選択</label></div><div class="field-body"><div class="field"><p class="control"><input type="file" name="file" multiple /></p></div></div></div>';
+        //    '<p>画像・動画を選択<input type="file" accept="image/*" multiple /></p>' +
+        //    '<p>カメラで撮影<input type="file" accept="image/*" capture="environment" /></p>';
 
         const self = this;
         const foot = this._footerButtons(function() {
-            //ok
+            const uploadWork = [{
+                list: {root: root, path: path},
+                parameter: {mode: "do_upload", formname: "file"}
+            }]
+            self._callFileFunc(uploadWork, cardElement);
         }, function() {
             self._closeModal(cardElement);
         });
