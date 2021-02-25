@@ -1,30 +1,39 @@
 var trimWork = [];
 var elements = null;
 
-var boxes = 500;  // TODO: for Pagination (ページ分け)
+const boxes = 1000;  // TODO: for Pagination (ページ分け)
 //my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
 let encoded_dir;
 
 let root, path;
 let actionList, modalContent;
 
-window.addEventListener("load", function(event) {
+window.addEventListener("load", function (event) {
     const params = jsUtils.url.getRawParams();
     root = params.dir || "";
     path = params.file || "";
-//    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
-//    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
+    //    const cont_from =  jsUtils.value.replaceNanToZero(params.from);
+    //    const cont_to   =  jsUtils.value.replaceNanToZero(params.to);
 
-    modalContent = new ModalContent(function() {
+    modalContent = new ModalContent(function () {
         const params = jsUtils.url.getRawParams();
-        reloadDirectoryList(params.dir, params.file, 0, 99999);  // TODO: refactor
+        reloadDirectoryList(params.dir, params.file, 0, boxes);  // TODO: refactor
     });
 
-    actionList = new ActionList({element: document.getElementById('action-drop-list')});
+    actionList = new ActionList({ element: document.getElementById('action-drop-list') });
     actionList.make();
 
-    getRootDirectories(function(data) {
-        document.getElementById('root_selector').appendChild(makeRootSelector('fm_dir', data, changeRoot, root));
+    getRootDirectories(function (data) {
+        document.getElementById('root_selector').appendChild(
+            makeRootSelector(
+                'fm_dir',
+                data,
+                function () {
+                    reloadDirectoryList(document.file_check.fm_dir.value, "", 0, boxes);
+                },
+                root
+            )
+        );
         encoded_dir = document.file_check.fm_dir.value;
         reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
     });
@@ -38,7 +47,7 @@ function getCheckedFiles() {
     var checked = new Array();
     var files = document.getElementsByName("file");
     if (files) {
-        for (var i=0; i<files.length; i++) {
+        for (var i = 0; i < files.length; i++) {
             if (files[i].checked === true) {
                 checked.push(files[i].value);
             }
@@ -51,7 +60,7 @@ function getCheckedFiles() {
 function allCheck(flag = true) {
     var files = document.getElementsByName("file");
     if (files) {
-        for (var i=0; i<files.length; i++) {
+        for (var i = 0; i < files.length; i++) {
             files[i].checked = flag;
         }
     }
@@ -60,31 +69,17 @@ function allCheck(flag = true) {
 function toggleCheckFile(value) {
     var files = document.getElementsByName("file");
     if (files) {
-        for (var i=0; i<files.length; i++) {
+        for (var i = 0; i < files.length; i++) {
             if (files[i].value === value) {
                 // チェックを付ける・外す
-                files[i].checked = ! files[i].checked;
+                files[i].checked = !files[i].checked;
                 break;
             }
         }
     }
 }
 
-function displayDirectoryProperty(directory) {
-    const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-
-    // titleをディレクトリ名にする
-    document.title = properties.name;
-
-    // 上位パスのリンク
-    if (properties.name) {
-        document.getElementById('uppath').innerHTML = "<a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + properties.up_path + "', 0, " + boxes + ")\">↑UP</a>";
-    } else {
-        document.getElementById('uppath').innerHTML = "";  // 最上位にはnameがない
-    }
-}
-
-function actionClickedIcon (action, clicked_path) {
+function actionClickedIcon(action, clicked_path) {
     if (getCheckedFiles().length > 0) {
         toggleCheckFile(clicked_path);
     } else {
@@ -94,10 +89,6 @@ function actionClickedIcon (action, clicked_path) {
             location.href = action;
         }
     }
-}
-
-function changeRoot() {
-    reloadDirectoryList(document.file_check.fm_dir.value, "", 0, boxes);
 }
 
 function jump_to(from, to) {
@@ -113,9 +104,9 @@ function jump_select(boxes) {
 }
 
 function printIcon(id, path, name, size, last_modified, icon, action) {
-    const box_width     = 120;   // 単位 px
-    const box_height    = 140;   // 単位 px
-//    const box_space     = 5;     // BOXの隙間 単位 px
+    const box_width = 120;   // 単位 px
+    const box_height = 140;   // 単位 px
+    //    const box_space     = 5;     // BOXの隙間 単位 px
 
     var html = "";
 
@@ -148,7 +139,7 @@ function addTrimWork(id, imgUrl) {
 }
 
 function doTrimWork() {
-    for (var i=0; i<trimWork.length; i++) {
+    for (var i = 0; i < trimWork.length; i++) {
         var work = trimWork[i];
         trimThumbnail(work.id, work.imgUrl);
     }
@@ -165,7 +156,7 @@ function trimThumbnail(id, imgUrl) {
     img.src = imgUrl;
 
     // imgは読み込んだ後でないとwidth,heightが0
-    img.onload = function() {
+    img.onload = function () {
         // 横長か縦長かで場合分けして描画位置を調整
         var width, height, xOffset, yOffset;
         if (img.width > img.height) {
@@ -186,12 +177,12 @@ function trimThumbnail(id, imgUrl) {
 // 戻る操作で前のページとするURLを追加する
 function addBackHistory(encoded_dir, url_path) {
     const url = stocker.uri.list + '?dir=' + encoded_dir + '&file=' + url_path;
-    history.pushState({dir: encoded_dir, file: url_path}, '', url);
+    history.pushState({ dir: encoded_dir, file: url_path }, '', url);
 }
 
-window.onpopstate = function(event) {
+window.onpopstate = function (event) {
     const s = event.state;
-    reloadDirectoryList(s.dir, s.file, 0, 99999, false);  // TODO: refactor
+    reloadDirectoryList(s.dir, s.file, 0, NaN, false);  // TODO: refactor
 };
 
 function clearNarrowList() {
@@ -203,7 +194,7 @@ function narrowList() {
     reloadDirectoryList(document.getElementById('fm_dir').value, path); //, cont_from, cont_to);
 }
 
-function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHistory = true) {
+function reloadDirectoryList(encoded_dir, url_path, from, to, addHistory = true) {
     if (addHistory === true) { // TODO: addHistory フラグを追加したのは綺麗ではないので、読み込み処理だけを別関数にしたい
         addBackHistory(encoded_dir, url_path);
     }
@@ -213,9 +204,9 @@ function reloadDirectoryList(encoded_dir, url_path, from = 0, to = 999999, addHi
     root = encoded_dir;
     path = url_path;
 
-    getDirectoryList(encoded_dir, url_path, from, to, function(dir_xml) {
-        directoryList(dir_xml, document.getElementById('narrow').value);
-        addSubdirectoryLink(dir_xml, encoded_dir, url_path);
+    getDirectoryProperties(encoded_dir, url_path, from, to, function (data) {  // TODO xml -> JSON (21.01.24)
+        directoryList(data, document.getElementById('narrow').value);
+        addSubdirectoryLink(data, encoded_dir, url_path);
     });
 }
 
@@ -227,71 +218,59 @@ function narrowMatch(name, key) {
     return (name.indexOf(key) >= 0) ? true : false;
 }
 
-function directoryList(data, narrowKey="") {
-    encoded_dir = document.file_check.fm_dir.value;
-
-    const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-
-    displayDirectoryProperty(directory);
-    const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-    if (contents == null) {
-      document.getElementById('directoryListArea').innerHTML = "ファイル・ディレクトリは存在しません";
-      return;
+function directoryList(data, narrowKey = "") {
+    if (!data || !data.properties) {
+        alert("ERROR: directory list has no properties");
+        return;
     }
 
-    elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
+    document.title = data.properties.name;  // titleをディレクトリ名にする
+
+    if (data.properties.name) {
+        document.getElementById('uppath').innerHTML = "<a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + data.properties.up_path + "', 0, " + boxes + ")\">↑UP</a>";
+    } else {
+        document.getElementById('uppath').innerHTML = '';
+    }
+
+    const elements = data.elements;
     if (elements == null) {
-      alert("ERROR: files list has no elements");
-      return;
+        alert("ERROR: files list has no elements");
+        return;
     }
 
     clearList();
-    for (var i=0; i<elements.length; i++) {
-        const e = elements[i];
+    elements.forEach(function (e, index) {
         if (narrowMatch(e.name, narrowKey)) {
-            printIcons(i, e);
+            printIcons(index, e);
         }
-    }
+    })
     doTrimWork();
 }
 
-// TODO: -> Breadcrumbs
-function makeSubdirectoryLink(encoded_dir, url_path) {
-    const param = "dir=" + encoded_dir + "&file=" + url_path + "&from=0&to=0";
-
-    const ajax = jsUtils.ajax;
-    ajax.init();
-    ajax.setOnSuccess(function(httpRequest) {
-        addSubdirectoryLink(httpRequest.responseXML, encoded_dir, url_path);
-    });
-    ajax.post(stocker.uri.cgi.get_dir, param);
-}
-
 function addSubdirectoryLink(data, encoded_dir, url_path) {
-    const xml = jsUtils.xml;
-    const directory = xml.getFirstFoundChildNode(data, 'directory');
-    const properties = xml.getDataInElements(directory, 'properties', ['name', 'up_path'])[0];
-
-    if (properties['name']) {
+    if (data.properties['name']) {
         var s = document.getElementById('path_link').innerHTML;
-        document.getElementById('path_link').innerHTML = "/ <a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + url_path + "', 0, " + boxes + ")\">" + properties['name'] + "</a> " + s;
+        document.getElementById('path_link').innerHTML = "/ <a href=\"javascript:reloadDirectoryList('" + encoded_dir + "', '" + url_path + "', 0, " + boxes + ")\">" + data.properties['name'] + "</a> " + s;
     }
 
-    const up_path = properties['up_path'];
+    const up_path = data.properties['up_path'];
     if (up_path.length !== 0 && up_path !== "/") {
-        makeSubdirectoryLink(encoded_dir, up_path);
+        // 再帰的に上位のパスを取得する
+        getDirectoryProperties(encoded_dir, up_path, 0, NaN, function (data) {
+            addSubdirectoryLink(data, encoded_dir, up_path);
+        })
     }
 }
 
 function downloadWork() {
     var files = document.getElementsByName("file");
     if (files && elements) {
-        for (var i=0; i<files.length; i++) {
+        for (var i = 0; i < files.length; i++) {
             if (files[i].checked === false) {
                 continue;
             }
 
-            for (var j=0; j<elements.length; j++) {
+            for (var j = 0; j < elements.length; j++) {
                 if (files[i].value === elements[j].path) {
                     handleDownload(files[i].value, elements[j].name);
                     break;
@@ -302,6 +281,5 @@ function downloadWork() {
 }
 
 function handleDownload(filepath, filename) {
-    const get_url = stocker.uri.cgi.get_file + "?mime=application/force-download&dir=" + root + "&file=" + filepath;
-    jsUtils.file.DownloadWithDummyAnchor(get_url, filename);
+    jsUtils.file.DownloadWithDummyAnchor('/api/v1/storage/' + root + '/' + filepath + '/raw', filename);
 }

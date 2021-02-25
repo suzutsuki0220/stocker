@@ -1,54 +1,51 @@
 function printIcons(i, e) {
     const HTDOCS_ROOT = stocker.uri.htdocs_root;
 
-//  try {
+    //  try {
 
-    var icon;
-    var action;
-
-    const name = e.name;
-    const path = e.path;
+    let icon;
+    let action;
 
     if (e.type === "DIRECTORY") {
-        icon   = stocker.uri.icon.directory;
-        action = "dir:" + path;
+        icon = stocker.uri.icon.directory;
+        action = "dir:" + e.path;
     } else {
-        if (stocker.supportTypes.pattern.audio.test(name)) {
-            icon   = stocker.uri.icon.audio;
-            action = HTDOCS_ROOT + "/music_player.html?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.image.test(name) || stocker.supportTypes.browserPlayableMovie().test(name)) {
-            icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
-            action = HTDOCS_ROOT + "/picture_viewer.html?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.video.test(name)) {
-            icon   = stocker.uri.cgi.thumbnail + "?file=" + path + "&dir=" + encoded_dir;
-            action = HTDOCS_ROOT + "/action/converter.html?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.gps.test(name)) {
-            icon   = stocker.uri.icon.gps;
-            action = HTDOCS_ROOT + "/gps_viewer.html?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.txt.test(name)) {
-            icon   = stocker.uri.icon.txt;
-            action = HTDOCS_ROOT + "/text_viewer.html?file=" + path + "&dir=" + encoded_dir;
-        } else if (stocker.supportTypes.pattern.doc.test(name)) {
-            icon   = stocker.uri.icon.doc;
-            action = stocker.uri.cgi.get_file + "?file=" + path + "&dir=" + encoded_dir + "&mime=application/msword";
-        } else if (stocker.supportTypes.pattern.excel.test(name)) {
-            icon   = stocker.uri.icon.excel;
-            action = stocker.uri.cgi.get_file + "?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-excel";
-        } else if (stocker.supportTypes.pattern.ppt.test(name)) {
-            icon   = stocker.uri.icon.ppt;
-            action = stocker.uri.cgi.get_file + "?file=" + path + "&dir=" + encoded_dir + "&mime=application/vnd.ms-powerpoint";
-        } else if (stocker.supportTypes.pattern.pdf.test(name)) {
-            icon   = stocker.uri.icon.pdf;
-            action = stocker.uri.cgi.get_file + "?file=" + path + "&dir=" + encoded_dir + "&mime=application/pdf";
+        if (stocker.supportTypes.pattern.audio.test(e.name)) {
+            icon = stocker.uri.icon.audio;
+            action = HTDOCS_ROOT + "/music_player.html?file=" + e.path + "&dir=" + e.root;
+        } else if (stocker.supportTypes.pattern.image.test(e.name) || stocker.supportTypes.browserPlayableMovie().test(e.name)) {
+            icon = "/api/v1/media/" + e.root + "/" + e.path + "/thumbnail";
+            action = HTDOCS_ROOT + "/picture_viewer.html?file=" + e.path + "&dir=" + e.root;
+        } else if (stocker.supportTypes.pattern.video.test(e.name)) {
+            icon = "/api/v1/media/" + e.root + "/" + e.path + "/thumbnail";
+            action = HTDOCS_ROOT + "/action/converter.html?file=" + e.path + "&dir=" + e.root;
+        } else if (stocker.supportTypes.pattern.gps.test(e.name)) {
+            icon = stocker.uri.icon.gps;
+            action = HTDOCS_ROOT + "/gps_viewer.html?file=" + e.path + "&dir=" + e.root;
+        } else if (stocker.supportTypes.pattern.txt.test(e.name)) {
+            icon = stocker.uri.icon.txt;
+            action = HTDOCS_ROOT + "/text_viewer.html?file=" + e.path + "&dir=" + e.root;
+        } else if (stocker.supportTypes.pattern.doc.test(e.name)) {
+            icon = stocker.uri.icon.doc;
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
+        } else if (stocker.supportTypes.pattern.excel.test(e.name)) {
+            icon = stocker.uri.icon.excel;
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
+        } else if (stocker.supportTypes.pattern.ppt.test(e.name)) {
+            icon = stocker.uri.icon.ppt;
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
+        } else if (stocker.supportTypes.pattern.pdf.test(e.name)) {
+            icon = stocker.uri.icon.pdf;
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         } else {
-            icon   = stocker.uri.icon.unknown;
-            action = stocker.uri.cgi.get_file + "?file=" + path + "&dir=" + encoded_dir + "&mime=application/octet-stream";
+            icon = stocker.uri.icon.unknown;
+            action = "/api/v1/storage/" + e.root + "/" + e.path + "/raw";
         }
     }
 
     const id = "icon_" + i;
-    printIcon(id, path, name, e.size, e.last_modified, icon, action);
-//  } catch(e) {
-//     alert("ERROR: " + e.description);
-//  }
+    printIcon(id, e.path, e.name, e.size, e.last_modified, icon, action);
+    //  } catch(e) {
+    //     alert("ERROR: " + e.description);
+    //  }
 }

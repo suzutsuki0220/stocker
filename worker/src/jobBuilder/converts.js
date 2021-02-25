@@ -5,40 +5,20 @@ const uuid = require('uuid');
 const jsUtils = require('js-utils');
 
 const StockerLib = require('../../build/Release/stockerlib').StockerLib;
-const config = require('../config-file.js').load('/converter.conf');
+const stockerConf = require('../config-file.js').load('/stocker.conf');
 
-const format = {
-    "mts": {
-        "extension": "mts",
-        "format": "mpegts"
-    },
-    "dvd": {
-        "extension": "mpeg",
-        "format": "dvd"
-    },
-    "mp4": {
-        "extension": "mp4",
-        "format": "mp4"
-    },
-    "webm": {
-        "extension": "webm",
-        "format": "webm"
-    },
-    "ogv": {
-        "extension": "ogv",
-        "format": "ogg"
-    }
-};
+const FFmpegOption = require('../ffmpeg-option.js');
+let ffmpegOption;
 
 function getFirstSourceName(params, source) {
-//    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
-//        return jsUtils.file.getNameFromPath(source.replace(/^concat:(.*?)\|.*?$/, '$1'));
-//    } else {
-        return jsUtils.file.getNameFromPath(source);
-//    }
+    //    if (isMultipleChoice(params) === true && params.multi_editmode === "combine") {
+    //        return jsUtils.file.getNameFromPath(source.replace(/^concat:(.*?)\|.*?$/, '$1'));
+    //    } else {
+    return jsUtils.file.getNameFromPath(source);
+    //    }
 }
 
-function makeOutputName(source, params, pass ,ssIndex) {
+function makeOutputPath(source, dest, params, pass, ssIndex) {
     let ret = "";
 
     if (params.set_position === "true") {
@@ -51,9 +31,9 @@ function makeOutputName(source, params, pass ,ssIndex) {
     }
 
     const name = getFirstSourceName(params, source);
-    ret += name.filename + '.' + format[params.format].extension;
+    ret += name.filename + '.' + FFmpegOption.getExtension(params.format);
 
-    return ret;
+    return dest + '/' + ret;
 }
 
 function setPassOption(params, pass, dest) {
@@ -65,240 +45,79 @@ function setPassOption(params, pass, dest) {
     return [];
 }
 
-function setExtraOption(options, extraString) {
-    if (!extraString) {
-        return;
-    }
+// 複数のファイルを結合するにはパスを書き出したファイルをffmpegに渡す
+function makeCombineListfile(files) {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stockerWorker-'));
+    const listFile = path.join(tmpDir, jsUtils.file.getNameFromPath(files[0]).filename + '.txt');
+    let data = "";
+    files.forEach(file => {
+        data += 'file \'' + file + '\'\n';
+    });
 
-    const extOpts = extraString.split(' ');
-    if (extOpts) {
-        extOpts.forEach(ext => {
-            options.push(ext);
-        });
-    }
+    fs.writeFileSync(listFile, data, { encoding: 'utf8', flag: 'w' });
+
+    return listFile;
 }
 
-function setVideoFilter(options, params) {
-    const filters = new Array();
-
-    if (params.deinterlace === "true") {
-        filters.push("yadif=0:-1");
-    }
-
-    if (params.deshake === "true") {
-        /*
-        const analyzeResult = output + '/stabilize.trf';
-        if (pass === 1) {
-            filters.push("vidstabdetect=shakiness=10:accuracy=15:result=\"${analyze_result}\"");
-        } else if (pass === 2) {
-            filter.push("vidstabtransform=zoom=5:input=\"${analyze_result}\"");
-        }
-        */
-    }
-
-    if (params.enable_crop === "true") {
-        filters.push("crop=" + params.crop_w + ":" + params.crop_h + ":" + params.crop_x + ":" + params.crop_y);
-    }
-
-    if (params.enable_pad === "true") {
-        filters.push("pad=" + params.pad_w + ":" + params.pad_h + ":" + params.pad_x + ":" + params.pad_y + ":" + params.pad_color);
-    }
-
-    if (params.enable_adjust === "true") {
-        const eq = "eq=gamma=" + params.gamma + ":contrast=" + params.contrast + ":brightness=" + params.brightness + ":gamma_r=" + params.rg + ":gamma_g=" + params.gg + ":gamma_b=" + params.bg + ":gamma_weight=" + params.weight;
-        const hue = "hue=h=" + params.hue + ":s=" + params.saturation;
-        const unsharp = "unsharp=3:3:" + params.sharp;
-
-        filters.push(eq);
-        filters.push(hue);
-        filters.push(unsharp);
-    }
-
-    filters.push("scale=" + params.s_w + ":" + params.s_h);  // 解像度
-
-    if (params.aspect_set !== 'none') {
-        filters.push(params.aspect_set + '=ratio=' + params.aspect_numerator + '/' + params.aspect_denominator + ':max=1000');
-    }
-
-    if (filters.length > 0) {
-        let filterOpt = "";
-        for (let i=0; i<filters.length; i++) {
-            filterOpt += i === 0 ? '' : ',';
-            filterOpt += filters[i];
-        }
-
-        options.push('-vf');
-        options.push(filterOpt);
-    }
-}
-
-function setVideoOption(params) {
-    const ret = new Array();
-
-    if (params.v_convert === 'none') {
-        ret.push('-vn');
-    } else {
-        ret.push('-map');
-        ret.push('0:' + params.v_map);
-        ret.push('-c:v');
-
-        if (params.v_convert === 'copy') {
-            ret.push('copy');
-        } else {
-            ret.push(params.v_codec);
-
-            if (params.encode_type === 'crf') {
-                ret.push('-crf');
-                ret.push(params.crf);
-                ret.push('-preset');
-                ret.push(params.preset);
-            } else {
-                // bitrate
-                ret.push('-b:v');
-                ret.push(params.b + 'k');
-            }
-            ret.push('-r');
-            ret.push(params.r);
-
-            setVideoFilter(ret, params);
-            setExtraOption(ret, params.v_option);
-        }
-    }
-
-    return ret;
-}
-
-function isLossLessCodec(codec) {
-    return /(flac)|(^pcm_)/.test(codec);
-}
-
-function setAudioFilter(options, params) {
-    const filters = new Array();
-
-    if (params.volume && params.volume !== '1.0') {
-        filters.push('volume=' + params.volume);
-    }
-
-    if (filters.length > 0) {
-        let filterOpt = "";
-        for (let i=0; i<filters.length; i++) {
-            filterOpt += i === 0 ? '' : ',';
-            filterOpt += filters[i];
-        }
-
-        options.push('-af');
-        options.push(filterOpt);
-    }
-}
-
-function setAudioOption(params) {
-    const ret = new Array();
-
-    if (params.a_convert === 'none') {
-        ret.push('-an');
-    } else {
-        ret.push('-map');
-        ret.push('0:' + params.a_map);
-        ret.push('-c:a');
-
-        if (params.a_convert === 'copy') {
-            ret.push('copy');
-        } else {
-            ret.push(params.a_codec);
-
-            if (params.ac) {
-                ret.push('-ac');
-                ret.push(params.ac);
-            }
-            if (params.ar) {
-                ret.push('-ar');
-                ret.push(params.ar);
-            }
-
-            if (!isLossLessCodec(params.a_codec)) {
-                ret.push('-b:a');
-                ret.push(params.ab + 'k');
-            }
-
-            if (params.cutoff && params.cutoff !== '0') {
-                ret.push('-cutoff');
-                ret.push(params.cutoff);
-            }
-
-            setAudioFilter(ret, params);
-            setExtraOption(ret, params.a_option);
-        }
-    }
-
-    return ret;
-}
-
-function converterCommand(cmdgroup, options, params, output) {
-    let opt = options;
-    opt = opt.concat(setVideoOption(params));
-    opt = opt.concat(setAudioOption(params));
-    opt.push('-f');
-    opt.push(format[params.format].format);
-    opt.push(output);
-
-    return {
-        cmdgroup: cmdgroup,
-        command: config.ffmpeg_cmd,
-        options: opt,
-        queue: (params.v_convert === 'copy') ? 1 : 0
-    };
-}
-
-function composeEncodeCommand(cmdgroup, source, dest, params) {
+function composeConvertCommand(cmdgroup, source, dest, params) {
     let ssIndex = 0;
     const ret = new Array();
+    const outputs = new Array();
 
     do {
-        const options = new Array();
-
-        if (params.set_position === "true") {
-            options.push('-ss');
-            options.push(params['ss' + ssIndex]);
-        }
-        if (params.multi_editmode === 'combine') {
-            options.push('-f');
-            options.push('concat');
-            options.push('-safe');
-            options.push('0');
-        }
-        options.push('-i');
-        options.push(source);
-        options.push('-y');
-
-        if (config.encoding_thread) {
-            options.push('-threads');
-            options.push(config.encoding_thread);
-        }
-
-        options.push('-progress');
-        options.push(dest + '/_progress.txt');
-
-        if (params.set_position === "true") {
-            options.push('-t');
-            options.push(params['t' + ssIndex]);
+        if (params.set_position === 'true' && params.after_combine_them === 'true') {
+            outputs.push(makeOutputPath(source, dest, params, params.pass2 === "true" ? 1 : 2, ssIndex));
         }
 
         // 1pass encoding
-        const pass1Options = options.concat(setPassOption(params, 1, dest));
-        ret.push(converterCommand(cmdgroup, pass1Options, params,
-            dest + '/' + makeOutputName(source, params, 1, ssIndex))
-        );
+        ret.push({
+            cmdgroup: cmdgroup,
+            command: stockerConf.ffmpeg_cmd,
+            options: ffmpegOption.compose(source, makeOutputPath(source, dest, params, 1, ssIndex), params, ssIndex, setPassOption(params, 1, dest)),
+            queue: (params.v_convert === 'copy') ? 1 : 0
+        });
 
         // 2pass encoding
         if (params.pass2 === "true") {
-            const pass2Options = options.concat(setPassOption(params, 2, dest));
-            ret.push(converterCommand(cmdgroup, pass2Options, params,
-                dest + '/' + makeOutputName(source, params, 2, ssIndex))
-            );
+            ret.push({
+                cmdgroup: cmdgroup,
+                command: stockerConf.ffmpeg_cmd,
+                options: ffmpegOption.compose(source, makeOutputPath(source, dest, params, 2, ssIndex), params, ssIndex, setPassOption(params, 2, dest)),
+                queue: (params.v_convert === 'copy') ? 1 : 0
+            });
         }
 
         ssIndex++;
-    } while(params['ss' + ssIndex]);
+    } while (params['ss' + ssIndex]);
+
+    if (outputs.length > 1) {
+        const listFile = makeCombineListfile(outputs);
+        const concatOutput = dest + '/concat_' + jsUtils.file.getNameFromPath(outputs[0]).filename + '.' + FFmpegOption.getExtension(params.format);
+        const concatParams = {
+            ...params,
+            set_position: false,
+            multi_editmode: 'combine',
+            v_convert: 'copy',
+            v_map: '',
+            frames: '',
+            a_convert: 'copy',
+            a_map: ''
+        };
+        ret.push({
+            cmdgroup: cmdgroup,
+            command: stockerConf.ffmpeg_cmd,
+            options: ffmpegOption.compose(listFile, concatOutput, concatParams),
+            queue: (params.v_convert === 'copy') ? 1 : 0
+        });
+
+        const tmpDir = jsUtils.file.getNameFromPath(listFile).dirname;
+        ret.push({
+            cmdgroup: cmdgroup,
+            command: "/usr/bin/rm",
+            options: ['-rf', tmpDir],
+            queue: (params.v_convert === 'copy') ? 1 : 0
+        });
+    }
 
     return ret;
 }
@@ -317,15 +136,7 @@ function getSourcePath(stockerLib, params) {
     decoded.sort();
 
     if (params.multi_editmode === 'combine') {
-        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stockerWorker-'));
-        const listFile = path.join(tmpDir, jsUtils.file.getNameFromPath(decoded[0]).filename + '.txt');
-        let data = "";
-        decoded.forEach(file => {
-            data += 'file \'' + file + '\'\n';
-        });
-
-        fs.writeFileSync(listFile, data, {encoding: 'utf8', flag: 'w'});
-        return [listFile];
+        return [makeCombineListfile(decoded)];
     }
 
     return decoded;
@@ -340,8 +151,9 @@ function destinationPath(stockerLib, params, source) {
     };
 }
 
-module.exports = function(params) {
+module.exports = function (params) {
     const stockerLib = new StockerLib();
+    ffmpegOption = new FFmpegOption({ encodingThread: stockerConf.encoding_thread });
 
     return new Promise((resolve, reject) => {
         if (!params.root || !params.path) {
@@ -361,10 +173,10 @@ module.exports = function(params) {
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mkdir",
                 options: ['-p', dest.converting],
-                queue: 0
+                queue: (params.v_convert === 'copy') ? 1 : 0
             });
 
-            ret = ret.concat(composeEncodeCommand(cmdgroup, source, dest.converting, params));
+            ret = ret.concat(composeConvertCommand(cmdgroup, source, dest.converting, params));
 
             if (params.multi_editmode === 'combine') {
                 const tmpDir = jsUtils.file.getNameFromPath(source).dirname;
@@ -372,7 +184,7 @@ module.exports = function(params) {
                     cmdgroup: cmdgroup,
                     command: "/usr/bin/rm",
                     options: ['-rf', tmpDir],
-                    queue: 0
+                    queue: (params.v_convert === 'copy') ? 1 : 0
                 });
             }
 
@@ -381,7 +193,7 @@ module.exports = function(params) {
                 cmdgroup: cmdgroup,
                 command: "/usr/bin/mv",
                 options: [dest.converting, dest.done],
-                queue: 0
+                queue: (params.v_convert === 'copy') ? 1 : 0
             });
         });
 

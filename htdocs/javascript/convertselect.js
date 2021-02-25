@@ -27,7 +27,7 @@ const skip_options = [
 function buildSkipOptions() {
     const default_value = 3;
 
-    for(var i=0; i<skip_options.length; i++) {
+    for (var i = 0; i < skip_options.length; i++) {
         let op = document.createElement("option");
         op.value = skip_options[i][0] * 1000;
         op.text = skip_options[i][1];
@@ -77,24 +77,24 @@ function closeWindow() {
 
 function getImageURL(elem) {
     var ss = elem.value;
-    return stockerConfig.uri.converter.movie_img + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=1&ss=" + ss;
+    return '/api/v1/media/' + params.dir + '/' + params.file + '/videoImage' + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=true&ss0=" + ss;
 }
 
 function reloadImage() {
     if (loading) {
-      load_again = true;
-      return;
+        load_again = true;
+        return;
     }
 
     var elem, reloading_elem, selected_time_elem;
     if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
-      elem = document.f1.previewStart;
-      reloading_elem = document.getElementById("reloadingStart");
-      selected_time_elem = document.f1.selectedTimeStart;
+        elem = document.f1.previewStart;
+        reloading_elem = document.getElementById("reloadingStart");
+        selected_time_elem = document.f1.selectedTimeStart;
     } else {
-      elem = document.f1.previewEnd;
-      reloading_elem = document.getElementById("reloadingEnd");
-      selected_time_elem = document.f1.selectedTimeEnd;
+        elem = document.f1.previewEnd;
+        reloading_elem = document.getElementById("reloadingEnd");
+        selected_time_elem = document.f1.selectedTimeEnd;
     }
 
     setLoading(elem, reloading_elem, selected_time_elem);
@@ -102,13 +102,13 @@ function reloadImage() {
 
 function setLoading(preview_elem, reloading_elem, selected_time_elem) {
     if (preview_elem.addEventListener) {
-      preview_elem.addEventListener("load", function() { unsetLoading(preview_elem, reloading_elem); }, false);
-      preview_elem.addEventListener("error", function() { showGrayPad(preview_elem, reloading_elem); }, false);
-      preview_elem.addEventListener("abort", function() { showGrayPad(preview_elem, reloading_elem); }, false);
+        preview_elem.addEventListener("load", function () { unsetLoading(preview_elem, reloading_elem); }, false);
+        preview_elem.addEventListener("error", function () { showGrayPad(preview_elem, reloading_elem); }, false);
+        preview_elem.addEventListener("abort", function () { showGrayPad(preview_elem, reloading_elem); }, false);
     } else if (preview_elem.attachEvent) {
-      preview_elem.attachEvent("onload", function() { unsetLoading(preview_elem, reloading_elem); });
-      preview_elem.attachEvent("onerror", function() { showGrayPad(preview_elem, reloading_elem); });
-      preview_elem.attachEvent("onabort", function() { showGrayPad(preview_elem, reloading_elem); });
+        preview_elem.attachEvent("onload", function () { unsetLoading(preview_elem, reloading_elem); });
+        preview_elem.attachEvent("onerror", function () { showGrayPad(preview_elem, reloading_elem); });
+        preview_elem.attachEvent("onabort", function () { showGrayPad(preview_elem, reloading_elem); });
     }
 
     loading = true;
@@ -118,21 +118,21 @@ function setLoading(preview_elem, reloading_elem, selected_time_elem) {
 
 function unsetLoading(preview_elem, reloading_elem) {
     if (preview_elem.removeEventListener) {
-      preview_elem.removeEventListener("load", function() { unsetLoading(preview_elem); }, false);
-      preview_elem.removeEventListener("error", function() { showGrayPad(preview_elem); }, false);
-      preview_elem.removeEventListener("abort", function() { showGrayPad(preview_elem); }, false);
+        preview_elem.removeEventListener("load", function () { unsetLoading(preview_elem); }, false);
+        preview_elem.removeEventListener("error", function () { showGrayPad(preview_elem); }, false);
+        preview_elem.removeEventListener("abort", function () { showGrayPad(preview_elem); }, false);
     } else if (preview_elem.detachEvent) {
-      preview_elem.detachEvent("onload", function() { unsetLoading(preview_elem); });
-      preview_elem.detachEvent("onerror", function() { showGrayPad(preview_elem); });
-      preview_elem.detachEvent("onabort", function() { showGrayPad(preview_elem); });
+        preview_elem.detachEvent("onload", function () { unsetLoading(preview_elem); });
+        preview_elem.detachEvent("onerror", function () { showGrayPad(preview_elem); });
+        preview_elem.detachEvent("onabort", function () { showGrayPad(preview_elem); });
     }
 
     reloading_elem.style.display = "none";
     loading = false;
 
     if (load_again) {
-      load_again = false;
-      reloadImage();
+        load_again = false;
+        reloadImage();
     }
 }
 
@@ -140,10 +140,10 @@ function selectSkipDown(cnt) {
     var idx = document.f1.skip.selectedIndex;
     idx += cnt;
     if (idx < 0) {
-      idx = 0;
+        idx = 0;
     }
-    if (idx > document.f1.skip.options.length -1) {
-      idx = document.f1.skip.options.length -1;
+    if (idx > document.f1.skip.options.length - 1) {
+        idx = document.f1.skip.options.length - 1;
     }
     document.f1.skip.options[idx].selected = true;
 }
@@ -170,45 +170,45 @@ function keyDownWork(e) {
         return;
     }
 
-    switch(key_code) {
-      case 37: // left
-      case 71:
-        addTime(document.f1.skip.value * (-1));
-        break;
-      case 39: // right
-      case 72:
-        addTime(document.f1.skip.value);
-        break;
-      case 38: // up
-        selectSkipDown(-1);
-        break;
-      case 40: // down
-        selectSkipDown(1);
-        break;
-      case 70: // f
-        addTime(-500);
-        break;
-      case 68: // d
-        addTime(-1000);
-        break;
-      case 83: // s
-        addTime(-15000);
-        break;
-      case 65: // a
-        addTime(-60000);
-        break;
-      case 74: // j
-        addTime(500);
-        break;
-      case 75: // k
-        addTime(1000);
-        break;
-      case 76: // l
-        addTime(15000);
-        break;
-      case 187: // ;
-        addTime(60000);
-        break;
+    switch (key_code) {
+        case 37: // left
+        case 71:
+            addTime(document.f1.skip.value * (-1));
+            break;
+        case 39: // right
+        case 72:
+            addTime(document.f1.skip.value);
+            break;
+        case 38: // up
+            selectSkipDown(-1);
+            break;
+        case 40: // down
+            selectSkipDown(1);
+            break;
+        case 70: // f
+            addTime(-500);
+            break;
+        case 68: // d
+            addTime(-1000);
+            break;
+        case 83: // s
+            addTime(-15000);
+            break;
+        case 65: // a
+            addTime(-60000);
+            break;
+        case 74: // j
+            addTime(500);
+            break;
+        case 75: // k
+            addTime(1000);
+            break;
+        case 76: // l
+            addTime(15000);
+            break;
+        case 187: // ;
+            addTime(60000);
+            break;
     }
 }
 
@@ -228,7 +228,7 @@ function adjustStartAndEndTime() {
     var end = document.f1.selectedTimeEnd;
 
     var start_time = getSecondFromFormatTime(start.value);
-    var end_time   = getSecondFromFormatTime(end.value);
+    var end_time = getSecondFromFormatTime(end.value);
 
     if (start_time > end_time) {
         if (getRadioButtonValue(document.f1.controlTimeSwitch) === "start") {
@@ -276,36 +276,30 @@ function addTime(num) {
     }
 }
 
-function getMovieDuration(movie_info_url, root, path, vno) {
+function getMovieDuration(root, path, vno) {
     jsUtils.fetch.request({
-        method: 'POST',
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        format: 'text',
-        uri: movie_info_url,
+        method: 'GET',
+        format: 'json',
+        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
         body: stocker.components.makeDirFileParam(root, path)
-    }, function(text) {
-        const responseXML = jsUtils.xml.getDom(text);
-        getMovieDurationResult(responseXML, vno);
+    }, function (json) {
+        getMovieDurationResult(json, Number(vno));
         callGetSceneData();
-    }, function(message) {
+    }, function (message) {
         alert("動画の長さ取得に失敗しました - " + message);
     });
 }
 
 function getMovieDurationResult(data, vno) {
-    const xml = jsUtils.xml;
-    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
-    const hhmmssxxx = xml.getFirstFoundTagData(movie_info.childNodes, 'duration');
+    const hhmmssxxx = data.duration;
     if (hhmmssxxx) {
         duration = getSecondFromFormatTime(hhmmssxxx);
         moveSeekPosition(document.f1.seekFrom, getSelectedTimeElem());
 
-        const videos = xml.getDataInElements(movie_info, 'video', ["no", "disp_width", "disp_height"]);
-        for (var i=0; i<videos.length; i++) {
-            const v = videos[i];
-            if (vno === v.no) {
-                const disp_width   = parseInt(v.disp_width);
-                const disp_height  = parseInt(v.disp_height);
+        for (const st of data.streams) {
+            if (vno === st.no) {
+                const disp_width = parseInt(st.disp_width);
+                const disp_height = parseInt(st.disp_height);
                 if (disp_width.length !== 0 && disp_height !== 0) {
                     setPreviewSize(document.getElementById('startPreviewArea'), disp_width, disp_height);
                     setPreviewSize(document.getElementById('endPreviewArea'), disp_width, disp_height);
@@ -324,10 +318,9 @@ function callGetSceneData() {
     ajax.init();
 
     ajax.setOnSuccess(getSceneDataResult);
-    ajax.setOnError(function(httpRequest) {});
+    ajax.setOnError(function (httpRequest) { });
 
-    const query = "dir=" + params.dir + "&file=" + scene_list_path + "&mime=text/plain";
-    ajax.post(stockerConfig.uri.get_file, query);
+    ajax.get('/api/v1/storage/' + params.dir + '/' + scene_list_path + '/raw');
 }
 
 function getSceneDataResult(httpRequest) {
@@ -335,7 +328,7 @@ function getSceneDataResult(httpRequest) {
     var data = httpRequest.responseText;
 
     sp = 0;
-    while((ep = data.indexOf("\n", sp)) != -1) {
+    while ((ep = data.indexOf("\n", sp)) != -1) {
         var line = data.substring(sp, ep);
         pushSceneList(line);
         sp = ep + 1;
@@ -347,7 +340,7 @@ function getSceneDataResult(httpRequest) {
 
     if (sceneList.length > 0) {
         var html;
-        html  = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
+        html = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
         html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
         document.getElementById('sceneSelectArea').innerHTML = html;
     }
@@ -369,7 +362,7 @@ function getNextScene(next_step) {
     var milisec = Math.floor(getSecondFromFormatTime(elem.value) * 1000);
     var base_index, next_index;
 
-    for (var base_index=0; base_index<sceneList.length; base_index++) {
+    for (var base_index = 0; base_index < sceneList.length; base_index++) {
         if (milisec < sceneList[base_index]) {
             if (next_step > 0) {
                 next_step--;

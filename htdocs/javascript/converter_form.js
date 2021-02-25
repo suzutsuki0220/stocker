@@ -5,11 +5,11 @@ var sceneListPath = "";
 
 let params = new Object();
 let files = new Array();
-let filename, upPath, upRealPath;
+let filename, upPath;
 
 const GRAY_PAD = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAQklEQVRo3u3PAQkAAAgDMLV/mie0hSBsDdZJ6rOp5wQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBATuLGnyAnZizub2AAAAAElFTkSuQmCC";
 
-const enc_params = ['a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crf', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'encode_type', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'preset', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
+const enc_params = ['after_combine_them', 'a_codec', 'a_option', 'a_convert', 'a_map', 'ab', 'ac', 'ar', 'aspect_denominator', 'aspect_numerator', 'aspect_set', 'b', 'bg', 'brightness', 'contrast', 'crf', 'crop_h', 'crop_w', 'crop_x', 'crop_y', 'cutoff', 'deinterlace', 'deshake', 'enable_adjust', 'enable_crop', 'enable_pad', 'encode_type', 'format', 'gamma', 'gg', 'hue', 'multi_editmode', 'pad_color', 'pad_h', 'pad_w', 'pad_x', 'pad_y', 'pass2', 'preset', 'r', 'rg', 's_h', 's_w', 'saturation', 'set_position', 'sharp', 'v_codec', 'v_option', 'v_convert', 'v_map', 'volume', 'weight'];
 
 const encodeFormats = {
     video: [
@@ -29,7 +29,7 @@ const encodeFormats = {
     ]
 };
 
-window.addEventListener("load", function(event) {
+window.addEventListener("load", function (event) {
     params = jsUtils.url.getRawParams();
     files = stocker.components.getParamFile();
 
@@ -38,29 +38,27 @@ window.addEventListener("load", function(event) {
     }
     makeMultiEditForm();
 
-    stocker.components.getFileProperties(params.dir, files[0], function(properties) {
-        filename = properties.name;
-        upPath = properties.up_path;
-        upRealPath = properties.up_dir;
+    getDirectoryProperties(params.dir, files[0], NaN, NaN, function (data) {
+        filename = data.properties.name;
+        upPath = data.properties.up_path;
 
         document.getElementById('fileNameArea').textContent = filename;
         sourceFileList(document.getElementById('source_file_list'));
-        getMovieInfo(stockerConfig.uri.converter.movie_info, params.dir, files[0]);
+        getMovieInfo(params.dir, files[0]);
         getSceneListFilePath(filename, params.dir, upPath);
-    }, function(e) {
+    }, function (e) {
         console.log(e);
     });
 
-    document.enc_setting.action = stockerConfig.uri.converter.form;
-    document.getElementById('vimg').src = stockerConfig.uri.converter.movie_img + "?size=640&file=" + files[0] + "&dir=" + params.dir;
+    document.getElementById('vimg').src = getPreviewUrl(640);
     document.adjpreview.src = GRAY_PAD;
-    document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
+    //document.getElementById('encodeListLink').href = stockerConfig.uri.converter.list;
 
     makeDirectorySelector(document.getElementById('destinationSelectorArea'));
 });
 
 function setFormOption(options, value) {
-    for (let i=0; i<options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
         if (options[i].value === value) {
             options[i].selected = true;
             return;
@@ -106,14 +104,14 @@ function makeMultiEditForm() {
 }
 
 function makeEncodeQuery() {
-    const getNamedValue = function(key) {
+    const getNamedValue = function (key) {
         const e = document.getElementsByName(key);
         var v = "";
         if (e && e[0]) {
             if (e[0].type === 'checkbox') {
                 v = e[0].checked ? 'true' : 'false';
             } else if (e[0].type === 'radio') {
-                for (var i=0; i<e.length; i++) {
+                for (var i = 0; i < e.length; i++) {
                     if (e[i].checked === true) {
                         v = e[i].value;
                         break;
@@ -129,21 +127,21 @@ function makeEncodeQuery() {
 
     let query = "root=" + params.dir;
 
-    for (let i=0; i<files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         query += '&path=' + files[i];
     }
 
     query += "&out_root=" + selectedParam.root + "&out_path=" + selectedParam.path;
 
-    for (let i=0; i<=timeSelNum; i++) {
+    for (let i = 0; i <= timeSelNum; i++) {
         const ss = 'ss' + i;
         const t = 't' + i;
 
         query += '&' + ss + '=' + getNamedValue(ss);
-        query += '&' + t  + '=' + getNamedValue(t);
+        query += '&' + t + '=' + getNamedValue(t);
     }
 
-    for (let i=0; i<enc_params.length; i++) {
+    for (let i = 0; i < enc_params.length; i++) {
         query += '&' + enc_params[i] + '=' + getNamedValue(enc_params[i]);
     }
 
@@ -155,15 +153,16 @@ function addJob() {
     const formUri = jsUtils.url.apart(window.location.href);
 
     jsUtils.fetch.request(
-        {uri: formUri.scheme + "://" + formUri.host + stockerConfig.uri.converter.worker_api,
-         headers: {"Content-Type": "application/x-www-form-urlencoded"},
-         body: makeEncodeQuery(),
-         mode: 'cors',
-         method: 'POST',
-         format: 'json'
-        }, function(data) {
+        {
+            uri: '/api/v1/converts',
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: makeEncodeQuery(),
+            mode: 'cors',
+            method: 'POST',
+            format: 'json'
+        }, function (data) {
             document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
-        }, function(error) {
+        }, function (error) {
             document.getElementById('sStatus').innerHTML = "ERROR: " + error.message;
         }
     );
@@ -195,7 +194,7 @@ function print_aspect(location) {
 
 // 表示比率を求める
 function get_video_aspect(width, height) {
-    const ratio = jsUtils.image.getAspect({width: width, height: height});
+    const ratio = jsUtils.image.getAspect({ width: width, height: height });
 
     return ratio ? ratio.x + ":" + ratio.y : "-----";
 }
@@ -215,7 +214,7 @@ function checkSize(elem) {
 
 function fixHeight() {
     if (checkSize(document.enc_setting.s_w)) {
-        if( document.enc_setting.save_aspect.checked == true ) {
+        if (document.enc_setting.save_aspect.checked == true) {
             document.enc_setting.s_h.value = Math.round(document.enc_setting.s_w.value / selectedVideo.ratio.x * selectedVideo.ratio.y);
         }
         print_aspect('ssize');
@@ -224,7 +223,7 @@ function fixHeight() {
 
 function fixWidth() {
     if (checkSize(document.enc_setting.s_h)) {
-        if( document.enc_setting.save_aspect.checked == true ) {
+        if (document.enc_setting.save_aspect.checked == true) {
             document.enc_setting.s_w.value = Math.round(document.enc_setting.s_h.value / selectedVideo.ratio.y * selectedVideo.ratio.x);
         }
         print_aspect('ssize');
@@ -235,22 +234,22 @@ function fixWidth() {
 function calcBitrateAim() {
     // aimed bitrate calcurate from BPP (http://service.jp.real.com/help/faq/prod/faq_4226.html)
     var high_bit = 0;
-    var low_bit  = 0;
-    var width  = document.enc_setting.s_w.value;
+    var low_bit = 0;
+    var width = document.enc_setting.s_w.value;
     var height = document.enc_setting.s_h.value;
-    var fps    = document.enc_setting.r.value;
-    if( document.enc_setting.move_freq[0].checked == true ) {
+    var fps = document.enc_setting.r.value;
+    if (document.enc_setting.move_freq[0].checked == true) {
         // freq high
         high_bit = Math.round(width * height * fps * 0.225 / 1000);
-        low_bit  = Math.round(width * height * fps * 0.125 / 1000);
-    } else if( document.enc_setting.move_freq[1].checked == true ) {
+        low_bit = Math.round(width * height * fps * 0.125 / 1000);
+    } else if (document.enc_setting.move_freq[1].checked == true) {
         // freq middle;
         high_bit = Math.round(width * height * fps * 0.200 / 1000);
-        low_bit  = Math.round(width * height * fps * 0.100 / 1000);
-    } else if( document.enc_setting.move_freq[2].checked == true ) {
+        low_bit = Math.round(width * height * fps * 0.100 / 1000);
+    } else if (document.enc_setting.move_freq[2].checked == true) {
         // freq low
         high_bit = Math.round(width * height * fps * 0.175 / 1000);
-        low_bit  = Math.round(width * height * fps * 0.075 / 1000);
+        low_bit = Math.round(width * height * fps * 0.075 / 1000);
     }
     document.getElementById('aimed_bitrate').innerHTML = high_bit + "～" + low_bit + " kbps";
 }
@@ -261,8 +260,8 @@ function openPreviewWindow() {
 }
 
 function getPreviewUrl(width) {
-    var url = stockerConfig.uri.converter.movie_img + "?dir=" + params.dir +"&file=" + files[0] + "&size=" + width;
-    if (document.enc_setting.v_map.length !== 0) {
+    let url = '/api/v1/media/' + params.dir + "/" + files[0] + "/videoimage?size=" + width;
+    if (document.enc_setting.v_map && document.enc_setting.v_map.length !== 0) {
         url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
     }
     if (document.enc_setting.set_position.checked == true) {
@@ -301,7 +300,7 @@ function getPreviewUrl(width) {
 }
 
 function actionAdjEnable() {  // 画質調整する のチェックボックス
-    if(document.enc_setting.enable_adjust.checked == true) {
+    if (document.enc_setting.enable_adjust.checked == true) {
         adjust_preview();
     } else {
         document.adjpreview.src = GRAY_PAD;
@@ -315,151 +314,151 @@ function adjust_preview() {
 }
 
 function adj_brightness(gain) {
-    var num = (((parseFloat(document.enc_setting.brightness.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.brightness.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.brightness.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_brightness(value) {
     document.enc_setting.brightness.value = value;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_contrast(gain) {
-    var num = (((parseFloat(document.enc_setting.contrast.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.contrast.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.contrast.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_contrast(num) {
     document.enc_setting.contrast.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_gamma(gain) {
-    var num = (((parseFloat(document.enc_setting.gamma.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.gamma.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.gamma.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_gamma(num) {
     document.enc_setting.gamma.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_hue(gain) {
-    var num = (((parseFloat(document.enc_setting.hue.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.hue.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.hue.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_hue(num) {
     document.enc_setting.hue.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_saturation(gain) {
-    var num = (((parseFloat(document.enc_setting.saturation.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.saturation.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.saturation.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_saturation(num) {
     document.enc_setting.saturation.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_sharp(gain) {
-    var num = (((parseFloat(document.enc_setting.sharp.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.sharp.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.sharp.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_sharp(num) {
     document.enc_setting.sharp.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_rg(gain) {
-    var num = (((parseFloat(document.enc_setting.rg.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.rg.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.rg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_rg(num) {
     document.enc_setting.rg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_gg(gain) {
-    var num = (((parseFloat(document.enc_setting.gg.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.gg.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.gg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_gg(num) {
     document.enc_setting.gg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_bg(gain) {
-    var num = (((parseFloat(document.enc_setting.bg.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.bg.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.bg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_bg(num) {
     document.enc_setting.bg.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function adj_weight(gain) {
-    var num = (((parseFloat(document.enc_setting.weight.value)*1000) + (gain*1000)) / 1000);
+    var num = (((parseFloat(document.enc_setting.weight.value) * 1000) + (gain * 1000)) / 1000);
     document.enc_setting.weight.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
 
 function set_weight(num) {
     document.enc_setting.weight.value = num;
-    if(vaildate_adjustment()) {
+    if (vaildate_adjustment()) {
         adjust_preview();
     }
 }
@@ -574,19 +573,11 @@ function getSceneListFilePath(file_name, root, dirpath) {
     sceneListPath = "";
 
     jsUtils.fetch.request({
-        uri: stockerConfig.uri.get_dir,
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: stocker.components.makeDirFileParam(root, dirpath),
-        method: 'POST',
-        format: 'text'
-    }, function(text) {
-        const xml = jsUtils.xml.getDom(text);
-        const directory = jsUtils.xml.getFirstFoundChildNode(xml, 'directory');
-        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-        const elements = jsUtils.xml.getDataInElements(contents, 'element', ['name', 'path', 'type']);
-
-        for (var i=0; i<elements.length; i++) {
-            const e = elements[i];
+        uri: '/api/v1/storage/' + root + '/' + dirpath + '/properties',
+        method: 'GET',
+        format: 'json'
+    }, function (json) {
+        for (const e of json.elements) {
             if (e.type === 'FILE' && e.name === list_file) {
                 sceneListPath = e.path;
                 break;
@@ -595,66 +586,47 @@ function getSceneListFilePath(file_name, root, dirpath) {
     });
 }
 
-function getMovieInfo(movie_info_url, root, path) {
+function getMovieInfo(root, path) {
     document.getElementById('information_table').innerHTML = "読み込み中";
 
     jsUtils.fetch.request({
-        uri: movie_info_url,
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: stocker.components.makeDirFileParam(root, path),
-        method: 'POST',
-        format: 'text'
-    }, showInfoTable, function() {
+        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
+        method: 'GET',
+        format: 'json'
+    }, showInfoTable, function (e) {
+        console.warn(e);
         render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
     });
 }
 
-function showInfoTable(text) {
+function showInfoTable(data) {
     var video_table = "";
     var audio_table = "";
-    var width, height;
 
-    const data = jsUtils.xml.getDom(text);
-    const xml = jsUtils.xml;
-    const movie_info = xml.getFirstFoundChildNode(data, 'movie_info');
-    const properties = xml.getDataInElements(data, 'movie_info', ["filename", "filesize", "format", "duration"])[0];
-
-    if (!properties) {
-        document.getElementById('information_table').innerHTML = "予期しないデータを受け取りました";
-        return;
-    }
-
-    const videos = xml.getDataInElements(movie_info, 'video', ["no", "bitrate", "codec", "fps", "fps_average", "width", "height", "disp_width", "disp_height", "disp_aspect", "sar", "gop_size"]);
-    const audios = xml.getDataInElements(movie_info, 'audio', ['no' ,'sample_rate' ,'channel' ,'bitrate' ,'sample_fmt' ,'codec']);
-
-    if (videos.length > 0) {
-        for (var i=0; i<videos.length; i++) {
-            if (i === 0) {
+    for (const st of data.streams) {
+        if (st.type === 'video') {
+            if (video_table.length === 0) {
                 video_table += "<tr><th colspan=\"3\">映像ストリーム</th></tr>";
             }
-            video_table += makeVideoTable(videos[i]);
-        }
-    }
-
-    if (audios.length > 0) {
-        for (var i=0; i<audios.length; i++) {
-            if (i === 0) {
+            video_table += makeVideoTable(st);
+        } else if (st.type === 'audio') {
+            if (audio_table.length === 0) {
                 audio_table += "<tr><th colspan=\"3\">音声ストリーム</th></tr>";
             }
-            audio_table += makeAudioTable(audios[i]);
+            audio_table += makeAudioTable(st);
         }
     }
 
     document.getElementById('information_table').innerHTML
         = "<table border=\"3\">"
-                + "<tr><th colspan=\"3\">全般</th></tr>"
-                + "<tr><th colspan=\"2\">ファイル名</th><td>" + properties.filename + "</td></tr>"
-                + "<tr><th colspan=\"2\">ファイルサイズ</th><td>" + properties.filesize + " Byte</td></tr>"
-                + "<tr><th colspan=\"2\">時間</th><td>" + properties.duration + "</td></tr>"
-                + "<tr><th colspan=\"2\">フォーマット</th><td>" + properties.format + "</td></tr>"
-                + video_table + audio_table + "</table>";
+        + "<tr><th colspan=\"3\">全般</th></tr>"
+        + "<tr><th colspan=\"2\">ファイル名</th><td>" + filename + "</td></tr>"
+        //        + "<tr><th colspan=\"2\">ファイルサイズ</th><td>" + "properties.filesize" + " Byte</td></tr>"
+        + "<tr><th colspan=\"2\">時間</th><td>" + data.duration + "</td></tr>"
+        + "<tr><th colspan=\"2\">フォーマット</th><td>" + data.format + "</td></tr>"
+        + video_table + audio_table + "</table>";
 
-    const best_stream = getBestStream(videos, audios);
+    const best_stream = getBestStream(data.streams);
 
     // check radio button
     if (isNaN(best_stream.video.index) === false) {
@@ -694,10 +666,21 @@ function makeAudioTable(aud) {
 `;
 }
 
-function getBestStream(videos, audios) {
+function getBestStream(streams) {
+    const videos = new Array();
+    const audios = new Array();
+
+    for (const st of streams) {
+        if (st.type === 'video') {
+            videos.push(st);
+        } else if (st.type === 'audio') {
+            audios.push(st);
+        }
+    }
+
     if (videos.length === 0) {
         return {
-            video: {no: NaN, index: NaN},
+            video: { no: NaN, index: NaN },
             audio: getBestAudioStream(audios)
         };
     }
@@ -717,7 +700,7 @@ function getBestVideoStream(videos) {
     var max_pixel_streams = new Array();
 
     // 最も大きい解像度のストリームを探す
-    for (var i=0; i<videos.length; i++) {
+    for (var i = 0; i < videos.length; i++) {
         const pixel_dimension = jsUtils.image.getAreaSize(videos[i]);
         if (max_pixel_dimension < pixel_dimension) {
             // 最大解像度が更新された
@@ -730,7 +713,7 @@ function getBestVideoStream(videos) {
     }
 
     // 最も大きい解像度のストリームの中から最もfpsが高いストリームを探す
-    for (var i=0; i< max_pixel_streams.length; i++) {
+    for (var i = 0; i < max_pixel_streams.length; i++) {
         const vid_fps = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].fps);
         if (max_fps < vid_fps) {
             max_fps = vid_fps;
@@ -738,7 +721,7 @@ function getBestVideoStream(videos) {
     }
 
     // 更にビットレートで比較
-    for (var i=0; i< max_pixel_streams.length; i++) {
+    for (var i = 0; i < max_pixel_streams.length; i++) {
         const vid_fps = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].fps);
         const vid_bitrate = jsUtils.value.replaceNanToZero(videos[max_pixel_streams[i]].bitrate);
 
@@ -766,14 +749,14 @@ function getBestVideoStream(videos) {
 }
 
 function getNearestAudioStream(audios, best_video_no) {
-    for (var i=0; i<audios.length; i++) {
+    for (var i = 0; i < audios.length; i++) {
         const aud_no = jsUtils.value.replaceNanToZero(audios[i].no);
-        if ((best_video_no > 0 && best_video_no -1 === aud_no) || best_video_no + 1 === aud_no) {
-            return {index: i, no: aud_no};
+        if ((best_video_no > 0 && best_video_no - 1 === aud_no) || best_video_no + 1 === aud_no) {
+            return { index: i, no: aud_no };
         }
     }
 
-    return {index: 0, no: parseInt(audios[0].no)};
+    return { index: 0, no: parseInt(audios[0].no) };
 }
 
 function getBestAudioStream(audios) {
@@ -783,21 +766,21 @@ function getBestAudioStream(audios) {
     var max_bitrate = NaN;
     var max_channel_streams = new Array();
 
-    for (var i=0; i<audios.length; i++) {
+    for (var i = 0; i < audios.length; i++) {
         const aud_channel = jsUtils.value.replaceNanToZero(audios[i].channel);
         if (max_channel < aud_channel) {
             max_channel = aud_channel;
         }
     }
 
-    for (var i=0; i<audios.length; i++) {
+    for (var i = 0; i < audios.length; i++) {
         const aud_channel = jsUtils.value.replaceNanToZero(audios[i].channel);
         if (max_channel === aud_channel) {
             max_channel_streams.push(i);
         }
     }
 
-    for (var i=0; i<max_channel_streams.length; i++) {
+    for (var i = 0; i < max_channel_streams.length; i++) {
         const aud_sample_rate = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].sample_rate);
         if (isNaN(max_sample_rate) === true) {
             max_sample_rate = aud_sample_rate;
@@ -808,9 +791,9 @@ function getBestAudioStream(audios) {
         }
     }
 
-    for (var i=0; i<max_channel_streams.length; i++) {
+    for (var i = 0; i < max_channel_streams.length; i++) {
         const aud_sample_rate = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].sample_rate);
-        const aud_bitrate     = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].bitrate);
+        const aud_bitrate = jsUtils.value.replaceNanToZero(audios[max_channel_streams[i]].bitrate);
 
         if (max_sample_rate === aud_sample_rate) {
             if (aud_bitrate !== 0) {
@@ -839,15 +822,15 @@ function doVideoStreamSelected(vid_no) {
     var wxh_pattern = /^(\d+)\s*x\s*(\d+).*$/;
     var size_str = document.getElementById("size_" + vid_no).innerHTML;
     var disp_str = document.getElementById("disp_" + vid_no).innerHTML;
-    var fps  = parseFloat(document.getElementById("fps_" + vid_no).innerHTML);
-    var bps  = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
+    var fps = parseFloat(document.getElementById("fps_" + vid_no).innerHTML);
+    var bps = parseInt(document.getElementById("bps_" + vid_no).innerHTML);
 
     var wxh_result = wxh_pattern.exec(size_str);
-    selectedVideo.width  = parseInt(wxh_result[1]);
+    selectedVideo.width = parseInt(wxh_result[1]);
     selectedVideo.height = parseInt(wxh_result[2]);
 
     var disp_wxh_result = wxh_pattern.exec(disp_str);
-    selectedVideo.disp_width  = parseInt(disp_wxh_result[1]);
+    selectedVideo.disp_width = parseInt(disp_wxh_result[1]);
     selectedVideo.disp_height = parseInt(disp_wxh_result[2]);
 
     if (bps === 0) {
@@ -857,12 +840,12 @@ function doVideoStreamSelected(vid_no) {
     var obj = {
         s_w: selectedVideo.disp_width - (selectedVideo.disp_width % 8),
         s_h: selectedVideo.disp_height - (selectedVideo.disp_height % 8),
-        r:   jsUtils.value.round(fps, 2),  // 少数点第2位以下は捨てる
-        b:   Math.floor(bps / 1000)
+        r: jsUtils.value.round(fps, 2),  // 少数点第2位以下は捨てる
+        b: Math.floor(bps / 1000)
     };
     setFormValues(obj);
 
-    selectedVideo.ratio = jsUtils.image.getAspect({width: obj.s_w, height: obj.s_h});
+    selectedVideo.ratio = jsUtils.image.getAspect({ width: obj.s_w, height: obj.s_h });
     print_aspect('ssize');
 
     document.getElementById('vimg').src = getPreviewUrl(640);
@@ -880,7 +863,7 @@ function setPresetCrop43() {
     const gcd = jsUtils.value.getGcd(disp.width, disp.height);
 
     const crop_size = {
-        width:  gcd * 4 * (ratio.y / 3),
+        width: gcd * 4 * (ratio.y / 3),
         height: disp.height
     };
     const center = image.getCenteringPositionXY(crop_size, disp);
@@ -900,16 +883,16 @@ function setPresetCrop43() {
 var timeSelNum = 0;
 function addTimeSel() {
     var elm = document.getElementById("TimeSelAddtion");
-    var newValue = document.getElementsByName("tend"+timeSelNum)[0].value;  // 一つ上の範囲の終了時間を次の開始時間にする
+    var newValue = document.getElementsByName("tend" + timeSelNum)[0].value;  // 一つ上の範囲の終了時間を次の開始時間にする
     timeSelNum++;
 
     var selectArea = document.createElement("div");
-    selectArea.setAttribute("id", "sarea"+timeSelNum);
+    selectArea.setAttribute("id", "sarea" + timeSelNum);
     var textElem = document.createTextNode(String(timeSelNum + 1) + ".位置 ");
     selectArea.appendChild(textElem);
     var ssArea = document.createElement("input");
     ssArea.setAttribute("type", "text");
-    ssArea.setAttribute("name", "ss"+timeSelNum);
+    ssArea.setAttribute("name", "ss" + timeSelNum);
     ssArea.setAttribute("class", "hhmmssxxx");
     ssArea.setAttribute("value", newValue);
     ssArea.setAttribute("onClick", "openTimerSelector(this, timeSelNum)");
@@ -918,7 +901,7 @@ function addTimeSel() {
     selectArea.appendChild(textElem);
     var tendArea = document.createElement("input");
     tendArea.setAttribute("type", "text");
-    tendArea.setAttribute("name", "tend"+timeSelNum);
+    tendArea.setAttribute("name", "tend" + timeSelNum);
     tendArea.setAttribute("class", "hhmmssxxx");
     tendArea.setAttribute("value", newValue);
     tendArea.setAttribute("onClick", "openTimerSelector(this, timeSelNum)");
@@ -927,29 +910,32 @@ function addTimeSel() {
     selectArea.appendChild(textElem);
     var tArea = document.createElement("input");
     tArea.setAttribute("type", "text");
-    tArea.setAttribute("name", "t"+timeSelNum);
+    tArea.setAttribute("name", "t" + timeSelNum);
     tArea.setAttribute("class", "hhmmssxxx");
     tArea.setAttribute("value", "00:00:00.000");
     tArea.setAttribute("readonly", "true");
     selectArea.appendChild(tArea);
     var delArea = document.createElement("input");
     delArea.setAttribute("type", "button");
-    delArea.setAttribute("name", "btnDel"+timeSelNum);
+    delArea.setAttribute("name", "btnDel" + timeSelNum);
     delArea.setAttribute("value", "削除");
-    delArea.setAttribute("onClick", "deleteTimeSel("+timeSelNum+")");
+    delArea.setAttribute("onClick", "deleteTimeSel(" + timeSelNum + ")");
     selectArea.appendChild(delArea);
     elm.appendChild(selectArea);
 }
 
 function sourceFileList(elem) {
-    stocker.components.getFilenames(params.dir, files, function(reals) {
+    getDirectoryProperties(params.dir, upPath, NaN, NaN, function (data) {
         const ul = document.createElement('ul');
-        for (let i=0; i<reals.length; i++) {
-            const li = document.createElement('li');
-            li.innerText = reals[i].name
-            ul.appendChild(li);
-        }
-
+        data.elements.forEach(function (e) {
+            for (const f of files) {
+                if (f === e.path) {
+                    const li = document.createElement('li');
+                    li.innerText = e.name
+                    ul.appendChild(li);
+                }
+            }
+        })
         elem.appendChild(ul);
     });
 }
@@ -962,17 +948,17 @@ function deleteTimeSel(idx) {
         // 間に空いた部分を詰める
         while (i < timeSelNum) {
             var nextIdx = i + 1;
-            var nextSs = document.getElementsByName('ss'+nextIdx)[0].value;
-            var nextTend = document.getElementsByName('tend'+nextIdx)[0].value;
-            var nextT = document.getElementsByName('t'+nextIdx)[0].value;
-            document.getElementsByName('ss'+i)[0].value = nextSs;
-            document.getElementsByName('tend'+i)[0].value = nextTend;
-            document.getElementsByName('t'+i)[0].value = nextT;
+            var nextSs = document.getElementsByName('ss' + nextIdx)[0].value;
+            var nextTend = document.getElementsByName('tend' + nextIdx)[0].value;
+            var nextT = document.getElementsByName('t' + nextIdx)[0].value;
+            document.getElementsByName('ss' + i)[0].value = nextSs;
+            document.getElementsByName('tend' + i)[0].value = nextTend;
+            document.getElementsByName('t' + i)[0].value = nextT;
             i++;
         }
 
         // 最後を消す
-        var selectArea = document.getElementById("sarea"+timeSelNum);
+        var selectArea = document.getElementById("sarea" + timeSelNum);
         elm.removeChild(selectArea);
         timeSelNum--;
     }

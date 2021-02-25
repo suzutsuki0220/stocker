@@ -18,10 +18,10 @@ function getKeyValue(line) {
         return null;
     }
 
-    return [
-        match[1].toLowerCase(),
-        match[2]
-    ];
+    return {
+        key: match[1].toLowerCase(),
+        value: match[2]
+    };
 }
 
 function loadConfig(data) {
@@ -36,7 +36,7 @@ function loadConfig(data) {
 
         const kv = getKeyValue(data.substring(sp, ep));
         if (kv) {
-            ret[kv[0]] = kv[1];
+            ret[kv.key] = kv.value;
         }
 
         sp = ep + 1;

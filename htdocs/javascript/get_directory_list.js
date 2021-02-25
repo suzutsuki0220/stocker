@@ -6,34 +6,40 @@ function initSelectedParam() {
     selectedParam.path = "";
 }
 
-function getDirectoryList(encoded_dir, url_path, from, to, receive_func) {
-    let option = new Object();
+function getDirectoryProperties(root, url_path, from, to, receive_func) {
+    const option = new Object();
     if (from) {
         option.from = from;
     }
     if (to) {
         option.to = to;
     }
-    const param = stocker.components.makePathParams(encoded_dir, url_path, option);
+    const optionParam = jsUtils.url.makeQueryString(option);
 
-    jsUtils.ajax.init();
-    jsUtils.ajax.setOnSuccess(function(httpRequest) {
-        receive_func(httpRequest.responseXML);
-    });
-    jsUtils.ajax.setOnError(function(httpRequest) {
-        console.warn("ERROR: " + stocker.uri.cgi.get_dir + " param: " + param + " status: " + httpRequest.status);
-    });
-
-    jsUtils.ajax.post(stocker.uri.cgi.get_dir, param);
+    fetch('/api/v1/storage/' + root + '/' + url_path + '/properties' + (optionParam ? '?' + optionParam : ''), {
+        method: 'GET',
+        mode: 'same-origin',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer'
+    }).then(function (response) {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return Promise.reject(new Error(response.status + ' ' + response.statusText));
+        }
+    }).then(receive_func);
 }
 
 function getRootDirectories(callback) {
     jsUtils.fetch.request(
-        {uri: stocker.uri.cgi_root + "/directory.cgi",
-         format: "json"
-        }, function(json) {
+        {
+            uri: "/api/v1/storage/root-paths",
+            format: "json"
+        }, function (json) {
             callback(json);
-        }, function(error) {
+        }, function (error) {
             console.warn(error);
         }
     );
@@ -47,7 +53,7 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
     select.addEventListener("change", onChanged);
 
     var fragment = document.createDocumentFragment();
-    for (var i=0; i<directory.length; i++) {
+    for (var i = 0; i < directory.length; i++) {
         var directoryList = document.createElement('option');
         if (directory[i].encoded === selected) {
             directoryList.selected = true;
@@ -64,16 +70,16 @@ function makeRootSelector(name, directory, onChanged, selected = '') {
 
 function newDirectoryAnchor(div, height) {
     const flexStyle = "display: flex; flex-direction: row; justify-content: space-between";
-    const elm = render.basic.element.newNode('div', '', {style: flexStyle});
-    const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', {style: 'display: flex; align-items: center'});
-    anchor.onclick = function() {
-        const modalContent = new ModalContent(function() {
+    const elm = render.basic.element.newNode('div', '', { style: flexStyle });
+    const anchor = render.basic.element.newNode('a', '<i class="fas fa-folder-plus"></i>', { style: 'display: flex; align-items: center' });
+    anchor.onclick = function () {
+        const modalContent = new ModalContent(function () {
             refreshDirectorySelector(div, selectedParam.root, selectedParam.path, height);
         });
         modalContent.newFolder(selectedParam.root, selectedParam.path);
     };
     elm.appendChild(
-        render.basic.element.newNode('div', 'フォルダー', {style: 'display: flex'})
+        render.basic.element.newNode('div', 'フォルダー', { style: 'display: flex' })
     );
     elm.appendChild(anchor);
 
@@ -90,7 +96,7 @@ function directoryListStyleFactory(elem, height) {
 }
 
 function refreshDirectorySelector(div, root, path, height) {
-    getDirectoryList(root, path, 0, 0, function(data) {
+    getDirectoryProperties(root, path, NaN, NaN, function (data) {
         let filesArray = new Array();
         let directoriesArray = new Array();
 
@@ -100,19 +106,16 @@ function refreshDirectorySelector(div, root, path, height) {
         //clear
         div.innerHTML = "";
 
-        const directory = jsUtils.xml.getFirstFoundChildNode(data, 'directory');
-        const properties = jsUtils.xml.getDataInElements(directory, 'properties', ['name', 'up_path', 'up_dir'])[0];
-
         const nameArea = document.createElement('div');
         const upButton = document.createElement('a');
-        upButton.onclick = function() {
-            refreshDirectorySelector(div, root, properties.up_path, height);
+        upButton.onclick = function () {
+            refreshDirectorySelector(div, root, data.properties.up_path, height);
         };
         upButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
         nameArea.appendChild(upButton);
 
         const span = document.createElement('span');
-        span.innerHTML = properties.up_dir + "/" + properties.name;
+        span.innerHTML = data.properties.dirname + "/" + data.properties.name;
         nameArea.appendChild(span);
         div.appendChild(nameArea);
 
@@ -131,27 +134,19 @@ function refreshDirectorySelector(div, root, path, height) {
         container.appendChild(fileList);
         div.appendChild(container);
 
-        const contents = jsUtils.xml.getFirstFoundChildNode(directory, 'contents');
-        if (!contents) {
-            return;
-        }
-
-        const elements = jsUtils.xml.getDataInElements(contents, 'element', ["name", "path", "type", "size", "last_modified"]);
-        if (!elements) {
-            return;
-        }
-
-        for (var i=0; i<elements.length; i++) {
-            const e = elements[i];
-            if (e.type === "DIRECTORY") {
-                const a = document.createElement('a');
-                a.onclick = function() {
-                    refreshDirectorySelector(div, root, e.path, height);
-                };
-                a.innerHTML = e.name;
-                directoriesArray.push(a);
-            } else {
-                filesArray.push(e.name);
+        if (data.elements) {
+            for (var i = 0; i < data.elements.length; i++) {
+                const e = data.elements[i];
+                if (e.type === "DIRECTORY") {
+                    const a = document.createElement('a');
+                    a.onclick = function () {
+                        refreshDirectorySelector(div, root, e.path, height);
+                    };
+                    a.innerHTML = e.name;
+                    directoriesArray.push(a);
+                } else {
+                    filesArray.push(e.name);
+                }
             }
         }
 
@@ -167,8 +162,8 @@ function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", heigh
 
     initSelectedParam();
     elem.innerHTML = "";
-    getRootDirectories(function(data) {
-        const rootSelector = makeRootSelector("", data, function() {
+    getRootDirectories(function (data) {
+        const rootSelector = makeRootSelector("", data, function () {
             refreshDirectorySelector(directorySelector, rootSelector.value, "", height)
         }, selectedRoot);
         div.appendChild(rootSelector);

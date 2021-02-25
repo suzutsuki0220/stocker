@@ -8,12 +8,12 @@ class ActionList {
         const self = this;
         const fragment = document.createDocumentFragment();
 
-        for(var i=0; i<list_json.length; i++) {
+        for (var i = 0; i < list_json.length; i++) {
             const l = list_json[i];
 
             const a = document.createElement('a');
             a.classList.add('navbar-item');
-            a.onclick = function() {self._performAction(l.id)};
+            a.onclick = function () { self._performAction(l.id) };
             a.innerText = l.title;
             fragment.appendChild(a);
         }
@@ -25,20 +25,20 @@ class ActionList {
         const self = this;
 
         jsUtils.fetch.request({
-            uri: stockerConfig.htdocs_root + "/action_param.json",
+            uri: "/action_param.json",
             format: 'json',
             method: 'GET'
-        }, function(json) {
+        }, function (json) {
             self._addList(json);
             self.actionParam = json;
-        }, function(error) {
+        }, function (error) {
             console.warn(error);
             render.bulma.elements.notification("error", 'error: ' + error.message);
         });
     }
 
     _performAction(sw) {
-        for (var i=0; i<this.actionParam.length; i++) {
+        for (var i = 0; i < this.actionParam.length; i++) {
             const ap = this.actionParam[i];
             if (ap.id === sw) {
                 const params = Object.assign((ap.parameters || {}), {
@@ -46,7 +46,7 @@ class ActionList {
                     path: decodeURIComponent(document.file_check.target.value),
                     file: getCheckedFiles()  // stocker_list.js
                 });
-                location.href = stockerConfig.htdocs_root + "/action/" + ap.form + '?' + jsUtils.url.makeQueryString(params);
+                location.href = "/action/" + ap.form + '?' + jsUtils.url.makeQueryString(params);
             }
         }
     }
