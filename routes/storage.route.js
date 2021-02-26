@@ -2,6 +2,7 @@ const fs = require('fs');
 const jsUtils = require('js-utils');
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
 const roots = require('../src/config-file.js').load('/basedirs.conf');
+const stockerConf = require('../config/stocker-conf.json');
 
 const stockerLib = new StockerLib();
 
@@ -75,7 +76,7 @@ function getProperties(root, path, query) {
 }
 
 module.exports = function (app) {
-    const apiRest = '/api/v1/storage';
+    const apiRest = stockerConf.htdocsRoot + '/api/v1/storage';
 
     app.get(apiRest + '/root-paths', function (req, res) {
         let data = new Array();

@@ -5,14 +5,13 @@ const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 const jobStatus = require('./src/jobstatus.js');
 
+const stockerConf = require('./config/stocker-conf.json');
+
 let running = false;
 //const logger = log4js.getLogger("stocker");
 
-let config;
 try {
-    config = require('./src/config-file.js').load('/converter.conf');
-
-    if (isNaN(config.worker_port)) {
+    if (isNaN(stockerConf.port)) {
         throw new Error('worker port setting not found');
     }
 } catch (error) {
@@ -84,10 +83,10 @@ require('./routes/converts.route.js')(app);
 require('./routes/media.route.js')(app);
 
 // static contents
-app.use(express.static('./htdocs'));
-app.use('/bundle', express.static('./dist/bundle'));
+app.use(stockerConf.htdocsRoot, express.static('./htdocs'));
+app.use(stockerConf.htdocsRoot + '/bundle', express.static('./dist/bundle'));
 
-http.createServer(app).listen(config.worker_port);
+http.createServer(app).listen(stockerConf.port);
 
 // child process
 fetchJob();

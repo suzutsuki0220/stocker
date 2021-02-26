@@ -1,0 +1,15 @@
+{
+    "port": 3030,
+    "htdocsRoot": "/stocker",
+    "encodingThreads": 2,
+    "audioConvertBitrate": 256,
+    "thumbnailSize": 160,
+    "commands": {
+        "ffmpeg": "/usr/bin/ffmpeg",
+        "convert": "/usr/bin/convert"
+    },
+    "path": {
+        "cache": "/var/www/stocker/cache",
+        "temporary": "/dev/shm"
+    }
+}
