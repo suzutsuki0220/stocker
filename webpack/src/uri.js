@@ -1,18 +1,7 @@
-const htdocs_root = "%htdocs_root%";
-const cgi_root = "%cgi_root%";
+const htdocs_root = require('../../config/stocker-conf.json').htdocsRoot;
 
-const music_player_uri = {
-    tag_info: cgi_root + '/taginfo'
-};
-
-module.exports.cgi_root = cgi_root;
 module.exports.htdocs_root = htdocs_root;
 module.exports.list = htdocs_root + '/list.html';
-
-module.exports.cgi = {
-    edit: cgi_root + '/edit.cgi',
-    music_player: music_player_uri
-};
 
 // アイコンのURL
 module.exports.icon = {

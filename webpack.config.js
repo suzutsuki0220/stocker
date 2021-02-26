@@ -11,14 +11,7 @@ const contentBase = [
 ];
 const outPath = path.resolve(__dirname, 'dist/bundle');
 
-module.exports = env => {
-    const HTDOCS_ROOT = (env && env.htdocs_root) ? env.htdocs_root : '';
-    const CGI_ROOT = (env && env.cgi_root) ? env.cgi_root : '/cgi-bin/stocker';
-    const API_DUMMY = (env && env.api_dummy) ? env.api_dummy : 'no';
-
-    console.log("webpack config: htdocs_root -> " + HTDOCS_ROOT);
-    console.log("webpack config: cgi_root -> " + CGI_ROOT);
-
+module.exports = () => {
     return {
         mode: MODE,
         entry: {
@@ -54,16 +47,6 @@ module.exports = env => {
                             }
                         }
                     ],
-                }, {
-                    test: /uri.js/,
-                    loader: 'string-replace-loader',
-                    options: {
-                        multiple: [
-                            { search: '%htdocs_root%', replace: HTDOCS_ROOT },
-                            { search: '%cgi_root%', replace: CGI_ROOT },
-                            { search: '%api_dummy%', replace: API_DUMMY },
-                        ]
-                    }
                 }, {
                     test: /\.ts$/,
                     use: 'ts-loader'

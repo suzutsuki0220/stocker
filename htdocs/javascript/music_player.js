@@ -83,35 +83,23 @@ function getTrackOrder(t, element) {
 
 function getMediaTag(element) {
     return new Promise(function (resolve) {
-        fetch("/api/v1/media/" + params.dir + "/" + element.path + "/mediaTag", {
-            method: 'GET',
-            mode: 'same-origin',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            redirect: 'error',
-            referrerPolicy: 'no-referrer'
-        }).then(function (response) {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return Promise.reject(new Error(response.status + ' ' + response.statusText));
-            }
-        }).then(function (json) {
-            resolve({
-                ...json,
-                root: params.dir,
-                path: element.path,
-                title: json.title || element.name,  // tagのtitleが無ければファイル名をタイトルとする
-                playOrder: getTrackOrder(json, element)
+        stocker.api.getMediaTag(params.dir, element.path)
+            .then(function (json) {
+                resolve({
+                    ...json,
+                    root: params.dir,
+                    path: element.path,
+                    title: json.title || element.name,  // tagのtitleが無ければファイル名をタイトルとする
+                    playOrder: getTrackOrder(json, element)
+                });
+            }).catch(function (e) {
+                resolve({
+                    root: params.dir,
+                    path: element.path,
+                    title: element.name, // ファイル名をタイトルとする
+                    playOrder: element.num   // ファイル名順で番号を振る
+                });
             });
-        }).catch(function (e) {
-            resolve({
-                root: params.dir,
-                path: element.path,
-                title: element.name, // ファイル名をタイトルとする
-                playOrder: element.num   // ファイル名順で番号を振る
-            });
-        });
     });
 }
 

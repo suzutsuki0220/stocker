@@ -1,3 +1,5 @@
+/* global stocker */
+
 var trimWork = [];
 var elements = null;
 
@@ -23,7 +25,7 @@ window.addEventListener("load", function (event) {
     actionList = new ActionList({ element: document.getElementById('action-drop-list') });
     actionList.make();
 
-    getRootDirectories(function (data) {
+    stocker.api.getStorageRoots().then(function (data) {
         document.getElementById('root_selector').appendChild(
             makeRootSelector(
                 'fm_dir',
@@ -204,7 +206,7 @@ function reloadDirectoryList(encoded_dir, url_path, from, to, addHistory = true)
     root = encoded_dir;
     path = url_path;
 
-    getDirectoryProperties(encoded_dir, url_path, from, to, function (data) {  // TODO xml -> JSON (21.01.24)
+    getDirectoryProperties(encoded_dir, url_path, from, to, function (data) {
         directoryList(data, document.getElementById('narrow').value);
         addSubdirectoryLink(data, encoded_dir, url_path);
     });
@@ -272,7 +274,7 @@ function downloadWork() {
 
             for (var j = 0; j < elements.length; j++) {
                 if (files[i].value === elements[j].path) {
-                    handleDownload(files[i].value, elements[j].name);
+                    stocker.api.download(root, files[i].value, elements[j].name);
                     break;
                 }
             }
@@ -280,6 +282,3 @@ function downloadWork() {
     }
 }
 
-function handleDownload(filepath, filename) {
-    jsUtils.file.DownloadWithDummyAnchor('/api/v1/storage/' + root + '/' + filepath + '/raw', filename);
-}

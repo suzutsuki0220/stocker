@@ -183,20 +183,7 @@ function toggleExifLayer(path) {
 function requestExifData(path) {
     document.getElementById('ExifLayer').innerHTML = "loading...";
 
-    fetch('/api/v1/media/' + params.dir + '/' + path + '/exif', {
-        method: 'GET',
-        mode: 'same-origin',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-        redirect: 'error',
-        referrerPolicy: 'no-referrer'
-    }).then(function (response) {
-        if (response.ok) {
-            return response.json();
-        } else {
-            return Promise.reject(new Error(response.status + ' ' + response.statusText));
-        }
-    }).then(showExif)
+    stocker.api.getMediaExif(params.dir, path).then(showExif)
         .catch(function (error) {
             console.warn(error);
             document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";

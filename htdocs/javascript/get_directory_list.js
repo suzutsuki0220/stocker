@@ -15,34 +15,7 @@ function getDirectoryProperties(root, url_path, from, to, receive_func) {
         option.to = to;
     }
     const optionParam = jsUtils.url.makeQueryString(option);
-
-    fetch('/api/v1/storage/' + root + '/' + url_path + '/properties' + (optionParam ? '?' + optionParam : ''), {
-        method: 'GET',
-        mode: 'same-origin',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-        redirect: 'error',
-        referrerPolicy: 'no-referrer'
-    }).then(function (response) {
-        if (response.ok) {
-            return response.json();
-        } else {
-            return Promise.reject(new Error(response.status + ' ' + response.statusText));
-        }
-    }).then(receive_func);
-}
-
-function getRootDirectories(callback) {
-    jsUtils.fetch.request(
-        {
-            uri: "/api/v1/storage/root-paths",
-            format: "json"
-        }, function (json) {
-            callback(json);
-        }, function (error) {
-            console.warn(error);
-        }
-    );
+    stocker.api.getStorageProperty(root, url_path, optionParam).then(receive_func);
 }
 
 function makeRootSelector(name, directory, onChanged, selected = '') {
@@ -162,7 +135,7 @@ function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", heigh
 
     initSelectedParam();
     elem.innerHTML = "";
-    getRootDirectories(function (data) {
+    stocker.api.getStorageRoots().then(function (data) {
         const rootSelector = makeRootSelector("", data, function () {
             refreshDirectorySelector(directorySelector, rootSelector.value, "", height)
         }, selectedRoot);
