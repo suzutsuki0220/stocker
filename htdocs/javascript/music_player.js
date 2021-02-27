@@ -83,7 +83,7 @@ function getTrackOrder(t, element) {
 
 function getMediaTag(element) {
     return new Promise(function (resolve) {
-        stocker.api.getMediaTag(params.dir, element.path)
+        stocker.api.media.getTag(params.dir, element.path)
             .then(function (json) {
                 resolve({
                     ...json,

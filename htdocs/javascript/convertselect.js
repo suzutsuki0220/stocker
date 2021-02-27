@@ -1,3 +1,5 @@
+/* global jsUtils, stocker */
+
 var duration = 0; // 動画の長さ(秒)
 var loading = false;  // previewの更新多発を抑止するフラグ
 var load_again = false;  // preview読み込み中に値が変わって再度読み直しが必要か判断するフラグ
@@ -77,7 +79,7 @@ function closeWindow() {
 
 function getImageURL(elem) {
     var ss = elem.value;
-    return '/api/v1/media/' + params.dir + '/' + params.file + '/videoImage' + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=true&ss0=" + ss;
+    return stocker.uri.htdocs_root + '/api/v1/media/' + params.dir + '/' + params.file + '/videoImage' + "?" + jsUtils.url.getQueryInUrl() + "&size=640&set_position=true&ss0=" + ss;
 }
 
 function reloadImage() {
@@ -277,17 +279,16 @@ function addTime(num) {
 }
 
 function getMovieDuration(root, path, vno) {
-    jsUtils.fetch.request({
-        method: 'GET',
-        format: 'json',
-        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
-        body: stocker.components.makeDirFileParam(root, path)
-    }, function (json) {
-        getMovieDurationResult(json, Number(vno));
-        callGetSceneData();
-    }, function (message) {
-        alert("動画の長さ取得に失敗しました - " + message);
-    });
+    stocker.api.media.getMovieInfo(root, path).then(
+        function (json) {
+            getMovieDurationResult(json, Number(vno));
+            callGetSceneData();
+        }
+    ).catch(
+        function (error) {
+            alert("動画の長さ取得に失敗しました - " + error.message);
+        }
+    );
 }
 
 function getMovieDurationResult(data, vno) {
@@ -314,37 +315,31 @@ function callGetSceneData() {
         return;
     }
 
-    const ajax = jsUtils.ajax;
-    ajax.init();
+    stocker.api.storage.getRaw(params.dir, scene_list_path).then(
+        function (data) {
+            let sp, ep;
 
-    ajax.setOnSuccess(getSceneDataResult);
-    ajax.setOnError(function (httpRequest) { });
+            sp = 0;
+            while ((ep = data.indexOf("\n", sp)) != -1) {
+                const line = data.substring(sp, ep);
+                pushSceneList(line);
+                sp = ep + 1;
+            }
+            if (sp < data.length) {
+                const line = data.substring(sp);
+                pushSceneList(line);
+            }
 
-    ajax.get('/api/v1/storage/' + params.dir + '/' + scene_list_path + '/raw');
+            if (sceneList.length > 0) {
+                var html;
+                html = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
+                html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
+                document.getElementById('sceneSelectArea').innerHTML = html;
+            }
+        }
+    ).catch(function () { });
 }
 
-function getSceneDataResult(httpRequest) {
-    var sp, ep;
-    var data = httpRequest.responseText;
-
-    sp = 0;
-    while ((ep = data.indexOf("\n", sp)) != -1) {
-        var line = data.substring(sp, ep);
-        pushSceneList(line);
-        sp = ep + 1;
-    }
-    if (sp < data.length) {
-        var line = data.substring(sp);
-        pushSceneList(line);
-    }
-
-    if (sceneList.length > 0) {
-        var html;
-        html = "<input type=\"button\" name=\"btnPrevScene\" onClick=\"getNextScene(-1)\" value=\"＜\">&nbsp;シーン&nbsp;";
-        html += "<input type=\"button\" name=\"btnNextScene\" onClick=\"getNextScene(1)\" value=\"＞\">";
-        document.getElementById('sceneSelectArea').innerHTML = html;
-    }
-}
 
 function pushSceneList(scene_data_line) {
     var delim_pos = scene_data_line.indexOf(" ", 0);

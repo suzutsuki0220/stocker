@@ -150,19 +150,13 @@ function makeEncodeQuery() {
 
 function addJob() {
     document.getElementById('sStatus').innerHTML = "登録中...";
-    const formUri = jsUtils.url.apart(window.location.href);
 
-    jsUtils.fetch.request(
-        {
-            uri: '/api/v1/converts',
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: makeEncodeQuery(),
-            mode: 'cors',
-            method: 'POST',
-            format: 'json'
-        }, function (data) {
+    stocker.api.convert.addJob(makeEncodeQuery()).then(
+        function () {
             document.getElementById('sStatus').innerHTML = "変換ジョブを登録しました";
-        }, function (error) {
+        }
+    ).catch(
+        function (error) {
             document.getElementById('sStatus').innerHTML = "ERROR: " + error.message;
         }
     );
@@ -260,7 +254,7 @@ function openPreviewWindow() {
 }
 
 function getPreviewUrl(width) {
-    let url = '/api/v1/media/' + params.dir + "/" + files[0] + "/videoimage?size=" + width;
+    let url = stocker.uri.htdocs_root + '/api/v1/media/' + params.dir + "/" + files[0] + "/videoimage?size=" + width;
     if (document.enc_setting.v_map && document.enc_setting.v_map.length !== 0) {
         url += "&v_map=" + getRadioButtonValue(document.enc_setting.v_map);
     }
@@ -572,31 +566,29 @@ function getSceneListFilePath(file_name, root, dirpath) {
     const list_file = jsUtils.file.getNameFromPath(file_name).filename + '.vdr';
     sceneListPath = "";
 
-    jsUtils.fetch.request({
-        uri: '/api/v1/storage/' + root + '/' + dirpath + '/properties',
-        method: 'GET',
-        format: 'json'
-    }, function (json) {
-        for (const e of json.elements) {
-            if (e.type === 'FILE' && e.name === list_file) {
-                sceneListPath = e.path;
-                break;
+    stocker.api.storage.getProperty(root, dirpath).then(
+        function (json) {
+            for (const e of json.elements) {
+                if (e.type === 'FILE' && e.name === list_file) {
+                    sceneListPath = e.path;
+                    break;
+                }
             }
         }
-    });
+    );
 }
 
 function getMovieInfo(root, path) {
     document.getElementById('information_table').innerHTML = "読み込み中";
 
-    jsUtils.fetch.request({
-        uri: '/api/v1/media/' + root + '/' + path + '/movieInfo',
-        method: 'GET',
-        format: 'json'
-    }, showInfoTable, function (e) {
-        console.warn(e);
-        render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
-    });
+    stocker.api.media.getMovieInfo(root, path).then(
+        showInfoTable
+    ).catch(
+        function (e) {
+            console.warn(e);
+            render.bulma.elements.notification("error", "動画ファイルの情報取得に失敗しました");
+        }
+    );
 }
 
 function showInfoTable(data) {

@@ -1,3 +1,5 @@
+/* global jsUtils, stocker */
+
 class ActionList {
     constructor(options) {
         this.actionParam = new Array();
@@ -25,7 +27,7 @@ class ActionList {
         const self = this;
 
         jsUtils.fetch.request({
-            uri: "/action_param.json",
+            uri: stocker.uri.htdocs_root + "/action_param.json",
             format: 'json',
             method: 'GET'
         }, function (json) {

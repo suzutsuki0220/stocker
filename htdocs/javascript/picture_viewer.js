@@ -1,4 +1,4 @@
-/* global jsUtils, stockerConfig */
+/* global jsUtils, stocker */
 
 var load_flg = false;
 var load_again = -1;
@@ -99,9 +99,9 @@ function setSrc(img) {
 
     const path = img.path;
     const src = {
-        vgaImage: "/api/v1/media/" + params.dir + "/" + path + "/vga",
-        video: "/api/v1/storage/" + params.dir + "/" + path + "/raw",
-        thumbnail: "/api/v1/media/" + params.dir + "/" + path + "/thumbnail",
+        vgaImage: stocker.uri.htdocs_root + "/api/v1/media/" + params.dir + "/" + path + "/vga",
+        video: stocker.uri.htdocs_root + "/api/v1/storage/" + params.dir + "/" + path + "/raw",
+        thumbnail: stocker.uri.htdocs_root + "/api/v1/media/" + params.dir + "/" + path + "/thumbnail",
         exif: "javascript:toggleExifLayer('" + path + "')"
     };
 
@@ -183,7 +183,7 @@ function toggleExifLayer(path) {
 function requestExifData(path) {
     document.getElementById('ExifLayer').innerHTML = "loading...";
 
-    stocker.api.getMediaExif(params.dir, path).then(showExif)
+    stocker.api.media.getExif(params.dir, path).then(showExif)
         .catch(function (error) {
             console.warn(error);
             document.getElementById('ExifLayer').innerHTML = "EXIFを読み取れませんでした";

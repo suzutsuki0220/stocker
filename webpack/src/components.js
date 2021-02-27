@@ -21,26 +21,6 @@ module.exports.backToList = function (root, path) {
     window.location.href = uri.htdocs_root + '/list.html' + '?' + makeDirFileParam(root, path);
 };
 
-/**
- * URIパラメータで指定されたfile/dirの実名を取得します
- * サーバーに問い合わせてjson形式で返ります
- **/
-module.exports.getFilenames = function (root, paths, onSuccess, onError = noWork) {
-    const params = { dir: root, file: paths };
-
-    const init = {
-        uri: uri.cgi.filename,
-        method: 'POST',
-        format: 'json',
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: jsUtils.url.makeQueryString(params)
-    };
-
-    jsUtils.fetch.request(init, onSuccess, onError);
-};
-
 module.exports.getParamRoot = function () {
     const myQuery = jsUtils.url.getQueryInUrl();
     const params = jsUtils.url.getRawParams(myQuery);

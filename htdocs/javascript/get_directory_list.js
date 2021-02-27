@@ -15,7 +15,7 @@ function getDirectoryProperties(root, url_path, from, to, receive_func) {
         option.to = to;
     }
     const optionParam = jsUtils.url.makeQueryString(option);
-    stocker.api.getStorageProperty(root, url_path, optionParam).then(receive_func);
+    stocker.api.storage.getProperty(root, url_path, optionParam).then(receive_func);
 }
 
 function makeRootSelector(name, directory, onChanged, selected = '') {
@@ -135,7 +135,7 @@ function makeDirectorySelector(elem, selectedRoot = "", selectedPath = "", heigh
 
     initSelectedParam();
     elem.innerHTML = "";
-    stocker.api.getStorageRoots().then(function (data) {
+    stocker.api.storage.getRoots().then(function (data) {
         const rootSelector = makeRootSelector("", data, function () {
             refreshDirectorySelector(directorySelector, rootSelector.value, "", height)
         }, selectedRoot);

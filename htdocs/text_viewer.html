@@ -36,12 +36,12 @@
         const params = jsUtils.url.getRawParams();
         document.getElementById('textDataArea').innerHTML = '読み込み中 <i class="fas fa-spinner fa-pulse"></i>';
 
-        jsUtils.fetch.request(
-            {uri: '/api/v1/storage/' + params.dir + '/' + params.file + '/raw',
-             method: 'GET',
-             format: 'arrayBuffer'
-            }, displayText
-            , function(error) {
+        stocker.api.storage.getRaw(params.dir, params.file, 'arrayBuffer').then(
+            function(data) {
+                displayText(data);
+            }
+        ).catch(
+            function(error) {
                 document.getElementById('textDataArea').textContent = "読み込み失敗: " + error.message;
             }
         );

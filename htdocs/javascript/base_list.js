@@ -14,7 +14,7 @@ function baseCard(dirs) {
 }
 
 window.addEventListener("load", function (event) {
-    stocker.api.getStorageRoots().then(function (directory) {
+    stocker.api.storage.getRoots().then(function (directory) {
         document.getElementById('base_list').appendChild(baseCard(directory));
     });
 });

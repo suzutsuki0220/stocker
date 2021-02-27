@@ -38,8 +38,8 @@
       else if (support_wav == 'maybe' || support_wav == 'probably') { play_type="wav"; }
     }
 
-    document.coverart.src = "/api/v1/media/" + tracks[track_no].root + "/" + tracks[track_no].path + "/coverArt";
-    audio_player.src = "/api/v1/media/" + tracks[track_no].root + "/" +tracks[track_no].path + "/" + play_type;
+    document.coverart.src = stocker.uri.htdocs_root + "/api/v1/media/" + tracks[track_no].root + "/" + tracks[track_no].path + "/coverArt";
+    audio_player.src = stocker.uri.htdocs_root + "/api/v1/media/" + tracks[track_no].root + "/" +tracks[track_no].path + "/" + play_type;
     audio_player.play();
     document.controller.button_pause.value = "Pause";
 

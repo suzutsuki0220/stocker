@@ -25,7 +25,7 @@ window.addEventListener("load", function (event) {
     actionList = new ActionList({ element: document.getElementById('action-drop-list') });
     actionList.make();
 
-    stocker.api.getStorageRoots().then(function (data) {
+    stocker.api.storage.getRoots().then(function (data) {
         document.getElementById('root_selector').appendChild(
             makeRootSelector(
                 'fm_dir',
