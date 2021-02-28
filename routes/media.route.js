@@ -50,7 +50,7 @@ function isCacheAvailable(cachePath, decodedPath) {
     return false;
 }
 
-function makeCache(width, origPath, cachePath) {
+function makeCache(width, origPath, cachePath, log) {
     const fname = jsUtils.file.getNameFromPath(cachePath);
     fs.mkdirSync(fname.dirname, { recursive: true });
 
@@ -67,27 +67,27 @@ function makeCache(width, origPath, cachePath) {
             fs.futimesSync(fd, fstat.atime, fstat.mtime);
         }
     } catch (e) {
-        //console.log(e);
+        log.warn(e);
     }
 }
 
-function sendCacheImage(width, req, res) {
+function sendCacheImage(width, req, res, log) {
     try {
         const cachePath = getCachePath(width, req.params.root, req.params.path);
         const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
 
         if (isCacheAvailable(cachePath, decoded) === false) {
-            makeCache(width, decoded, cachePath);
+            makeCache(width, decoded, cachePath, log);
         }
         res.type('image/jpeg');
         res.sendFile(cachePath, { dotfiles: 'deny' });
     } catch (e) {
-        console.warn(e);
+        log.warn(e);
         res.sendStatus(404);
     }
 }
 
-function sendTemporaryFile(type, temporary, res) {
+function sendTemporaryFile(type, temporary, res, log) {
     try {
         res.type(type);
         // 部分的な転送を許可すると変換処理が増えてしまうために acceptRanges は無効にする
@@ -97,7 +97,7 @@ function sendTemporaryFile(type, temporary, res) {
             fs.rmdirSync(tempdir, { recursive: true });
         });
     } catch (e) {
-        console.warn(e);
+        log.warn(e);
         res.sendStatus(404);
     }
 }
@@ -128,7 +128,7 @@ function makeVideoImage(req, output) {
     execFileSync(stockerConf.commands.ffmpeg, composeMovieImageOptions(width, decoded, output, req.query));
 }
 
-function sendAudio(type, req, res) {
+function sendAudio(type, req, res, log) {
     const decoded = stockerLib.decodeUrlPath(req.params.root, req.params.path);
     const name = jsUtils.file.getNameFromPath(decoded);
 
@@ -139,33 +139,33 @@ function sendAudio(type, req, res) {
         const tempdir = fs.mkdtempSync(path.join(stockerConf.path.temporary, 'stocker-'));
         const tempfile = path.join(tempdir, name.filename + '.' + FFmpegOption.getExtension(type));
         execFileSync(stockerConf.commands.ffmpeg, new FFmpegOption().compose(decoded, tempfile, { nolog: true, ab: stockerConf.audioConvertBitrate, format: type }, 0));
-        sendTemporaryFile(contentTypes.getContentType(FFmpegOption.getExtension(type)), tempfile, res);
+        sendTemporaryFile(contentTypes.getContentType(FFmpegOption.getExtension(type)), tempfile, res, log);
     }
 }
 
-module.exports = function (app) {
+module.exports = function (app, log) {
     const apiRest = stockerConf.htdocsRoot + '/api/v1/media';
 
     app.get(apiRest + '/:root/:path(*)/mp3', function (req, res) {
-        sendAudio('mp3', req, res);
+        sendAudio('mp3', req, res, log);
     });
     app.get(apiRest + '/:root/:path(*)/ogg', function (req, res) {
-        sendAudio('ogg', req, res);
+        sendAudio('ogg', req, res, log);
     });
     app.get(apiRest + '/:root/:path(*)/wav', function (req, res) {
-        sendAudio('wav', req, res);
+        sendAudio('wav', req, res, log);
     });
     app.get(apiRest + '/:root/:path(*)/thumbnail', function (req, res) {
-        sendCacheImage(stockerConf.thumbnailSize, req, res)
+        sendCacheImage(stockerConf.thumbnailSize, req, res, log)
     });
     app.get(apiRest + '/:root/:path(*)/vga', function (req, res) {
-        sendCacheImage(640, req, res)
+        sendCacheImage(640, req, res, log)
     });
     app.get(apiRest + '/:root/:path(*)/videoimage', function (req, res) {
         const tempdir = fs.mkdtempSync(path.join(stockerConf.path.temporary, 'stocker-'));
         const tempfile = path.join(tempdir, 'videoimage.jpg');
         makeVideoImage(req, tempfile);
-        sendTemporaryFile('image/jpeg', tempfile, res);
+        sendTemporaryFile('image/jpeg', tempfile, res, log);
     });
     app.get(apiRest + '/:root/:path(*)/exif', function (req, res) {
         res.type('application/json');

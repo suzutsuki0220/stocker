@@ -1,8 +1,14 @@
 const db = require('../models');
 const jobStatus = require('./jobstatus.js');
 
+let log = null;
+
 function onError(error) {
-    console.warn(error);
+    if (log) {
+        log.warn(error);
+    } else {
+        console.warn(error);
+    }
 }
 
 function escapeSingleQuote(string) {
@@ -26,7 +32,11 @@ function getArrayString(array) {
     return '[' + ret + ']';
 }
 
-module.exports.create = function(jobs) {
+module.exports.setLogger = function (log) {
+    this.log = log;
+}
+
+module.exports.create = function (jobs) {
     if (!Array.isArray(jobs)) {
         jobs = new Array(jobs);
     }
@@ -41,7 +51,7 @@ module.exports.create = function(jobs) {
     });
 };
 
-module.exports.get = function(onGet, id = NaN) {
+module.exports.get = function (onGet, id = NaN) {
     db.jobs.findOne({
         where: {
             id: id
@@ -52,7 +62,7 @@ module.exports.get = function(onGet, id = NaN) {
     }).catch(onError);
 };
 
-module.exports.fetch = function(onGet) {
+module.exports.fetch = function (onGet) {
     db.jobs.findOne({
         where: {
             status: jobStatus.queued
@@ -63,7 +73,7 @@ module.exports.fetch = function(onGet) {
     }).catch(onError);
 };
 
-module.exports.setRunning = function(id) {
+module.exports.setRunning = function (id) {
     if (isNaN(id)) {
         return;
     }
@@ -78,7 +88,7 @@ module.exports.setRunning = function(id) {
     }).catch(onError);
 };
 
-module.exports.setFinish = function(id, commandResults) {
+module.exports.setFinish = function (id, commandResults) {
     if (isNaN(id)) {
         return;
     }
@@ -95,7 +105,7 @@ module.exports.setFinish = function(id, commandResults) {
     }).catch(onError);
 };
 
-module.exports.setCancel = function(groupId) {
+module.exports.setCancel = function (groupId) {
     db.jobs.update({
         status: jobStatus.canceled,
     }, {
@@ -107,7 +117,7 @@ module.exports.setCancel = function(groupId) {
     }).catch(onError);
 }
 
-module.exports.cleanup = function() {
+module.exports.cleanup = function () {
     db.jobs.destroy({
         where: {
             status: jobStatus.success

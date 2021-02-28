@@ -7,8 +7,9 @@ function addCorsHeader(res) {
     res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, access_token");
 }
 
-module.exports = function (app) {
+module.exports = function (app, log) {
     const apiRest = stockerConf.htdocsRoot + '/api/v1/converts';
+    jobDb.setLogger(log);
 
     // create
     app.post(apiRest, function (req, res) {
@@ -18,6 +19,7 @@ module.exports = function (app) {
             jobDb.create(jobs);
             res.json({ message: "encode job create successfully" });
         }).catch(error => {
+            log.warn(error);
             res.status(500).json(error.message);
         });
     });

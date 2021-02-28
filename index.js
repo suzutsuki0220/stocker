@@ -1,21 +1,40 @@
 const express = require('express');
 const http = require('http');
-//const log4js = require('log4js');
+const path = require('path');
 const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 const jobStatus = require('./src/jobstatus.js');
 
+const bunyan = require('bunyan');
+const log = bunyan.createLogger({
+    name: 'stocker',
+    streams: [
+        {
+            level: 'info',
+            path: path.join(__dirname, 'logs', 'stocker.log'),
+            period: '1d',
+            count: 7
+/*
+        }, {
+            level: 'warn',
+            path: path.join(__dirname, 'logs', 'error.log'),
+            period: '1d',
+            count: 7
+        }
+*/
+    ]
+});
+
 const stockerConf = require('./config/stocker-conf.json');
 
 let running = false;
-//const logger = log4js.getLogger("stocker");
 
 try {
     if (isNaN(stockerConf.port)) {
         throw new Error('worker port setting not found');
     }
 } catch (error) {
-    //    logger.warn(error.message);
+    log.error(error.message);
     process.exit(1);
 }
 
@@ -29,14 +48,14 @@ function getArgArray(argString) {
 
 function fetchJob(forceRunning = false) {
     if (forceRunning === false && running === true) {
-        //        logger.debug("skip fetch during another job running");
+        //        log.debug("skip fetch during another job running");
         return;
     }
 
-    //logger.debug("fetch job");
+    //log.debug("fetch job");
     jobdb.fetch(function (result) {
         if (!result) {
-            //logger.debug("no jobs");
+            //log.debug("no jobs");
             running = false;
             return;
         }
@@ -78,9 +97,9 @@ function fetchJob(forceRunning = false) {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.set('query parser', 'extended');
-require('./routes/storage.route.js')(app);
-require('./routes/converts.route.js')(app);
-require('./routes/media.route.js')(app);
+require('./routes/storage.route.js')(app, log);
+require('./routes/converts.route.js')(app, log);
+require('./routes/media.route.js')(app, log);
 
 // static contents
 app.use(stockerConf.htdocsRoot, express.static('./htdocs'));

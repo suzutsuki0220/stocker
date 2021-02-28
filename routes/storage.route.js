@@ -52,30 +52,26 @@ function getProperties(root, path, query) {
     };
 
     if (fs.statSync(decodedPath).isDirectory()) {
-        try {
-            const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
-            const from = Number(query.from) || 0;
-            const to = jsUtils.value.getMin(entries.length - 1, Number(query.to));
+        const entries = fs.readdirSync(decodedPath, { withFileTypes: true })
+        const from = Number(query.from) || 0;
+        const to = jsUtils.value.getMin(entries.length - 1, Number(query.to));
 
-            for (let i = from; i <= to; i++) {
-                const childPath = decodedPath + '/' + entries[i].name;
-                elements.push(Object.assign({
-                    name: entries[i].name,
-                    root: root,
-                    path: stockerLib.encodeUrlPath(root, childPath),
-                    type: getType(entries[i]),
-                    num: i
-                }, getStats(childPath)));
-            }
-        } catch (e) {
-            console.log(e);
+        for (let i = from; i <= to; i++) {
+            const childPath = decodedPath + '/' + entries[i].name;
+            elements.push(Object.assign({
+                name: entries[i].name,
+                root: root,
+                path: stockerLib.encodeUrlPath(root, childPath),
+                type: getType(entries[i]),
+                num: i
+            }, getStats(childPath)));
         }
     }
 
     return { properties: properties, elements: elements };
 }
 
-module.exports = function (app) {
+module.exports = function (app, log) {
     const apiRest = stockerConf.htdocsRoot + '/api/v1/storage';
 
     app.get(apiRest + '/root-paths', function (req, res) {
@@ -88,11 +84,18 @@ module.exports = function (app) {
         res.json(data);
     });
 
-    app.get(apiRest + '/:root/:path(*)/properties', function (req, res) {
+    app.get(apiRest + '/:rootAndPath(*)/properties', function (req, res) {
         try {
-            res.json(getProperties(req.params.root, req.params.path, req.query));
+            const index = req.params.rootAndPath.indexOf('/');
+            if (index >= 0) {
+                const root = req.params.rootAndPath.substring(0, index);
+                const path = req.params.rootAndPath.substring(index + 1);
+                res.json(getProperties(root, path, req.query));
+            } else {
+                res.json(getProperties(req.params.rootAndPath, '', req.query));
+            }
         } catch (e) {
-            console.warn(e);
+            log.warn(e);
             res.sendStatus(404);
         }
     });
@@ -104,7 +107,7 @@ module.exports = function (app) {
             res.attachment(name.basename);
             res.sendFile(decoded, { dotfiles: 'deny', acceptRanges: true });
         } catch (e) {
-            console.warn(e);
+            log.warn(e);
             res.sendStatus(404);
         }
     });
