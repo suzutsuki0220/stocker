@@ -9,7 +9,6 @@ const mediaLib = require('../build/Release/medialib');
 const stockerConf = require('../config/stocker-conf.json');
 
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
-const { createEmitAndSemanticDiagnosticsBuilderProgram } = require('typescript');
 const stockerLib = new StockerLib();
 
 // FFMpegのオプション
