@@ -14,14 +14,7 @@ const log = bunyan.createLogger({
             path: path.join(__dirname, 'logs', 'stocker.log'),
             period: '1d',
             count: 7
-/*
-        }, {
-            level: 'warn',
-            path: path.join(__dirname, 'logs', 'error.log'),
-            period: '1d',
-            count: 7
         }
-*/
     ]
 });
 
