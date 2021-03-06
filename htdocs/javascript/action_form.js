@@ -24,17 +24,16 @@ class ActionForm {
         return icon;
     }
 
-    makeFilesList(root, files, callback) {
+    makeFilesList(root, paths, callback) {
         const self = this;
-        getDirectoryProperties(root, upPath, NaN, NaN, function (data) {
-
-            stocker.components.getFilenames(root, files, function (reals) {
+        stocker.api.storage.getProperty(root, paths[0]).then(function (currentProp) {
+            getDirectoryProperties(root, currentProp.properties.up_path, NaN, NaN, function (data) {
                 self.filesList = [];
-                for (let i = 0; i < files.length; i++) {
-                    const icon = self._statusIcon();
-                    const real = self._getReal(reals, files[i]);
-                    if (real) {
-                        self.filesList.push({ name: real.name, root: real.dir, path: files[i], statusIcon: icon });
+                for (const path of paths) {
+                    const elem = data.elements.find(e => e.path === path);
+                    if (elem) {
+                        const icon = self._statusIcon();
+                        self.filesList.push({ name: elem.name, root: elem.root, path: elem.path, statusIcon: icon });
                     }
                 }
                 callback();

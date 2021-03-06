@@ -3,23 +3,9 @@ const jsUtils = require('js-utils');
 const StockerLib = require('../build/Release/stockerlib').StockerLib;
 const roots = require('../src/config-file.js').load('/basedirs.conf');
 const stockerConf = require('../config/stocker-conf.json');
+const StockerStorage = require('../src/stocker-storage.js');
 
 const stockerLib = new StockerLib();
-
-function getStats(path) {
-    const stats = fs.statSync(path);
-    if (stats.isDirectory()) {
-        return {
-            size: fs.readdirSync(path).length,
-            last_modified: stats.mtimeMs
-        };
-    } else {
-        return {
-            size: stats.size,
-            last_modified: stats.mtimeMs
-        };
-    }
-}
 
 function getType(dirent) {
     if (dirent.isDirectory()) {
@@ -64,7 +50,7 @@ function getProperties(root, path, query) {
                 path: stockerLib.encodeUrlPath(root, childPath),
                 type: getType(entries[i]),
                 num: i
-            }, getStats(childPath)));
+            }, StockerStorage.getStats(childPath)));
         }
     }
 
@@ -86,14 +72,8 @@ module.exports = function (app, log) {
 
     app.get(apiRest + '/:rootAndPath(*)/properties', function (req, res) {
         try {
-            const index = req.params.rootAndPath.indexOf('/');
-            if (index >= 0) {
-                const root = req.params.rootAndPath.substring(0, index);
-                const path = req.params.rootAndPath.substring(index + 1);
-                res.json(getProperties(root, path, req.query));
-            } else {
-                res.json(getProperties(req.params.rootAndPath, '', req.query));
-            }
+            const rp = StockerStorage.divideRootPath(req.params.rootAndPath);
+            res.json(getProperties(rp.root, rp.path, req.query));
         } catch (e) {
             log.warn(e);
             res.sendStatus(404);
@@ -110,5 +90,24 @@ module.exports = function (app, log) {
             log.warn(e);
             res.sendStatus(404);
         }
+    });
+
+    app.delete(apiRest + '/:root/:path(*)', function (req, res) {
+        StockerStorage.delete(req.params.root, req.params.path).then(() => {
+            res.send('{"status": "ok", "message": "successful"}');
+        }).catch((error) => {
+            // frontのfetchがエラーにならないように200で返す
+            res.send('{"status": "fail", "message": "' + error + '"}');
+        });
+    });
+
+    app.put(apiRest + '/:rootAndPath(*)/mkdir', function (req, res) {
+        StockerStorage.mkdir(req.params.rootAndPath, req.body.newname).then(() => {
+            res.send('{"status": "ok", "message": "successful"}');
+        }).catch((error) => {
+            log.info('mkdir failed: ' + error + ' name: [' + req.body.newname + ']');
+            // frontのfetchがエラーにならないように200で返す
+            res.send('{"status": "fail", "message": "' + error + '"}');
+        });
     });
 };

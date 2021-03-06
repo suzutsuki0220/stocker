@@ -1,5 +1,12 @@
 /* global stocker, jsUtils, render getCheckedFiles encoded_dir selectedParam makeDirectorySelector */
 
+const changeIcon = function (f, stat) {
+    if (!f || !f.statusIcon) {
+        return;
+    }
+    f.statusIcon.innerHTML = render.bulma.statusIcon[stat];
+};
+
 class ModalContent {  // eslint-disable-line no-unused-vars
     constructor(onClose) {
         this.onClose = onClose;
@@ -10,14 +17,14 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         const foot = document.createElement('span');
         const self = this;
 
-        const okButton = render.bulma.button.okButton('実行', function() {
+        const okButton = render.bulma.button.okButton('実行', function () {
             self._disableFooterButton(true);
             okFunc();
         });
         okButton.id = 'footerOkButton';
         foot.appendChild(okButton);
 
-        const cancelButton = render.bulma.button.cancelButton('キャンセル', function() {
+        const cancelButton = render.bulma.button.cancelButton('キャンセル', function () {
             self._disableFooterButton(false);
             cancelFunc();
         });
@@ -45,13 +52,6 @@ class ModalContent {  // eslint-disable-line no-unused-vars
     }
 
     _callFileFunc(parameterList, cardElement) {
-        const changeIcon = function(f, stat) {
-            if (!f || !f.statusIcon) {
-                return;
-            }
-            f.statusIcon.innerHTML = render.bulma.statusIcon[stat];
-        };
-
         const self = this;
         const p = parameterList.shift();
         if (!p) {
@@ -61,25 +61,13 @@ class ModalContent {  // eslint-disable-line no-unused-vars
 
         const f = p.list;
         changeIcon(f, "loading");
-        jsUtils.fetch.request(
-            {uri: stocker.uri.cgi_root + "/action/filefunc.cgi",
-             headers: {"Content-Type": "application/x-www-form-urlencoded"},
-             body: stocker.components.makeDirFileParam(f.root, f.path, p.parameter),
-             method: 'POST',
-             format: 'json'
-            }, function(json) {
-                if (json.status === 'ok') {
-                    changeIcon(f, "done");
-                    self._callFileFunc(parameterList, cardElement);  // do recursively
-                } else {
-                    changeIcon(f, "error");
-                    self._onError(json.message);
-                }
-            }, function(error) {
-                changeIcon(f, "error");
-                self._onError(error.message);
-            }
-        );
+        stocker.api.storage.mkdir(f.root, f.path, p.parameter.newname).then(function () {
+            changeIcon(f, "done");
+            self._callFileFunc(parameterList, cardElement);  // do recursively
+        }).catch(function (error) {
+            changeIcon(f, "error");
+            self._onError(error.message);
+        });
     }
 
     _onSuccess(cardElement) {
@@ -98,13 +86,13 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         cardContent.innerHTML = 'フォルダー名: <input type="text" name="foldername" value="">';
 
         const self = this;
-        const foot = this._footerButtons(function() {
-            const mkdirWork = [{
-                list: {root: root, path: path},
-                parameter: {mode: "do_newfolder", newname: cardContent.foldername.value}
-            }]
-            self._callFileFunc(mkdirWork, cardElement);
-        }, function() {
+        const foot = this._footerButtons(function () {
+            stocker.api.storage.mkdir(root, path, cardContent.foldername.value).then(function () {
+                self._onSuccess(cardElement);
+            }).catch(function (error) {
+                self._onError(error.message);
+            });
+        }, function () {
             self._closeModal(cardElement);
         });
 
@@ -124,13 +112,13 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         //    '<p>カメラで撮影<input type="file" accept="image/*" capture="environment" /></p>';
 
         const self = this;
-        const foot = this._footerButtons(function() {
+        const foot = this._footerButtons(function () {
             const uploadWork = [{
-                list: {root: root, path: path},
-                parameter: {mode: "do_upload", formname: "file"}
+                list: { root: root, path: path },
+                parameter: { mode: "do_upload", formname: "file" }
             }]
             self._callFileFunc(uploadWork, cardElement);
-        }, function() {
+        }, function () {
             self._closeModal(cardElement);
         });
 
@@ -150,14 +138,25 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         cardContent.innerHTML = '<span id="filesArea"></span>';
 
         const self = this;
-        const foot = this._footerButtons(function() {
+        const foot = this._footerButtons(function () {
             let removeWorks = new Array();
-            const list = self._actionForm.filesList;
-            for (let i=0; i<list.length; i++) {
-                removeWorks.push({list: list[i], parameter: {mode: 'do_delete'}});
+            for (const list of self._actionForm.filesList) {
+                removeWorks.push(new Promise(function (resolve, reject) {
+                    stocker.api.storage.delete(list.root, list.path).then(function () {
+                        changeIcon(list, 'done');
+                        resolve();
+                    }).catch(function () {
+                        changeIcon(list, 'error');
+                        reject();
+                    })
+                }));
             }
-            self._callFileFunc(removeWorks, cardElement);
-        }, function() {
+            Promise.all(removeWorks).then(function () {
+                self._onSuccess(cardElement);
+            }).catch((error) => {
+                self._onError(error.message);
+            });
+        }, function () {
             self._closeModal(cardElement);
         });
 
@@ -166,7 +165,7 @@ class ModalContent {  // eslint-disable-line no-unused-vars
 
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('filesArea').innerHTML = "読み込み中...";
-        this._actionForm.makeFilesList(encoded_dir, files, function() {
+        this._actionForm.makeFilesList(encoded_dir, files, function () {
             document.getElementById('filesArea').innerHTML = "";
             document.getElementById('filesArea').appendChild(self._actionForm.filenameTable());
         });
@@ -183,15 +182,15 @@ class ModalContent {  // eslint-disable-line no-unused-vars
 
         let cardElement;
         const self = this;
-        const foot = this._footerButtons(function() {
+        const foot = this._footerButtons(function () {
             let renameWorks = new Array();
             const list = self._actionForm.filesList;
-            for (let i=0; i<list.length; i++) {
+            for (let i = 0; i < list.length; i++) {
                 const newName = document.getElementById('newName' + i).value;
-                renameWorks.push({list: list[i], parameter: {mode: 'do_rename', newname: newName}});
+                renameWorks.push({ list: list[i], parameter: { mode: 'do_rename', newname: newName } });
             }
             self._callFileFunc(renameWorks, cardElement);
-        }, function() {
+        }, function () {
             self._closeModal(cardElement);
         });
 
@@ -200,12 +199,12 @@ class ModalContent {  // eslint-disable-line no-unused-vars
 
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('renameFormArea').innerHTML = "読み込み中...";
-        this._actionForm.makeFilesList(encoded_dir, files, function() {
+        this._actionForm.makeFilesList(encoded_dir, files, function () {
             document.getElementById('renameFormArea').innerHTML = "";
 
             const list = self._actionForm.filesList;
-            for (let i=0; i<list.length; i++) {
-            //self._actionForm.filenameTable(document.getElementById('renameFormArea'));
+            for (let i = 0; i < list.length; i++) {
+                //self._actionForm.filenameTable(document.getElementById('renameFormArea'));
                 const label = list[i].name;  // 変更前の名前
                 const control = document.createElement('input');
                 control.classList.add('input');
@@ -228,19 +227,19 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         let cardElement;
         const cardContent = document.createElement('div');
         cardContent.innerHTML =
-        '<h2 class="subtitle is-6">移動先:</h2>' +
-        '<span id="destinationSelectorArea"></span>' +
-        '<span id="moveFilesArea"></span>';
+            '<h2 class="subtitle is-6">移動先:</h2>' +
+            '<span id="destinationSelectorArea"></span>' +
+            '<span id="moveFilesArea"></span>';
 
         const self = this;
-        const foot = this._footerButtons(function() {
+        const foot = this._footerButtons(function () {
             let moveWorks = new Array();
             const list = self._actionForm.filesList;
-            for (let i=0; i<list.length; i++) {
-                moveWorks.push({list: list[i], parameter: {mode: 'do_move', dest_path: selectedParam.path, dest_root: selectedParam.root}});
+            for (let i = 0; i < list.length; i++) {
+                moveWorks.push({ list: list[i], parameter: { mode: 'do_move', dest_path: selectedParam.path, dest_root: selectedParam.root } });
             }
             self._callFileFunc(moveWorks, cardElement);
-        }, function() {
+        }, function () {
             self._closeModal(cardElement);
         });
 
@@ -250,7 +249,7 @@ class ModalContent {  // eslint-disable-line no-unused-vars
         makeDirectorySelector(document.getElementById('destinationSelectorArea'));
         //document.getElementById('filesCountArea').innerText = files.length;
         document.getElementById('moveFilesArea').innerHTML = "読み込み中...";
-        this._actionForm.makeFilesList(encoded_dir, files, function() {
+        this._actionForm.makeFilesList(encoded_dir, files, function () {
             document.getElementById('moveFilesArea').innerHTML = ""
             document.getElementById('moveFilesArea').appendChild(self._actionForm.filenameTable());
         });

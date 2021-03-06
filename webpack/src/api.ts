@@ -10,9 +10,9 @@ const fetchOptions: RequestInit = {
 };
 
 export class Api {
-    private static fetchData = async (url: string, format: string = 'json') => {
+    private static fetchData = async (url: string, format: string = 'json', method: string = 'GET') => {
         return await fetch(url, {
-            method: 'GET',
+            method: method,
             ...fetchOptions
         }).then(function (response) {
             if (response.ok) {
@@ -23,10 +23,10 @@ export class Api {
         })
     }
 
-    private static postData = async (url: string, body: string) => {
+    private static pushData = async (url: string, body: string, method: string = 'POST') => {
         return await fetch(url, {
             ...fetchOptions,
-            method: 'POST',
+            method: method,
             body: body,
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -46,7 +46,7 @@ export class Api {
 
     static convert = {
         addJob: (query: string) => {
-            return Api.postData(stockerConf.htdocsRoot + '/api/v1/converts', query);
+            return Api.pushData(stockerConf.htdocsRoot + '/api/v1/converts', query);
         }
     }
 
@@ -79,6 +79,14 @@ export class Api {
         },
         getRoots: () => {
             return Api.fetchData(stockerConf.htdocsRoot + '/api/v1/storage/root-paths');
+        },
+        delete: (root: string, path: string) => {
+            const uri = Api.getUriRoot('storage', root, path);
+            return Api.fetchData(uri, 'json', 'DELETE');
+        },
+        mkdir: (root: string, path: string, newname: string) => {
+            const uri = Api.getUriRoot('storage', root, path) + '/mkdir';
+            return Api.pushData(uri, jsUtils.url.makeQueryString({ newname: newname }), 'PUT');
         }
     }
 }
