@@ -48,7 +48,7 @@ class ActionList {
                     path: decodeURIComponent(document.file_check.target.value),
                     file: getCheckedFiles()  // stocker_list.js
                 });
-                location.href = "/action/" + ap.form + '?' + jsUtils.url.makeQueryString(params);
+                location.href = stocker.uri.htdocs_root + "/action/" + ap.form + '?' + jsUtils.url.makeQueryString(params);
             }
         }
     }
