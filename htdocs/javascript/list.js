@@ -1,7 +1,7 @@
 /* global stocker */
 
-var trimWork = [];
-var elements = null;
+let trimWork = [];
+let elements = null;
 
 const boxes = 1000;  // TODO: for Pagination (ページ分け)
 //my $boxes = $disp_box_x * $disp_box_y * 3;  # 3スクロール分
@@ -234,7 +234,7 @@ function directoryList(data, narrowKey = "") {
         document.getElementById('uppath').innerHTML = '';
     }
 
-    const elements = data.elements;
+    elements = data.elements;
     if (elements == null) {
         alert("ERROR: files list has no elements");
         return;
@@ -265,16 +265,16 @@ function addSubdirectoryLink(data, encoded_dir, url_path) {
 }
 
 function downloadWork() {
-    var files = document.getElementsByName("file");
+    const files = document.getElementsByName("file");
     if (files && elements) {
-        for (var i = 0; i < files.length; i++) {
+        for (let i = 0; i < files.length; i++) {
             if (files[i].checked === false) {
                 continue;
             }
 
-            for (var j = 0; j < elements.length; j++) {
-                if (files[i].value === elements[j].path) {
-                    stocker.api.download(root, files[i].value, elements[j].name);
+            for (const elem of elements) {
+                if (files[i].value === elem.path) {
+                    stocker.api.storage.download(root, files[i].value, elem.name);
                     break;
                 }
             }
