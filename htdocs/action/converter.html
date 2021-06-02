@@ -129,6 +129,13 @@
     document.enc_setting.s_h.value = 720;
   }
 
+  function preset1080() {
+    resetForm();
+    setH265();
+    document.enc_setting.s_w.value = 1920;
+    document.enc_setting.s_h.value = 1080;
+  }
+
   function openTimerSelector(elem, f_num) {
     var size_w = 670;
     var size_h = 700;
@@ -185,6 +192,9 @@
       </p>
       <p class="control">
         <a class="button" onClick="preset720p()">HEVC 720p</a>
+      </p>
+      <p class="control">
+        <a class="button" onClick="preset1080()">HEVC 1080</a>
       </p>
     </div>
   </div>
