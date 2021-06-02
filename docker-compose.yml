@@ -11,9 +11,9 @@ services:
             - ./container/log:/var/log:z
         ports:
             - "3030:3030"
-    build:
-        container_name: stocker_build
+    make:
+        container_name: stocker_make
         build:
-            context: ./container/webui/build
+            context: ./container/webui/make
         volumes:
             - ./:/root/stocker:z
