@@ -15,11 +15,10 @@ build: ffmpeg
 	cd ffmpeg; \
 	./configure \
 	    --prefix=/usr \
-	    --libdir=/usr/lib64 \
-	    --shlibdir=/usr/lib64 \
+	    --libdir=/usr/lib \
+	    --shlibdir=/usr/lib \
 	    --disable-debug \
 	    --enable-shared \
-	    --enable-pic \
 	    --enable-gpl \
 	    --enable-version3 \
 	    --enable-nonfree \
@@ -35,7 +34,7 @@ build: ffmpeg
 	    --enable-postproc \
 	    --enable-bzlib \
 	    --enable-fontconfig \
-	    --enable-libcelt \
+	    --enable-libopus \
 	    --enable-swresample \
 	    --enable-swscale \
 	    --disable-libopencore-amrnb \
