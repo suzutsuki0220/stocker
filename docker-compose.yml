@@ -2,18 +2,20 @@ version: '2'
 services:
     webui:
         container_name: stocker_node
+        user: ${UID}:users
         build:
             context: ./container/webui/compose
         environment:
             - STOCKER_CONF=/var/www/stocker/conf
         volumes:
-            - ./:/root/stocker:z
+            - ./:/stocker:z
             - ./container/log:/var/log:z
         ports:
             - "3030:3030"
     make:
         container_name: stocker_make
+        user: ${UID}:users
         build:
             context: ./container/webui/make
         volumes:
-            - ./:/root/stocker:z
+            - ./:/stocker:z
