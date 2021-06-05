@@ -7,17 +7,23 @@ build-libs:
 	cd ./x265; ./build-x265.sh
 	make -C libopus
 	make -C fdk-aac
+	make -C libgsm
+	make -C libmp3lame
 
 install-libs:
-	make -C x265/build/linux install
+	make -C x265/x265/build/linux install
 	make -C libopus install
 	make -C fdk-aac install
+	make -C libgsm install
+	make -C libmp3lame install
 
 install: install-libs
 	make -C ffmpeg install
 
 clean:
-	make -C x265/build/linux clean
+	make -C x265/x265/build/linux clean
 	make -C libopus clean
 	make -C fdk-aac clean
+	make -C libgsm clean
+	make -C libmp3lame clean
 	make -C ffmpeg clean
