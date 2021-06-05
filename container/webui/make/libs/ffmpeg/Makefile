@@ -59,5 +59,5 @@ build: ffmpeg
 	    --disable-libxavs \
 	    --enable-zlib \
 	|| exit 1
-	make -j`nproc` || exit 1
+	make -j`nproc` -C ffmpeg || exit 1
 
