@@ -47,7 +47,7 @@ build: ffmpeg
 	    --enable-libmp3lame \
 	    --enable-gnutls \
 	    --enable-libopenjpeg \
-	    --enable-librtmp \
+	    --disable-librtmp \
 	    --enable-libspeex \
 	    --enable-libtheora \
 	    --enable-libvidstab \
