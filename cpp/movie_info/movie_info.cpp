@@ -49,10 +49,20 @@ int get_ratio(int a, int b)
     return a;
 }
 
+std::string fractional_str(AVRational r)
+{
+    if (r.num && r.den) {
+        const double fract = (double)r.num / (double)r.den;
+        return std::to_string(fract);
+    }
+
+    return "null";
+}
+
 const char *avcodec_get_name(enum AVCodecID id)
 {
     const AVCodecDescriptor *cd;
-    AVCodec *codec;
+    const AVCodec *codec;
 
     if (id == AV_CODEC_ID_NONE)
         return "none";
@@ -75,20 +85,20 @@ static void print_video_tag(std::stringstream &ss, AVStream *vst, const int stre
 {
     ss << "{\"type\": \"video\", " << std::endl;
     ss << "\"no\": " << stream_no << ", " << std::endl;
-    ss << "\"bitrate\": " << vst->codec->bit_rate << ", " << std::endl;
-    //ss << "  <codec_name>" << vst->codec->codec_name << " </codec_name> << std::endl; // ffmpeg-1.0
-    ss << "\"codec\": \"" << avcodec_get_name(vst->codec->codec_id) << "\", " << std::endl;
-    ss << "\"fps\": " << ((vst->r_frame_rate.num && vst->r_frame_rate.den) ? (double)vst->r_frame_rate.num / (double)vst->r_frame_rate.den : NULL) << ", " << std::endl;
-    ss << "\"fps_average\": " << ((vst->avg_frame_rate.num && vst->avg_frame_rate.den) ? (double)vst->avg_frame_rate.num / (double)vst->avg_frame_rate.den : NULL) << ", " << std::endl;
-    ss << "\"width\": " << vst->codec->width << ", " << std::endl;
-    ss << "\"height\": " << vst->codec->height << ", " << std::endl;
+    ss << "\"bitrate\": " << vst->codecpar->bit_rate << ", " << std::endl;
+    //ss << "  <codec_name>" << vst->codecpar->codec_name << " </codec_name> << std::endl; // ffmpeg-1.0
+    ss << "\"codec\": \"" << avcodec_get_name(vst->codecpar->codec_id) << "\", " << std::endl;
+    ss << "\"fps\": " << fractional_str(vst->r_frame_rate) << ", " << std::endl;
+    ss << "\"fps_average\": " << fractional_str(vst->avg_frame_rate) << ", " << std::endl;
+    ss << "\"width\": " << vst->codecpar->width << ", " << std::endl;
+    ss << "\"height\": " << vst->codecpar->height << ", " << std::endl;
 
-    int disp_width = vst->codec->width;
-    int disp_height = vst->codec->height;
-    if (vst->codec->sample_aspect_ratio.num > 0 && vst->codec->sample_aspect_ratio.den > 0)
+    int disp_width = vst->codecpar->width;
+    int disp_height = vst->codecpar->height;
+    if (vst->codecpar->sample_aspect_ratio.num > 0 && vst->codecpar->sample_aspect_ratio.den > 0)
     {
-        float ratio = (float)vst->codec->sample_aspect_ratio.num / (float)vst->codec->sample_aspect_ratio.den;
-        disp_width = (int)((float)vst->codec->width * ratio + 0.5);
+        float ratio = (float)vst->codecpar->sample_aspect_ratio.num / (float)vst->codecpar->sample_aspect_ratio.den;
+        disp_width = (int)((float)vst->codecpar->width * ratio + 0.5);
     }
 
     int aspect_x = 1;
@@ -103,21 +113,20 @@ static void print_video_tag(std::stringstream &ss, AVStream *vst, const int stre
     ss << "\"disp_width\": " << disp_width << ", " << std::endl;
     ss << "\"disp_height\": " << disp_height << ", " << std::endl;
     ss << "\"disp_aspect\": \"" << aspect_x << ":" << aspect_y << "\", " << std::endl;
-    ss << "\"sar\": \"" << vst->codec->sample_aspect_ratio.num << ":" << vst->codec->sample_aspect_ratio.den << "\"}" << std::endl;
+    ss << "\"sar\": \"" << vst->codecpar->sample_aspect_ratio.num << ":" << vst->codecpar->sample_aspect_ratio.den << "\"}" << std::endl;
 }
 
 static void print_audio_tag(std::stringstream &ss, AVStream *ast, const int stream_no)
 {
     ss << "{\"type\": \"audio\", " << std::endl;
     ss << "\"no\": " << stream_no << ", " << std::endl;
-    ss << "\"sample_rate\": " << ast->codec->sample_rate << ", " << std::endl;
-    ss << "\"channel\": " << ast->codec->channels << ", " << std::endl;
-    ss << "\"bitrate\": " << ast->codec->bit_rate << ", " << std::endl;
+    ss << "\"sample_rate\": " << ast->codecpar->sample_rate << ", " << std::endl;
+    ss << "\"channel\": " << ast->codecpar->channels << ", " << std::endl;
+    ss << "\"bitrate\": " << ast->codecpar->bit_rate << ", " << std::endl;
 
-    const char *s = av_get_sample_fmt_name(ast->codec->sample_fmt);
+    const char *s = av_get_sample_fmt_name((AVSampleFormat)ast->codecpar->format);
     ss << "\"sample_fmt\": \"" << (s ? s : "Unknown") << "\", " << std::endl;
-    //    ss << "  <codec_name>%s</codec_name>\n", ast->codec->codec->long_name); << std::endl;
-    ss << "\"codec\": \"" << avcodec_get_name(ast->codec->codec_id) << "\"}" << std::endl;
+    ss << "\"codec\": \"" << avcodec_get_name(ast->codecpar->codec_id) << "\"}" << std::endl;
 }
 
 int movie_info(Path_t &decodedPath, std::string &result)
@@ -131,7 +140,7 @@ int movie_info(Path_t &decodedPath, std::string &result)
 
     ss << "{" << std::endl;
 
-    av_register_all();
+    // av_register_all(); // it has been deprecated in FFMpeg 4.0
     if ((ret = avformat_open_input(&fmt_ctx, decodedPath.path.c_str(), NULL, NULL)))
     {
         decodedPath.error_message = "failed to open mediafile";
@@ -163,10 +172,10 @@ int movie_info(Path_t &decodedPath, std::string &result)
 
     ss << "\"streams\": [" << std::endl;
     first = true;
-    for (int i = 0; i < fmt_ctx->nb_streams; i++)
+    for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++)
     {
         AVStream *s = fmt_ctx->streams[i];
-        if (s->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+        if (s->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
         {
             if (first == true) {
                 first = false;
@@ -175,7 +184,7 @@ int movie_info(Path_t &decodedPath, std::string &result)
             }
             print_video_tag(ss, s, i);
         }
-        else if (s->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+        else if (s->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
         {
             if (first == true) {
                 first = false;
