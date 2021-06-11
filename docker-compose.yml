@@ -4,7 +4,7 @@ services:
         container_name: stocker_node
         user: ${UID}:users
         build:
-            context: ./container/webui/compose
+            context: ./container/compose/webui
         environment:
             - STOCKER_CONF=/var/www/stocker/conf
         volumes:
@@ -16,6 +16,6 @@ services:
         container_name: stocker_make
         user: ${UID}:users
         build:
-            context: ./container/webui/make
+            context: ./container/compose/make
         volumes:
             - ./:/stocker:z
