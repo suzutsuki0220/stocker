@@ -5,6 +5,11 @@ const command = require('./src/command.js');
 const jobdb = require('./src/jobdb.js');
 const jobStatus = require('./src/jobstatus.js');
 
+const fs = require('fs');
+if (!fs.statSync(path.join(__dirname, 'logs'), {throwIfNoEntry: false})) {
+    fs.mkdirSync(path.join(__dirname, 'logs'));
+}
+
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({
     name: 'stocker',
