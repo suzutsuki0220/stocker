@@ -6,7 +6,7 @@ services:
         build:
             context: ./container/compose/webui
         environment:
-            - STOCKER_CONF=/var/www/stocker/conf
+            - STOCKER_CONF=/stocker/conf
         volumes:
             - ./:/stocker:z
             - ./container/log:/var/log:z

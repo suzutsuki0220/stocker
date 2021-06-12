@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "build:native": "node-gyp rebuild",
-    "start": "STOCKER_CONF=/var/www/stocker/conf node index.js",
-    "dev": "STOCKER_CONF=/var/www/stocker/conf nodemon index.js",
+    "start": "STOCKER_CONF=${PWD}/config node index.js",
+    "dev": "STOCKER_CONF=${PWD}/config nodemon index.js",
     "migrate": "mkdir -p db&&sequelize db:migrate",
     "rollback": "sequelize db:migrate:undo",
     "test": "STOCKER_CONF=./test/config jest",

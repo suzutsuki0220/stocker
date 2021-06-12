@@ -7,4 +7,4 @@ RUN apt-get -q install -y fontconfig libexif-dev libtag-extras-dev imagemagick l
 WORKDIR /stocker
 EXPOSE 3030
 
-CMD npm start
+CMD make -C container/libs install && npm install && npm start

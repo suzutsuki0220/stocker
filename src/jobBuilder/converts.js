@@ -5,7 +5,7 @@ const uuid = require('uuid');
 const jsUtils = require('js-utils');
 
 const StockerLib = require('../../build/Release/stockerlib').StockerLib;
-const stockerConf = require('../config-file.js').load('/stocker.conf');
+const stockerConf = require('../../config/stocker-conf.json');
 
 const FFmpegOption = require('../ffmpeg-option.js');
 let ffmpegOption;
@@ -72,7 +72,7 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
         // 1pass encoding
         ret.push({
             cmdgroup: cmdgroup,
-            command: stockerConf.ffmpeg_cmd,
+            command: stockerConf.commands.ffmpeg,
             options: ffmpegOption.compose(source, makeOutputPath(source, dest, params, 1, ssIndex), params, ssIndex, setPassOption(params, 1, dest)),
             queue: (params.v_convert === 'copy') ? 1 : 0
         });
@@ -81,7 +81,7 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
         if (params.pass2 === "true") {
             ret.push({
                 cmdgroup: cmdgroup,
-                command: stockerConf.ffmpeg_cmd,
+                command: stockerConf.commands.ffmpeg,
                 options: ffmpegOption.compose(source, makeOutputPath(source, dest, params, 2, ssIndex), params, ssIndex, setPassOption(params, 2, dest)),
                 queue: (params.v_convert === 'copy') ? 1 : 0
             });
@@ -105,7 +105,7 @@ function composeConvertCommand(cmdgroup, source, dest, params) {
         };
         ret.push({
             cmdgroup: cmdgroup,
-            command: stockerConf.ffmpeg_cmd,
+            command: stockerConf.commands.ffmpeg,
             options: ffmpegOption.compose(listFile, concatOutput, concatParams),
             queue: (params.v_convert === 'copy') ? 1 : 0
         });
@@ -153,7 +153,7 @@ function destinationPath(stockerLib, params, source) {
 
 module.exports = function (params) {
     const stockerLib = new StockerLib();
-    ffmpegOption = new FFmpegOption({ encodingThread: stockerConf.encoding_thread });
+    ffmpegOption = new FFmpegOption({ encodingThread: stockerConf.encodingThreads });
 
     return new Promise((resolve, reject) => {
         if (!params.root || !params.path) {
